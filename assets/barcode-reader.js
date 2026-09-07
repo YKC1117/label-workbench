@@ -126,7 +126,17 @@
   }
   function patchAnalysis(){
     if(state.analysisPatched||typeof window.analyzeSelected!=='function')return;
-    const base=window.analyzeSelected;window.analyzeSelected=async function(files){await base(files);const imgs=[...files].filter(isImage);if(!imgs.length)return;const out=el('analysisResult');if(!out)return;const box=document.createElement('div');box.className='analysis-block';box.innerHTML='<b>圖片條碼內容：</b><div class="scan-working">正在讀碼…</div>';out.appendChild(box);const results=await scanFiles(imgs);const hits=results.flatMap(fr=>(fr.results||[]).map(r=>({file:fr.name,...r})));box.innerHTML=hits.length?`<b>圖片條碼內容：</b>${hits.map(r=>`<div class="scan-result-row"><span class="pill">${esc(r.format)}</span><small>${esc(r.file)}</small><pre>${esc(visibleText(r.text))}</pre></div>`).join('')}`:'<b>圖片條碼內容：</b><div class="footer-note">沒有讀到可確認的條碼內容。</div>'};state.analysisPatched=true};
+    const base=window.analyzeSelected;
+    window.analyzeSelected=async function(files){
+      await base(files);
+      const imgs=[...files].filter(isImage);if(!imgs.length)return;
+      const out=el('analysisResult');if(!out)return;
+      const box=document.createElement('div');box.className='analysis-block';box.innerHTML='<b>圖片條碼內容：</b><div class="scan-working">正在讀碼…</div>';out.appendChild(box);
+      const results=await scanFiles(imgs);
+      const hits=results.flatMap(fr=>(fr.results||[]).map(r=>({file:fr.name,...r})));
+      box.innerHTML=hits.length?`<b>圖片條碼內容：</b>${hits.map(r=>`<div class="scan-result-row"><span class="pill">${esc(r.format)}</span><small>${esc(r.file)}</small><pre>${esc(visibleText(r.text))}</pre></div>`).join('')}`:'<b>圖片條碼內容：</b><div class="footer-note">沒有讀到可確認的條碼內容。</div>';
+    };
+    state.analysisPatched=true;
   }
   function updateVersion(){const small=document.querySelector('.brand small');if(small&&/v0\.\d+/i.test(small.textContent||''))small.textContent=(small.textContent||'').replace(/v0\.\d+/i,'v0.9.1')}
   function init(){injectStyles();injectUi();updateVersion();let n=0;const t=setInterval(()=>{patchAnalysis();if(state.analysisPatched||n++>80)clearInterval(t)},100)}
