@@ -8,3 +8,13 @@ window.LABEL_WORKBENCH_CLOUD = {
   key: 'sb_publishable_xHNHjHZxddpdEmSE606ktQ_9HP0H7UW',
   enabled: true
 };
+
+// Load the private attachment add-on separately so the core app can stay local-first.
+(function loadAttachmentAddon(){
+  if (document.querySelector('script[data-label-attachments]')) return;
+  const script = document.createElement('script');
+  script.src = 'assets/cloud-attachments.js?v=0.7.0';
+  script.dataset.labelAttachments = 'true';
+  script.async = false;
+  document.head.appendChild(script);
+})();
