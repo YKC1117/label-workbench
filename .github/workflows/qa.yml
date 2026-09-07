@@ -29,6 +29,8 @@ jobs:
           node --check assets/cloud-attachments.js
           node --check assets/file-parsers.js
           node --check assets/barcode-reader.js
+          node --check assets/barcode-reader-core.js
+          node --check assets/barcode-reader-ui.js
 
       - name: Static HTML / JS integrity check
         run: python3 tests/static_check.py
