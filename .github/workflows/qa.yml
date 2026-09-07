@@ -1,0 +1,31 @@
+name: Label Workbench QA
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  qa:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: JavaScript syntax check
+        run: node --check assets/app.js
+
+      - name: Static HTML / JS integrity check
+        run: python3 tests/static_check.py
+
+      - name: Logic smoke tests
+        run: node tests/logic-smoke.cjs
