@@ -26,6 +26,7 @@ jobs:
           node --check assets/app.js
           node --check assets/cloud.js
           node --check assets/cloud-config.js
+          node --check assets/cloud-attachments.js
 
       - name: Static HTML / JS integrity check
         run: python3 tests/static_check.py
@@ -35,3 +36,6 @@ jobs:
 
       - name: Cloud merge smoke tests
         run: node tests/cloud-smoke.cjs
+
+      - name: Attachment helper smoke tests
+        run: node tests/attachment-smoke.cjs
