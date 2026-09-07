@@ -1,0 +1,24 @@
+# Customer / case data must never be committed
+customer-files/
+uploads/
+cases/
+exports/
+backups/
+*.labelcase
+*.labelworkbench
+
+# Local/private files
+.env
+.env.*
+*.local
+*.tmp
+*.log
+.DS_Store
+Thumbs.db
+
+# Editor / tooling
+.vscode/
+.idea/
+node_modules/
+dist/
+coverage/
