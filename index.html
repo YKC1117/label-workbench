@@ -11,102 +11,121 @@
 <body>
 <div class="shell">
   <aside class="side">
-    <div class="brand">🏷️ Label Workbench<small>標籤製作工作台 · v0.3</small></div>
-    <div class="nav">
+    <div class="brand">🏷️ Label Workbench<small>標籤製作工作台 · v0.5</small></div>
+    <nav class="nav" aria-label="主要導覽">
       <button class="active" data-view="dashboard">🏠 工作台</button>
       <button data-view="cases">📂 案件</button>
       <button data-view="analysis">⚡ 快速分析</button>
       <button data-view="barcode">▥ 條碼工具</button>
       <button data-view="bartender">🖨️ BarTender</button>
-    </div>
+    </nav>
   </aside>
 
   <main class="main">
-    <div class="top">
+    <header class="top">
       <div><h1 id="pageTitle">工作台</h1><p id="pageSub">把 BarTender 前置工作先完成，回公司專心製作、測試與列印。</p></div>
-      <button class="btn primary" onclick="showView('cases');document.getElementById('caseEditor').scrollIntoView({behavior:'smooth'})">＋ 新增案件</button>
-    </div>
+      <button class="btn primary" id="topNewCase">＋ 新增案件</button>
+    </header>
 
     <section id="dashboard" class="view active">
       <div class="hero">
-        <div><div class="eyebrow">LABEL WORKBENCH</div><h2>客戶原稿先整理，BarTender 回公司再做。</h2><p>支援圖片、PDF、Word、Excel、CSV 與 .btw 收件。客戶原稿只記錄檔案資訊，不會自動提交到 GitHub。</p></div>
+        <div><div class="eyebrow">LABEL WORKBENCH</div><h2>客戶原稿先整理，BarTender 回公司再做。</h2><p>支援圖片、PDF、Word、Excel、CSV 與 .btw 收件。客戶原稿只在你的裝置被讀取，不會被提交到 GitHub。</p></div>
         <button class="btn primary" onclick="showView('analysis')">⚡ 快速分析</button>
       </div>
       <div class="cards">
         <div class="card"><span>進行中案件</span><b id="caseCount">0</b></div>
         <div class="card"><span>待客戶確認</span><b id="waitCount">0</b></div>
         <div class="card"><span>待 BarTender</span><b id="btCount">0</b></div>
-        <div class="card"><span>BarTender 環境</span><b style="font-size:16px">2022 R2 UltraLite</b></div>
+        <div class="card"><span>資料齊全率</span><b id="avgComplete">—</b></div>
+      </div>
+      <div class="panel">
+        <div class="section-title"><h3>需要注意</h3><button class="btn ghost small" onclick="showView('cases')">查看全部案件</button></div>
+        <div id="attentionList" class="attention-list"></div>
       </div>
       <div class="panel"><h3>常用工作</h3><div class="quick">
-        <button onclick="showView('cases')"><strong>＋ 建立標籤案件</strong><span>整理尺寸、印表機、資料來源與客戶需求</span></button>
-        <button onclick="showView('analysis')"><strong>⚡ 客戶原稿快速分析</strong><span>先確認檔案類型與製作前缺件</span></button>
+        <button id="dashNewCase"><strong>＋ 建立標籤案件</strong><span>整理尺寸、印表機、資料來源、條碼與客戶需求</span></button>
+        <button onclick="showView('analysis')"><strong>⚡ 客戶原稿快速分析</strong><span>先確認檔案格式、影像尺寸與 CSV 欄位</span></button>
         <button onclick="showView('barcode')"><strong>▥ 條碼規則</strong><span>編碼內容與顯示文字分開管理</span></button>
       </div></div>
-      <div class="note warn-note"><b>目前資料保存方式：</b>案件先存在「目前這台裝置的瀏覽器」。這一段完成後，下一個需要決策的是跨手機、平板、公司與家裡電腦的安全同步方式。</div>
+      <div class="note warn-note"><b>目前同步狀態：</b>案件資料先保存在「目前這台裝置的瀏覽器」。跨手機、平板、公司與家裡電腦的自動同步，會在需要後端架構時再讓你決定。</div>
     </section>
 
     <section id="cases" class="view">
       <div class="panel">
-        <div class="section-title"><h3>案件清單</h3><div class="toolbar"><input id="caseSearch" type="search" placeholder="搜尋客戶、標籤、機型"><select id="caseFilter"><option value="all">全部狀態</option><option value="new">新案件</option><option value="waiting">待客戶確認</option><option value="ready">資料齊全</option><option value="bartender">待 BarTender</option><option value="testing">測試中</option><option value="done">完成</option></select><label class="btn ghost">匯入案件<input id="importCase" class="hidden" type="file" accept=".labelcase,application/json"></label></div></div>
+        <div class="section-title stack-mobile"><h3>案件清單</h3><div class="toolbar"><input id="caseSearch" type="search" placeholder="搜尋客戶、標籤、機型"><select id="caseFilter"><option value="all">全部狀態</option><option value="new">新案件</option><option value="waiting">待客戶確認</option><option value="ready">資料齊全</option><option value="bartender">待 BarTender</option><option value="testing">測試中</option><option value="done">完成</option></select><label class="btn ghost small">匯入案件<input id="importCase" class="hidden" type="file" accept=".labelcase,application/json"></label></div></div>
         <div id="caseList" class="case-list"></div>
       </div>
 
       <div class="panel" id="caseEditor">
-        <div class="section-title"><h3>新增 / 編輯案件</h3><span class="pill">瀏覽器本機保存</span></div>
+        <div class="section-title"><h3 id="editorTitle">新增案件</h3><span class="pill">本機保存</span></div>
         <form id="caseForm" onsubmit="return false">
           <div class="grid">
-            <div class="field"><label for="customer">客戶名稱 *</label><input id="customer" autocomplete="organization" placeholder="例如：華碩 / XX 公司"></div>
+            <div class="field"><label for="customer">客戶名稱 *</label><input id="customer" autocomplete="organization" placeholder="例如：XX 公司"></div>
             <div class="field"><label for="labelName">案件 / 標籤名稱 *</label><input id="labelName" placeholder="例如：外箱 Label"></div>
           </div>
-          <div class="grid-3" style="margin-top:14px">
+          <div class="grid-3 form-gap">
             <div class="field"><label for="caseStatus">案件狀態</label><select id="caseStatus"><option value="new">新案件</option><option value="waiting">待客戶確認</option><option value="ready">資料齊全</option><option value="bartender">待 BarTender</option><option value="testing">測試中</option><option value="done">完成</option></select></div>
-            <div class="field"><label>Label 寬度（mm）</label><input id="labelWidth" inputmode="decimal" placeholder="例如：100"></div>
-            <div class="field"><label>Label 高度（mm）</label><input id="labelHeight" inputmode="decimal" placeholder="例如：80"></div>
+            <div class="field"><label for="labelWidth">Label 寬度（mm）</label><input id="labelWidth" inputmode="decimal" placeholder="例如：100"></div>
+            <div class="field"><label for="labelHeight">Label 高度（mm）</label><input id="labelHeight" inputmode="decimal" placeholder="例如：80"></div>
+          </div>
+          <div class="grid-3 form-gap">
+            <div class="field"><label for="printerBrand">印表機品牌</label><select id="printerBrand"><option value="">尚未確認</option><option>Argox</option><option>Zebra</option><option>TSC</option><option>Honeywell</option><option>其他</option></select></div>
+            <div class="field"><label for="printerModel">印表機型號</label><input id="printerModel" placeholder="例如：ZT610 / TH240"></div>
+            <div class="field"><label for="dpi">DPI</label><select id="dpi"><option value="">尚未確認</option><option value="203">203</option><option value="300">300</option><option value="600">600</option><option value="其他">其他</option></select></div>
+          </div>
+          <div class="grid-3 form-gap">
+            <div class="field"><label for="printMethod">列印方式</label><select id="printMethod"><option value="">尚未確認</option><option>熱轉印</option><option>熱感</option><option>不確定</option></select></div>
+            <div class="field"><label for="media">標籤 / 紙材</label><input id="media" placeholder="例如：銅版紙、PET、無背膠"></div>
+            <div class="field"><label for="dataSource">主要資料來源</label><select id="dataSource"><option value="">尚未確認</option><option>手動輸入</option><option>Excel</option><option>CSV</option><option>資料庫</option><option>既有 BTW</option><option>其他</option></select></div>
+          </div>
+          <div class="grid form-gap">
+            <div class="field"><label for="request">客戶需求</label><textarea id="request" placeholder="客戶希望怎麼做、哪些欄位會變動、條碼需求等"></textarea></div>
+            <div class="field"><label for="notes">內部備註</label><textarea id="notes" placeholder="待確認事項、特殊規則、製作提醒"></textarea></div>
           </div>
 
-          <div class="grid-3" style="margin-top:14px">
-            <div class="field"><label>印表機品牌</label><select id="printerBrand"><option value="">尚未確認</option><option>Argox</option><option>Zebra</option><option>TSC</option><option>Honeywell</option><option>其他</option></select></div>
-            <div class="field"><label>印表機型號</label><input id="printerModel" placeholder="例如：ZT610 / TH240"></div>
-            <div class="field"><label>DPI</label><select id="dpi"><option value="">尚未確認</option><option value="203">203</option><option value="300">300</option><option value="600">600</option><option value="其他">其他</option></select></div>
+          <div class="subpanel form-gap">
+            <div class="section-title"><div><h3>條碼規則</h3><p class="muted compact">正式條碼不在這裡重畫；這裡先把 BarTender 要建立的規則整理清楚。</p></div><button class="btn ghost small" id="addBarcodeBtn" type="button">＋ 新增條碼</button></div>
+            <div id="barcodeDraftList" class="barcode-rule-list"></div>
           </div>
 
-          <div class="grid-3" style="margin-top:14px">
-            <div class="field"><label>列印方式</label><select id="printMethod"><option value="">尚未確認</option><option>熱轉印</option><option>熱感</option><option>不確定</option></select></div>
-            <div class="field"><label>標籤 / 紙材</label><input id="media" placeholder="例如：銅版紙、PET、無背膠"></div>
-            <div class="field"><label>主要資料來源</label><select id="dataSource"><option value="">尚未確認</option><option>手動輸入</option><option>Excel</option><option>CSV</option><option>資料庫</option><option>既有 BTW</option><option>其他</option></select></div>
-          </div>
-
-          <div class="grid" style="margin-top:14px">
-            <div class="field"><label>客戶需求</label><textarea id="request" placeholder="客戶希望怎麼做、哪些欄位會變動、條碼需求等"></textarea></div>
-            <div class="field"><label>內部備註</label><textarea id="notes" placeholder="待確認事項、特殊規則、製作提醒"></textarea></div>
-          </div>
-
-          <div class="drop" style="margin-top:14px"><strong>客戶原稿 / 附件</strong><p>圖片、PDF、Excel、Word、CSV、BarTender (.btw)</p><input id="caseFiles" type="file" multiple accept=".jpg,.jpeg,.png,.webp,.pdf,.xls,.xlsx,.doc,.docx,.csv,.btw"><div id="fileList" class="footer-note">尚未選擇檔案</div></div>
-          <div class="note">目前只保存附件的「檔名、格式、大小等資訊」，不會把客戶原始檔案塞進 GitHub 或 localStorage。真正跨裝置附件管理會跟同步架構一起處理。</div>
+          <div class="drop form-gap"><strong>客戶原稿 / 附件</strong><p>圖片、PDF、Excel、Word、CSV、BarTender (.btw)</p><input id="caseFiles" type="file" multiple accept=".jpg,.jpeg,.png,.webp,.pdf,.xls,.xlsx,.doc,.docx,.csv,.btw"><div id="fileList" class="footer-note">尚未選擇檔案</div></div>
+          <div class="note"><b>附件安全：</b>目前只保存檔名、格式、大小等資訊；不會把客戶原始檔提交到 GitHub，也不會把大型檔案塞進瀏覽器儲存空間。</div>
+          <div id="formCompleteness" class="completion-box form-gap"></div>
           <div class="case-actions"><button id="saveCaseBtn" class="btn primary" type="button">儲存案件</button><button id="cancelEditBtn" class="btn ghost hidden" type="button">取消編輯</button></div>
         </form>
       </div>
     </section>
 
     <section id="analysis" class="view">
-      <div class="panel"><h3>快速分析</h3><div class="drop"><strong>把客戶檔案丟進來</strong><p>先做檔案分類與製作前檢查。</p><input id="analysisFiles" type="file" multiple accept=".jpg,.jpeg,.png,.webp,.pdf,.xls,.xlsx,.doc,.docx,.csv,.btw"><div id="analysisResult" class="footer-note">等待檔案</div></div><div class="note warn-note">這裡目前是「安全的前置分類」，尚未假裝能從圖片或 BTW 自動猜出可靠條碼內容。下一階段才會加入文件解析與欄位拆解。</div></div>
+      <div class="panel"><h3>快速分析</h3><div class="drop"><strong>把客戶檔案丟進來</strong><p>先做本機檔案分類、圖片尺寸與 CSV 欄位檢查。</p><input id="analysisFiles" type="file" multiple accept=".jpg,.jpeg,.png,.webp,.pdf,.xls,.xlsx,.doc,.docx,.csv,.btw"><div id="analysisResult" class="footer-note">等待檔案</div></div><div class="note warn-note"><b>目前不會亂猜：</b>PDF / Word / Excel / BTW 內容解析與圖片中的文字、條碼判讀，尚未啟用 AI 或後端服務，因此這版只呈現能在瀏覽器可靠取得的資訊。</div></div>
     </section>
 
     <section id="barcode" class="view">
-      <div class="panel"><h3>⭐ 常用條碼</h3><div class="barcodes">
-        <div class="barcode"><strong>Code 39</strong><small>工業料號、外箱標籤常用</small></div><div class="barcode"><strong>Code 128</strong><small>高密度英數字資料</small></div><div class="barcode"><strong>QR Code</strong><small>網址與較長文字</small></div><div class="barcode"><strong>Data Matrix</strong><small>電子零件、小尺寸標籤</small></div><div class="barcode"><strong>GS1-128</strong><small>物流、批號、效期與追溯</small></div><div class="barcode"><strong>GS1 DataMatrix</strong><small>GS1 AI 與產品追蹤</small></div>
-      </div><div class="note"><b>製作原則：</b>「實際編碼內容」與「條碼下方顯示文字」永遠分開記錄；正式條碼不得用生成式圖片重畫，BarTender 必須使用真正條碼物件並做實機掃描確認。</div></div>
+      <div class="panel">
+        <div class="section-title"><div><h3>條碼規則工具</h3><p class="muted compact">先確認「實際編碼」與「顯示文字」，避免 BarTender 建版時混在一起。</p></div></div>
+        <div class="grid-3">
+          <div class="field"><label for="scratchType">條碼種類</label><select id="scratchType"><option>Code 39</option><option>Code 128</option><option>QR Code</option><option>Data Matrix</option><option>GS1-128</option><option>GS1 DataMatrix</option><option>EAN-13</option><option>EAN-8</option><option>UPC-A</option><option>ITF-14</option><option>Interleaved 2 of 5</option><option>PDF417</option><option>Aztec</option><option>其他</option></select></div>
+          <div class="field"><label for="scratchPrefix">前綴</label><input id="scratchPrefix" placeholder="例如：P"></div>
+          <div class="field"><label for="scratchSuffix">後綴</label><input id="scratchSuffix" placeholder="可留白"></div>
+        </div>
+        <div class="grid form-gap"><div class="field"><label for="scratchEncoded">資料內容</label><input id="scratchEncoded" placeholder="例如：ABC123"></div><div class="field"><label for="scratchHuman">條碼下方顯示文字</label><input id="scratchHuman" placeholder="可與掃描內容不同"></div></div>
+        <div class="code-preview form-gap"><span>預期實際編碼</span><strong id="scratchResult">—</strong><small>這裡只是資料規則預覽，不代表已產生或驗證可掃描條碼。</small></div>
+        <div class="note"><b>常用優先：</b>Code 39、Code 128、QR Code、Data Matrix、GS1-128、GS1 DataMatrix。GS1 類別仍需確認 AI、FNC1 與客戶規範後再進 BarTender。</div>
+      </div>
     </section>
 
     <section id="bartender" class="view">
-      <div class="panel"><div class="status"><span class="dot"></span>公司環境已確認</div><h3 style="margin-top:14px">BarTender Designer for Argox 2022 R2</h3><p>授權：UltraLite。外面先完成需求、欄位與條碼規則，回公司再用 BarTender 正式製作、列印與掃描驗證。</p><div class="note"><b>目標流程：</b> 客戶原稿 → 案件分析 → 補齊缺件 → BarTender 製作包 → 公司 BarTender 建版 → 測試 → 完成。未來若授權升級，再開啟正式 Connector / API 串接。</div></div>
+      <div class="panel"><div class="status"><span class="dot"></span>公司環境已確認</div><h3 class="bt-title">BarTender Designer for Argox 2022 R2</h3><p>版本 11.3 / 64-bit，UltraLite。外面先完成需求、欄位與條碼規則，回公司再用 BarTender 正式製作、列印與掃描驗證。</p></div>
+      <div class="panel"><div class="section-title"><h3>待 BarTender 製作</h3><span class="pill">製作包</span></div><div id="bartenderQueue" class="case-list"></div></div>
+      <div class="panel"><h3>製作原則</h3><div class="workflow"><span>客戶原稿</span><b>→</b><span>案件整理</span><b>→</b><span>條碼規則</span><b>→</b><span>製作包</span><b>→</b><span>BarTender</span><b>→</b><span>實機掃描</span></div><div class="note"><b>UltraLite 現況：</b>不假裝已經做 API 自動建版。這一階段先把回公司前能完成的工作整理到最完整。</div></div>
     </section>
   </main>
 </div>
 
 <nav class="mobile-nav"><button class="active" data-view="dashboard">首頁</button><button data-view="cases">案件</button><button data-view="analysis">分析</button><button data-view="barcode">條碼</button><button data-view="bartender">BT</button></nav>
-<div id="toast" class="toast"></div>
+
+<div id="modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="modal-card"><div class="section-title"><h3 id="modalTitle">內容</h3><button class="icon-btn" id="modalClose" aria-label="關閉">✕</button></div><div id="modalBody"></div><div id="modalActions" class="case-actions"></div></div></div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
 <script src="assets/app.js"></script>
 </body>
 </html>
