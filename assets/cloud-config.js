@@ -9,12 +9,17 @@ window.LABEL_WORKBENCH_CLOUD = {
   enabled: true
 };
 
-// Load the private attachment add-on separately so the core app can stay local-first.
-(function loadAttachmentAddon(){
-  if (document.querySelector('script[data-label-attachments]')) return;
-  const script = document.createElement('script');
-  script.src = 'assets/cloud-attachments.js?v=0.7.0';
-  script.dataset.labelAttachments = 'true';
-  script.async = false;
-  document.head.appendChild(script);
+(function loadWorkbenchAddons(){
+  const addons = [
+    ['assets/cloud-attachments.js?v=0.7.0','labelAttachments'],
+    ['assets/file-parsers.js?v=0.8.0','labelParsers']
+  ];
+  addons.forEach(([src,key]) => {
+    if (document.querySelector(`script[data-${key}]`)) return;
+    const script = document.createElement('script');
+    script.src = src;
+    script.setAttribute(`data-${key}`, 'true');
+    script.async = false;
+    document.head.appendChild(script);
+  });
 })();
