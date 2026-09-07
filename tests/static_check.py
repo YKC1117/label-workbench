@@ -74,14 +74,21 @@ for module in ['barcode-reader-core.js','barcode-reader-ui.js']:
         raise SystemExit(f'Barcode loader is missing {module}')
 if "const ZX='3.1.3'" not in barcode_core or 'zxing-wasm@${ZX}' not in barcode_core:
     raise SystemExit('Barcode core must pin zxing-wasm 3.1.3')
+if '@undecaf/zbar-wasm@0.11.0' not in barcode_core:
+    raise SystemExit('Barcode core must pin ZBar WASM 0.11.0')
 if 'BarcodeDetector' not in barcode_core or 'ZXingWASM' not in barcode_core or 'readBarcodes' not in barcode_core:
     raise SystemExit('Barcode core must retain native detector plus ZXing-C++ WASM decoder')
-for marker in ['SELF_TEXT', 'tryRotate:true', 'minLineCount:1', 'threshold(', 'grid(base,4', 'grid(base,5', 'scanCanvas']:
+for marker in ['scanImageData', 'decodeZBar', 'tryRotate:true', 'minLineCount:1', 'threshold(', 'deepScan', 'options.deep', 'scanCanvas']:
     if marker not in barcode_core:
-        raise SystemExit(f'Barcode core is missing robustness marker: {marker}')
-for marker in ['barcodeEngineStatus', 'barcodePreview', '精準框選讀碼', 'selfTest()', 'scanCrop']:
+        raise SystemExit(f'Barcode core is missing fast/fallback marker: {marker}')
+for marker in ['加強讀取', 'retryDeep', '快速掃描中']:
     if marker not in barcode_ui:
-        raise SystemExit(f'Barcode UI is missing diagnostic/manual-crop marker: {marker}')
+        raise SystemExit(f'Barcode UI is missing simple on-demand scan marker: {marker}')
+for legacy_marker in ['精準框選讀碼', 'barcodePreview', 'barcodeEngineStatus']:
+    if legacy_marker in barcode_ui:
+        raise SystemExit(f'Barcode UI still contains legacy heavy workflow marker: {legacy_marker}')
+if '20260907-v110' not in barcode_loader:
+    raise SystemExit('Barcode loader cache key was not bumped for v1.1')
 
 print(f'PASS: {len(ids)} HTML ids checked')
 print(f'PASS: {len(refs)} JavaScript DOM references checked')
@@ -89,4 +96,4 @@ print(f'PASS: {len(handlers)} inline handler names checked')
 print('PASS: cloud files and script order checked')
 print('PASS: enabled Supabase browser config is publishable-key only')
 print('PASS: private attachments and document parser dependency pins checked')
-print('PASS: modular barcode v1 self-test, deep scan, native fallback and manual crop checked')
+print('PASS: barcode v1.1 fast ZXing path, ZBar fallback and on-demand deep scan checked')
