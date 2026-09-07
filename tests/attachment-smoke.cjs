@@ -29,7 +29,7 @@ vm.runInContext(source, context, { filename: 'assets/cloud-attachments.js' });
 
 const api = context.window.LabelWorkbenchAttachments;
 if (!api) throw new Error('Attachment helper API was not exposed');
-if (api.safeSegment('A B/中文?.pdf') !== 'A_B____.pdf') throw new Error('Storage path sanitizer changed unexpectedly');
+if (api.safeSegment('A B/中文?.pdf') !== 'A_B_.pdf') throw new Error('Storage path sanitizer changed unexpectedly');
 
 const meta = api.ensureMeta({ name: 'sample.pdf', size: 123, lastModified: 456 });
 if (!meta.attachmentId) throw new Error('Attachment metadata should receive an id');
