@@ -11,10 +11,11 @@ Label Workbench **不取代 BarTender**。
 1. 客戶提供圖片 / PDF / Excel / Word / CSV / BarTender `.btw`
 2. 在手機、平板、家裡電腦或公司電腦先整理需求
 3. 確認標籤尺寸、印表機、DPI、固定 / 變動欄位、條碼種類與編碼規則
-4. 整理缺少資料與客戶待確認事項
-5. 產生 BarTender 製作包
-6. 回公司使用 BarTender 正式製作
-7. 實機列印、掃描驗證、完成案件
+4. 圖片有一維碼 / 二維碼時，可直接在工作台讀出實際內容
+5. 整理缺少資料與客戶待確認事項
+6. 產生 BarTender 製作包
+7. 回公司使用 BarTender 正式製作
+8. 實機列印、掃描驗證、完成案件
 
 ## 已確認的 BarTender 環境
 
@@ -34,7 +35,23 @@ Label Workbench **不取代 BarTender**。
 - CSV
 - BarTender：BTW
 
-其中 XLS / XLSX、CSV、DOCX 與有文字層的 PDF 可在瀏覽器本機做前置解析；舊版 DOC、掃描型 PDF、圖片中的文字 / 條碼，以及 BTW 物件內容不做不可靠的猜測。
+其中 XLS / XLSX、CSV、DOCX 與有文字層的 PDF 可在瀏覽器本機做前置解析；舊版 DOC、掃描型 PDF 的 OCR 與 BTW 物件內容不做不可靠的猜測。
+
+## 圖片讀碼
+
+圖片讀碼在瀏覽器本機執行，不需要外接掃描器，也不會因為讀碼把客戶圖片送到 AI 服務。
+
+讀碼策略：
+
+- 優先使用瀏覽器原生 `BarcodeDetector`（有支援時）
+- 以 ZXing Browser 作跨瀏覽器 fallback
+- 對整張、重疊區域與旋轉方向嘗試解碼，提升客戶原稿中多條碼 / 小條碼的成功率
+- 支援常見 Code 39、Code 128、EAN、UPC、ITF、QR Code、Data Matrix、PDF417、Aztec 等格式（實際結果依瀏覽器與圖片品質）
+- 一張圖片可整理多組不同結果並去除重複
+- ASCII GS (0x1D) 會顯示為 `[GS]`，方便檢查 GS1 類資料
+- 單筆「複製內容」保留原始字串，不把 `[GS]` 顯示文字誤當成真正資料
+- 手機可直接拍照後讀碼
+- 「快速分析」丟圖片時也會自動做條碼內容辨識
 
 ## 條碼原則
 
@@ -48,7 +65,7 @@ Label Workbench **不取代 BarTender**。
 
 跨裝置案件使用 Supabase Auth + Row Level Security；客戶附件使用 private Storage bucket。瀏覽器只放 Supabase publishable key，不放 service-role / secret key。
 
-## v0.8 已完成
+## v0.9 已完成
 
 - 新增 / 編輯標籤案件
 - 案件搜尋、狀態篩選與完整度評分
@@ -63,7 +80,9 @@ Label Workbench **不取代 BarTender**。
 - 私人附件 Storage：單檔 20 MB，登入後可上傳 / 下載 / 移除
 - 舊案件附件 metadata 可用「補上傳」重新選原檔
 - 快速分析：圖片尺寸、Excel 工作表 / 欄位 / 資料預覽、CSV 欄位 / 資料預覽、DOCX 文字擷取、PDF 文字層擷取
-- 掃描型 PDF / 圖片 OCR / BTW 物件不亂猜
+- 圖片一維碼 / 二維碼內容辨識、格式顯示、GS 控制字元顯示、複製內容
+- 快速分析自動掃描圖片條碼
+- 手機直接拍照讀碼
 - 手機 / 平板響應式介面
 
 ## Supabase 架構
@@ -85,14 +104,14 @@ Label Workbench **不取代 BarTender**。
 - 本機優先同步合併邏輯
 - 私人附件 metadata / 路徑規則
 - CSV 引號欄位解析、檔案分類、標籤常見欄位偵測
+- 圖片讀碼格式正規化、GS/CR/LF 控制字元顯示、重複結果移除
 - 案件完整度、客戶訊息、BarTender 製作包等核心邏輯
 
 ## 尚未宣稱完成
 
 - Email Magic Link 在所有手機 / 電腦瀏覽器的實際端到端登入驗證
 - 圖片 / 掃描型 PDF 的 OCR 與 AI 視覺拆版
-- 圖片條碼種類與內容可靠辨識
 - BTW 物件內容解析
 - BarTender API 自動建版（目前 UltraLite 不適合）
 
-下一個主要階段會是「圖片 / 掃描型 PDF 的可靠分析」，但會維持免費優先，任何需要付費 API 的方案都不會自行啟用。
+下一個主要階段會是「圖片 / 掃描型 PDF 的 OCR 與欄位拆版」，仍維持免費優先；任何需要付費 API 的方案都不會自行啟用。
