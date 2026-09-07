@@ -25,6 +25,7 @@
   function getCases(){return typeof window.loadCases==='function'?window.loadCases():[]}
   function changedCases(before,after){const old=new Map((before||[]).map(c=>[c.id,JSON.stringify(c)]));return (after||[]).filter(c=>!old.has(c.id)||old.get(c.id)!==JSON.stringify(c))}
   function newestCase(items){return [...items].sort((a,b)=>Date.parse(b.updatedAt||b.createdAt||0)-Date.parse(a.updatedAt||a.createdAt||0))[0]}
+  function clearPending(){state.pendingFiles=[];const input=el('caseFiles');if(input)input.value=''}
 
   function updateUiCopy(){
     const small=document.querySelector('.brand small');
@@ -50,8 +51,8 @@
       const seen=new Set();
       return merged.filter(m=>{const key=m.attachmentId||fingerprint(m);if(seen.has(key))return false;seen.add(key);return true});
     };
-    if(typeof baseEditCase==='function')window.editCase=function(id){const r=baseEditCase(id);const e=el('caseEditor');if(e)e.dataset.cloudCaseId=id||'';return r};
-    ['topNewCase','dashNewCase','cancelEditBtn'].forEach(id=>el(id)?.addEventListener('click',()=>{const e=el('caseEditor');if(e)e.dataset.cloudCaseId=''}));
+    if(typeof baseEditCase==='function')window.editCase=function(id){clearPending();const r=baseEditCase(id);const e=el('caseEditor');if(e)e.dataset.cloudCaseId=id||'';return r};
+    ['topNewCase','dashNewCase','cancelEditBtn'].forEach(id=>el(id)?.addEventListener('click',()=>{clearPending();const e=el('caseEditor');if(e)e.dataset.cloudCaseId=''}));
     state.fileMetaPatched=true;
   }
 
@@ -175,5 +176,5 @@
   function init(){updateUiCopy();waitForCloud()}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 
-  window.LabelWorkbenchAttachments={safeSegment,ensureMeta,fingerprint,uploadFiles,downloadAttachment,chooseUpload,removeAttachment,showAttachments,state};
+  window.LabelWorkbenchAttachments={safeSegment,ensureMeta,fingerprint,uploadFiles,downloadAttachment,chooseUpload,removeAttachment,showAttachments,clearPending,state};
 })();
