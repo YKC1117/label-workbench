@@ -7,6 +7,7 @@ cloud_js = Path('assets/cloud.js').read_text(encoding='utf-8')
 cloud_cfg = Path('assets/cloud-config.js').read_text(encoding='utf-8')
 attachments_js = Path('assets/cloud-attachments.js').read_text(encoding='utf-8')
 parsers_js = Path('assets/file-parsers.js').read_text(encoding='utf-8')
+barcode_js = Path('assets/barcode-reader.js').read_text(encoding='utf-8')
 
 ids = set(re.findall(r'id="([^"]+)"', html))
 refs = set(re.findall(r"getElementById\('([^']+)'\)", js))
@@ -23,7 +24,7 @@ if missing_handlers:
 required_files = [
     'index.html', 'assets/app.css', 'assets/app.js',
     'assets/cloud.css', 'assets/cloud.js', 'assets/cloud-config.js',
-    'assets/cloud-attachments.js', 'assets/file-parsers.js',
+    'assets/cloud-attachments.js', 'assets/file-parsers.js', 'assets/barcode-reader.js',
     'docs/supabase-schema.sql', '.gitignore', 'README.md'
 ]
 missing_files = [p for p in required_files if not Path(p).exists()]
@@ -58,14 +59,22 @@ else:
 
 if 'Local-first' not in cloud_js and '本機優先' not in cloud_js:
     raise SystemExit('Cloud layer must explicitly preserve local-first behavior')
+for module in ['assets/cloud-attachments.js','assets/file-parsers.js','assets/barcode-reader.js']:
+    if module not in cloud_js:
+        raise SystemExit(f'Feature module is not wired by cloud loader: {module}')
 if "label-attachments" not in attachments_js or '20*1024*1024' not in attachments_js.replace(' ', ''):
     raise SystemExit('Private attachment add-on must target the expected bucket and 20 MB limit')
 if 'xlsx@0.18.5' not in parsers_js or 'mammoth@1.12.2' not in parsers_js or 'pdfjs-dist@6.3.289' not in parsers_js:
     raise SystemExit('Document parser CDN dependencies must remain version-pinned')
+if '@zxing/browser@0.1.5' not in barcode_js:
+    raise SystemExit('Barcode reader dependency must remain version-pinned')
+if 'BarcodeDetector' not in barcode_js or 'BrowserMultiFormatReader' not in barcode_js:
+    raise SystemExit('Barcode reader must retain native detector plus ZXing fallback')
 
 print(f'PASS: {len(ids)} HTML ids checked')
 print(f'PASS: {len(refs)} JavaScript DOM references checked')
 print(f'PASS: {len(handlers)} inline handler names checked')
 print('PASS: cloud files and script order checked')
 print('PASS: enabled Supabase browser config is publishable-key only')
-print('PASS: private attachments and parser dependency pins checked')
+print('PASS: private attachments and document parser dependency pins checked')
+print('PASS: image barcode reader wiring and ZXing pin checked')
