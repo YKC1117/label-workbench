@@ -34,6 +34,8 @@ Label Workbench **不取代 BarTender**。
 - CSV
 - BarTender：BTW
 
+其中 XLS / XLSX、CSV、DOCX 與有文字層的 PDF 可在瀏覽器本機做前置解析；舊版 DOC、掃描型 PDF、圖片中的文字 / 條碼，以及 BTW 物件內容不做不可靠的猜測。
+
 ## 條碼原則
 
 常用條碼優先：Code 39、Code 128、QR Code、Data Matrix、GS1-128、GS1 DataMatrix。
@@ -44,33 +46,53 @@ Label Workbench **不取代 BarTender**。
 
 程式碼可以放 GitHub，但客戶原稿、內部料號、訂單、Excel、PDF、BTW 等資料**不提交到 Repository**。
 
-## v0.5 已完成
+跨裝置案件使用 Supabase Auth + Row Level Security；客戶附件使用 private Storage bucket。瀏覽器只放 Supabase publishable key，不放 service-role / secret key。
+
+## v0.8 已完成
 
 - 新增 / 編輯標籤案件
 - 案件搜尋、狀態篩選與完整度評分
 - 工作台「需要注意」清單
 - 標籤尺寸、品牌、型號、DPI、列印方式、紙材、資料來源、需求與備註
 - 條碼規則編輯器：種類、資料來源、實際資料、顯示文字、前綴 / 後綴、GS1 AI 備註
-- 常用與延伸條碼種類
-- 自動整理「還缺什麼資料」
-- 自動產生可複製的客戶確認訊息
-- BarTender 待製作佇列
-- 一鍵產生可列印 / 存 PDF 的 BarTender 製作包 HTML
+- 自動整理缺件與產生可複製的客戶確認訊息
+- BarTender 待製作佇列與 BarTender 製作包 HTML
 - `.labelcase` 單案匯出 / 匯入
-- 快速分析：檔案分類、圖片像素尺寸、CSV 第一列欄位
+- Supabase Email 登入與案件同步程式
+- 本機優先：雲端失敗不阻斷核心案件操作
+- 私人附件 Storage：單檔 20 MB，登入後可上傳 / 下載 / 移除
+- 舊案件附件 metadata 可用「補上傳」重新選原檔
+- 快速分析：圖片尺寸、Excel 工作表 / 欄位 / 資料預覽、CSV 欄位 / 資料預覽、DOCX 文字擷取、PDF 文字層擷取
+- 掃描型 PDF / 圖片 OCR / BTW 物件不亂猜
 - 手機 / 平板響應式介面
-- 案件暫存在目前瀏覽器的 `localStorage`
+
+## Supabase 架構
+
+- `public.label_cases`：每位登入使用者自己的案件 JSON
+- RLS：SELECT / INSERT / UPDATE / DELETE 均限制 `auth.uid() = user_id`
+- private bucket：`label-attachments`
+- Storage 路徑第一層固定使用登入者 UID，Storage RLS 僅允許本人操作
+- 單檔附件限制：20 MB
 
 ## QA
 
-v0.5 上線前已做：
+每次 push 到 `main` 會自動檢查：
 
-- JavaScript `node --check` 語法檢查
-- HTML ID 與 JavaScript `getElementById` 對應檢查
-- 純邏輯測試：檔案分類、案件完整度、客戶訊息、CSV 引號欄位解析、BarTender 製作包內容
+- JavaScript 語法
+- HTML ID 與 JavaScript DOM 對應
+- Supabase 前端設定不得包含 privileged secret
+- Supabase URL / publishable key 格式
+- 本機優先同步合併邏輯
+- 私人附件 metadata / 路徑規則
+- CSV 引號欄位解析、檔案分類、標籤常見欄位偵測
+- 案件完整度、客戶訊息、BarTender 製作包等核心邏輯
 
-目前仍未宣稱完成的項目：PDF / Word / Excel 內容深度解析、圖片中的文字與條碼 AI 分析、客戶附件跨裝置保存、案件跨裝置同步、BarTender API 自動建版。
+## 尚未宣稱完成
 
-## 下一個架構決策點
+- Email Magic Link 在所有手機 / 電腦瀏覽器的實際端到端登入驗證
+- 圖片 / 掃描型 PDF 的 OCR 與 AI 視覺拆版
+- 圖片條碼種類與內容可靠辨識
+- BTW 物件內容解析
+- BarTender API 自動建版（目前 UltraLite 不適合）
 
-要進入「公司電腦、家裡電腦、手機、平板都能自動看到同一案件」以及真正的 AI 原稿分析，下一階段需要決定安全的雲端後端 / 同步方式。GitHub Pages 本身是靜態網站，不適合直接在前端放 API Key 或客戶機密檔案。
+下一個主要階段會是「圖片 / 掃描型 PDF 的可靠分析」，但會維持免費優先，任何需要付費 API 的方案都不會自行啟用。
