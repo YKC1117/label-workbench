@@ -27,6 +27,15 @@
   }
   function describeError(err){ return err?.message || String(err || '未知錯誤'); }
 
+  function injectCss(){
+    if(document.querySelector('link[data-label-cloud]')) return;
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'assets/cloud.css';
+    link.dataset.labelCloud = 'true';
+    document.head.appendChild(link);
+  }
+
   function injectPanel(){
     const host = el('dashboard');
     if(!host || el('cloudPanel')) return;
@@ -215,7 +224,7 @@
     el('cloudEmail')?.addEventListener('keydown', e => { if(e.key === 'Enter') sendMagicLink(); });
   }
 
-  function init(){ injectPanel(); bind(); renderAuth(); bootClient(); }
+  function init(){ injectCss(); injectPanel(); bind(); renderAuth(); bootClient(); }
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
   else init();
 
