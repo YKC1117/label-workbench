@@ -22,10 +22,16 @@ jobs:
           node-version: '22'
 
       - name: JavaScript syntax check
-        run: node --check assets/app.js
+        run: |
+          node --check assets/app.js
+          node --check assets/cloud.js
+          node --check assets/cloud-config.js
 
       - name: Static HTML / JS integrity check
         run: python3 tests/static_check.py
 
-      - name: Logic smoke tests
+      - name: Core logic smoke tests
         run: node tests/logic-smoke.cjs
+
+      - name: Cloud merge smoke tests
+        run: node tests/cloud-smoke.cjs
