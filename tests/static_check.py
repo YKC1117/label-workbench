@@ -36,7 +36,6 @@ missing_scripts = [s for s in required_scripts if s not in html]
 if missing_scripts:
     raise SystemExit(f'Missing required script references: {missing_scripts}')
 
-# Browser config may contain a Supabase publishable key. It must never contain privileged secrets.
 for forbidden in ['SUPABASE_SERVICE_ROLE', 'sb_secret_']:
     if forbidden.lower() in cloud_cfg.lower():
         raise SystemExit(f'Privileged secret marker found in browser config: {forbidden}')
@@ -66,10 +65,12 @@ if "label-attachments" not in attachments_js or '20*1024*1024' not in attachment
     raise SystemExit('Private attachment add-on must target the expected bucket and 20 MB limit')
 if 'xlsx@0.18.5' not in parsers_js or 'mammoth@1.12.2' not in parsers_js or 'pdfjs-dist@6.3.289' not in parsers_js:
     raise SystemExit('Document parser CDN dependencies must remain version-pinned')
-if '@zxing/browser@0.1.5' not in barcode_js:
+if 'zxing-wasm@3.1.3' not in barcode_js:
     raise SystemExit('Barcode reader dependency must remain version-pinned')
-if 'BarcodeDetector' not in barcode_js or 'BrowserMultiFormatReader' not in barcode_js:
-    raise SystemExit('Barcode reader must retain native detector plus ZXing fallback')
+if 'BarcodeDetector' not in barcode_js or 'ZXingWASM' not in barcode_js or 'readBarcodes' not in barcode_js:
+    raise SystemExit('Barcode reader must retain native detector plus ZXing-C++ WASM decoder')
+if 'threshold(' not in barcode_js or 'rotate(' not in barcode_js or 'maxNumberOfSymbols:32' not in barcode_js:
+    raise SystemExit('Barcode reader must retain multi-pass preprocessing and multi-symbol decoding')
 
 print(f'PASS: {len(ids)} HTML ids checked')
 print(f'PASS: {len(refs)} JavaScript DOM references checked')
@@ -77,4 +78,4 @@ print(f'PASS: {len(handlers)} inline handler names checked')
 print('PASS: cloud files and script order checked')
 print('PASS: enabled Supabase browser config is publishable-key only')
 print('PASS: private attachments and document parser dependency pins checked')
-print('PASS: image barcode reader wiring and ZXing pin checked')
+print('PASS: robust image barcode reader wiring, multi-pass strategy and ZXing-WASM pin checked')
