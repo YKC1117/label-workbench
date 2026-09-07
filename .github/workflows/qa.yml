@@ -28,6 +28,7 @@ jobs:
           node --check assets/cloud-config.js
           node --check assets/cloud-attachments.js
           node --check assets/file-parsers.js
+          node --check assets/barcode-reader.js
 
       - name: Static HTML / JS integrity check
         run: python3 tests/static_check.py
@@ -43,3 +44,6 @@ jobs:
 
       - name: Document parser helper smoke tests
         run: node tests/parser-smoke.cjs
+
+      - name: Image barcode reader helper smoke tests
+        run: node tests/barcode-reader-smoke.cjs
