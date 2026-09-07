@@ -7,7 +7,9 @@ cloud_js = Path('assets/cloud.js').read_text(encoding='utf-8')
 cloud_cfg = Path('assets/cloud-config.js').read_text(encoding='utf-8')
 attachments_js = Path('assets/cloud-attachments.js').read_text(encoding='utf-8')
 parsers_js = Path('assets/file-parsers.js').read_text(encoding='utf-8')
-barcode_js = Path('assets/barcode-reader.js').read_text(encoding='utf-8')
+barcode_loader = Path('assets/barcode-reader.js').read_text(encoding='utf-8')
+barcode_core = Path('assets/barcode-reader-core.js').read_text(encoding='utf-8')
+barcode_ui = Path('assets/barcode-reader-ui.js').read_text(encoding='utf-8')
 
 ids = set(re.findall(r'id="([^"]+)"', html))
 refs = set(re.findall(r"getElementById\('([^']+)'\)", js))
@@ -24,7 +26,8 @@ if missing_handlers:
 required_files = [
     'index.html', 'assets/app.css', 'assets/app.js',
     'assets/cloud.css', 'assets/cloud.js', 'assets/cloud-config.js',
-    'assets/cloud-attachments.js', 'assets/file-parsers.js', 'assets/barcode-reader.js',
+    'assets/cloud-attachments.js', 'assets/file-parsers.js',
+    'assets/barcode-reader.js', 'assets/barcode-reader-core.js', 'assets/barcode-reader-ui.js',
     'docs/supabase-schema.sql', '.gitignore', 'README.md'
 ]
 missing_files = [p for p in required_files if not Path(p).exists()]
@@ -65,12 +68,20 @@ if "label-attachments" not in attachments_js or '20*1024*1024' not in attachment
     raise SystemExit('Private attachment add-on must target the expected bucket and 20 MB limit')
 if 'xlsx@0.18.5' not in parsers_js or 'mammoth@1.12.2' not in parsers_js or 'pdfjs-dist@6.3.289' not in parsers_js:
     raise SystemExit('Document parser CDN dependencies must remain version-pinned')
-if 'zxing-wasm@3.1.3' not in barcode_js:
-    raise SystemExit('Barcode reader dependency must remain version-pinned')
-if 'BarcodeDetector' not in barcode_js or 'ZXingWASM' not in barcode_js or 'readBarcodes' not in barcode_js:
-    raise SystemExit('Barcode reader must retain native detector plus ZXing-C++ WASM decoder')
-if 'threshold(' not in barcode_js or 'rotate(' not in barcode_js or 'maxNumberOfSymbols:32' not in barcode_js:
-    raise SystemExit('Barcode reader must retain multi-pass preprocessing and multi-symbol decoding')
+
+for module in ['barcode-reader-core.js','barcode-reader-ui.js']:
+    if module not in barcode_loader:
+        raise SystemExit(f'Barcode loader is missing {module}')
+if "const ZX='3.1.3'" not in barcode_core or 'zxing-wasm@${ZX}' not in barcode_core:
+    raise SystemExit('Barcode core must pin zxing-wasm 3.1.3')
+if 'BarcodeDetector' not in barcode_core or 'ZXingWASM' not in barcode_core or 'readBarcodes' not in barcode_core:
+    raise SystemExit('Barcode core must retain native detector plus ZXing-C++ WASM decoder')
+for marker in ['SELF_TEXT', 'tryRotate:true', 'minLineCount:1', 'threshold(', 'grid(base,4', 'grid(base,5', 'scanCanvas']:
+    if marker not in barcode_core:
+        raise SystemExit(f'Barcode core is missing robustness marker: {marker}')
+for marker in ['barcodeEngineStatus', 'barcodePreview', '精準框選讀碼', 'selfTest()', 'scanCrop']:
+    if marker not in barcode_ui:
+        raise SystemExit(f'Barcode UI is missing diagnostic/manual-crop marker: {marker}')
 
 print(f'PASS: {len(ids)} HTML ids checked')
 print(f'PASS: {len(refs)} JavaScript DOM references checked')
@@ -78,4 +89,4 @@ print(f'PASS: {len(handlers)} inline handler names checked')
 print('PASS: cloud files and script order checked')
 print('PASS: enabled Supabase browser config is publishable-key only')
 print('PASS: private attachments and document parser dependency pins checked')
-print('PASS: robust image barcode reader wiring, multi-pass strategy and ZXing-WASM pin checked')
+print('PASS: modular barcode v1 self-test, deep scan, native fallback and manual crop checked')
