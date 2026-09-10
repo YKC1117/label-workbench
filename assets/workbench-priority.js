@@ -14,7 +14,7 @@
   const headerCopy={
     barcode:['條碼工具','常用條碼優先，直接產生、讀取與驗證一維碼、二維碼。'],
     analysis:['快速分析','把客戶檔案整理成可回覆、可製作、可確認的內容。'],
-    bartender:['BT 快速製作','把前置資料先整理好，回公司只做 BarTender 最後建版、微調、列印與掃描。'],
+    bartender:['BT 快速製作','PDF／圖片可直接輸出成 BarTender UltraLite 可匯入的 Label 圖檔。'],
     dashboard:['工作台','查看需要注意的製作工作與暫存紀錄。'],
     cases:['案件紀錄','選用的工作紀錄區；需要跨裝置接續或特別追蹤時再使用。']
   };
@@ -97,12 +97,12 @@
     const btTitle=bt?.querySelector('.bt-title');
     if(btTitle)btTitle.textContent='BT 快速製作';
     const btIntro=btTitle?.nextElementSibling;
-    if(btIntro)btIntro.textContent='主流程改成：客戶原稿 → 快速分析 → 整理製作資料 → 套用 BarTender 母版 → 微調、列印與掃描。案件紀錄不是必要步驟。';
+    if(btIntro)btIntro.textContent='PDF／圖片快速分析後，可下載成 BarTender 可直接匯入的 PNG；開啟 BT 後直接拖入或使用「圖片 → 從檔案」。';
     const btPanels=bt?.querySelectorAll('.panel');
     const queueTitle=btPanels?.[1]?.querySelector('h3');if(queueTitle)queueTitle.textContent='可接續的 BT 製作紀錄';
     const flowTitle=btPanels?.[2]?.querySelector('h3');if(flowTitle)flowTitle.textContent='快速製作流程';
-    const flow=btPanels?.[2]?.querySelector('.workflow');if(flow)flow.innerHTML='<span>客戶原稿</span><b>→</b><span>快速分析</span><b>→</b><span>製作資料</span><b>→</b><span>BT 母版</span><b>→</b><span>微調測試</span>';
-    const btNote=btPanels?.[2]?.querySelector('.note');if(btNote)btNote.innerHTML='<b>目前方向：</b>案件只保留給需要追蹤的人使用；接下來 BT 快速製作會直接接快速分析結果，不要求先建立案件。';
+    const flow=btPanels?.[2]?.querySelector('.workflow');if(flow)flow.innerHTML='<span>客戶原稿</span><b>→</b><span>快速分析</span><b>→</b><span>下載 BT 匯入圖</span><b>→</b><span>拖進 BarTender</span><b>→</b><span>尺寸／測印</span>';
+    const btNote=btPanels?.[2]?.querySelector('.note');if(btNote)btNote.innerHTML='<b>UltraLite 建議：</b>PDF／圖片以「直接匯入 PNG」為主；CSV／欄位對照保留為進階製作資料。';
     syncHeaderCopy();
   }
 
