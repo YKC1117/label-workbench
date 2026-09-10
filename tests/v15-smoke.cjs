@@ -11,6 +11,8 @@ function context(){
     ClipboardItem:function(){},
     setTimeout:()=>0,
     clearTimeout:()=>{},
+    setInterval:()=>0,
+    clearInterval:()=>{},
     Promise,
     Uint8Array,
     Date,
@@ -86,6 +88,38 @@ function context(){
   if(!api.editableTarget({tagName:'TEXTAREA'}))throw new Error('Textarea fields must be protected from layout shortcuts');
   if(api.editableTarget({tagName:'DIV',closest:()=>null}))throw new Error('Plain layout div should accept layout shortcuts');
   console.log('PASS: barcode layout Ctrl/Cmd copy-paste, duplicate, delete, arrows and escape shortcuts');
+}
+
+{
+  const c=context();vm.createContext(c);
+  vm.runInContext(fs.readFileSync('assets/bt-quick.js','utf8'),c,{filename:'bt-quick.js'});
+  const api=c.window.LabelWorkbenchBtQuick;
+  if(!api)throw new Error('BT Quick API missing');
+  const sample={labels:[
+    {sourceName:'LABEL.pdf',fields:[
+      {code:'1P',name:'PART NO',value:'ABC123',repeat:2,spatial:true,conflict:false},
+      {code:'Q',name:'QTY',value:'4000',repeat:2,spatial:true,conflict:false}
+    ],barcodes:[{format:'Code 128',text:'ABC123'}],marks:['RoHS']},
+    {sourceName:'LABEL.pdf',fields:[
+      {code:'1P',name:'PART NO',value:'XYZ999',repeat:2,spatial:true,conflict:false},
+      {code:'Q',name:'QTY',value:'4000',repeat:2,spatial:true,conflict:false}
+    ],barcodes:[{format:'Data Matrix',text:'XYZ999'}],marks:['RoHS']}
+  ]};
+  const d=api.buildDraft(sample,['LABEL.pdf']);
+  if(d.labels.length!==2)throw new Error('BT draft label count mismatch');
+  if(!d.columns.some(x=>x.btName==='PART_NO')||!d.columns.some(x=>x.btName==='QTY'))throw new Error('BT field names were not normalized');
+  const part=d.usage.find(x=>x.btName==='PART_NO'),qty=d.usage.find(x=>x.btName==='QTY');
+  if(part?.usage!=='本批有變動')throw new Error('BT variable-field inference failed');
+  if(qty?.usage!=='本批固定')throw new Error('BT fixed-field inference failed');
+  if(!d.barcodes.some(x=>x.sourceField==='PART_NO'))throw new Error('Barcode-to-field mapping failed');
+  if(!/混合條碼母版/.test(d.recommendation))throw new Error(`Unexpected BT template recommendation: ${d.recommendation}`);
+  const csv=api.buildDataCsv(d);
+  if(!csv.includes('LABEL_NO,PART_NO,QTY')||!csv.includes('ABC123,4000')||!csv.includes('XYZ999,4000'))throw new Error('BT_Data.csv output failed');
+  const fmap=api.buildFieldMapCsv(d),bmap=api.buildBarcodeMapCsv(d),readme=api.buildReadme(d);
+  if(!fmap.includes('USAGE_IN_THIS_SAMPLE')||!fmap.includes('本批有變動'))throw new Error('BT field map output failed');
+  if(!bmap.includes('SOURCE_FIELD')||!bmap.includes('PART_NO'))throw new Error('BT barcode map output failed');
+  if(!readme.includes('最快製作方式')||!readme.includes('BT_Data.csv'))throw new Error('BT production readme failed');
+  console.log('PASS: Quick Analysis facts become BT CSV, field map, barcode map and production instructions');
 }
 
 {
