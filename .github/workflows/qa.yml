@@ -31,6 +31,8 @@ jobs:
           node --check assets/barcode-reader.js
           node --check assets/barcode-reader-core.js
           node --check assets/barcode-reader-ui.js
+          node --check assets/barcode-generator.js
+          node --check assets/label-interpreter.js
           node --check assets/workbench-priority.js
 
       - name: Static HTML / JS integrity check
@@ -50,3 +52,6 @@ jobs:
 
       - name: Image barcode reader helper smoke tests
         run: node tests/barcode-reader-smoke.cjs
+
+      - name: Barcode generator and production-analysis smoke tests
+        run: node tests/v15-smoke.cjs
