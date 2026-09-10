@@ -83,7 +83,7 @@
 
 /* Load optional workbench modules in one fixed order with one explicit cache key. */
 (function(){
-  const BUILD='20260910-v190';
+  const BUILD='20260910-v191';
   const queue=['assets/cloud-attachments.js','assets/file-parsers.js','assets/barcode-reader.js'];
   function next(){const src=queue.shift();if(!src)return;if(document.querySelector(`script[data-lw-module="${src}"]`)){next();return}const s=document.createElement('script');s.src=`${src}?v=${BUILD}`;s.dataset.lwModule=src;s.async=false;s.onload=next;s.onerror=()=>{console.warn('[Label Workbench] module load failed:',src);next()};document.head.appendChild(s)}
   next();
