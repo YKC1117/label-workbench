@@ -10,6 +10,7 @@ parsers_js = Path('assets/file-parsers.js').read_text(encoding='utf-8')
 barcode_loader = Path('assets/barcode-reader.js').read_text(encoding='utf-8')
 barcode_core = Path('assets/barcode-reader-core.js').read_text(encoding='utf-8')
 barcode_ui = Path('assets/barcode-reader-ui.js').read_text(encoding='utf-8')
+interpreter_js = Path('assets/label-interpreter.js').read_text(encoding='utf-8')
 priority_js = Path('assets/workbench-priority.js').read_text(encoding='utf-8')
 
 ids = set(re.findall(r'id="([^"]+)"', html))
@@ -29,7 +30,7 @@ required_files = [
     'assets/cloud.css', 'assets/cloud.js', 'assets/cloud-config.js',
     'assets/cloud-attachments.js', 'assets/file-parsers.js',
     'assets/barcode-reader.js', 'assets/barcode-reader-core.js', 'assets/barcode-reader-ui.js',
-    'assets/workbench-priority.js',
+    'assets/label-interpreter.js', 'assets/workbench-priority.js',
     'docs/supabase-schema.sql', '.gitignore', 'README.md'
 ]
 missing_files = [p for p in required_files if not Path(p).exists()]
@@ -66,6 +67,8 @@ if 'Local-first' not in cloud_js and '本機優先' not in cloud_js:
 for module in ['assets/cloud-attachments.js','assets/file-parsers.js','assets/barcode-reader.js']:
     if module not in cloud_js:
         raise SystemExit(f'Feature module is not wired by cloud loader: {module}')
+if '20260910-v140' not in cloud_js:
+    raise SystemExit('Cloud optional-module cache key must be v1.4')
 if "label-attachments" not in attachments_js or '20*1024*1024' not in attachments_js.replace(' ', ''):
     raise SystemExit('Private attachment add-on must target the expected bucket and 20 MB limit')
 if 'xlsx@0.18.5' not in parsers_js or 'mammoth@1.12.2' not in parsers_js or 'pdfjs-dist@6.3.289' not in parsers_js:
@@ -74,7 +77,7 @@ for marker in ['tesseract.js@7.0.0', 'createOcrWorker', 'renderPdfPage', "['eng'
     if marker not in parsers_js:
         raise SystemExit(f'Scanned PDF OCR flow is missing marker: {marker}')
 
-for module in ['barcode-reader-core.js','barcode-reader-ui.js','workbench-priority.js']:
+for module in ['barcode-reader-core.js','barcode-reader-ui.js','label-interpreter.js','workbench-priority.js']:
     if module not in barcode_loader:
         raise SystemExit(f'Barcode/workbench loader is missing {module}')
 if "const ZX='3.1.3'" not in barcode_core or 'zxing-wasm@${ZX}' not in barcode_core:
@@ -92,17 +95,22 @@ for marker in ['加強讀取', 'retryDeep', '快速掃描中']:
 for legacy_marker in ['精準框選讀碼', 'barcodePreview', 'barcodeEngineStatus']:
     if legacy_marker in barcode_ui:
         raise SystemExit(f'Barcode UI still contains legacy heavy workflow marker: {legacy_marker}')
-if '20260910-v130' not in barcode_loader:
-    raise SystemExit('Barcode/workbench loader cache key was not bumped for v1.3')
-for marker in ["['barcode','analysis','dashboard','cases','bartender']", 'runQuickAnalysis', 'stopImmediatePropagation', 'LabelWorkbenchParsers', 'LabelWorkbenchBarcodeCore', 'v1.3']:
+
+for marker in ['20260910-v140','chooseOrientation','detectLabelBands','parseFields','scanRegionDeep','fieldVerified','製作模式','條碼實際解碼 ＞ OCR']:
+    if marker not in interpreter_js:
+        raise SystemExit(f'Label interpreter is missing manufacturing marker: {marker}')
+if '20260910-v140' not in barcode_loader:
+    raise SystemExit('Barcode/workbench loader cache key was not bumped for v1.4')
+for marker in ["['barcode','analysis','dashboard','cases','bartender']", 'runQuickAnalysis', 'stopImmediatePropagation', 'LabelWorkbenchParsers', 'LabelWorkbenchInterpreter', 'v1.4']:
     if marker not in priority_js:
         raise SystemExit(f'Priority controller is missing workflow marker: {marker}')
 
 print(f'PASS: {len(ids)} HTML ids checked')
 print(f'PASS: {len(refs)} JavaScript DOM references checked')
 print(f'PASS: {len(handlers)} inline handler names checked')
-print('PASS: cloud files and script order checked')
+print('PASS: cloud files, script order and v1.4 cache key checked')
 print('PASS: enabled Supabase browser config is publishable-key only')
 print('PASS: private attachments and document parser dependency pins checked')
-print('PASS: scanned PDF OCR + PDF barcode detection markers checked')
-print('PASS: barcode v1.3 fast path, priority navigation and stable quick-analysis entry checked')
+print('PASS: barcode v1.4 fast path checked')
+print('PASS: manufacturing label interpreter markers checked')
+print('PASS: priority navigation and stable quick-analysis entry checked')
