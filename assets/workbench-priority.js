@@ -1,11 +1,11 @@
-/* Label Workbench priority controller v1.6
+/* Label Workbench priority controller v1.7
  * Keeps the engineer's most-used tools first and gives Quick Analysis one stable entry point.
  * Does not change case data, localStorage format, Supabase tables, or attachment metadata.
  */
 (function(){
   'use strict';
 
-  const BUILD='20260910-v161';
+  const BUILD='20260910-v170';
   const el=id=>document.getElementById(id);
   const esc=(v='')=>String(v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
   const isImage=f=>!!(f?.type?.startsWith('image/')||/\.(jpe?g|png|webp|gif|bmp)$/i.test(f?.name||''));
@@ -42,14 +42,14 @@
       else if(parsers&&typeof parsers.analyze==='function'){await parsers.analyze(arr);await appendBarcodeAnalysis(arr)}
       else if(typeof window.analyzeSelected==='function'){await window.analyzeSelected(arr);await appendBarcodeAnalysis(arr)}
       else throw new Error('快速分析元件未載入');
-    }catch(err){console.error('[Label Workbench] quick analysis failed',err);out.innerHTML=`<div class="note warn-note"><b>快速分析失敗：</b>${esc(err?.message||err)}<br>請重新選擇檔案再試一次。</div>`}
+    }catch(err){console.error('[Label Workbench] quick analysis failed',err);out.innerHTML=`<div class="note warn-note"><b>快速分析失敗：</b>${esc(err?.message||err)}<br>請重新選擇檔案再試一次；若仍無法辨識，系統會以可讀內容為主並列出需要向客戶補確認的資料。</div>`}
   }
 
   function bindQuickAnalysis(){const input=el('analysisFiles');if(!input||input.dataset.priorityBound==='true')return;input.dataset.priorityBound='true';input.addEventListener('change',async e=>{e.stopImmediatePropagation();const files=[...(e.target.files||[])];await runQuickAnalysis(files);e.target.value=''},true)}
 
   function updateCopy(){
-    const title=el('pageTitle');if(title&&document.querySelector('#barcode.view.active'))title.textContent='條碼工具';const small=document.querySelector('.brand small');if(small)small.textContent='標籤製作工作台 · v1.6';
-    const analysis=el('analysis'),drop=analysis?.querySelector('.drop > p');if(drop)drop.textContent='客戶給 PDF、圖片、Excel、Word 或 CSV，直接丟進來整理成可製作內容。';const note=analysis?.querySelector('.warn-note');if(note)note.innerHTML='<b>快速分析：</b>PDF／圖片會自動分標籤、補讀小字、交叉比對條碼；畫面只顯示可製作內容與待確認項目。';
+    const title=el('pageTitle');if(title&&document.querySelector('#barcode.view.active'))title.textContent='條碼工具';const small=document.querySelector('.brand small');if(small)small.textContent='標籤製作工作台 · v1.7';
+    const analysis=el('analysis'),drop=analysis?.querySelector('.drop > p');if(drop)drop.textContent='客戶給 PDF、圖片、Excel、Word 或 CSV，直接丟進來整理成可製作內容。';const note=analysis?.querySelector('.warn-note');if(note)note.innerHTML='<b>快速分析：</b>PDF／圖片會自動分標籤、補讀小字、交叉比對條碼；畫面只顯示可製作內容與待確認項目。若資料不足，會直接列出要向客戶補確認的項目，同事可自行完成後續處理。';
   }
 
   function init(){reorderNav();bindQuickAnalysis();openBarcodeFirst();updateCopy();console.info('[Label Workbench] priority controller',BUILD)}
