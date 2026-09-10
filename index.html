@@ -6,17 +6,18 @@
   <meta name="theme-color" content="#0f172a">
   <meta name="description" content="Label Workbench 標籤製作工作台">
   <title>Label Workbench｜標籤製作工作台</title>
-  <link rel="stylesheet" href="assets/app.css">
+  <link rel="stylesheet" href="assets/app.css?v=20260910-v180">
+  <link rel="stylesheet" href="assets/ui-refresh.css?v=20260910-v180">
 </head>
 <body>
 <div class="shell">
   <aside class="side">
-    <div class="brand">🏷️ Label Workbench<small>標籤製作工作台 · v1.1</small></div>
+    <div class="brand">🏷️ Label Workbench<small>標籤製作工作台 · v1.8</small></div>
     <nav class="nav" aria-label="主要導覽">
+      <button data-view="barcode">▥ 條碼工具</button>
+      <button data-view="analysis">⚡ 快速分析</button>
       <button class="active" data-view="dashboard">🏠 工作台</button>
       <button data-view="cases">📂 案件</button>
-      <button data-view="analysis">⚡ 快速分析</button>
-      <button data-view="barcode">▥ 條碼工具</button>
       <button data-view="bartender">🖨️ BarTender</button>
     </nav>
   </aside>
@@ -44,8 +45,8 @@
       </div>
       <div class="panel"><h3>常用工作</h3><div class="quick">
         <button id="dashNewCase"><strong>＋ 建立標籤案件</strong><span>整理尺寸、印表機、資料來源、條碼與客戶需求</span></button>
-        <button onclick="showView('analysis')"><strong>⚡ 客戶原稿快速分析</strong><span>本機讀取 PDF / Excel / Word / CSV、圖片資訊與圖片條碼</span></button>
-        <button onclick="showView('barcode')"><strong>▥ 條碼規則</strong><span>編碼內容與顯示文字分開管理</span></button>
+        <button onclick="showView('analysis')"><strong>⚡ 客戶原稿快速分析</strong><span>把客戶檔案整理成可製作、可確認的內容</span></button>
+        <button onclick="showView('barcode')"><strong>▥ 條碼工具</strong><span>直接讀碼或產生一維碼、二維碼</span></button>
       </div></div>
     </section>
 
@@ -83,12 +84,12 @@
           </div>
 
           <div class="subpanel form-gap">
-            <div class="section-title"><div><h3>條碼規則</h3><p class="muted compact">正式條碼不在這裡重畫；這裡先把 BarTender 要建立的規則整理清楚。</p></div><button class="btn ghost small" id="addBarcodeBtn" type="button">＋ 新增條碼</button></div>
+            <div class="section-title"><div><h3>條碼規則</h3><p class="muted compact">先把 BarTender 要建立的規則整理清楚。</p></div><button class="btn ghost small" id="addBarcodeBtn" type="button">＋ 新增條碼</button></div>
             <div id="barcodeDraftList" class="barcode-rule-list"></div>
           </div>
 
           <div class="drop form-gap"><strong>客戶原稿 / 附件</strong><p>圖片、PDF、Excel、Word、CSV、BarTender (.btw)</p><input id="caseFiles" type="file" multiple accept=".jpg,.jpeg,.png,.webp,.pdf,.xls,.xlsx,.doc,.docx,.csv,.btw"><div id="fileList" class="footer-note">尚未選擇檔案</div></div>
-          <div class="note"><b>附件安全：</b>目前只保存檔名、格式、大小等資訊；不會把客戶原始檔提交到 GitHub。正式附件雲端會走登入後的私人儲存空間。</div>
+          <div class="note"><b>附件安全：</b>客戶原始檔不會提交到 GitHub；登入後的正式附件走私人儲存空間。</div>
           <div id="formCompleteness" class="completion-box form-gap"></div>
           <div class="case-actions"><button id="saveCaseBtn" class="btn primary" type="button">儲存案件</button><button id="cancelEditBtn" class="btn ghost hidden" type="button">取消編輯</button></div>
         </form>
@@ -96,7 +97,7 @@
     </section>
 
     <section id="analysis" class="view">
-      <div class="panel"><h3>快速分析</h3><div class="drop"><strong>把客戶檔案丟進來</strong><p>本機解析 PDF / Excel / Word / CSV，圖片可讀尺寸與條碼內容。</p><input id="analysisFiles" type="file" multiple accept=".jpg,.jpeg,.png,.webp,.pdf,.xls,.xlsx,.doc,.docx,.csv,.btw"><div id="analysisResult" class="footer-note">等待檔案</div></div><div class="note warn-note"><b>已啟用本機解析：</b>Excel / CSV 可讀工作表與欄位、DOCX 可擷取文字、PDF 可擷取文字層；圖片可讀一維碼 / 二維碼。掃描型 PDF / 圖片 OCR 與 .btw 物件解析仍不會亂猜。</div></div>
+      <div class="panel"><h3>快速分析</h3><div class="drop"><strong>把客戶檔案丟進來</strong><p>PDF、圖片、Excel、Word、CSV 直接整理成可製作內容。</p><input id="analysisFiles" type="file" multiple accept=".jpg,.jpeg,.png,.webp,.pdf,.xls,.xlsx,.doc,.docx,.csv,.btw"><div id="analysisResult" class="footer-note">等待檔案</div></div><div class="note warn-note"><b>快速分析：</b>PDF／圖片會自動判斷方向、分標籤、讀欄位位置、補讀小字並交叉比對條碼；畫面只留下可製作內容與待確認項目。</div></div>
     </section>
 
     <section id="barcode" class="view">
@@ -121,13 +122,13 @@
   </main>
 </div>
 
-<nav class="mobile-nav"><button class="active" data-view="dashboard">首頁</button><button data-view="cases">案件</button><button data-view="analysis">分析</button><button data-view="barcode">條碼</button><button data-view="bartender">BT</button></nav>
+<nav class="mobile-nav"><button data-view="barcode">條碼</button><button data-view="analysis">分析</button><button class="active" data-view="dashboard">工作台</button><button data-view="cases">案件</button><button data-view="bartender">BT</button></nav>
 
 <div id="modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="modal-card"><div class="section-title"><h3 id="modalTitle">內容</h3><button class="icon-btn" id="modalClose" aria-label="關閉">✕</button></div><div id="modalBody"></div><div id="modalActions" class="case-actions"></div></div></div>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
-<script src="assets/cloud-config.js" defer></script>
-<script src="assets/app.js" defer></script>
-<script src="assets/cloud.js" defer></script>
+<script src="assets/cloud-config.js?v=20260910-v180" defer></script>
+<script src="assets/app.js?v=20260910-v180" defer></script>
+<script src="assets/cloud.js?v=20260910-v180" defer></script>
 </body>
 </html>
