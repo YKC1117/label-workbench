@@ -6,7 +6,7 @@
 (function(){
   'use strict';
 
-  const BUILD='20260910-v160';
+  const BUILD='20260910-v161';
   const PDF_SRC='https://cdn.jsdelivr.net/npm/pdfjs-dist@6.3.289/build/pdf.min.mjs';
   const PDF_WORKER='https://cdn.jsdelivr.net/npm/pdfjs-dist@6.3.289/build/pdf.worker.min.mjs';
   const TESS_SRC='https://cdn.jsdelivr.net/npm/tesseract.js@7.0.0/dist/tesseract.min.js';
@@ -111,7 +111,7 @@
   async function recognize(worker,canvas,psm='6'){try{await worker.setParameters({tessedit_pageseg_mode:String(psm),preserve_interword_spaces:'1'})}catch{}const r=await worker.recognize(canvas);return{text:String(r?.data?.text||'').trim(),confidence:Number(r?.data?.confidence||0)}}
 
   async function chooseOrientation(worker,canvas,onProgress){
-    const preview=enhanceCanvas(canvas,'gray'),order=[0,90,270,180],tested=[];for(let i=0;i<order.length;i++){const deg=order[i];onProgress?.(`正在判斷原稿方向… ${i+1}/${order.length}`);const r=await recognize(worker,rotateCanvas(preview,deg),'6'),score=scoreText(r.text)+(r.confidence||0)*.25;tested.push({deg,score});if(score>=220&&r.text.length>=90)break}tested.sort((a,b)=>b.score-a.score);const best=tested[0]||{deg:0};return{deg:best.deg,canvas:rotateCanvas(canvas,best.deg)};
+    const preview=enhanceCanvas(canvas,'gray'),order=[0,90,270,180],tested=[];for(let i=0;i<order.length;i++){const deg=order[i];onProgress?.(`正在判斷原稿方向… ${i+1}/${order.length}`);const r=await recognize(worker,rotateCanvas(preview,deg),'6'),score=scoreText(r.text)+(r.confidence||0)*.25;tested.push({deg,score,textLength:r.text.length});if(score>=220&&r.text.length>=90)break}tested.sort((a,b)=>b.score-a.score);const best=tested[0]||{deg:0};return{deg:best.deg,canvas:rotateCanvas(canvas,best.deg)};
   }
 
   function runs(flags){const out=[];let start=null;for(let i=0;i<flags.length;i++){if(flags[i]&&start===null)start=i;if(!flags[i]&&start!==null){out.push([start,i-1]);start=null}}if(start!==null)out.push([start,flags.length-1]);return out}
@@ -129,9 +129,11 @@
   function aliasPattern(alias){return alias.replace(/[.*+?^${}()|[\]\\]/g,'\\$&').replace(/\s+/g,'\\s*')}
 
   function parseCodeChunks(line){
-    const codeAlt=KNOWN_CODES.map(c=>c.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|'),rx=new RegExp(`[\\(\\[]?\\s*(${codeAlt})\\s*[\\)\\]]?`,'ig'),ms=[...line.matchAll(rx)];if(!ms.length)return[];const out=[];
+    const codeAlt=KNOWN_CODES.map(c=>c.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|');
+    const rx=new RegExp(`(?:[\\(\\[]\\s*(${codeAlt})\\s*[\\)\\]]?|\\b(${codeAlt})\\s*[\\)\\]])`,'ig');
+    const ms=[...line.matchAll(rx)];if(!ms.length)return[];const out=[];
     for(let i=0;i<ms.length;i++){
-      const m=ms[i],code=m[1].toUpperCase(),end=i+1<ms.length?ms[i+1].index:line.length,chunk=cleanLine(line.slice((m.index||0)+m[0].length,end)),def=FIELD_DEFS.find(d=>d.code===code),name=def?.name||code;let rest=chunk;
+      const m=ms[i],code=(m[1]||m[2]||'').toUpperCase(),end=i+1<ms.length?ms[i+1].index:line.length,chunk=cleanLine(line.slice((m.index||0)+m[0].length,end)),def=FIELD_DEFS.find(d=>d.code===code),name=def?.name||code;let rest=chunk;
       for(const a of (def?.aliases||[]).sort((a,b)=>b.length-a.length))rest=rest.replace(new RegExp('^\\s*'+aliasPattern(a)+'\\s*[:：=]?\\s*','i'),'');
       rest=rest.replace(/^\s*[^:：]{0,28}[:：]\s*/,'');const value=cleanValue(rest);if(value&&/[A-Z0-9+\-]/i.test(value))out.push({code,name,value});
     }
@@ -139,10 +141,9 @@
   }
 
   function parseKnownNames(line){
-    const hits=[];
-    for(const def of FIELD_DEFS){for(const alias of def.aliases){const short=alias.replace(/[^A-Z0-9]/gi,'').length<=3,suffix=short?'\\s*[:：=]':'\\s*[:：=]?';const rx=new RegExp(aliasPattern(alias)+suffix,'ig');let m;while((m=rx.exec(line)))hits.push({start:m.index,end:rx.lastIndex,def,alias})}}
-    hits.sort((a,b)=>a.start-b.start||b.end-a.end);const anchors=[];for(const h of hits){if(anchors.some(x=>h.start>=x.start&&h.end<=x.end))continue;anchors.push(h)}
-    const out=[];for(let i=0;i<anchors.length;i++){const a=anchors[i],next=anchors[i+1],value=cleanValue(line.slice(a.end,next?next.start:line.length));if(value&&/[A-Z0-9+\-]/i.test(value))out.push({code:'',name:a.def.name,value})}return out;
+    const hits=[];for(const def of FIELD_DEFS){for(const alias of def.aliases){const short=alias.replace(/[^A-Z0-9]/gi,'').length<=3,suffix=short?'\\s*[:：=]':'\\s*[:：=]?';const rx=new RegExp(aliasPattern(alias)+suffix,'ig');let m;while((m=rx.exec(line)))hits.push({start:m.index,end:rx.lastIndex,def})}}
+    hits.sort((a,b)=>a.start-b.start||b.end-a.end);const anchors=[];for(const h of hits){if(anchors.some(x=>h.start>=x.start&&h.end<=x.end))continue;anchors.push(h)}const out=[];
+    for(let i=0;i<anchors.length;i++){const a=anchors[i],next=anchors[i+1],value=cleanValue(line.slice(a.end,next?next.start:line.length));if(value&&/[A-Z0-9+\-]/i.test(value))out.push({code:'',name:a.def.name,value})}return out;
   }
 
   function parseFields(text){
@@ -157,28 +158,15 @@
   }
 
   function dedupeBarcodes(rows){const s=new Set(),out=[];for(const r of rows||[]){const k=`${r.format||''}|${r.text||''}`;if(!r.text||s.has(k))continue;s.add(k);out.push(r)}return out}
-
-  async function scanRegionDeep(canvas,labelNo,onProgress){
-    const core=window.LabelWorkbenchBarcodeCore;if(!core?.scanCanvas)return[];const c=trimCanvas(canvas),candidates=[{c,name:`標籤 ${labelNo} 全圖`}],h=c.height*.30;for(let i=0;i<6;i++){const y=Math.min(c.height-h,i*c.height*.14);candidates.push({c:crop(c,0,y,c.width,h),name:`標籤 ${labelNo} 區域 ${i+1}`})}
-    const all=[];for(let i=0;i<candidates.length;i++){onProgress?.(`正在讀取標籤 ${labelNo} 的條碼… ${i+1}/${candidates.length}`);try{all.push(...await core.scanCanvas(candidates[i].c,candidates[i].name))}catch(e){console.warn('[LW interpreter barcode]',e)}}return dedupeBarcodes(all);
-  }
-
+  async function scanRegionDeep(canvas,labelNo,onProgress){const core=window.LabelWorkbenchBarcodeCore;if(!core?.scanCanvas)return[];const c=trimCanvas(canvas),candidates=[{c,name:`標籤 ${labelNo} 全圖`}],h=c.height*.30;for(let i=0;i<6;i++){const y=Math.min(c.height-h,i*c.height*.14);candidates.push({c:crop(c,0,y,c.width,h),name:`標籤 ${labelNo} 區域 ${i+1}`})}const all=[];for(let i=0;i<candidates.length;i++){onProgress?.(`正在讀取標籤 ${labelNo} 的條碼… ${i+1}/${candidates.length}`);try{all.push(...await core.scanCanvas(candidates[i].c,candidates[i].name))}catch(e){console.warn('[LW interpreter barcode]',e)}}return dedupeBarcodes(all)}
   function fieldVerified(field,barcodes){const v=norm(field.value);if(v.length<2)return null;return barcodes.find(b=>{const t=norm(b.text);return t===v||t.includes(v)||(v.includes(t)&&t.length>=4)})||null}
   function fieldState(field,barcodes){if(fieldVerified(field,barcodes))return'barcode';if(field.repeat>=2&&!field.conflict)return'repeated';return'pending'}
   function detectMarks(text){const t=String(text||'').toUpperCase(),out=[];if(/ROHS/.test(t))out.push('RoHS');if(/\bHF\b/.test(t))out.push('HF');if(/\bPB\b/.test(t))out.push('Pb 標誌');return out}
 
   function makeTiles(canvas){const c=enhanceCanvas(canvas,'gray'),out=[],overlap=.08;for(let ry=0;ry<2;ry++)for(let rx=0;rx<2;rx++){const x0=Math.max(0,(rx*.5-overlap)*c.width),y0=Math.max(0,(ry*.5-overlap)*c.height),x1=Math.min(c.width,((rx+1)*.5+overlap)*c.width),y1=Math.min(c.height,((ry+1)*.5+overlap)*c.height);out.push(crop(c,x0,y0,x1-x0,y1-y0))}return out}
+  async function readRegionFields(worker,region,onProgress){const passes=[];onProgress?.('正在整理欄位內容…');passes.push(await recognize(worker,enhanceCanvas(region,'gray'),'6'));passes.push(await recognize(worker,enhanceCanvas(region,'bw'),'6'));let fields=aggregateFields(passes);if(fields.length<6||fields.some(f=>f.conflict)){const tiles=makeTiles(region);for(let i=0;i<tiles.length;i++){onProgress?.(`正在補讀細小欄位… ${i+1}/${tiles.length}`);passes.push(await recognize(worker,tiles[i],'6'))}fields=aggregateFields(passes)}return{fields,passes}}
 
-  async function readRegionFields(worker,region,onProgress){
-    const passes=[];onProgress?.('正在整理欄位內容…');passes.push(await recognize(worker,enhanceCanvas(region,'gray'),'6'));passes.push(await recognize(worker,enhanceCanvas(region,'bw'),'6'));let fields=aggregateFields(passes);
-    if(fields.length<6||fields.some(f=>f.conflict)){const tiles=makeTiles(region);for(let i=0;i<tiles.length;i++){onProgress?.(`正在補讀細小欄位… ${i+1}/${tiles.length}`);passes.push(await recognize(worker,tiles[i],'6'))}fields=aggregateFields(passes)}return{fields,passes};
-  }
-
-  async function processCanvas(canvas,sourceName,pageNo,worker,labels,onProgress){
-    const best=await chooseOrientation(worker,canvas,onProgress),bands=detectLabelBands(best.canvas);onProgress?.(`找到 ${bands.length} 個標籤區域，正在逐張讀取…`);
-    for(let i=0;i<bands.length;i++){const b=bands[i],region=crop(best.canvas,b.x,b.y,b.w,b.h),read=await readRegionFields(worker,region,onProgress),barcodes=await scanRegionDeep(region,labels.length+1,onProgress),allText=read.passes.map(p=>p.text).join('\n'),marks=detectMarks(allText);labels.push({sourceName,page:pageNo,index:i+1,rotation:best.deg,fields:read.fields,barcodes,marks})}
-  }
-
+  async function processCanvas(canvas,sourceName,pageNo,worker,labels,onProgress){const best=await chooseOrientation(worker,canvas,onProgress),bands=detectLabelBands(best.canvas);onProgress?.(`找到 ${bands.length} 個標籤區域，正在逐張讀取…`);for(let i=0;i<bands.length;i++){const b=bands[i],region=crop(best.canvas,b.x,b.y,b.w,b.h),read=await readRegionFields(worker,region,onProgress),barcodes=await scanRegionDeep(region,labels.length+1,onProgress),allText=read.passes.map(p=>p.text).join('\n'),marks=detectMarks(allText);labels.push({sourceName,page:pageNo,index:i+1,rotation:best.deg,fields:read.fields,barcodes,marks})}}
   async function interpretPdf(file,onProgress,sharedWorker){const pdfjs=await loadPdf(),pdf=await pdfjs.getDocument({data:new Uint8Array(await file.arrayBuffer())}).promise,pageLimit=Math.min(pdf.numPages,3),labels=[],own=!sharedWorker,worker=sharedWorker||await createWorker(onProgress);try{for(let p=1;p<=pageLimit;p++){onProgress?.(`正在讀取 ${file.name} 第 ${p}/${pageLimit} 頁…`);const page=await pdf.getPage(p),canvas=await renderPage(page);await processCanvas(canvas,file.name,p,worker,labels,onProgress)}}finally{if(own)try{await worker.terminate()}catch{}}return{pdfPages:pdf.numPages,labels}}
   async function interpretImage(file,onProgress,sharedWorker){const own=!sharedWorker,worker=sharedWorker||await createWorker(onProgress),labels=[];try{onProgress?.(`正在讀取圖片 ${file.name}…`);await processCanvas(await imageCanvas(file),file.name,1,worker,labels,onProgress)}finally{if(own)try{await worker.terminate()}catch{}}return{imageCount:1,labels}}
   async function interpretFiles(files,onProgress){const arr=[...files].filter(f=>ext(f)==='pdf'||isImage(f)).slice(0,4),labels=[];if(!arr.length)return{files:0,pages:0,labels:[]};const worker=await createWorker(onProgress);let pages=0;try{for(let i=0;i<arr.length;i++){const f=arr[i];onProgress?.(`正在分析 ${i+1}/${arr.length}：${f.name}`);if(ext(f)==='pdf'){const r=await interpretPdf(f,onProgress,worker);pages+=r.pdfPages;labels.push(...r.labels)}else{const r=await interpretImage(f,onProgress,worker);pages+=1;labels.push(...r.labels)}}}finally{try{await worker.terminate()}catch{}}return{files:arr.length,pages,labels}}
@@ -192,12 +180,7 @@
   function questionsText(result){const q=[];(result.labels||[]).forEach((l,i)=>(l.fields||[]).forEach(f=>{if(fieldState(f,l.barcodes||[])==='pending')q.push(`標籤 ${i+1}「${fieldName(f)}」是否為 ${f.value}`)}));q.push('標籤實際尺寸（寬 × 高 mm）');q.push('字型、LOGO／圖示、線條位置是否需要完全依原稿');return`您好～原稿已收到，製作前再麻煩確認：\n${q.slice(0,14).map((x,i)=>`${i+1}. ${x}`).join('\n')}`}
   async function copyText(text,msg){try{await navigator.clipboard.writeText(text);if(typeof window.toast==='function')window.toast(msg)}catch{if(typeof window.toast==='function')window.toast('複製失敗')}}
 
-  function renderInterpretation(files,result){
-    const labels=result.labels||[],t=totals(result),names=[...files].map(f=>f.name).join('、'),state=t.fields||t.barcodes?(t.pending?'已讀出內容，部分待確認':'主要內容已讀出'):'需要補資料';let html=`<div class="analysis-block"><div class="section-title"><div><h3>分析完成</h3><p class="muted compact">${esc(names)}</p></div><span class="pill">${state}</span></div><div class="file-chips"><span class="file-chip">標籤 ${labels.length} 張</span><span class="file-chip">欄位 ${t.fields} 個</span><span class="file-chip">條碼 ${t.barcodes} 個</span><span class="file-chip">可信 ${t.confirmed} 個</span>${t.pending?`<span class="file-chip">待確認 ${t.pending} 個</span>`:''}</div><div class="generator-actions"><button id="analysisCopyProduction" class="btn primary" type="button">複製製作資料</button><button id="analysisCopyQuestions" class="btn ghost" type="button">複製給客戶確認</button></div>`;
-    if(!labels.length)return html+'<div class="note warn-note">沒有成功讀出可製作內容。請確認檔案是否正確，或改用更清楚的原稿。</div></div>';
-    labels.forEach((l,idx)=>{const pending=(l.fields||[]).filter(f=>fieldState(f,l.barcodes||[])==='pending').length,good=(l.fields||[]).length-pending;html+=`<div class="analysis-block"><div class="section-title"><h3>標籤 ${idx+1}</h3><div><span class="file-chip">${esc(l.sourceName||'原稿')}</span>${l.page>1?` <span class="file-chip">第 ${l.page} 頁</span>`:''}</div></div><div class="footer-note"><b>可直接整理：</b>${good} 個欄位${pending?`；另有 ${pending} 個需要核對。`:'，目前沒有文字衝突。'}</div><h4>欄位內容</h4>${fieldTableHtml(l.fields||[],l.barcodes||[])}<h4>條碼內容</h4>${barcodeRowsHtml(l.barcodes||[])}${l.marks?.length?`<div class="footer-note"><b>圖示／標記：</b>${l.marks.map(esc).join('、')}</div>`:''}</div>`});
-    html+=`<div class="note ${t.pending?'warn-note':''}"><b>下一步：</b>${t.pending?'先核對標成「請核對原稿」的欄位；其他一致資料可先拿去整理製作。':'主要文字內容已重複辨識一致或由條碼確認，可先進入製作整理。'} 標籤尺寸、字型、LOGO／圖示與線條位置若客戶沒有提供規格，仍需確認。</div></div>`;return html;
-  }
+  function renderInterpretation(files,result){const labels=result.labels||[],t=totals(result),names=[...files].map(f=>f.name).join('、'),state=t.fields||t.barcodes?(t.pending?'已讀出內容，部分待確認':'主要內容已讀出'):'需要補資料';let html=`<div class="analysis-block"><div class="section-title"><div><h3>分析完成</h3><p class="muted compact">${esc(names)}</p></div><span class="pill">${state}</span></div><div class="file-chips"><span class="file-chip">標籤 ${labels.length} 張</span><span class="file-chip">欄位 ${t.fields} 個</span><span class="file-chip">條碼 ${t.barcodes} 個</span><span class="file-chip">可信 ${t.confirmed} 個</span>${t.pending?`<span class="file-chip">待確認 ${t.pending} 個</span>`:''}</div><div class="generator-actions"><button id="analysisCopyProduction" class="btn primary" type="button">複製製作資料</button><button id="analysisCopyQuestions" class="btn ghost" type="button">複製給客戶確認</button></div>`;if(!labels.length)return html+'<div class="note warn-note">沒有成功讀出可製作內容。請確認檔案是否正確，或改用更清楚的原稿。</div></div>';labels.forEach((l,idx)=>{const pending=(l.fields||[]).filter(f=>fieldState(f,l.barcodes||[])==='pending').length,good=(l.fields||[]).length-pending;html+=`<div class="analysis-block"><div class="section-title"><h3>標籤 ${idx+1}</h3><div><span class="file-chip">${esc(l.sourceName||'原稿')}</span>${l.page>1?` <span class="file-chip">第 ${l.page} 頁</span>`:''}</div></div><div class="footer-note"><b>可直接整理：</b>${good} 個欄位${pending?`；另有 ${pending} 個需要核對。`:'，目前沒有文字衝突。'}</div><h4>欄位內容</h4>${fieldTableHtml(l.fields||[],l.barcodes||[])}<h4>條碼內容</h4>${barcodeRowsHtml(l.barcodes||[])}${l.marks?.length?`<div class="footer-note"><b>圖示／標記：</b>${l.marks.map(esc).join('、')}</div>`:''}</div>`});html+=`<div class="note ${t.pending?'warn-note':''}"><b>下一步：</b>${t.pending?'先核對標成「請核對原稿」的欄位；其他一致資料可先拿去整理製作。':'主要文字內容已重複辨識一致或由條碼確認，可先進入製作整理。'} 標籤尺寸、字型、LOGO／圖示與線條位置若客戶沒有提供規格，仍需確認。</div></div>`;return html}
 
   function wireResultButtons(){const a=el('analysisCopyProduction'),b=el('analysisCopyQuestions');if(a)a.onclick=()=>copyText(productionText(lastResult),'已複製製作資料');if(b)b.onclick=()=>copyText(questionsText(lastResult),'已複製客戶確認內容')}
   async function analyze(files){const arr=[...files],out=el('analysisResult');if(!out)return;const eligible=arr.filter(f=>ext(f)==='pdf'||isImage(f));if(!eligible.length||eligible.length!==arr.length){const base=window.LabelWorkbenchParsers;if(base?.analyze)return base.analyze(arr);throw new Error('文件解析器尚未載入')}lastFiles=eligible;const progress=msg=>{out.innerHTML=`<div class="scan-working"><b>正在完整讀取客戶原稿</b><br>${esc(msg)}<br><small>系統會自動分標籤、補讀小字並交叉比對條碼。</small></div>`};progress('準備分析…');lastResult=await interpretFiles(eligible,progress);out.innerHTML=renderInterpretation(eligible,lastResult);wireResultButtons();return lastResult}
