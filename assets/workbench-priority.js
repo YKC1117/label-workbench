@@ -1,11 +1,11 @@
 /* Label Workbench priority controller v1.8
- * Keeps the engineer's most-used tools first and gives Quick Analysis one stable entry point.
+ * Keeps the engineer's most-used tools first and owns the single Quick Analysis entry point.
  * Does not change case data, localStorage format, Supabase tables, or attachment metadata.
  */
 (function(){
   'use strict';
 
-  const BUILD='20260910-v180';
+  const BUILD='20260910-v181';
   const el=id=>document.getElementById(id);
   const esc=(v='')=>String(v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
   const isImage=f=>!!(f?.type?.startsWith('image/')||/\.(jpe?g|png|webp|gif|bmp)$/i.test(f?.name||''));
@@ -45,12 +45,20 @@
       const allMedia=arr.every(f=>isPdf(f)||isImage(f));
       if(allMedia){const interpreter=await waitFor(()=>window.LabelWorkbenchInterpreter,10000);if(interpreter?.analyze)await interpreter.analyze(arr);else if(parsers?.analyze)await parsers.analyze(arr);else throw new Error('原稿解析元件未載入')}
       else if(parsers&&typeof parsers.analyze==='function'){await parsers.analyze(arr);await appendBarcodeAnalysis(arr)}
-      else if(typeof window.analyzeSelected==='function'){await window.analyzeSelected(arr);await appendBarcodeAnalysis(arr)}
       else throw new Error('快速分析元件未載入');
     }catch(err){console.error('[Label Workbench] quick analysis failed',err);out.innerHTML=`<div class="note warn-note"><b>快速分析失敗：</b>${esc(err?.message||err)}<br>請重新選擇檔案再試一次；若內容本身不足，系統會列出同事需要向客戶補確認的資料。</div>`}
   }
 
-  function bindQuickAnalysis(){const input=el('analysisFiles');if(!input||input.dataset.priorityBound==='true')return;input.dataset.priorityBound='true';input.addEventListener('change',async e=>{e.stopImmediatePropagation();const files=[...(e.target.files||[])];await runQuickAnalysis(files);e.target.value=''},true)}
+  function bindQuickAnalysis(){
+    const input=el('analysisFiles');
+    if(!input||input.dataset.priorityBound==='true')return;
+    input.dataset.priorityBound='true';
+    input.addEventListener('change',async e=>{
+      const files=[...(e.target.files||[])];
+      await runQuickAnalysis(files);
+      e.target.value='';
+    });
+  }
 
   function updateCopy(){
     const title=el('pageTitle');if(title&&document.querySelector('#barcode.view.active'))title.textContent='條碼工具';const small=document.querySelector('.brand small');if(small)small.textContent='標籤製作工作台 · v1.8';
