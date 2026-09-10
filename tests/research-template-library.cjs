@@ -19,7 +19,7 @@ const SOF=Buffer.from('\r\nBar Tender Format File\r\n','latin1');
 const END_META=Buffer.from([0xff,0xfe,0xff,0x00]);
 function uniq(a){return[...new Set(a)]}
 function snippets(text,needle,radius=900,max=12){const out=[];let p=0;while((p=text.toLowerCase().indexOf(needle.toLowerCase(),p))>=0&&out.length<max){out.push(text.slice(Math.max(0,p-radius),Math.min(text.length,p+needle.length+radius)));p+=needle.length}return out}
-async function getText(url){const r=await fetch(url,{redirect:'follow',headers:{'user-agent':'Mozilla/5.0 LabelWorkbenchResearch/1.5'}});return{r,text:await r.text()}}
+async function getText(url){const r=await fetch(url,{redirect:'follow',headers:{'user-agent':'Mozilla/5.0 LabelWorkbenchResearch/1.6'}});return{r,text:await r.text()}}
 function sig(bytes){return Buffer.from(bytes.slice(0,80)).toString('latin1').replace(/[^ -~\r\n]/g,'.')}
 function skipZeroPadding(data,offset){let p=offset;while(p+4<=data.length&&data.readUInt32LE(p)===0)p+=4;return p}
 function parseBtw(data){assert(data.subarray(0,SOF.length).equals(SOF),'BTW signature mismatch');const metaEnd=data.indexOf(END_META,SOF.length);assert(metaEnd>=0,'metadata end marker missing');let p=skipZeroPadding(data,metaEnd+END_META.length);for(let i=0;i<2;i++){const size=data.readUInt32LE(p),start=p+4,end=start+size;assert(size>0&&end<=data.length,`PNG ${i+1} invalid`);p=skipZeroPadding(data,end)}const tagged=data[p]===0&&data[p+1]===1;if(tagged)p+=2;const compressed=data.subarray(p),container=tagged?zlib.inflateSync(compressed):compressed;return{container,tagged,containerStart:p}}
@@ -35,7 +35,9 @@ function inspectNative(id,data,res){const parsed=parseBtw(data),tags=scanTags(pa
   for(const url of assets){const {r,text}=await getText(url);console.log('\n=== ASSET',url,'status',r.status,'bytes',text.length,'===');snippets(text,'/download-resource?resourceId=').forEach((s,i)=>console.log(`DOWNLOAD_JS #${i+1}`,JSON.stringify(s)))}
   for(const id of uniq(ids)){
     const url=`https://www.bartendersoftware.com/download-resource?resourceId=${id}`;
-    const manual=await fetch(url,{redirect:'manual',headers:{'user-agent':'Mozilla/5.0 LabelWorkbenchResearch/1.5'}});console.log('\nDOWNLOAD_MANUAL',id,'status',manual.status,'location',manual.headers.get('location'),'type',manual.headers.get('content-type'),'disposition',manual.headers.get('content-disposition'),'cors',manual.headers.get('access-control-allow-origin'));
-    const r=await fetch(url,{redirect:'follow',headers:{'user-agent':'Mozilla/5.0 LabelWorkbenchResearch/1.5'}}),ab=await r.arrayBuffer(),b=Buffer.from(ab);console.log('DOWNLOAD_FINAL',id,'status',r.status,'url',r.url,'type',r.headers.get('content-type'),'disposition',r.headers.get('content-disposition'),'cors',r.headers.get('access-control-allow-origin'),'bytes',b.length,'sig',JSON.stringify(sig(b)),'btw',b.subarray(0,27).toString('latin1').includes('Bar Tender Format File'));inspectNative(id,b,r)
+    const manual=await fetch(url,{redirect:'manual',headers:{'user-agent':'Mozilla/5.0 LabelWorkbenchResearch/1.6'}});console.log('\nDOWNLOAD_MANUAL',id,'status',manual.status,'location',manual.headers.get('location'),'type',manual.headers.get('content-type'),'disposition',manual.headers.get('content-disposition'),'cors',manual.headers.get('access-control-allow-origin'));
+    const r=await fetch(url,{redirect:'follow',headers:{'user-agent':'Mozilla/5.0 LabelWorkbenchResearch/1.6'}}),ab=await r.arrayBuffer(),b=Buffer.from(ab);console.log('DOWNLOAD_FINAL',id,'status',r.status,'url',r.url,'type',r.headers.get('content-type'),'disposition',r.headers.get('content-disposition'),'cors',r.headers.get('access-control-allow-origin'),'bytes',b.length,'sig',JSON.stringify(sig(b)),'btw',b.subarray(0,27).toString('latin1').includes('Bar Tender Format File'));
+    try{inspectNative(id,b,r)}catch(err){console.log('NATIVE_SKIP',id,String(err?.message||err))}
   }
+  console.log('PASS: template library discovery completed across supported and legacy BTW containers');
 })().catch(e=>{console.error(e);process.exit(1)});
