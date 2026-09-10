@@ -7,6 +7,7 @@
   const TABLE = 'label_cases';
   const cfg = window.LABEL_WORKBENCH_CLOUD || {};
   const state = {client:null,session:null,syncing:false,timer:null,lastSync:null,patched:false};
+  let baseSaveCases=null;
 
   function el(id){ return document.getElementById(id); }
   function safeDate(v){ const n = Date.parse(v || ''); return Number.isFinite(n) ? n : 0; }
@@ -53,15 +54,19 @@
       const userId=state.session.user.id;const {data:remoteRows,error:readError}=await state.client.from(TABLE).select('case_id,payload,updated_at').eq('user_id',userId);if(readError)throw readError;
       const localCases=typeof window.loadCases==='function'?window.loadCases():[],merged=mergeCases(localCases,remoteRows||[]),rows=merged.map(c=>({user_id:userId,case_id:c.id,payload:c,updated_at:c.updatedAt||c.createdAt||new Date().toISOString()}));
       if(rows.length){const {error:writeError}=await state.client.from(TABLE).upsert(rows,{onConflict:'user_id,case_id'});if(writeError)throw writeError}
-      if(JSON.stringify(localCases)!==JSON.stringify(merged)&&typeof originalSaveCases==='function')originalSaveCases(merged);
+      if(JSON.stringify(localCases)!==JSON.stringify(merged)&&typeof baseSaveCases==='function')baseSaveCases(merged);
       state.lastSync=new Date().toISOString();setStatus('ok','已同步');setText('cloudMessage',`同步完成：${merged.length} 筆案件 · ${new Date(state.lastSync).toLocaleString()}`);
     }catch(err){console.warn('[Label Workbench] cloud sync failed:',err);setStatus('error','同步失敗');setText('cloudMessage','雲端同步失敗，但本機功能不受影響。'+describeError(err))}
     finally{state.syncing=false}
   }
 
   function scheduleSync(){if(!state.session)return;clearTimeout(state.timer);state.timer=setTimeout(()=>syncNow({silent:true}),900)}
-  const originalSaveCases=window.saveCases;
-  function patchLocalSave(){if(state.patched||typeof originalSaveCases!=='function')return;window.saveCases=function(cases){originalSaveCases(cases);scheduleSync()};state.patched=true}
+  function patchLocalSave(){
+    if(state.patched||typeof window.saveCases!=='function')return;
+    baseSaveCases=window.saveCases;
+    window.saveCases=function(cases){baseSaveCases(cases);scheduleSync()};
+    state.patched=true;
+  }
   async function signOut(){try{await state.client.auth.signOut()}catch(err){console.warn('[Label Workbench] sign out failed:',err)}}
 
   async function bootClient(){
@@ -76,7 +81,7 @@
   window.LabelWorkbenchCloud={syncNow,mergeCases,state};
 })();
 
-/* Load optional workbench modules in a fixed order with an explicit cache key. */
+/* Load optional workbench modules in one fixed order with one explicit cache key. */
 (function(){
   const BUILD='20260910-v180';
   const queue=['assets/cloud-attachments.js','assets/file-parsers.js','assets/barcode-reader.js'];
