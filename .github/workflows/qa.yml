@@ -75,6 +75,9 @@ jobs:
       - name: Native editable BTW generation smoke tests
         run: node tests/btw-native-smoke.cjs
 
+      - name: Verify official 2022 CEA seed proxy
+        run: node tests/btw-seed-proxy.cjs
+
       - name: Discover reusable public BTW seeds
         run: node tests/btw-discovery.cjs
 
