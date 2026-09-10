@@ -8,7 +8,7 @@
   <title>Label Workbench｜標籤製作工作台</title>
   <link rel="stylesheet" href="assets/app.css?v=20260910-v180">
   <link rel="stylesheet" href="assets/ui-refresh.css?v=20260910-v190.1" data-lw-ui-refresh="true">
-  <link rel="stylesheet" href="assets/nav-groups.css?v=20260910-v100">
+  <link rel="stylesheet" href="assets/nav-groups.css?v=20260910-v110">
 </head>
 <body>
 <div class="shell">
@@ -17,16 +17,16 @@
     <nav class="nav" aria-label="主要導覽">
       <button class="active" data-view="barcode">▥ 條碼工具</button>
       <button data-view="analysis">⚡ 快速分析</button>
+      <button data-view="bartender">🖨️ BT 快速製作</button>
       <button data-view="dashboard">🏠 工作台</button>
-      <button data-view="cases">📂 案件</button>
-      <button data-view="bartender">🖨️ BarTender</button>
+      <button data-view="cases">📂 案件紀錄</button>
     </nav>
   </aside>
 
   <main class="main">
     <header class="top">
       <div><h1 id="pageTitle">條碼工具</h1><p id="pageSub">常用條碼優先，直接產生、讀取與驗證一維碼、二維碼。</p></div>
-      <button class="btn primary" id="topNewCase">＋ 新增案件</button>
+      <button class="btn primary hidden" id="topNewCase">＋ 新增案件</button>
     </header>
 
     <section id="dashboard" class="view">
@@ -41,20 +41,21 @@
         <div class="card"><span>資料齊全率</span><b id="avgComplete">—</b></div>
       </div>
       <div class="panel">
-        <div class="section-title"><h3>需要注意</h3><button class="btn ghost small" onclick="showView('cases')">查看全部案件</button></div>
+        <div class="section-title"><h3>需要注意</h3><button class="btn ghost small" onclick="showView('cases')">查看案件紀錄</button></div>
         <div id="attentionList" class="attention-list"></div>
       </div>
       <div class="panel"><h3>常用工作</h3><div class="quick">
-        <button id="dashNewCase"><strong>＋ 建立標籤案件</strong><span>整理尺寸、印表機、資料來源、條碼與客戶需求</span></button>
         <button onclick="showView('analysis')"><strong>⚡ 客戶原稿快速分析</strong><span>把客戶檔案整理成可製作、可確認的內容</span></button>
-        <button onclick="showView('barcode')"><strong>▥ 條碼工具</strong><span>直接讀碼或產生一維碼、二維碼</span></button>
+        <button onclick="showView('bartender')"><strong>🖨️ BT 快速製作</strong><span>整理成 BarTender 可快速接手的製作資料</span></button>
+        <button id="dashNewCase"><strong>＋ 建立案件紀錄</strong><span>只有需要跨裝置接續或特別追蹤時再使用</span></button>
       </div></div>
     </section>
 
     <section id="cases" class="view">
       <div class="panel">
-        <div class="section-title stack-mobile"><h3>案件清單</h3><div class="toolbar"><input id="caseSearch" type="search" placeholder="搜尋客戶、標籤、機型"><select id="caseFilter"><option value="all">全部狀態</option><option value="new">新案件</option><option value="waiting">待客戶確認</option><option value="ready">資料齊全</option><option value="bartender">待 BarTender</option><option value="testing">測試中</option><option value="done">完成</option></select><label class="btn ghost small">匯入案件<input id="importCase" class="hidden" type="file" accept=".labelcase,application/json"></label></div></div>
-        <div id="caseList" class="case-list"></div>
+        <div class="section-title stack-mobile"><h3>案件紀錄</h3><div class="toolbar"><input id="caseSearch" type="search" placeholder="搜尋客戶、標籤、機型"><select id="caseFilter"><option value="all">全部狀態</option><option value="new">新案件</option><option value="waiting">待客戶確認</option><option value="ready">資料齊全</option><option value="bartender">待 BarTender</option><option value="testing">測試中</option><option value="done">完成</option></select><label class="btn ghost small">匯入案件<input id="importCase" class="hidden" type="file" accept=".labelcase,application/json"></label></div></div>
+        <div class="note"><b>選用功能：</b>一般客戶需求已有官方客服文字紀錄時，不必另外建立案件；只有需要跨裝置接續、追蹤或保留內部製作資料時再使用。</div>
+        <div id="caseList" class="case-list form-gap"></div>
       </div>
 
       <div class="panel" id="caseEditor">
@@ -104,21 +105,26 @@
     <section id="barcode" class="view active"></section>
 
     <section id="bartender" class="view">
-      <div class="panel"><div class="status"><span class="dot"></span>公司環境已確認</div><h3 class="bt-title">BarTender Designer for Argox 2022 R2</h3><p>版本 11.3 / 64-bit，UltraLite。外面先完成需求、欄位與條碼規則，回公司再用 BarTender 正式製作、列印與掃描驗證。</p></div>
-      <div class="panel"><div class="section-title"><h3>待 BarTender 製作</h3><span class="pill">製作包</span></div><div id="bartenderQueue" class="case-list"></div></div>
-      <div class="panel"><h3>製作原則</h3><div class="workflow"><span>客戶原稿</span><b>→</b><span>案件整理</span><b>→</b><span>條碼規則</span><b>→</b><span>製作包</span><b>→</b><span>BarTender</span><b>→</b><span>實機掃描</span></div><div class="note"><b>UltraLite 現況：</b>不假裝已經做 API 自動建版。這一階段先把回公司前能完成的工作整理到最完整。</div></div>
+      <div class="panel">
+        <div class="status"><span class="dot"></span>BT 製作主流程</div>
+        <h3 class="bt-title">BT 快速製作</h3>
+        <p>主流程改成：客戶原稿 → 快速分析 → 整理製作資料 → 套用 BarTender 母版 → 微調、列印與掃描。案件紀錄不是必要步驟。</p>
+        <div class="case-actions"><button class="btn primary" type="button" onclick="showView('analysis')">⚡ 從快速分析開始</button></div>
+      </div>
+      <div class="panel"><div class="section-title"><h3>可接續的 BT 製作紀錄</h3><span class="pill">選用</span></div><div id="bartenderQueue" class="case-list"></div></div>
+      <div class="panel"><h3>快速製作流程</h3><div class="workflow"><span>客戶原稿</span><b>→</b><span>快速分析</span><b>→</b><span>製作資料</span><b>→</b><span>BT 母版</span><b>→</b><span>微調測試</span></div><div class="note"><b>目前方向：</b>案件只保留給需要追蹤的人使用；接下來 BT 快速製作會直接接快速分析結果，不要求先建立案件。</div></div>
     </section>
   </main>
 </div>
 
-<nav class="mobile-nav"><button class="active" data-view="barcode">條碼</button><button data-view="analysis">分析</button><button data-view="dashboard">工作台</button><button data-view="cases">案件</button><button data-view="bartender">BT</button></nav>
+<nav class="mobile-nav"><button class="active" data-view="barcode">條碼</button><button data-view="analysis">分析</button><button data-view="bartender">BT 製作</button><button data-view="dashboard">工作台</button></nav>
 
 <div id="modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="modal-card"><div class="section-title"><h3 id="modalTitle">內容</h3><button class="icon-btn" id="modalClose" aria-label="關閉">✕</button></div><div id="modalBody"></div><div id="modalActions" class="case-actions"></div></div></div>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
 <script src="assets/cloud-config.js?v=20260910-v180" defer></script>
 <script src="assets/app.js?v=20260910-v181" defer></script>
-<script src="assets/cloud.js?v=20260910-v186" defer></script>
+<script src="assets/cloud.js?v=20260910-v187" defer></script>
 <script src="assets/layout-shortcuts.js?v=20260910-v210" defer></script>
 </body>
 </html>
