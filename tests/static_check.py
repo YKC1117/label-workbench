@@ -6,7 +6,7 @@ FILES = [
     'assets/cloud.css','assets/cloud.js','assets/cloud-config.js','assets/cloud-attachments.js','assets/file-parsers.js',
     'assets/barcode-reader.js','assets/barcode-reader-core.js','assets/barcode-reader-ui.js','assets/barcode-generator.js',
     'assets/label-interpreter.js','assets/bt-quick.js','assets/btw-format.js','assets/btw-native.js','assets/bt-direct-import.js','assets/bt-bridge.js','assets/bt-native-primary.js','assets/layout-shortcuts.js','assets/workbench-priority.js',
-    'docs/supabase-schema.sql','.gitignore','README.md','tests/bt-launch-smoke.cjs','tests/bt-direct-import-smoke.cjs','tests/btw-native-smoke.cjs'
+    'docs/supabase-schema.sql','.gitignore','README.md','tests/bt-launch-smoke.cjs','tests/bt-direct-import-smoke.cjs','tests/btw-native-smoke.cjs','tests/btw-seed-proxy.cjs'
 ]
 missing=[p for p in FILES if not Path(p).exists()]
 if missing: raise SystemExit(f'Missing required project files: {missing}')
@@ -30,14 +30,15 @@ if 'stopImmediatePropagation' in priority: raise SystemExit('Quick analysis must
 if "el('analysisFiles')" not in priority or "addEventListener('change'" not in priority: raise SystemExit('Priority controller must own quick analysis input')
 
 # Current cache/load chain
-for marker in ['assets/ui-refresh.css?v=20260910-v190','assets/nav-groups.css?v=20260910-v110','assets/app.js?v=20260910-v181','assets/cloud.js?v=20260910-v194']:
+for marker in ['assets/ui-refresh.css?v=20260910-v190','assets/nav-groups.css?v=20260910-v110','assets/app.js?v=20260910-v181','assets/cloud.js?v=20260910-v196','標籤製作工作台 · v1.9.6']:
     if marker not in html: raise SystemExit(f'index.html missing current cache marker: {marker}')
-for marker in ['assets/cloud-attachments.js','assets/file-parsers.js','assets/barcode-reader.js','20260910-v194']:
+for marker in ['assets/cloud-attachments.js','assets/file-parsers.js','assets/barcode-reader.js','20260910-v196']:
     if marker not in cloud: raise SystemExit(f'cloud loader missing: {marker}')
-for marker in ['barcode-reader-core.js','barcode-reader-ui.js','barcode-generator.js','label-interpreter.js','bt-quick.js','bt-direct-import.js','btw-format.js','btw-native.js','bt-bridge.js','workbench-priority.js','bt-native-primary.js','20260910-v195']:
+for marker in ['barcode-reader-core.js','barcode-reader-ui.js','barcode-generator.js','label-interpreter.js','bt-quick.js','bt-direct-import.js','btw-format.js','btw-native.js','bt-bridge.js','workbench-priority.js','bt-native-primary.js','20260910-v196']:
     if marker not in loader: raise SystemExit(f'workbench loader missing: {marker}')
 for duplicated in ['assets/cloud-attachments.js','assets/file-parsers.js','assets/barcode-reader.js']:
     if duplicated in cfg: raise SystemExit(f'cloud-config must not load {duplicated}')
+if re.search(r'<script[^>]+src="assets/bt-native-primary\.js',html,re.I): raise SystemExit('bt-native-primary must be loaded only by the workbench loader')
 
 # Navigation: shared tools -> BT production -> optional case records
 if "['barcode','analysis','bartender','dashboard','cases']" not in priority: raise SystemExit('BT-first navigation order missing')
@@ -86,12 +87,14 @@ if bt.find('window.LabelWorkbenchBtQuick=API') > bt.find("if(document.readyState
     raise SystemExit('BT Quick API must be registered before UI initialization')
 if '/P /' in bt or ' /P ' in bt: raise SystemExit('BT launch helper must not contain automatic print switch')
 
-# Editable native BTW primary path
+# Editable native BTW primary path: one verified official 2022 R5 seed for text + Code128 + DataMatrix
 for marker in ['20260910-btw011','parseStructure','inflateContainer','rebuild','scanUtf16Strings','replaceStringAt']:
     if marker not in btw: raise SystemExit(f'BTW format marker missing: {marker}')
-for marker in ['20260910-btwn100','Sample_Doc1.btw','BcC128Data','BcDatamatrixData','patchCode128','patchDataMatrix','generateOne','downloadFromAnalysis','BT_Editable_']:
+for marker in ['20260910-btwn210','CEA-2022-R5','btw-seed','LABEL_WORKBENCH_CLOUD','BcC128Data','BcDatamatrixData','sourcePlan','patchCea','seedEndpoint','fetchSeed','generateOne','downloadFromAnalysis','BT_Editable_']:
     if marker not in native: raise SystemExit(f'Native BTW generator marker missing: {marker}')
-for marker in ['20260910-btnp100','下載可編輯 BTW','downloadEditable','ensureNative','analysisBtNative','btNativeDownload','備用：下載 BT 匯入圖','第一次給客戶前請確認尺寸與版面']:
+for forbidden in ['Sample_Doc1.btw','Transparency Rectangle - Wide.btw','patchCode128','patchDataMatrix']:
+    if forbidden in native: raise SystemExit(f'Legacy mixed-seed native path still present: {forbidden}')
+for marker in ['20260910-btnp110','20260910-btwn210','BarTender 2022','下載可編輯 BTW','downloadEditable','ensureNative','analysisBtNative','btNativeDownload','備用：下載 BT 匯入圖','第一次給客戶前請確認尺寸與版面']:
     if marker not in native_primary: raise SystemExit(f'Native BTW primary UI marker missing: {marker}')
 
 # UltraLite fallback path remains available
@@ -106,7 +109,7 @@ for marker in ['analysis-summary','analysis-label-card','analysis-metrics','@med
 
 print(f'PASS: {len(ids)} HTML ids and {len(refs)} app DOM references checked')
 print('PASS: one Quick Analysis entry point; legacy scratch path removed')
-print('PASS: v1.9.5 workbench loader includes native editable BTW path')
+print('PASS: v1.9.6 cache chain uses one official BarTender 2022 R5 native BTW seed path')
 print('PASS: publishable-key-only cloud security and private attachment schema checked')
 print('PASS: barcode reader/generator and action-focused analysis markers checked')
 print('PASS: native editable BTW is primary; PNG/data pack remain fallbacks')
