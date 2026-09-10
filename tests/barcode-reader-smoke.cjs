@@ -36,7 +36,7 @@ class MockFile extends Blob{
 }
 const uiContext={
   console,
-  window:{},
+  window:{addEventListener(){}},
   navigator:{clipboard:{}},
   document:{readyState:'loading',addEventListener(){},getElementById(){return null}},
   File:MockFile,
@@ -51,10 +51,16 @@ const clip=new MockFile(['image'],'clipboard.png',{type:'image/png'});
 const pasted=uiApi.clipboardFiles({items:[{kind:'file',type:'image/png',getAsFile:()=>clip}],files:[]});
 if(pasted.length!==1||pasted[0].name!=='clipboard.png'||pasted[0].type!=='image/png')throw new Error('Clipboard image extraction failed');
 const ignored=uiApi.clipboardFiles({items:[{kind:'string',type:'text/plain',getAsFile:()=>null}],files:[]});
-if(ignored.length!==0)throw new Error('Clipboard text must not be treated as an image');
+if(ignored.length!==0)throw new Error('Clipboard text must not be treated as a direct image');
+if(typeof uiApi.imageSourcesFromStrings!=='function'||typeof uiApi.filesFromClipboardData!=='function')throw new Error('Robust clipboard helpers missing');
+const htmlSources=uiApi.imageSourcesFromStrings('<div><img src="data:image/png;base64,AAAA"><img src="https://example.com/barcode.png"></div>','','');
+if(htmlSources.length!==2||!htmlSources[0].startsWith('data:image/png')||htmlSources[1]!=='https://example.com/barcode.png')throw new Error('Clipboard HTML image source extraction failed');
+const plainSource=uiApi.imageSourcesFromStrings('','data:image/png;base64,BBBB','');
+if(plainSource.length!==1)throw new Error('Clipboard data URL extraction failed');
 
 console.log('PASS: barcode format normalization');
 console.log('PASS: GS/CR/LF visible control characters');
 console.log('PASS: duplicate barcode result removal');
 console.log('PASS: self-test and manual crop APIs exposed');
-console.log('PASS: clipboard image paste extraction');
+console.log('PASS: direct clipboard image paste extraction');
+console.log('PASS: clipboard HTML/data-url image source extraction');
