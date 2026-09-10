@@ -70,6 +70,9 @@ if "label-attachments" not in attachments_js or '20*1024*1024' not in attachment
     raise SystemExit('Private attachment add-on must target the expected bucket and 20 MB limit')
 if 'xlsx@0.18.5' not in parsers_js or 'mammoth@1.12.2' not in parsers_js or 'pdfjs-dist@6.3.289' not in parsers_js:
     raise SystemExit('Document parser CDN dependencies must remain version-pinned')
+for marker in ['tesseract.js@7.0.0', 'createOcrWorker', 'renderPdfPage', "['eng','chi_tra']", 'OCR_MAX_PAGES=3', 'scanPdfCanvas']:
+    if marker not in parsers_js:
+        raise SystemExit(f'Scanned PDF OCR flow is missing marker: {marker}')
 
 for module in ['barcode-reader-core.js','barcode-reader-ui.js','workbench-priority.js']:
     if module not in barcode_loader:
@@ -89,9 +92,9 @@ for marker in ['加強讀取', 'retryDeep', '快速掃描中']:
 for legacy_marker in ['精準框選讀碼', 'barcodePreview', 'barcodeEngineStatus']:
     if legacy_marker in barcode_ui:
         raise SystemExit(f'Barcode UI still contains legacy heavy workflow marker: {legacy_marker}')
-if '20260910-v120' not in barcode_loader:
-    raise SystemExit('Barcode/workbench loader cache key was not bumped for v1.2')
-for marker in ["['barcode','analysis','dashboard','cases','bartender']", 'runQuickAnalysis', 'stopImmediatePropagation', 'LabelWorkbenchParsers', 'LabelWorkbenchBarcodeCore']:
+if '20260910-v130' not in barcode_loader:
+    raise SystemExit('Barcode/workbench loader cache key was not bumped for v1.3')
+for marker in ["['barcode','analysis','dashboard','cases','bartender']", 'runQuickAnalysis', 'stopImmediatePropagation', 'LabelWorkbenchParsers', 'LabelWorkbenchBarcodeCore', 'v1.3']:
     if marker not in priority_js:
         raise SystemExit(f'Priority controller is missing workflow marker: {marker}')
 
@@ -101,4 +104,5 @@ print(f'PASS: {len(handlers)} inline handler names checked')
 print('PASS: cloud files and script order checked')
 print('PASS: enabled Supabase browser config is publishable-key only')
 print('PASS: private attachments and document parser dependency pins checked')
-print('PASS: barcode v1.2 fast path, priority navigation and stable quick-analysis entry checked')
+print('PASS: scanned PDF OCR + PDF barcode detection markers checked')
+print('PASS: barcode v1.3 fast path, priority navigation and stable quick-analysis entry checked')
