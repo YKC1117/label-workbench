@@ -13,7 +13,7 @@
 <body>
 <div class="shell">
   <aside class="side">
-    <div class="brand">🏷️ Label Workbench<small>標籤製作工作台 · v1.8</small></div>
+    <div class="brand">🏷️ Label Workbench<small>標籤製作工作台 · v1.9.6</small></div>
     <nav class="nav" aria-label="主要導覽">
       <button class="active" data-view="barcode">▥ 條碼工具</button>
       <button data-view="analysis">⚡ 快速分析</button>
@@ -46,7 +46,7 @@
       </div>
       <div class="panel"><h3>常用工作</h3><div class="quick">
         <button onclick="showView('analysis')"><strong>⚡ 客戶原稿快速分析</strong><span>把客戶檔案整理成可製作、可確認的內容</span></button>
-        <button onclick="showView('bartender')"><strong>🖨️ BT 快速製作</strong><span>PDF／圖片快速分析後直接產生可編輯 BTW</span></button>
+        <button onclick="showView('bartender')"><strong>🖨️ BT 快速製作</strong><span>PDF／圖片快速分析後直接產生 BarTender 2022 可編輯 BTW</span></button>
         <button id="dashNewCase"><strong>＋ 建立案件紀錄</strong><span>只有需要跨裝置接續或特別追蹤時再使用</span></button>
       </div></div>
     </section>
@@ -108,11 +108,11 @@
       <div class="panel">
         <div class="status"><span class="dot"></span>BT 製作主流程</div>
         <h3 class="bt-title">BT 快速製作</h3>
-        <p>PDF／圖片快速分析後，直接下載可編輯 .btw；回公司用 BarTender 開啟，再微調尺寸、字型與位置。</p>
+        <p>PDF／圖片快速分析後，直接下載 BarTender 2022 可編輯 .btw；回公司用 BarTender 開啟，再微調尺寸、字型與位置。</p>
         <div class="case-actions"><button class="btn primary" type="button" onclick="showView('analysis')">⚡ 從快速分析開始</button></div>
       </div>
       <div class="panel"><div class="section-title"><h3>可接續的 BT 製作紀錄</h3><span class="pill">選用</span></div><div id="bartenderQueue" class="case-list"></div></div>
-      <div class="panel"><h3>快速製作流程</h3><div class="workflow"><span>客戶原稿</span><b>→</b><span>快速分析</span><b>→</b><span>下載可編輯 BTW</span><b>→</b><span>BarTender 微調</span><b>→</b><span>尺寸／測印</span></div><div class="note"><b>目前原生 BTW：</b>優先處理文字、Code 128、Data Matrix；PNG 匯入與資料包保留當備用。</div></div>
+      <div class="panel"><h3>快速製作流程</h3><div class="workflow"><span>客戶原稿</span><b>→</b><span>快速分析</span><b>→</b><span>下載可編輯 BTW</span><b>→</b><span>BarTender 微調</span><b>→</b><span>尺寸／測印</span></div><div class="note"><b>目前原生 BTW：</b>以官方 BarTender 2022 R5 CEA 結構為基底，支援文字、Code 128、Data Matrix；PNG 匯入與資料包保留當備用。</div></div>
     </section>
   </main>
 </div>
@@ -124,8 +124,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
 <script src="assets/cloud-config.js?v=20260910-v180" defer></script>
 <script src="assets/app.js?v=20260910-v181" defer></script>
-<script src="assets/cloud.js?v=20260910-v194" defer></script>
-<script src="assets/bt-native-primary.js?v=20260910-btnp100" defer></script>
+<script src="assets/cloud.js?v=20260910-v196" defer></script>
 <script src="assets/layout-shortcuts.js?v=20260910-v210" defer></script>
 </body>
 </html>
