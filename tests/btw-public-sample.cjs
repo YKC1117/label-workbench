@@ -35,25 +35,39 @@ function scanStrings(buf){
   }
   return out;
 }
-function hexContext(buf,offset,before=48,after=112){const s=Math.max(0,offset-before),e=Math.min(buf.length,offset+after);return`${s.toString(16).padStart(8,'0')}: ${buf.subarray(s,e).toString('hex').match(/.{1,2}/g).join(' ')}`}
+function scanAsciiTags(buf){
+  const out=[];
+  // Serializer tags observed as: FF FF 01 00 <u16 length> <ASCII type name> ...
+  for(let i=0;i+8<buf.length;i++){
+    if(buf[i]!==0xff||buf[i+1]!==0xff||buf[i+2]!==0x01||buf[i+3]!==0x00)continue;
+    const len=buf.readUInt16LE(i+4);if(len<3||len>80||i+6+len>buf.length)continue;
+    const raw=buf.subarray(i+6,i+6+len);if(!raw.every(b=>b>=0x20&&b<=0x7e))continue;
+    const text=raw.toString('ascii');if(/(?:Data|Control|Object|Template|Source)$/i.test(text)||/^(?:Text|Bc|Barcode|Line|Box|Picture|Shape)/i.test(text))out.push({offset:i,len,text,after:i+6+len});
+  }
+  return out;
+}
+function hexContext(buf,offset,before=40,after=96){const s=Math.max(0,offset-before),e=Math.min(buf.length,offset+after);return`${s.toString(16).padStart(8,'0')}: ${buf.subarray(s,e).toString('hex').match(/.{1,2}/g).join(' ')}`}
 function likelyObjects(strings){return strings.filter(s=>/^(Text|Barcode|Box|Line|Picture|Shape|obj|datacomment|Template|Layer|Background)/i.test(s.text)||/DataSource|Code 128|Data Matrix|QR Code/i.test(s.text))}
+function nearbyStrings(strings,offset,radius=500){return strings.filter(s=>Math.abs(s.offset-offset)<=radius).map(s=>`${s.offset}:${s.text}`).join(' | ')}
 
 async function inspect(name,url){
   const res=await fetch(url);assert(res.ok,`${name} download ${res.status}`);const data=Buffer.from(await res.arrayBuffer());
-  const parsed=parse(data),strings=scanStrings(parsed.container),objects=likelyObjects(strings);
+  const parsed=parse(data),strings=scanStrings(parsed.container),objects=likelyObjects(strings),tags=scanAsciiTags(parsed.container);
   console.log(`=== ${name} ===`);
   console.log(`BTW bytes=${data.length} metaEnd=${parsed.metaEnd} containerStart=${parsed.containerStart} zlib=${parsed.tagged}`);
   console.log('PNG blobs:',JSON.stringify(parsed.png));
-  console.log(`container bytes=${parsed.container.length}; identified strings=${strings.length}; object-like=${objects.length}`);
-  console.log('OBJECT_LIKE_START');
-  for(const s of objects.slice(0,220))console.log(`${s.offset}\t${JSON.stringify(s.text)}\t${hexContext(parsed.container,s.offset)}`);
-  console.log('OBJECT_LIKE_END');
-  const special=strings.filter(s=>/NDS_|Sample Text|Screen Data|datacomment|objcomment|12345678|Code 128|Data Matrix|QR Code/i.test(s.text));
+  console.log(`container bytes=${parsed.container.length}; identified strings=${strings.length}; object-like=${objects.length}; serializer-tags=${tags.length}`);
+  console.log('SERIALIZER_TAGS_START');
+  for(const t of tags)console.log(`${t.offset}\t${t.text}\tnear=${nearbyStrings(strings,t.offset,360)}\t${hexContext(parsed.container,t.offset)}`);
+  console.log('SERIALIZER_TAGS_END');
+  const template=strings.find(s=>s.text==='Template 1');
+  if(template){console.log(`TEMPLATE_CONTEXT ${template.offset} ${hexContext(parsed.container,template.offset,24,180)}`)}
+  const special=strings.filter(s=>/NDS_|Sample Text|Screen Data|datacomment|objcomment|Text \d|Barcode \d|12345678|Code 128|Data Matrix|QR Code/i.test(s.text));
   console.log('SPECIAL_START');for(const s of special.slice(0,180))console.log(`${s.offset}\t${JSON.stringify(s.text)}\t${hexContext(parsed.container,s.offset)}`);console.log('SPECIAL_END');
   const recompressed=zlib.deflateSync(parsed.container),prefix=data.subarray(0,parsed.containerStart),rebuilt=Buffer.concat([prefix,recompressed]),again=parse(rebuilt);
   assert(again.container.equals(parsed.container),`${name} round-trip container mismatch`);
   console.log(`PASS ${name}: round-trip container; rebuilt=${rebuilt.length}`);
-  return{data,parsed,strings,objects};
+  return{data,parsed,strings,objects,tags};
 }
 
 (async()=>{
