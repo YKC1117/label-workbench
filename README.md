@@ -65,7 +65,7 @@ Label Workbench **不取代 BarTender**。
 
 跨裝置案件使用 Supabase Auth + Row Level Security；客戶附件使用 private Storage bucket。瀏覽器只放 Supabase publishable key，不放 service-role / secret key。
 
-## v0.9 已完成
+## v1.1 已完成
 
 - 新增 / 編輯標籤案件
 - 案件搜尋、狀態篩選與完整度評分
