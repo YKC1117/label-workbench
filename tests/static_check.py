@@ -46,7 +46,7 @@ if missing_scripts:
     raise SystemExit(f'Missing required script references: {missing_scripts}')
 if 'assets/ui-refresh.css?v=20260910-v190' not in html or 'data-lw-ui-refresh="true"' not in html:
     raise SystemExit('refreshed UI stylesheet must load once with the v1.9 cache key')
-if 'assets/app.js?v=20260910-v181' not in html or 'assets/cloud.js?v=20260910-v184' not in html:
+if 'assets/app.js?v=20260910-v181' not in html or 'assets/cloud.js?v=20260910-v185' not in html:
     raise SystemExit('latest app/cloud cache keys are not linked')
 
 legacy_scratch = ['scratchType','scratchPrefix','scratchSuffix','scratchEncoded','scratchHuman','scratchResult','updateScratch']
@@ -90,8 +90,8 @@ if 'Local-first' not in cloud_js and '本機優先' not in cloud_js:
 for module in ['assets/cloud-attachments.js','assets/file-parsers.js','assets/barcode-reader.js']:
     if module not in cloud_js:
         raise SystemExit(f'Feature module is not wired by cloud loader: {module}')
-if '20260910-v184' not in cloud_js:
-    raise SystemExit('Cloud optional-module cache key must be v1.8.4')
+if '20260910-v185' not in cloud_js:
+    raise SystemExit('Cloud optional-module cache key must be v1.8.5')
 
 if "label-attachments" not in attachments_js or '20*1024*1024' not in attachments_js.replace(' ', ''):
     raise SystemExit('Private attachment add-on must target the expected bucket and 20 MB limit')
@@ -109,8 +109,8 @@ for marker in ['tesseract.js@7.0.0', 'createOcrWorker', 'renderPdfPage', "['eng'
 for module in ['barcode-reader-core.js','barcode-reader-ui.js','barcode-generator.js','label-interpreter.js','workbench-priority.js']:
     if module not in barcode_loader:
         raise SystemExit(f'Barcode/workbench loader is missing {module}')
-if '20260910-v184' not in barcode_loader:
-    raise SystemExit('Barcode/workbench loader cache key must be v1.8.4')
+if '20260910-v185' not in barcode_loader:
+    raise SystemExit('Barcode/workbench loader cache key must be v1.8.5')
 
 if "const ZX='3.1.3'" not in barcode_core or 'zxing-wasm@${ZX}' not in barcode_core:
     raise SystemExit('Barcode core must pin zxing-wasm 3.1.3')
@@ -118,12 +118,14 @@ if '@undecaf/zbar-wasm@0.11.0' not in barcode_core:
     raise SystemExit('Barcode core must pin ZBar WASM 0.11.0')
 if 'BarcodeDetector' not in barcode_core or 'ZXingWASM' not in barcode_core or 'readBarcodes' not in barcode_core:
     raise SystemExit('Barcode core must retain native detector plus ZXing-C++ WASM decoder')
-for marker in ['scanImageData', 'decodeZBar', 'tryRotate:true', 'minLineCount:1', 'threshold(', 'deepScan', 'options.deep', 'scanCanvas']:
+for marker in ['scanImageData', 'decodeZBar', 'tryRotate:true', 'minLineCount:1', 'threshold(', 'deepScan', 'options.deep', 'scanCanvas', "fillStyle='#fff'", '標準化全圖', 'longSide<1600']:
     if marker not in barcode_core:
-        raise SystemExit(f'Barcode core is missing fast/fallback marker: {marker}')
-for marker in ['加強讀取', 'retryDeep', '快速掃描中', 'clipboardFiles', 'filesFromClipboardData', 'imageSourcesFromStrings', 'pasteFromClipboard', "window.addEventListener('paste',handlePaste,true)", 'barcodePasteZone', 'navigator.clipboard?.read']:
+        raise SystemExit(f'Barcode core is missing fast/clipboard normalization marker: {marker}')
+for marker in ['加強讀取', 'retryDeep', '快速掃描中', 'clipboardFiles', 'filesFromClipboardData', 'imageSourcesFromStrings', 'pasteFromClipboard', "window.addEventListener('paste',handlePaste,true)", 'barcodePasteZone', 'navigator.clipboard?.read', "run(files,{deep:true,mode:'paste'})"]:
     if marker not in barcode_ui:
         raise SystemExit(f'Barcode UI is missing robust read/paste marker: {marker}')
+if 'id="barcodePasteBtn"' in barcode_ui:
+    raise SystemExit('Redundant clipboard paste button must stay removed')
 if 'patchAnalysis' in barcode_ui or 'analyzeSelected' in barcode_ui:
     raise SystemExit('Barcode reader UI must not patch the retired quick-analysis path')
 
@@ -159,10 +161,11 @@ print(f'PASS: {len(handlers)} inline handler names checked')
 print('PASS: refreshed UI stylesheet is single-loaded with v1.9 cache key')
 print('PASS: quick analysis has one listener and no legacy scratch-pad path')
 print('PASS: enabled Supabase browser config is publishable-key only')
-print('PASS: optional modules have one loader and one cache-key chain')
+print('PASS: optional modules have one loader and v1.8.5 cache-key chain')
 print('PASS: private attachment bucket and schema path are aligned')
 print('PASS: private attachments and document parser dependency pins checked')
-print('PASS: barcode reader supports direct-file plus HTML/data-url clipboard image paste')
+print('PASS: barcode reader normalizes transparent clipboard images and auto deep-scans pasted images')
+print('PASS: redundant clipboard paste button is removed')
 print('PASS: barcode generator uses compact controls without oversized checkbox UI')
 print('PASS: quick analysis uses orientation + enhancement + layout blocks + spatial field matching')
 print('PASS: quick analysis hides OCR internals and returns action-focused results')
