@@ -1,0 +1,14 @@
+const zlib=require('zlib');
+const assert=require('assert');
+const URL='https://www.bartendersoftware.com/download-resource?resourceId=79797';
+const SOF=Buffer.from('\r\nBar Tender Format File\r\n','latin1'),END_META=Buffer.from([0xff,0xfe,0xff,0x00]);
+function skip0(b,p){while(p+4<=b.length&&b.readUInt32LE(p)===0)p+=4;return p}
+function parse(data){assert(data.subarray(0,SOF.length).equals(SOF));const me=data.indexOf(END_META,SOF.length);let p=skip0(data,me+4);for(let i=0;i<2;i++){const n=data.readUInt32LE(p);p=skip0(data,p+4+n)}if(data[p]===0&&data[p+1]===1)p+=2;return zlib.inflateSync(data.subarray(p))}
+function strings(b){const out=[];for(let i=0;i+4<=b.length;i++){if(b[i]!==255||b[i+1]!==254||b[i+2]!==255)continue;let n,h=4;if(b[i+3]===255){if(i+6>b.length)continue;n=b.readUInt16LE(i+4);h=6}else n=b[i+3];if(n<1||n>4096)continue;const e=i+h+n*2;if(e>b.length)continue;const t=b.subarray(i+h,e).toString('utf16le');if(t&&!/[\x00-\x08\x0b\x0c\x0e-\x1f]/.test(t))out.push({offset:i,text:t});i=e-1}return out}
+function tags(b){const out=[];for(let i=0;i+8<b.length;i++){if(b[i]!==255||b[i+1]!==255||b[i+2]!==1||b[i+3]!==0)continue;const n=b.readUInt16LE(i+4);if(n<3||n>80||i+6+n>b.length)continue;const r=b.subarray(i+6,i+6+n);if(!r.every(x=>x>=32&&x<=126))continue;const t=r.toString('ascii');if(/Data$/i.test(t))out.push({offset:i,type:t})}return out}
+function summarizeSegment(all,start,end){return all.filter(x=>x.offset>=start&&x.offset<end).filter(x=>x.text.length<220).map(x=>`${x.offset}:${JSON.stringify(x.text)}`)}
+(async()=>{const r=await fetch(URL,{redirect:'follow',headers:{'user-agent':'LabelWorkbenchResearch/1.5'}});assert(r.ok);const data=Buffer.from(await r.arrayBuffer()),c=parse(data),ss=strings(c),tt=tags(c);console.log('HEADER',data.subarray(0,600).toString('latin1').replace(/\0/g,''));console.log('TOP',tt.filter(t=>/^(TextData|BcDatamatrixData|BcC128Data|BackgroundData)$/.test(t.type)));
+  const groups=[['TextData',10795,18995],['BcDatamatrixData',18995,39166],['BcC128Data',39166,62288]];
+  for(const [name,start,end] of groups){console.log(`\n=== ${name} ${start}-${end} ===`);const roots=ss.filter(x=>x.offset>=start&&x.offset<end&&/^Root\.MasterSelectedObject/.test(x.text));const cuts=[start,...roots.map(x=>x.offset).filter((v,i,a)=>i===0||v!==a[i-1]),end].sort((a,b)=>a-b);for(let i=0;i<cuts.length-1;i++){const a=cuts[i],b=cuts[i+1],rows=summarizeSegment(ss,a,b);if(!rows.length)continue;console.log(`-- SEG ${a}-${b} --`);rows.forEach(x=>console.log(x))}}
+  console.log('\n=== NAMED SOURCE CONTEXTS ===');for(const target of ['SERIAL','PART','CAGE','MH80312','F100200300400AP','1U2R7']){for(const hit of ss.filter(x=>x.text===target)){console.log(`TARGET ${target} @${hit.offset}`);summarizeSegment(ss,Math.max(0,hit.offset-800),hit.offset+1200).forEach(x=>console.log(x))}}
+})().catch(e=>{console.error(e);process.exit(1)});
