@@ -1,4 +1,4 @@
-/* Label Workbench barcode core v1.1 - fast local decoding with ZXing + ZBar fallback. */
+/* Label Workbench barcode core v1.2 - fast local decoding with normalized canvas + ZXing + ZBar fallback. */
 (function(){
   'use strict';
 
@@ -80,19 +80,20 @@
   function canvasFromImage(img,scale=1){
     const w0=img.naturalWidth||img.width||1,h0=img.naturalHeight||img.height||1,sc=Math.min(scale,MAX_DIM/Math.max(w0,h0)),c=document.createElement('canvas');
     c.width=Math.max(1,Math.round(w0*sc));c.height=Math.max(1,Math.round(h0*sc));
-    const x=c.getContext('2d',{willReadFrequently:true});x.imageSmoothingEnabled=false;x.drawImage(img,0,0,c.width,c.height);return c;
+    const x=c.getContext('2d',{willReadFrequently:true});x.imageSmoothingEnabled=false;
+    x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(img,0,0,c.width,c.height);return c;
   }
   function crop(src,x,y,w,h){
     const c=document.createElement('canvas');c.width=Math.max(1,Math.round(w));c.height=Math.max(1,Math.round(h));
-    const q=c.getContext('2d',{willReadFrequently:true});q.imageSmoothingEnabled=false;q.drawImage(src,x,y,w,h,0,0,c.width,c.height);return c;
+    const q=c.getContext('2d',{willReadFrequently:true});q.imageSmoothingEnabled=false;q.fillStyle='#fff';q.fillRect(0,0,c.width,c.height);q.drawImage(src,x,y,w,h,0,0,c.width,c.height);return c;
   }
   function scale(src,f=1){
     f=Math.max(1,Math.min(f,MAX_DIM/Math.max(src.width,src.height)));if(f<=1.05)return src;
     const c=document.createElement('canvas');c.width=Math.round(src.width*f);c.height=Math.round(src.height*f);
-    const q=c.getContext('2d',{willReadFrequently:true});q.imageSmoothingEnabled=false;q.drawImage(src,0,0,c.width,c.height);return c;
+    const q=c.getContext('2d',{willReadFrequently:true});q.imageSmoothingEnabled=false;q.fillStyle='#fff';q.fillRect(0,0,c.width,c.height);q.drawImage(src,0,0,c.width,c.height);return c;
   }
   function threshold(src,invert=false){
-    const c=document.createElement('canvas');c.width=src.width;c.height=src.height;const q=c.getContext('2d',{willReadFrequently:true});q.drawImage(src,0,0);
+    const c=document.createElement('canvas');c.width=src.width;c.height=src.height;const q=c.getContext('2d',{willReadFrequently:true});q.fillStyle='#fff';q.fillRect(0,0,c.width,c.height);q.drawImage(src,0,0);
     const im=q.getImageData(0,0,c.width,c.height),d=im.data;let sum=0,n=0;
     for(let i=0;i<d.length;i+=16){sum+=(d[i]*77+d[i+1]*150+d[i+2]*29)>>8;n++}
     const t=Math.max(70,Math.min(210,sum/Math.max(1,n)));
@@ -124,13 +125,14 @@
     const all=[];
     onStage?.('快速掃描');
     all.push(...await decodeZX(file,'原始檔'));
+    if(!dedupe(all).length)all.push(...await decodeZX(imageData(base),'標準化全圖'));
     if(!dedupe(all).length)all.push(...await native(base));
     if(!dedupe(all).length){onStage?.('一維碼相容掃描');all.push(...await decodeZBar(imageData(base),'ZBar 全圖'))}
     return dedupe(all);
   }
   async function deepScan(base,onStage){
-    const all=[];
-    const list=deepCandidates(base);
+    const longSide=Math.max(base.width,base.height),factor=longSide<1600?Math.min(3,1600/Math.max(1,longSide)):1;
+    const prepared=scale(base,factor),all=[],list=deepCandidates(prepared);
     for(let i=0;i<list.length;i++){
       const item=list[i];onStage?.(`加強讀取 ${i+1}/${list.length}`);
       const data=imageData(item.canvas);
@@ -154,5 +156,5 @@
     return dedupe(all);
   }
 
-  window.LabelWorkbenchBarcodeCore={VERSION:'1.1',ZXING_VERSION:ZX,formatName,visibleText,key,dedupe,selfTest,loadImage,canvasFromImage,crop,scale,threshold,imageData,scanFile,scanCanvas,state};
+  window.LabelWorkbenchBarcodeCore={VERSION:'1.2',ZXING_VERSION:ZX,formatName,visibleText,key,dedupe,selfTest,loadImage,canvasFromImage,crop,scale,threshold,imageData,scanFile,scanCanvas,state};
 })();
