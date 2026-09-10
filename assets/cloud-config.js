@@ -9,17 +9,5 @@ window.LABEL_WORKBENCH_CLOUD = {
   enabled: true
 };
 
-(function loadWorkbenchAddons(){
-  const addons = [
-    ['assets/cloud-attachments.js?v=0.7.0','labelAttachments'],
-    ['assets/file-parsers.js?v=0.8.0','labelParsers']
-  ];
-  addons.forEach(([src,key]) => {
-    if (document.querySelector(`script[data-${key}]`)) return;
-    const script = document.createElement('script');
-    script.src = src;
-    script.setAttribute(`data-${key}`, 'true');
-    script.async = false;
-    document.head.appendChild(script);
-  });
-})();
+// Optional workbench modules are loaded only by assets/cloud.js.
+// Keeping one loader avoids duplicate execution, duplicate listeners, and mixed cache keys.
