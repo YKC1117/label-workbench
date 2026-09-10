@@ -3,7 +3,8 @@ const assert=require('assert');
 
 const SAMPLES=[
   ['official2022','https://raw.githubusercontent.com/Seagull-Scientific/bartender-cloud-api/main/Sample_Doc1.btw'],
-  ['activexSample','https://raw.githubusercontent.com/ssapj/BartenderSampleActivexCSharp/master/BTW/ProgramSample.btw']
+  ['activexSample','https://raw.githubusercontent.com/ssapj/BartenderSampleActivexCSharp/master/BTW/ProgramSample.btw'],
+  ['transparencyWide','https://support.seagullsoftware.com/hc/en-us/article_attachments/360011164514']
 ];
 const END_META=Buffer.from([0xff,0xfe,0xff,0x00]);
 const SOF=Buffer.from('\r\nBar Tender Format File\r\n','latin1');
@@ -49,23 +50,30 @@ function hexContext(buf,offset,before=40,after=96){const s=Math.max(0,offset-bef
 function nearbyStrings(strings,offset,radius=500){return strings.filter(s=>Math.abs(s.offset-offset)<=radius).map(s=>`${s.offset}:${s.text.replace(/\r?\n/g,'↵')}`).join(' | ')}
 
 async function inspect(name,url){
-  const res=await fetch(url);assert(res.ok,`${name} download ${res.status}`);const data=Buffer.from(await res.arrayBuffer());
+  const res=await fetch(url,{redirect:'follow'});assert(res.ok,`${name} download ${res.status}`);const data=Buffer.from(await res.arrayBuffer());
   const parsed=parse(data),strings=scanStrings(parsed.container),tags=scanAsciiTags(parsed.container);
   console.log(`=== ${name} ===`);
+  console.log(`final-url=${res.url}`);
   console.log(`BTW bytes=${data.length} metaEnd=${parsed.metaEnd} containerStart=${parsed.containerStart} zlib=${parsed.tagged}`);
   console.log(`container bytes=${parsed.container.length}; strings=${strings.length}; serializer-tags=${tags.length}`);
   console.log('SERIALIZER_TAGS_START');
   for(const t of tags)console.log(`${t.offset}\t${t.text}\tnear=${nearbyStrings(strings,t.offset,300)}`);
   console.log('SERIALIZER_TAGS_END');
-  const template=strings.find(s=>s.text==='Template 1');
+  const template=strings.find(s=>s.text==='Template 1'||/^Template \d+$/.test(s.text));
   const backgroundTag=tags.find(t=>t.text==='BackgroundData'&&(!template||t.offset>template.offset));
   if(template){
-    const zoneEnd=backgroundTag?.offset||Math.min(parsed.container.length,template.offset+12000);
+    const zoneEnd=backgroundTag?.offset||Math.min(parsed.container.length,template.offset+18000);
     console.log(`DESIGN_ZONE_START ${template.offset} ${zoneEnd}`);
     for(const s of strings.filter(s=>s.offset>=template.offset&&s.offset<zoneEnd))console.log(`${s.offset}\t${JSON.stringify(s.text)}`);
     console.log('DESIGN_ZONE_END');
-    console.log(`TEMPLATE_CONTEXT ${template.offset} ${hexContext(parsed.container,template.offset,24,220)}`);
+    console.log(`TEMPLATE_CONTEXT ${template.offset} ${hexContext(parsed.container,template.offset,24,240)}`);
   }
+  const dmTags=tags.filter(t=>/matrix|ecc|qr/i.test(t.text));
+  const dmStrings=strings.filter(s=>/matrix|ecc ?200|transparency/i.test(s.text));
+  console.log('DATA_MATRIX_CLUES_START');
+  for(const t of dmTags)console.log(`TAG ${t.offset}\t${t.text}\t${hexContext(parsed.container,t.offset)}`);
+  for(const s of dmStrings.slice(0,80))console.log(`STR ${s.offset}\t${JSON.stringify(s.text)}\t${hexContext(parsed.container,s.offset)}`);
+  console.log('DATA_MATRIX_CLUES_END');
   const recompressed=zlib.deflateSync(parsed.container),prefix=data.subarray(0,parsed.containerStart),rebuilt=Buffer.concat([prefix,recompressed]),again=parse(rebuilt);
   assert(again.container.equals(parsed.container),`${name} round-trip container mismatch`);
   console.log(`PASS ${name}: round-trip container; rebuilt=${rebuilt.length}`);
