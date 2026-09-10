@@ -39,6 +39,7 @@ function context(){
   }
   if(api.validate('Code 39','ABC-123'))throw new Error('Valid Code 39 rejected');
   if(!api.validate('Code 39','abc123'))throw new Error('Invalid lowercase Code 39 accepted');
+  if(!api.validate('Code 39','ABC_DEF'))throw new Error('Unsupported Code 39 underscore accepted');
   if(api.validate('EAN-13','4006381333931'))throw new Error('Valid EAN-13 rejected');
   if(!api.validate('EAN-13','4006381333932'))throw new Error('Bad EAN-13 check digit accepted');
   if(api.validate('GS1-128','(01)04712345678903'))throw new Error('GS1 bracket notation rejected');
