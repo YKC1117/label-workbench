@@ -11,7 +11,7 @@
 <body>
 <div class="shell">
   <aside class="side">
-    <div class="brand">🏷️ Label Workbench<small>標籤製作工作台 · v0.6</small></div>
+    <div class="brand">🏷️ Label Workbench<small>標籤製作工作台 · v1.1</small></div>
     <nav class="nav" aria-label="主要導覽">
       <button class="active" data-view="dashboard">🏠 工作台</button>
       <button data-view="cases">📂 案件</button>
@@ -44,7 +44,7 @@
       </div>
       <div class="panel"><h3>常用工作</h3><div class="quick">
         <button id="dashNewCase"><strong>＋ 建立標籤案件</strong><span>整理尺寸、印表機、資料來源、條碼與客戶需求</span></button>
-        <button onclick="showView('analysis')"><strong>⚡ 客戶原稿快速分析</strong><span>先確認檔案格式、影像尺寸與 CSV 欄位</span></button>
+        <button onclick="showView('analysis')"><strong>⚡ 客戶原稿快速分析</strong><span>本機讀取 PDF / Excel / Word / CSV、圖片資訊與圖片條碼</span></button>
         <button onclick="showView('barcode')"><strong>▥ 條碼規則</strong><span>編碼內容與顯示文字分開管理</span></button>
       </div></div>
     </section>
@@ -96,7 +96,7 @@
     </section>
 
     <section id="analysis" class="view">
-      <div class="panel"><h3>快速分析</h3><div class="drop"><strong>把客戶檔案丟進來</strong><p>先做本機檔案分類、圖片尺寸與 CSV 欄位檢查。</p><input id="analysisFiles" type="file" multiple accept=".jpg,.jpeg,.png,.webp,.pdf,.xls,.xlsx,.doc,.docx,.csv,.btw"><div id="analysisResult" class="footer-note">等待檔案</div></div><div class="note warn-note"><b>目前不會亂猜：</b>PDF / Word / Excel / BTW 內容解析與圖片中的文字、條碼判讀，尚未啟用 AI 後端，因此這版只呈現能在瀏覽器可靠取得的資訊。</div></div>
+      <div class="panel"><h3>快速分析</h3><div class="drop"><strong>把客戶檔案丟進來</strong><p>本機解析 PDF / Excel / Word / CSV，圖片可讀尺寸與條碼內容。</p><input id="analysisFiles" type="file" multiple accept=".jpg,.jpeg,.png,.webp,.pdf,.xls,.xlsx,.doc,.docx,.csv,.btw"><div id="analysisResult" class="footer-note">等待檔案</div></div><div class="note warn-note"><b>已啟用本機解析：</b>Excel / CSV 可讀工作表與欄位、DOCX 可擷取文字、PDF 可擷取文字層；圖片可讀一維碼 / 二維碼。掃描型 PDF / 圖片 OCR 與 .btw 物件解析仍不會亂猜。</div></div>
     </section>
 
     <section id="barcode" class="view">
