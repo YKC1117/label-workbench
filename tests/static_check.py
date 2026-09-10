@@ -46,6 +46,20 @@ if missing_scripts:
     raise SystemExit(f'Missing required script references: {missing_scripts}')
 if 'assets/ui-refresh.css?v=20260910-v180' not in html:
     raise SystemExit('v1.8 UI refresh stylesheet is not linked with cache key')
+if 'assets/app.js?v=20260910-v181' not in html or 'assets/cloud.js?v=20260910-v181' not in html:
+    raise SystemExit('v1.8.1 app/cloud cache keys are not linked')
+
+legacy_scratch = ['scratchType','scratchPrefix','scratchSuffix','scratchEncoded','scratchHuman','scratchResult','updateScratch']
+for marker in legacy_scratch:
+    if marker in html or marker in js:
+        raise SystemExit(f'Legacy scratch-pad marker still exists: {marker}')
+
+if 'analysisFiles' in js or 'function analyzeSelected' in js:
+    raise SystemExit('Core app must not own or reintroduce a legacy quick-analysis listener')
+if "el('analysisFiles')" not in priority_js or "addEventListener('change'" not in priority_js:
+    raise SystemExit('Priority controller must own the single quick-analysis change listener')
+if 'stopImmediatePropagation' in priority_js:
+    raise SystemExit('Quick analysis must not rely on event-propagation suppression')
 
 for forbidden in ['SUPABASE_SERVICE_ROLE', 'sb_secret_']:
     if forbidden.lower() in cloud_cfg.lower():
@@ -76,8 +90,8 @@ if 'Local-first' not in cloud_js and '本機優先' not in cloud_js:
 for module in ['assets/cloud-attachments.js','assets/file-parsers.js','assets/barcode-reader.js']:
     if module not in cloud_js:
         raise SystemExit(f'Feature module is not wired by cloud loader: {module}')
-if '20260910-v180' not in cloud_js:
-    raise SystemExit('Cloud optional-module cache key must be v1.8')
+if '20260910-v181' not in cloud_js:
+    raise SystemExit('Cloud optional-module cache key must be v1.8.1')
 
 if "label-attachments" not in attachments_js or '20*1024*1024' not in attachments_js.replace(' ', ''):
     raise SystemExit('Private attachment add-on must target the expected bucket and 20 MB limit')
@@ -95,8 +109,8 @@ for marker in ['tesseract.js@7.0.0', 'createOcrWorker', 'renderPdfPage', "['eng'
 for module in ['barcode-reader-core.js','barcode-reader-ui.js','barcode-generator.js','label-interpreter.js','workbench-priority.js']:
     if module not in barcode_loader:
         raise SystemExit(f'Barcode/workbench loader is missing {module}')
-if '20260910-v180' not in barcode_loader:
-    raise SystemExit('Barcode/workbench loader cache key must be v1.8')
+if '20260910-v181' not in barcode_loader:
+    raise SystemExit('Barcode/workbench loader cache key must be v1.8.1')
 
 if "const ZX='3.1.3'" not in barcode_core or 'zxing-wasm@${ZX}' not in barcode_core:
     raise SystemExit('Barcode core must pin zxing-wasm 3.1.3')
@@ -127,9 +141,9 @@ for forbidden in ['查看 OCR 原文','OCR 值','OCR 待確認']:
     if forbidden in interpreter_js:
         raise SystemExit(f'Action-focused analysis still exposes technical OCR output: {forbidden}')
 
-for marker in ["['barcode','analysis','dashboard','cases','bartender']", 'runQuickAnalysis', 'stopImmediatePropagation', 'LabelWorkbenchParsers', 'LabelWorkbenchInterpreter', '20260910-v180', 'v1.8', 'injectUiRefresh']:
+for marker in ["['barcode','analysis','dashboard','cases','bartender']", 'runQuickAnalysis', 'LabelWorkbenchParsers', 'LabelWorkbenchInterpreter', '20260910-v181', 'v1.8', 'injectUiRefresh', 'bindQuickAnalysis']:
     if marker not in priority_js:
-        raise SystemExit(f'Priority controller is missing v1.8 workflow marker: {marker}')
+        raise SystemExit(f'Priority controller is missing v1.8.1 workflow marker: {marker}')
 
 for marker in ['analysis-summary','analysis-label-card','analysis-metrics','generator-options','@media(max-width:820px)']:
     if marker not in ui_css:
@@ -139,6 +153,7 @@ print(f'PASS: {len(ids)} HTML ids checked')
 print(f'PASS: {len(refs)} JavaScript DOM references checked')
 print(f'PASS: {len(handlers)} inline handler names checked')
 print('PASS: v1.8 cache keys and UI refresh wiring checked')
+print('PASS: quick analysis has one listener and no legacy scratch-pad path')
 print('PASS: enabled Supabase browser config is publishable-key only')
 print('PASS: optional modules have one loader and one cache-key chain')
 print('PASS: private attachment bucket and schema path are aligned')
