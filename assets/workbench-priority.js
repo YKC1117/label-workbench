@@ -1,14 +1,15 @@
-/* Label Workbench priority controller v1.3
+/* Label Workbench priority controller v1.4
  * Keeps the engineer's most-used tools first and gives Quick Analysis one stable entry point.
  * Does not change case data, localStorage format, Supabase tables, or attachment metadata.
  */
 (function(){
   'use strict';
 
-  const BUILD='20260910-v130';
+  const BUILD='20260910-v140';
   const el=id=>document.getElementById(id);
   const esc=(v='')=>String(v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
   const isImage=f=>!!(f?.type?.startsWith('image/')||/\.(jpe?g|png|webp|gif|bmp)$/i.test(f?.name||''));
+  const isPdf=f=>/\.pdf$/i.test(f?.name||'')||f?.type==='application/pdf';
 
   function reorderNav(){
     const order=['barcode','analysis','dashboard','cases','bartender'];
@@ -39,7 +40,7 @@
     }catch(err){console.warn('[Label Workbench] default barcode view failed',err)}
   }
 
-  function waitFor(getter,timeout=6000){
+  function waitFor(getter,timeout=7000){
     const start=Date.now();
     return new Promise(resolve=>{
       const tick=()=>{
@@ -96,10 +97,15 @@
     if(!arr.length){out.textContent='等待檔案';return}
 
     out.innerHTML='<div class="scan-working">正在準備快速分析…<br><small>載入本機解析元件中</small></div>';
-    const parsers=await waitFor(()=>window.LabelWorkbenchParsers,6000);
+    const parsers=await waitFor(()=>window.LabelWorkbenchParsers,7000);
 
     try{
-      if(parsers&&typeof parsers.analyze==='function'){
+      if(arr.length===1&&isPdf(arr[0])){
+        const interpreter=await waitFor(()=>window.LabelWorkbenchInterpreter,7000);
+        if(interpreter?.analyze)await interpreter.analyze(arr);
+        else if(parsers?.analyze)await parsers.analyze(arr);
+        else throw new Error('PDF 解析元件未載入');
+      }else if(parsers&&typeof parsers.analyze==='function'){
         await parsers.analyze(arr);
       }else if(typeof window.analyzeSelected==='function'){
         await window.analyzeSelected(arr);
@@ -129,7 +135,7 @@
     const title=el('pageTitle');
     if(title&&document.querySelector('#barcode.view.active'))title.textContent='條碼工具';
     const small=document.querySelector('.brand small');
-    if(small)small.textContent='標籤製作工作台 · v1.3';
+    if(small)small.textContent='標籤製作工作台 · v1.4';
   }
 
   function init(){
