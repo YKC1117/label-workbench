@@ -1,12 +1,12 @@
-/* Label Workbench Quick Analysis -> BT Quick Production bridge v1.3
+/* Label Workbench Quick Analysis -> BT Quick Production bridge v1.4
  * One click creates a real downloadable BT production pack.
  * If the BT module is missing, the bridge retries it instead of asking the user to refresh.
  */
 (function(){
   'use strict';
 
-  const BUILD='20260910-btb130';
-  const BT_QUICK_SRC='assets/bt-quick.js?v=20260910-bt130-retry';
+  const BUILD='20260910-btb140';
+  const BT_QUICK_SRC='assets/bt-quick.js?v=20260910-bt140-retry';
   const JSZIP_SRC='https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js';
   let latestResult=null,latestFiles=[],zipPromise=null,btQuickPromise=null;
 
@@ -51,7 +51,7 @@
       const JSZip=await loadZip(),zip=new JSZip();
       zip.file('BT_Data.csv','\uFEFF'+api.buildDataCsv(draft));zip.file('BT_Field_Map.csv','\uFEFF'+api.buildFieldMapCsv(draft));zip.file('BT_Barcode_Map.csv','\uFEFF'+api.buildBarcodeMapCsv(draft));
       zip.file('BT_製作說明.txt','\uFEFF'+api.buildReadme(draft));zip.file('BT_Open.cmd',api.buildOpenCmd(draft));zip.file('BT_WorkPack.json',JSON.stringify(draft,null,2));
-      zip.file('請放入公司BT母版.txt','請將最接近的公司 BarTender 母版 .btw 放在此資料夾，再雙擊 BT_Open.cmd。\r\n建議母版檔名：'+api.templateBaseName(draft)+'\r\nBT_Open.cmd 不會自動列印。');
+      zip.file('BT_使用方式.txt','\uFEFF有相似的公司 .btw：放進這個資料夾後雙擊 BT_Open.cmd。\r\n沒有 .btw：也可直接雙擊 BT_Open.cmd，它會嘗試開 BarTender 並開啟本資料夾。\r\n資料檔：BT_Data.csv\r\nBT_Open.cmd 不會自動列印。');
       const blob=await zip.generateAsync({type:'blob',compression:'DEFLATE'}),base=safeFile([draft.settings?.customer,draft.settings?.labelName].filter(Boolean).join('_')||draft.sourceFiles?.[0]?.replace(/\.[^.]+$/,'')||'Label');
       downloadBlob(blob,`BT_製作包_${base}.zip`);return{ok:true,type:'zip'}
     }catch(err){console.warn('[Label Workbench] BT ZIP auto export failed, falling back to CSV',err);return downloadCsvFallback(api,draft)?{ok:true,type:'csv',error:err}:{ok:false,type:'none',error:err}}
