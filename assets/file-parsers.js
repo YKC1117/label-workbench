@@ -19,28 +19,39 @@
   function ext(file){return (file?.name?.split('.').pop()||'').toLowerCase()}
   function parseCsvLine(line){const out=[];let cur='',quote=false;for(let i=0;i<line.length;i++){const ch=line[i];if(ch==='"'){if(quote&&line[i+1]==='"'){cur+='"';i++}else quote=!quote}else if(ch===','&&!quote){out.push(cur.trim());cur=''}else cur+=ch}out.push(cur.trim());return out}
   function classify(files){const g={image:0,pdf:0,excel:0,word:0,csv:0,btw:0,other:0};for(const f of files){const e=ext(f);if(['jpg','jpeg','png','webp'].includes(e))g.image++;else if(e==='pdf')g.pdf++;else if(['xls','xlsx'].includes(e))g.excel++;else if(['doc','docx'].includes(e))g.word++;else if(e==='csv')g.csv++;else if(e==='btw')g.btw++;else g.other++}return g}
+
   function loadScript(src,globalName){
     if(globalThis[globalName])return Promise.resolve(globalThis[globalName]);
     if(scriptPromises.has(src))return scriptPromises.get(src);
-    const p=new Promise((resolve,reject)=>{const s=document.createElement('script');s.src=src;s.async=true;s.crossOrigin='anonymous';s.onload=()=>globalThis[globalName]?resolve(globalThis[globalName]):reject(new Error(`${globalName} 未載入`));s.onerror=()=>reject(new Error(`無法載入解析元件：${src}`));document.head.appendChild(s)});
+    const p=new Promise((resolve,reject)=>{
+      const s=document.createElement('script');
+      s.src=src;s.async=true;s.crossOrigin='anonymous';
+      s.onload=()=>globalThis[globalName]?resolve(globalThis[globalName]):reject(new Error(`${globalName} 未載入`));
+      s.onerror=()=>reject(new Error(`無法載入解析元件：${src}`));
+      document.head.appendChild(s)
+    });
     scriptPromises.set(src,p);return p
   }
+
   async function loadPdf(){
     if(globalThis.__LABEL_PDFJS)return globalThis.__LABEL_PDFJS;
     if(!pdfModulePromise)pdfModulePromise=import(PDF_SRC).then(m=>{m.GlobalWorkerOptions.workerSrc=PDF_WORKER;globalThis.__LABEL_PDFJS=m;return m});
     return pdfModulePromise
   }
+
   function sampleTable(rows,maxRows=5,maxCols=10){
     const slice=(rows||[]).slice(0,maxRows).map(r=>(r||[]).slice(0,maxCols));
     if(!slice.length)return '<div class="footer-note">沒有可顯示的資料列。</div>';
     const width=Math.max(...slice.map(r=>r.length),0);
     return `<div class="table-scroll"><table class="analysis-table"><tbody>${slice.map((r,ri)=>`<tr>${Array.from({length:width},(_,i)=>`<${ri===0?'th':'td'}>${esc(r[i]??'')}</${ri===0?'th':'td'}>`).join('')}</tr>`).join('')}</tbody></table></div>`
   }
+
   function labelKeywords(text){
     const source=String(text||'').toLowerCase();
     const terms=['Vendor','Vendor PN','P/N','Part No','ASUS PN','Product Name','Spec','Stage','QTY','Quantity','Date Code','LOT','Lot No','Origin','Carton No','MSL','Net Weight','Gross Weight','Serial','S/N','Barcode','QR Code','Data Matrix'];
     return terms.filter(t=>source.includes(t.toLowerCase())).filter((v,i,a)=>a.indexOf(v)===i)
   }
+
   async function imageInfo(file){return new Promise(resolve=>{const img=new Image(),url=URL.createObjectURL(file);img.onload=()=>{resolve({w:img.naturalWidth,h:img.naturalHeight});URL.revokeObjectURL(url)};img.onerror=()=>{resolve({w:null,h:null});URL.revokeObjectURL(url)};img.src=url})}
 
   async function parseExcel(file){
@@ -75,32 +86,91 @@
 
   async function renderPdfPage(page){
     const base=page.getViewport({scale:1});
-    const scale=Math.min(2.6,2600/Math.max(base.width,base.height));
-    const viewport=page.getViewport({scale:Math.max(1.6,scale)});
+    const scale=Math.min(3.6,3200/Math.max(base.width,base.height));
+    const viewport=page.getViewport({scale:Math.max(2.2,scale)});
     const canvas=document.createElement('canvas');
     canvas.width=Math.max(1,Math.round(viewport.width));canvas.height=Math.max(1,Math.round(viewport.height));
     const ctx=canvas.getContext('2d',{willReadFrequently:true});
-    await page.render({canvasContext:ctx,viewport}).promise;
+    ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);
+    await page.render({canvasContext:ctx,viewport,background:'rgb(255,255,255)'}).promise;
     return canvas
+  }
+
+  function rotateCanvas(src,degrees){
+    const d=((degrees%360)+360)%360;
+    if(!d)return src;
+    const swap=d===90||d===270;
+    const c=document.createElement('canvas');
+    c.width=swap?src.height:src.width;c.height=swap?src.width:src.height;
+    const q=c.getContext('2d',{willReadFrequently:true});
+    q.fillStyle='#fff';q.fillRect(0,0,c.width,c.height);
+    q.translate(c.width/2,c.height/2);q.rotate(d*Math.PI/180);q.drawImage(src,-src.width/2,-src.height/2);
+    return c
+  }
+
+  function ocrTextScore(text){
+    const s=String(text||'');
+    const useful=(s.match(/[A-Za-z0-9\u3400-\u9FFF]/g)||[]).length;
+    const words=(s.match(/[A-Za-z]{2,}/g)||[]).length;
+    const fields=labelKeywords(s).length;
+    const junk=(s.match(/[=_|]{2,}/g)||[]).length;
+    return useful+words*2+fields*90-junk*6
   }
 
   async function createOcrWorker(onProgress){
     const Tesseract=await loadScript(TESSERACT_SRC,'Tesseract');
     if(typeof Tesseract?.createWorker!=='function')throw new Error('OCR 元件載入不完整');
-    return Tesseract.createWorker(['eng','chi_tra'],1,{
+    const worker=await Tesseract.createWorker(['eng','chi_tra'],1,{
       workerPath:TESSERACT_WORKER,
       logger:m=>{
         if(!onProgress)return;
         if(m?.status==='recognizing text'&&Number.isFinite(m.progress))onProgress(`OCR 文字辨識中… ${Math.round(m.progress*100)}%`);
-        else if(m?.status)onProgress(`OCR：${m.status}`);
+        else if(m?.status)onProgress(`OCR：${m.status}`)
       }
-    })
+    });
+    try{await worker.setParameters({tessedit_pageseg_mode:Tesseract.PSM?.SPARSE_TEXT||'11',preserve_interword_spaces:'1'})}catch(err){console.warn('[Label Workbench] OCR parameter setup skipped',err)}
+    return worker
+  }
+
+  async function recognizeOrientation(worker,canvas,onProgress,pageNo){
+    const tries=[
+      {degrees:0,label:'自動旋轉',options:{rotateAuto:true}},
+      {degrees:90,label:'轉 90°',options:{}},
+      {degrees:270,label:'轉 270°',options:{}},
+      {degrees:180,label:'轉 180°',options:{}}
+    ];
+    let best={text:'',score:-Infinity,degrees:0,canvas};
+    for(let i=0;i<tries.length;i++){
+      const t=tries[i],candidate=t.degrees?rotateCanvas(canvas,t.degrees):canvas;
+      onProgress?.(`第 ${pageNo} 頁 OCR：${t.label}（${i+1}/${tries.length}）…`);
+      let result=null;
+      try{result=await worker.recognize(candidate,t.options)}catch(err){console.warn('[Label Workbench] OCR orientation failed',t.label,err)}
+      const text=String(result?.data?.text||'').trim(),score=ocrTextScore(text);
+      if(score>best.score)best={text,score,degrees:t.degrees,canvas:candidate};
+      const fields=labelKeywords(text).length;
+      if(text.length>=80&&fields>=2&&score>=220)break
+    }
+    return best
+  }
+
+  function dedupeBarcodeRows(rows){
+    const out=[],seen=new Set();
+    for(const r of rows||[]){const key=`${r?.format||''}\0${r?.text||''}`;if(!r?.text||seen.has(key))continue;seen.add(key);out.push(r)}
+    return out
   }
 
   async function scanPdfCanvas(canvas,pageNo){
     const core=window.LabelWorkbenchBarcodeCore;
     if(!core||typeof core.scanCanvas!=='function')return[];
-    try{return await core.scanCanvas(canvas,`PDF 第 ${pageNo} 頁`)}catch(err){console.warn('[Label Workbench] PDF barcode scan failed',err);return[]}
+    const rows=[];
+    async function scan(c,label){try{rows.push(...await core.scanCanvas(c,`PDF 第 ${pageNo} 頁 · ${label}`))}catch(err){console.warn('[Label Workbench] PDF barcode scan failed',label,err)}}
+    await scan(canvas,'整頁');
+    if(!rows.length&&typeof core.crop==='function'){
+      const w=canvas.width,h=canvas.height;
+      const regions=[['左半',0,0,w*.58,h],['右半',w*.42,0,w*.58,h],['上半',0,0,w,h*.58],['下半',0,h*.42,w,h*.58],['左上',0,0,w*.58,h*.58],['右上',w*.42,0,w*.58,h*.58],['左下',0,h*.42,w*.58,h*.58],['右下',w*.42,h*.42,w*.58,h*.58]];
+      for(const [name,x,y,rw,rh] of regions){await scan(core.crop(canvas,x,y,rw,rh),name);if(rows.length>=8)break}
+    }
+    return dedupeBarcodeRows(rows)
   }
 
   function barcodeHtml(rows){
@@ -112,10 +182,7 @@
     const pdfjs=await loadPdf(),data=new Uint8Array(await file.arrayBuffer());
     const pdf=await pdfjs.getDocument({data}).promise;
     const textPages=Math.min(pdf.numPages,12),chunks=[];
-    for(let p=1;p<=textPages;p++){
-      const page=await pdf.getPage(p),content=await page.getTextContent();
-      chunks.push(content.items.map(x=>x.str||'').join(' '));
-    }
+    for(let p=1;p<=textPages;p++){const page=await pdf.getPage(p),content=await page.getTextContent();chunks.push(content.items.map(x=>x.str||'').join(' '))}
     const layerText=chunks.join('\n').trim();
     const hasUsefulText=layerText.replace(/\s/g,'').length>=12;
 
@@ -124,7 +191,7 @@
       return {text:layerText,html:`<div class="analysis-block"><b>PDF：${esc(file.name)}</b><div class="file-chips"><span class="file-chip">共 ${pdf.numPages} 頁</span><span class="file-chip">文字層</span><span class="file-chip">文字 ${layerText.length} 字元</span></div>${keys.length?`<div class="footer-note"><b>原稿文字中出現：</b>${keys.map(esc).join('、')}</div>`:''}<div class="document-preview">${esc(preview)}</div>${layerText.length>preview.length?'<div class="footer-note">預覽只顯示前 5,000 字。</div>':''}</div>`}
     }
 
-    const ocrPages=Math.min(pdf.numPages,OCR_MAX_PAGES),ocrChunks=[],barcodes=[];
+    const ocrPages=Math.min(pdf.numPages,OCR_MAX_PAGES),ocrChunks=[],barcodes=[],orientations=[];
     let worker=null,ocrError='';
     try{
       onProgress?.(`PDF 沒有文字層，準備 OCR（前 ${ocrPages} 頁）…`);
@@ -132,23 +199,18 @@
       for(let p=1;p<=ocrPages;p++){
         onProgress?.(`掃描型 PDF：正在處理第 ${p}/${ocrPages} 頁…`);
         const page=await pdf.getPage(p),canvas=await renderPdfPage(page);
-        const [ocrResult,barcodeRows]=await Promise.all([
-          worker.recognize(canvas).catch(err=>({data:{text:''},__error:err})),
-          scanPdfCanvas(canvas,p)
-        ]);
-        const pageText=String(ocrResult?.data?.text||'').trim();
-        if(pageText)ocrChunks.push(`【第 ${p} 頁】\n${pageText}`);
-        (barcodeRows||[]).forEach(r=>barcodes.push(r));
+        const best=await recognizeOrientation(worker,canvas,onProgress,p);
+        if(best.text)ocrChunks.push(`【第 ${p} 頁】\n${best.text}`);
+        orientations.push(best.degrees);
+        barcodes.push(...await scanPdfCanvas(canvas,p));
+        if(best.degrees&&barcodes.length<8)barcodes.push(...await scanPdfCanvas(best.canvas,p))
       }
-    }catch(err){
-      ocrError=err?.message||String(err);
-    }finally{
-      if(worker){try{await worker.terminate()}catch{}}
-    }
+    }catch(err){ocrError=err?.message||String(err)}finally{if(worker){try{await worker.terminate()}catch{}}}
 
     const ocrText=ocrChunks.join('\n\n').trim(),keys=labelKeywords(ocrText),preview=ocrText.slice(0,7000);
     const status=ocrText?`OCR 讀到 ${ocrText.length} 字元`:'OCR 沒有讀到文字';
-    return {text:ocrText,html:`<div class="analysis-block"><b>PDF：${esc(file.name)}</b><div class="file-chips"><span class="file-chip">共 ${pdf.numPages} 頁</span><span class="file-chip">掃描型 PDF</span><span class="file-chip">OCR 前 ${ocrPages} 頁</span><span class="file-chip">${esc(status)}</span></div>${ocrError?`<div class="note warn-note"><b>OCR 載入 / 辨識失敗：</b>${esc(ocrError)}</div>`:''}${keys.length?`<div class="footer-note"><b>OCR 找到標籤欄位：</b>${keys.map(esc).join('、')}</div>`:''}${preview?`<div class="document-preview">${esc(preview)}</div>`:'<div class="note warn-note">這份 PDF 沒有文字層，而且 OCR 也沒有讀到可用文字。若原稿很模糊、旋轉或字非常小，可改用原始圖片再測。</div>'}${ocrText.length>preview.length?'<div class="footer-note">OCR 預覽只顯示前 7,000 字。</div>':''}<div class="analysis-block"><b>PDF 條碼偵測：</b>${barcodeHtml(barcodes)}</div>${pdf.numPages>ocrPages?`<div class="footer-note">為避免手機 / 電腦卡住，掃描型 PDF 先自動 OCR 前 ${ocrPages} 頁。</div>`:''}</div>`}
+    const rotation=orientations.some(x=>x)?`<span class="file-chip">自動旋轉 ${orientations.map(x=>`${x}°`).join(' / ')}</span>`:'';
+    return {text:ocrText,html:`<div class="analysis-block"><b>PDF：${esc(file.name)}</b><div class="file-chips"><span class="file-chip">共 ${pdf.numPages} 頁</span><span class="file-chip">掃描型 PDF</span><span class="file-chip">OCR 前 ${ocrPages} 頁</span>${rotation}<span class="file-chip">${esc(status)}</span></div>${ocrError?`<div class="note warn-note"><b>OCR 載入 / 辨識失敗：</b>${esc(ocrError)}</div>`:''}${keys.length?`<div class="footer-note"><b>OCR 找到標籤欄位：</b>${keys.map(esc).join('、')}</div>`:''}${preview?`<div class="document-preview">${esc(preview)}</div>`:'<div class="note warn-note">這份 PDF 沒有文字層，而且旋轉 OCR 也沒有讀到可用文字。若原稿極度模糊或解析元件被瀏覽器封鎖，請截圖錯誤訊息。</div>'}${ocrText.length>preview.length?'<div class="footer-note">OCR 預覽只顯示前 7,000 字。</div>':''}<div class="analysis-block"><b>PDF 條碼偵測：</b>${barcodeHtml(dedupeBarcodeRows(barcodes))}</div>${pdf.numPages>ocrPages?`<div class="footer-note">為避免手機 / 電腦卡住，掃描型 PDF 先自動 OCR 前 ${ocrPages} 頁。</div>`:''}</div>`}
   }
 
   async function parseOne(file,onProgress){const e=ext(file);if(['xls','xlsx'].includes(e))return parseExcel(file);if(e==='csv')return parseCsv(file);if(['doc','docx'].includes(e))return parseDocx(file);if(e==='pdf')return parsePdf(file,onProgress);return null}
@@ -164,25 +226,24 @@
     const parseTargets=arr.filter(f=>['xls','xlsx','csv','doc','docx','pdf'].includes(ext(f))).slice(0,8);
     for(const f of parseTargets){
       const progress=msg=>{out.innerHTML=html+`<div class="scan-working">${esc(msg)}</div>`};
-      try{const result=await parseOne(f,progress);if(result)html+=result.html}
-      catch(err){html+=`<div class="analysis-block"><b>${esc(f.name)}</b><div class="note warn-note">解析失敗：${esc(err?.message||err)}</div></div>`}
-      out.innerHTML=html+'<div class="footer-note">持續解析中…</div>';
+      try{const result=await parseOne(f,progress);if(result)html+=result.html}catch(err){html+=`<div class="analysis-block"><b>${esc(f.name)}</b><div class="note warn-note">解析失敗：${esc(err?.message||err)}</div></div>`}
+      out.innerHTML=html+'<div class="footer-note">持續解析中…</div>'
     }
     if(groups.btw)html+=`<div class="analysis-block"><b>BarTender .btw</b><div class="note warn-note">已辨識為 BarTender 檔案，但不會在外部瀏覽器假裝解析物件內容。正式內容仍回公司用 BarTender 2022 R2 開啟確認。</div></div>`;
     html+=`<div class="analysis-block"><b>製作前仍要確認：</b><br>• Label 實際尺寸（寬 × 高）<br>• 印表機品牌 / 型號 / DPI<br>• 固定欄位與每張變動欄位<br>• 條碼種類、真正掃描內容、前後綴與 GS1 規則<br>• Excel / CSV 每列資料是否就是一張標籤</div><div class="note"><b>隱私：</b>PDF / Excel / Word / CSV、OCR 與條碼辨識都在你的瀏覽器本機執行。解析程式與 OCR 語言資料會從公開 CDN 載入，但客戶檔案本身不會上傳到 CDN。</div>`;
-    out.innerHTML=html;
+    out.innerHTML=html
   }
 
   function updateUi(){
     const note=[...(el('analysis')?.querySelectorAll('.warn-note')||[])].find(n=>(n.textContent||'').includes('已啟用本機解析'));
-    if(note)note.innerHTML='<b>已啟用本機解析：</b>Excel / CSV 可讀工作表與欄位、DOCX 可擷取文字、PDF 先讀文字層；掃描型 PDF 會自動轉圖片做 OCR，並同時嘗試辨識一維碼 / 二維碼。';
+    if(note)note.innerHTML='<b>已啟用本機解析：</b>Excel / CSV 可讀工作表與欄位、DOCX 可擷取文字、PDF 先讀文字層；掃描型 PDF 會自動轉圖片、判斷旋轉方向後做 OCR，並同時嘗試辨識一維碼 / 二維碼。';
     const quick=[...(el('dashboard')?.querySelectorAll('.quick button')||[])].find(b=>(b.textContent||'').includes('客戶原稿快速分析'));
-    const span=quick?.querySelector('span');if(span)span.textContent='PDF 文字層 / 掃描 OCR、Excel、Word、CSV 與圖片條碼';
+    const span=quick?.querySelector('span');if(span)span.textContent='PDF 文字層 / 掃描旋轉 OCR、Excel、Word、CSV 與圖片條碼'
   }
 
   function patch(){if(typeof window.analyzeSelected==='function'&&!baseAnalyze){baseAnalyze=window.analyzeSelected;window.analyzeSelected=analyze}updateUi()}
   function init(){let count=0;const t=setInterval(()=>{patch();if(baseAnalyze||count++>80)clearInterval(t)},100)}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 
-  window.LabelWorkbenchParsers={parseCsvLine,labelKeywords,classify,parseExcel,parseCsv,parseDocx,parsePdf,renderPdfPage,analyze};
+  window.LabelWorkbenchParsers={parseCsvLine,labelKeywords,classify,parseExcel,parseCsv,parseDocx,parsePdf,renderPdfPage,rotateCanvas,ocrTextScore,recognizeOrientation,scanPdfCanvas,analyze};
 })();
