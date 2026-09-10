@@ -14,6 +14,7 @@ barcode_generator = Path('assets/barcode-generator.js').read_text(encoding='utf-
 interpreter_js = Path('assets/label-interpreter.js').read_text(encoding='utf-8')
 priority_js = Path('assets/workbench-priority.js').read_text(encoding='utf-8')
 ui_css = Path('assets/ui-refresh.css').read_text(encoding='utf-8')
+nav_css = Path('assets/nav-groups.css').read_text(encoding='utf-8')
 schema_sql = Path('docs/supabase-schema.sql').read_text(encoding='utf-8')
 
 ids = set(re.findall(r'id="([^"]+)"', html))
@@ -29,7 +30,7 @@ if missing_handlers:
     raise SystemExit(f'Inline handlers without JavaScript functions: {missing_handlers}')
 
 required_files = [
-    'index.html', 'assets/app.css', 'assets/ui-refresh.css', 'assets/app.js',
+    'index.html', 'assets/app.css', 'assets/ui-refresh.css', 'assets/nav-groups.css', 'assets/app.js',
     'assets/cloud.css', 'assets/cloud.js', 'assets/cloud-config.js',
     'assets/cloud-attachments.js', 'assets/file-parsers.js',
     'assets/barcode-reader.js', 'assets/barcode-reader-core.js', 'assets/barcode-reader-ui.js',
@@ -46,7 +47,9 @@ if missing_scripts:
     raise SystemExit(f'Missing required script references: {missing_scripts}')
 if 'assets/ui-refresh.css?v=20260910-v190' not in html or 'data-lw-ui-refresh="true"' not in html:
     raise SystemExit('refreshed UI stylesheet must load once with the v1.9 cache key')
-if 'assets/app.js?v=20260910-v181' not in html or 'assets/cloud.js?v=20260910-v186' not in html:
+if 'assets/nav-groups.css?v=20260910-v110' not in html:
+    raise SystemExit('BT-first navigation stylesheet must use the v1.1 cache key')
+if 'assets/app.js?v=20260910-v181' not in html or 'assets/cloud.js?v=20260910-v187' not in html:
     raise SystemExit('latest app/cloud cache keys are not linked')
 
 legacy_scratch = ['scratchType','scratchPrefix','scratchSuffix','scratchEncoded','scratchHuman','scratchResult','updateScratch']
@@ -60,6 +63,20 @@ if "el('analysisFiles')" not in priority_js or "addEventListener('change'" not i
     raise SystemExit('Priority controller must own the single quick-analysis change listener')
 if 'stopImmediatePropagation' in priority_js:
     raise SystemExit('Quick analysis must not rely on event-propagation suppression')
+
+if "['barcode','analysis','bartender','dashboard','cases']" not in priority_js:
+    raise SystemExit('Navigation must prioritize Barcode, Analysis, then BT quick production')
+for marker in ['BT 快速製作','案件紀錄','20260910-v182','headerCopy','syncHeaderCopy']:
+    if marker not in priority_js:
+        raise SystemExit(f'Priority controller is missing BT-first workflow marker: {marker}')
+for marker in ['BT 製作','data-view="cases"','font-size:12px','#topNewCase{display:none!important}']:
+    if marker not in nav_css:
+        raise SystemExit(f'Navigation styling is missing optional-case marker: {marker}')
+if 'data-view="bartender">🖨️ BT 快速製作' not in html:
+    raise SystemExit('Static desktop navigation must expose BT quick production')
+mobile_nav = re.search(r'<nav class="mobile-nav">(.*?)</nav>', html, re.S)
+if not mobile_nav or 'data-view="bartender"' not in mobile_nav.group(1) or 'data-view="cases"' in mobile_nav.group(1):
+    raise SystemExit('Mobile navigation must prioritize BT and keep Cases out of the main tab bar')
 
 for forbidden in ['SUPABASE_SERVICE_ROLE', 'sb_secret_']:
     if forbidden.lower() in cloud_cfg.lower():
@@ -90,8 +107,8 @@ if 'Local-first' not in cloud_js and '本機優先' not in cloud_js:
 for module in ['assets/cloud-attachments.js','assets/file-parsers.js','assets/barcode-reader.js']:
     if module not in cloud_js:
         raise SystemExit(f'Feature module is not wired by cloud loader: {module}')
-if '20260910-v186' not in cloud_js:
-    raise SystemExit('Cloud optional-module cache key must be v1.8.6')
+if '20260910-v187' not in cloud_js:
+    raise SystemExit('Cloud optional-module cache key must be v1.8.7')
 
 if "label-attachments" not in attachments_js or '20*1024*1024' not in attachments_js.replace(' ', ''):
     raise SystemExit('Private attachment add-on must target the expected bucket and 20 MB limit')
@@ -109,8 +126,8 @@ for marker in ['tesseract.js@7.0.0', 'createOcrWorker', 'renderPdfPage', "['eng'
 for module in ['barcode-reader-core.js','barcode-reader-ui.js','barcode-generator.js','label-interpreter.js','workbench-priority.js']:
     if module not in barcode_loader:
         raise SystemExit(f'Barcode/workbench loader is missing {module}')
-if '20260910-v186' not in barcode_loader:
-    raise SystemExit('Barcode/workbench loader cache key must be v1.8.6')
+if '20260910-v187' not in barcode_loader:
+    raise SystemExit('Barcode/workbench loader cache key must be v1.8.7')
 
 if "const ZX='3.1.3'" not in barcode_core or 'zxing-wasm@${ZX}' not in barcode_core:
     raise SystemExit('Barcode core must pin zxing-wasm 3.1.3')
@@ -152,10 +169,6 @@ for forbidden in ['查看 OCR 原文','OCR 值','OCR 待確認']:
     if forbidden in interpreter_js:
         raise SystemExit(f'Action-focused analysis still exposes technical OCR output: {forbidden}')
 
-for marker in ["['barcode','analysis','dashboard','cases','bartender']", 'runQuickAnalysis', 'LabelWorkbenchParsers', 'LabelWorkbenchInterpreter', '20260910-v181', 'v1.8', 'injectUiRefresh', 'bindQuickAnalysis']:
-    if marker not in priority_js:
-        raise SystemExit(f'Priority controller is missing v1.8.1 workflow marker: {marker}')
-
 for marker in ['analysis-summary','analysis-label-card','analysis-metrics','generator-options','@media(max-width:820px)','barcode-mode-tabs','mobile-nav']:
     if marker not in ui_css:
         raise SystemExit(f'UI refresh stylesheet is missing marker: {marker}')
@@ -164,9 +177,10 @@ print(f'PASS: {len(ids)} HTML ids checked')
 print(f'PASS: {len(refs)} JavaScript DOM references checked')
 print(f'PASS: {len(handlers)} inline handler names checked')
 print('PASS: refreshed UI stylesheet is single-loaded with v1.9 cache key')
+print('PASS: navigation prioritizes shared tools and BT quick production; Cases are optional')
 print('PASS: quick analysis has one listener and no legacy scratch-pad path')
 print('PASS: enabled Supabase browser config is publishable-key only')
-print('PASS: optional modules have one loader and v1.8.6 cache-key chain')
+print('PASS: optional modules have one loader and v1.8.7 cache-key chain')
 print('PASS: private attachment bucket and schema path are aligned')
 print('PASS: private attachments and document parser dependency pins checked')
 print('PASS: barcode reader normalizes transparent clipboard images and auto deep-scans pasted images')
