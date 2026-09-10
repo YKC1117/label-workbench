@@ -31,6 +31,7 @@ jobs:
           node --check assets/barcode-reader.js
           node --check assets/barcode-reader-core.js
           node --check assets/barcode-reader-ui.js
+          node --check assets/workbench-priority.js
 
       - name: Static HTML / JS integrity check
         run: python3 tests/static_check.py
