@@ -252,12 +252,47 @@
     const style = document.createElement('style');
     style.id = 'barcodeGeneratorStyle';
     style.textContent = `
-      .barcode-mode-tabs{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0 18px}.barcode-mode-tabs .btn{min-width:160px}
-      .generator-grid{display:grid;grid-template-columns:220px 1fr;gap:14px}.generator-options{display:grid;grid-template-columns:minmax(220px,320px) minmax(220px,320px);gap:12px;margin-top:12px}
-      .generator-preview{margin-top:16px;min-height:180px;border:1px dashed #cbd5e1;border-radius:14px;background:#fff;padding:18px;display:flex;align-items:center;justify-content:center;overflow:auto}
-      .generator-preview canvas{max-width:100%;height:auto}.generator-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
-      #genVerify{margin-top:10px}.generator-tip{margin-top:12px}.generator-size-help{display:block;margin-top:5px;color:#64748b;font-size:12px}
-      @media(max-width:820px){.generator-grid{grid-template-columns:1fr}.generator-options{grid-template-columns:1fr}.barcode-mode-tabs .btn{flex:1;min-width:0}.generator-actions .btn{flex:1}.generator-preview{min-height:150px}}
+      #barcodeGeneratorPanel{padding:24px}
+      #barcodeGeneratorPanel>.section-title{margin-bottom:12px}
+      .barcode-mode-tabs{display:inline-grid;grid-template-columns:1fr 1fr;gap:4px;margin:6px 0 20px;padding:4px;background:#eef2f7;border:1px solid #e2e8f0;border-radius:13px}
+      .barcode-mode-tabs .btn{min-width:170px;min-height:40px;border:0!important;border-radius:9px;box-shadow:none!important;transform:none!important}
+      .barcode-mode-tabs .btn.primary{background:#fff;color:#1d4ed8;box-shadow:0 1px 4px rgba(15,23,42,.09)!important}
+      .barcode-mode-tabs .btn.ghost{background:transparent;color:#64748b}
+      .generator-grid{display:grid;grid-template-columns:260px minmax(0,1fr);gap:16px;align-items:start}
+      .generator-grid .field{gap:7px}
+      #genText{min-height:82px;max-height:150px;resize:vertical;line-height:1.5}
+      .generator-controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:14px;padding:11px 12px;border:1px solid #e2e8f0;border-radius:12px;background:#f8fafc}
+      .generator-size-field{display:flex;align-items:center;gap:8px;min-height:38px}
+      .generator-size-field label{font-size:13px;font-weight:800;color:#334155;white-space:nowrap}
+      .generator-size-field input{width:84px;height:38px;border:1px solid #d7dee9;border-radius:9px;background:#fff;padding:7px 10px;font:inherit;color:#172033}
+      .generator-size-field input:focus{outline:3px solid #dbeafe;border-color:#60a5fa}
+      .generator-size-field .unit{font-size:12px;color:#64748b}
+      .generator-size-field small{font-size:11px;color:#94a3b8;white-space:nowrap}
+      .generator-toggle{position:relative;display:inline-flex;align-items:center;gap:9px;min-height:38px;padding:0 4px;cursor:pointer;user-select:none}
+      .generator-toggle input{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
+      .generator-toggle-track{position:relative;width:38px;height:22px;border-radius:999px;background:#cbd5e1;flex:0 0 auto;transition:.18s ease}
+      .generator-toggle-track::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(15,23,42,.25);transition:.18s ease}
+      .generator-toggle input:checked+.generator-toggle-track{background:#2563eb}
+      .generator-toggle input:checked+.generator-toggle-track::after{transform:translateX(16px)}
+      .generator-toggle input:focus-visible+.generator-toggle-track{outline:3px solid #bfdbfe}
+      .generator-toggle-copy{display:grid;gap:1px}
+      .generator-toggle-copy b{font-size:13px;color:#334155}
+      .generator-toggle-copy small{font-size:11px;color:#94a3b8}
+      .generator-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;padding-top:2px}
+      .generator-actions .btn{min-height:40px;padding:9px 14px}
+      .generator-actions #genGo{min-width:118px}
+      .generator-actions .btn:disabled{opacity:.45}
+      .generator-preview{margin-top:16px;min-height:160px;border:1px solid #dbe3ee;border-radius:14px;background:linear-gradient(180deg,#fff,#fbfdff);padding:20px;display:flex;align-items:center;justify-content:center;overflow:auto}
+      .generator-preview canvas{max-width:100%;height:auto}
+      #genVerify{margin-top:9px}.generator-tip{margin-top:12px}.generator-size-help{display:none}
+      @media(max-width:820px){
+        #barcodeGeneratorPanel{padding:16px}
+        .barcode-mode-tabs{display:grid;width:100%;margin-bottom:16px}.barcode-mode-tabs .btn{min-width:0}
+        .generator-grid{grid-template-columns:1fr;gap:12px}#genText{min-height:76px}
+        .generator-controls{align-items:flex-start;gap:10px;padding:10px}.generator-size-field{width:100%}.generator-toggle{width:100%}
+        .generator-actions{display:grid;grid-template-columns:1fr 1fr}.generator-actions #genGo{grid-column:1/-1}
+        .generator-preview{min-height:135px;padding:14px}
+      }
     `;
     document.head.appendChild(style);
   }
@@ -266,24 +301,22 @@
     const section = el('barcode');
     if(!section || el('barcodeGeneratorPanel')) return;
     styles();
-    const legacy = el('scratchType')?.closest('.panel');
-    if(legacy) legacy.classList.add('hidden');
 
     const panel = document.createElement('div');
     panel.id = 'barcodeGeneratorPanel';
     panel.className = 'panel';
     panel.innerHTML = `
-      <div class="section-title"><div><h3>▥ 條碼工具</h3><p class="muted compact">客戶給圖片就讀碼；客戶給內容就直接生碼，不用先開 BarTender。</p></div><span class="pill">v1.8</span></div>
+      <div class="section-title"><div><h3>▥ 條碼工具</h3><p class="muted compact">客戶給圖片就讀碼；客戶給內容就直接生碼，不用先開 BarTender。</p></div></div>
       <div class="barcode-mode-tabs"><button id="modeGenerate" class="btn primary" type="button">產生條碼</button><button id="modeRead" class="btn ghost" type="button">讀取客戶條碼</button></div>
       <div id="barcodeGenerateBody">
         <div class="generator-grid">
           <div class="field"><label for="genType">條碼種類</label><select id="genType">${Object.keys(TYPES).map(name => `<option>${esc(name)}</option>`).join('')}</select></div>
-          <div class="field"><label for="genText">客戶指定內容</label><textarea id="genText" rows="3" placeholder="例如：ABC123、LOT20260910、網址，或 (01)... 的 GS1 內容"></textarea></div>
+          <div class="field"><label for="genText">客戶指定內容</label><textarea id="genText" rows="2" placeholder="例如：ABC123、LOT20260910、網址，或 (01)... 的 GS1 內容"></textarea></div>
         </div>
-        <div class="generator-options">
-          <div id="gen1DOptions" class="field"><label for="genHeight">一維碼高度（mm）</label><input id="genHeight" type="number" min="2" max="40" step="0.5" value="4"><small class="generator-size-help">預設 4 mm，可調到 2 mm；太低時仍要以實際掃碼結果為準。</small></div>
-          <label id="genHumanWrap" class="field"><span>條碼下方文字</span><span><input id="genHuman" type="checkbox" checked> 顯示</span></label>
-          <div id="gen2DOptions" class="field hidden"><label for="gen2DSize">二維碼大小</label><input id="gen2DSize" type="number" min="1" max="10" step="1" value="3"><small class="generator-size-help">1 最小、10 最大；使用整數模組縮放，避免把 QR / Data Matrix 拉糊。</small></div>
+        <div class="generator-controls">
+          <div id="gen1DOptions" class="generator-size-field"><label for="genHeight">一維碼高度</label><input id="genHeight" type="number" min="2" max="40" step="0.5" value="4"><span class="unit">mm</span><small>2–40</small></div>
+          <label id="genHumanWrap" class="generator-toggle" for="genHuman"><input id="genHuman" type="checkbox" checked><span class="generator-toggle-track" aria-hidden="true"></span><span class="generator-toggle-copy"><b>顯示條碼文字</b><small>一維碼下方內容</small></span></label>
+          <div id="gen2DOptions" class="generator-size-field hidden"><label for="gen2DSize">二維碼大小</label><input id="gen2DSize" type="number" min="1" max="10" step="1" value="3"><span class="unit">級</span><small>1–10</small></div>
         </div>
         <div class="generator-actions"><button id="genGo" class="btn primary" type="button">立即產生</button><button id="genCopyText" class="btn ghost" type="button" disabled>複製內容</button><button id="genCopyImage" class="btn ghost" type="button" disabled>複製圖片</button><button id="genDownload" class="btn ghost" type="button" disabled>下載 PNG</button></div>
         <div id="genMessage"></div>
