@@ -388,6 +388,8 @@ input[type="file"]::file-selector-button{
 .scan-card h3{font-size:13px!important}
 .scan-row pre{margin:8px 0!important;padding:11px!important;border-radius:9px!important;font-size:12px!important}
 .retry-row{gap:8px!important}
+#barcodeScannerPanel .section-title .muted.compact{color:#dc2626!important;font-weight:800!important}
+#barcodeScannerPanel>.note{font-weight:800}
 
 /* ===== Quick analysis ===== */
 #analysis>.panel{padding:22px}
