@@ -1,12 +1,12 @@
-/* Label Workbench native editable BTW generator v0.2
+/* Label Workbench native editable BTW generator v0.2.1
  * Quick Analysis -> native BarTender .btw with editable Text / Code 128 / Data Matrix objects.
  * Structural seed: Seagull Scientific's official CEALabelCode-128.btw (BarTender 2022 R5),
- * fetched through the fixed btw-seed CORS proxy. Customer data never leaves this browser.
+ * fetched through the fixed btw-seed CORS proxy. Customer label values are patched locally in the browser.
  */
 (function(){
   'use strict';
 
-  const BUILD='20260910-btwn200';
+  const BUILD='20260910-btwn210';
   const SEED_ID='CEA-2022-R5';
   const SEED_FUNCTION='btw-seed';
   const JSZIP_SRC='https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js';
@@ -56,6 +56,8 @@
   function addReplacement(map,entry,value){if(entry)map.set(entry.offset,{entry,value:String(value??'')})}
   function addAll(map,entries,value){for(const e of entries)addReplacement(map,e,value)}
   function applyReplacements(F,container,map){let out=container;for(const r of[...map.values()].sort((a,b)=>b.entry.offset-a.entry.offset))out=F.replaceStringAt(out,r.entry,r.value);return out}
+  function setI32(data,offset,value){if(offset<0||offset+4>data.length)return false;new DataView(data.buffer,data.byteOffset,data.byteLength).setInt32(offset,Math.trunc(value),true);return true}
+  function moveTopObject(data,tags,type,x,y){const t=tags.find(v=>v.type===type);if(!t)return false;return setI32(data,t.coordOffset,x)&&setI32(data,t.coordOffset+4,y)}
 
   function sourcePlan(label){
     const dmRows=supportedBarcodes(label,'dm'),c128Rows=supportedBarcodes(label,'c128'),unsupported=unsupportedBarcodes(label);
@@ -63,11 +65,7 @@
     if(dmRows.length>1)throw new Error('單張標籤目前最多建立 1 個原生 Data Matrix；已保留 PNG 製作備援');
     if(dmRows.length&&c128Rows.length>2)throw new Error('同張含 Data Matrix 時目前最多建立 2 個原生 Code 128；已保留 PNG 製作備援');
     if(!dmRows.length&&c128Rows.length>3)throw new Error('單張標籤目前最多建立 3 個原生 Code 128；已保留 PNG 製作備援');
-    const dm=barcodeText(dmRows[0]);
-    const c128=c128Rows.map(barcodeText);
-    // Official CEA has three Code 128 objects bound to PART, SERIAL, CAGE.
-    // When Data Matrix is used, CAGE is intentionally reserved as an empty named-source sink
-    // so the composite Data Matrix can be collapsed into one exact browser-supplied payload.
+    const dm=barcodeText(dmRows[0]),c128=c128Rows.map(barcodeText);
     const named={part:c128[0]||'',serial:c128[1]||'',cage:dm?'':(c128[2]||'')};
     return{dm,c128,named,kind:barcodeKind(label)};
   }
@@ -77,44 +75,37 @@
     if(!textRange||!dmRange||!c128Range)throw new Error('官方 CEA BTW 種子缺少文字、Data Matrix 或 Code 128 原生物件');
     const entries=F.scanUtf16Strings(data,{minLength:1,maxLength:6000}),summary=fieldSummary(label),plan=sourcePlan(label),rep=new Map(),globalRange={start:0,end:textRange.start};
 
-    // Named source values are kept structurally intact; only their current values are replaced.
     addAll(rep,entriesIn(entries,globalRange,e=>e.text===CEA_DEFAULTS.part),plan.named.part);
     addAll(rep,entriesIn(entries,globalRange,e=>e.text===CEA_DEFAULTS.serial),plan.named.serial);
     addAll(rep,entriesIn(entries,globalRange,e=>e.text===CEA_DEFAULTS.cage),plan.named.cage);
 
-    // Reuse the first native text object as the editable production field summary.
     const summaryEntry=entriesIn(entries,textRange,e=>e.text==='(17V) MFR ID CAGE')[0];
     if(!summaryEntry)throw new Error('找不到官方 CEA 文字資料欄位');
     addReplacement(rep,summaryEntry,summary);
     addReplacement(rep,entriesIn(entries,textRange,e=>e.text==='Text 1')[0],'LW_FIELDS');
-    const serialPrefix=plan.named.serial?'Code128: ':'';
-    addAll(rep,entriesIn(entries,textRange,e=>e.text==='(S) '),serialPrefix);
+    addAll(rep,entriesIn(entries,textRange,e=>e.text==='(S) '),plan.named.serial?'Code128: ':'');
 
-    // Collapse the official multi-source Data Matrix expression to one exact fixed payload.
     const dmPrefix=entriesIn(entries,dmRange,e=>e.text==='[)>«RS»06«GS»')[0];
     if(!dmPrefix)throw new Error('找不到官方 CEA Data Matrix 主資料欄位');
     addReplacement(rep,dmPrefix,plan.dm);
     for(const token of DM_FIXED)addAll(rep,entriesIn(entries,dmRange,e=>e.text===token),'');
-    // CAGE stays as the empty sink. SERIAL/PART references inside Data Matrix are redirected to it;
-    // Code 128 references outside this range remain untouched.
     addAll(rep,entriesIn(entries,dmRange,e=>e.text==='SERIAL'||e.text==='PART'),'CAGE');
     addReplacement(rep,entriesIn(entries,dmRange,e=>e.text==='Barcode 1')[0],plan.dm?'LW_DATAMATRIX':'LW_DATAMATRIX_UNUSED');
+    if(!plan.dm)moveTopObject(data,tags,'BcDatamatrixData',50000,50000);
 
-    // Native Code 128 objects: Barcode 4=PART, Barcode 3=SERIAL, Barcode 2=CAGE.
     const names=[
       ['Barcode 4',plan.named.part?'LW_CODE128_01':'LW_CODE128_UNUSED_01'],
       ['Barcode 3',plan.named.serial?'LW_CODE128_02':'LW_CODE128_UNUSED_02'],
       ['Barcode 2',plan.named.cage?'LW_CODE128_03':'LW_CODE128_UNUSED_03']
     ];
     for(const[n,v]of names)addReplacement(rep,entriesIn(entries,c128Range,e=>e.text===n)[0],v);
-    // Remove CEA-specific visible caption while preserving its native text object.
     addAll(rep,entriesIn(entries,c128Range,e=>e.text==='(1P) SPLR PART'),'');
 
     return{container:applyReplacements(F,data,rep),summary,plan,seed:SEED_ID};
   }
 
   function seedEndpoint(){
-    const cfg=window.LabelWorkbenchCloudConfig||{};
+    const cfg=window.LABEL_WORKBENCH_CLOUD||window.LabelWorkbenchCloudConfig||{};
     const base=String(cfg.url||'').replace(/\/$/,'');
     if(!base||!String(cfg.key||'').startsWith('sb_publishable_'))throw new Error('BTW 官方種子連線設定未載入');
     return{url:`${base}/functions/v1/${SEED_FUNCTION}`,key:String(cfg.key)};
@@ -151,7 +142,7 @@
     const labels=(result?.labels||[]).slice(0,20);if(!labels.length)throw new Error('目前沒有可建立 BTW 的分析結果');
     const outputs=[];for(let i=0;i<labels.length;i++){onProgress?.(`正在建立 BarTender 2022 可編輯 BTW ${i+1}/${labels.length}`);outputs.push(await generateOne(labels[i],i))}
     if(outputs.length===1){downloadBlob(new Blob([outputs[0].bytes],{type:'application/octet-stream'}),outputs[0].name);return{ok:true,type:'btw',count:1,outputs}}
-    const JSZip=await loadZip(),zip=new JSZip();for(const out of outputs)zip.file(out.name,out.bytes);zip.file('README.txt','These BTW files preserve native editable Text, Data Matrix and Code 128 objects from Seagull Scientific\'s official BarTender 2022 R5 CEA template structure. Quick Analysis customer values are patched locally in the browser. Open each file in BarTender and verify layout/content before printing.');const blob=await zip.generateAsync({type:'blob',compression:'DEFLATE'}),base=safeFile(String(labels[0]?.sourceName||files?.[0]?.name||'Label').replace(/\.[^.]+$/,''));downloadBlob(blob,`BT_Editable_${base}.zip`);return{ok:true,type:'zip',count:outputs.length,outputs}
+    const JSZip=await loadZip(),zip=new JSZip();for(const out of outputs)zip.file(out.name,out.bytes);zip.file('README.txt','These BTW files preserve native editable Text, Data Matrix and Code 128 objects from Seagull Scientific\'s official BarTender 2022 R5 CEA template structure. Quick Analysis values are patched locally in the browser. Open each file in BarTender and verify layout/content before printing.');const blob=await zip.generateAsync({type:'blob',compression:'DEFLATE'}),base=safeFile(String(labels[0]?.sourceName||files?.[0]?.name||'Label').replace(/\.[^.]+$/,''));downloadBlob(blob,`BT_Editable_${base}.zip`);return{ok:true,type:'zip',count:outputs.length,outputs}
   }
 
   window.LabelWorkbenchBtwNative={BUILD,SEED_ID,SEED_FUNCTION,CEA_DEFAULTS,barcodeKind,supportedBarcode,supportedBarcodes,unsupportedBarcodes,fieldSummary,scanTags,tagRange,sourcePlan,patchCea,seedEndpoint,fetchSeed,generateOne,downloadFromAnalysis};
