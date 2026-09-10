@@ -1,17 +1,17 @@
-/* Label Workbench label interpreter v1.6
+/* Label Workbench label interpreter v1.8
  * Customer file -> production-ready facts.
- * Recognition is internal. UI shows fields, decoded barcodes, confidence and next actions.
- * Evidence priority: decoded barcode > repeated recognition > single recognition. Never invent missing values.
+ * OCR/layout recognition stays internal; UI shows fields, decoded barcodes, confidence and next actions.
+ * Evidence priority: decoded barcode > repeated/layout-consistent recognition > single recognition.
  */
 (function(){
   'use strict';
 
-  const BUILD='20260910-v161';
+  const BUILD='20260910-v180';
   const PDF_SRC='https://cdn.jsdelivr.net/npm/pdfjs-dist@6.3.289/build/pdf.min.mjs';
   const PDF_WORKER='https://cdn.jsdelivr.net/npm/pdfjs-dist@6.3.289/build/pdf.worker.min.mjs';
   const TESS_SRC='https://cdn.jsdelivr.net/npm/tesseract.js@7.0.0/dist/tesseract.min.js';
   const TESS_WORKER='https://cdn.jsdelivr.net/npm/tesseract.js@7.0.0/dist/worker.min.js';
-  let pdfPromise=null,tessPromise=null,lastResult=null,lastFiles=[];
+  let pdfPromise=null,tessPromise=null,lastResult=null;
 
   const el=id=>document.getElementById(id);
   const esc=(v='')=>String(v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
@@ -38,7 +38,6 @@
     {code:'',name:'SERIAL',aliases:['SERIAL NO','SERIAL NUMBER','SERIAL','S/N']},
     {code:'',name:'MODEL',aliases:['MODEL NO','MODEL NUMBER','MODEL']}
   ];
-  const CODE_MAP=Object.fromEntries(FIELD_DEFS.filter(x=>x.code).map(x=>[x.code,x.name]));
   const KNOWN_CODES=FIELD_DEFS.filter(x=>x.code).map(x=>x.code).sort((a,b)=>b.length-a.length);
 
   function loadScript(src,globalName){
@@ -61,7 +60,7 @@
   async function createWorker(onProgress){
     const T=await loadScript(TESS_SRC,'Tesseract');
     const worker=await T.createWorker(['eng','chi_tra'],1,{workerPath:TESS_WORKER,logger:m=>{
-      if(m?.status==='recognizing text'&&Number.isFinite(m.progress))onProgress?.(`正在讀取文字… ${Math.round(m.progress*100)}%`);
+      if(m?.status==='recognizing text'&&Number.isFinite(m.progress))onProgress?.(`正在讀取原稿… ${Math.round(m.progress*100)}%`);
     }});
     try{await worker.setParameters({preserve_interword_spaces:'1'})}catch{}
     return worker;
@@ -69,7 +68,7 @@
 
   async function renderPage(page){
     const base=page.getViewport({scale:1});
-    const scale=Math.max(2.6,Math.min(4.2,4300/Math.max(base.width,base.height)));
+    const scale=Math.max(3,Math.min(4.8,4800/Math.max(base.width,base.height)));
     const vp=page.getViewport({scale});
     const c=document.createElement('canvas');c.width=Math.round(vp.width);c.height=Math.round(vp.height);
     const x=c.getContext('2d',{willReadFrequently:true});x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);
@@ -81,37 +80,47 @@
     const x=c.getContext('2d',{willReadFrequently:true});x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.translate(c.width/2,c.height/2);x.rotate(d*Math.PI/180);x.drawImage(src,-src.width/2,-src.height/2);return c;
   }
 
-  function crop(src,x,y,w,h){
+  function crop(src,x,y,w,h,pad=0){
+    x=Math.max(0,Math.floor(x-pad));y=Math.max(0,Math.floor(y-pad));w=Math.min(src.width-x,Math.ceil(w+pad*2));h=Math.min(src.height-y,Math.ceil(h+pad*2));
     const c=document.createElement('canvas');c.width=Math.max(1,Math.round(w));c.height=Math.max(1,Math.round(h));const z=c.getContext('2d',{willReadFrequently:true});z.fillStyle='#fff';z.fillRect(0,0,c.width,c.height);z.drawImage(src,x,y,w,h,0,0,c.width,c.height);return c;
   }
 
   async function imageCanvas(file){
     const img=await new Promise((resolve,reject)=>{const i=new Image(),u=URL.createObjectURL(file);i.onload=()=>{URL.revokeObjectURL(u);resolve(i)};i.onerror=()=>{URL.revokeObjectURL(u);reject(new Error('圖片無法開啟'))};i.src=u});
-    const max=Math.max(img.naturalWidth||1,img.naturalHeight||1),scale=Math.max(1,Math.min(3,4200/max));const c=document.createElement('canvas');c.width=Math.round(img.naturalWidth*scale);c.height=Math.round(img.naturalHeight*scale);const x=c.getContext('2d',{willReadFrequently:true});x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(img,0,0,c.width,c.height);return c;
+    const max=Math.max(img.naturalWidth||1,img.naturalHeight||1),scale=Math.max(1,Math.min(3.4,4600/max));const c=document.createElement('canvas');c.width=Math.round(img.naturalWidth*scale);c.height=Math.round(img.naturalHeight*scale);const x=c.getContext('2d',{willReadFrequently:true});x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(img,0,0,c.width,c.height);return c;
   }
 
   function grayAt(d,i){return(d[i]*77+d[i+1]*150+d[i+2]*29)>>8}
 
-  function contentBounds(canvas,threshold=242){
+  function contentBounds(canvas,threshold=244){
     const x=canvas.getContext('2d',{willReadFrequently:true}),im=x.getImageData(0,0,canvas.width,canvas.height),d=im.data,sx=Math.max(1,Math.ceil(canvas.width/1800)),sy=Math.max(1,Math.ceil(canvas.height/1800));let minX=canvas.width,minY=canvas.height,maxX=-1,maxY=-1;
     for(let y=0;y<canvas.height;y+=sy)for(let xx=0;xx<canvas.width;xx+=sx){const i=(y*canvas.width+xx)*4;if(grayAt(d,i)<threshold){if(xx<minX)minX=xx;if(xx>maxX)maxX=xx;if(y<minY)minY=y;if(y>maxY)maxY=y}}
-    if(maxX<0)return{x:0,y:0,w:canvas.width,h:canvas.height};const px=Math.round(canvas.width*.018),py=Math.round(canvas.height*.018);minX=Math.max(0,minX-px);minY=Math.max(0,minY-py);maxX=Math.min(canvas.width-1,maxX+px);maxY=Math.min(canvas.height-1,maxY+py);return{x:minX,y:minY,w:maxX-minX+1,h:maxY-minY+1};
+    if(maxX<0)return{x:0,y:0,w:canvas.width,h:canvas.height};const px=Math.round(canvas.width*.02),py=Math.round(canvas.height*.02);minX=Math.max(0,minX-px);minY=Math.max(0,minY-py);maxX=Math.min(canvas.width-1,maxX+px);maxY=Math.min(canvas.height-1,maxY+py);return{x:minX,y:minY,w:maxX-minX+1,h:maxY-minY+1};
   }
 
   function trimCanvas(canvas){const b=contentBounds(canvas);return crop(canvas,b.x,b.y,b.w,b.h)}
 
   function enhanceCanvas(src,mode='gray'){
-    const trimmed=trimCanvas(src),target=Math.min(3600,Math.max(trimmed.width,2200)),scale=Math.max(1,Math.min(2.2,target/Math.max(1,trimmed.width)));const c=document.createElement('canvas');c.width=Math.round(trimmed.width*scale);c.height=Math.round(trimmed.height*scale);const x=c.getContext('2d',{willReadFrequently:true});x.imageSmoothingEnabled=true;x.drawImage(trimmed,0,0,c.width,c.height);
+    const trimmed=trimCanvas(src),target=Math.min(3900,Math.max(trimmed.width,2400)),scale=Math.max(1,Math.min(2.4,target/Math.max(1,trimmed.width)));const c=document.createElement('canvas');c.width=Math.round(trimmed.width*scale);c.height=Math.round(trimmed.height*scale);const x=c.getContext('2d',{willReadFrequently:true});x.imageSmoothingEnabled=true;x.drawImage(trimmed,0,0,c.width,c.height);
     const im=x.getImageData(0,0,c.width,c.height),d=im.data;let lo=255,hi=0;for(let i=0;i<d.length;i+=16){const g=grayAt(d,i);if(g<lo)lo=g;if(g>hi)hi=g}if(hi-lo<40){lo=0;hi=255}
-    for(let i=0;i<d.length;i+=4){let g=grayAt(d,i);g=Math.max(0,Math.min(255,(g-lo)*255/Math.max(1,hi-lo)));if(mode==='bw')g=g<190?0:255;else g=Math.max(0,Math.min(255,(g-128)*1.28+128));d[i]=d[i+1]=d[i+2]=g;d[i+3]=255}x.putImageData(im,0,0);return c;
+    for(let i=0;i<d.length;i+=4){let g=grayAt(d,i);g=Math.max(0,Math.min(255,(g-lo)*255/Math.max(1,hi-lo)));if(mode==='bw')g=g<188?0:255;else g=Math.max(0,Math.min(255,(g-128)*1.34+128));d[i]=d[i+1]=d[i+2]=g;d[i+3]=255}x.putImageData(im,0,0);return c;
   }
 
   function scoreText(text){const t=String(text||'').toUpperCase(),words=['PART NO','PART NUMBER','LOT NO','QTY','QUANTITY','DATE','ASSY','SHAPE','MLOT','BIN','MC','VC','P1','P2','GP','SERIAL','S/N','MODEL'];let s=Math.min(70,t.replace(/\s/g,'').length/4);words.forEach(w=>{if(t.includes(w))s+=24});s+=(t.match(/\([0-9A-Z]{1,5}\)/g)||[]).length*7;s+=Math.min(36,(t.match(/[:：]/g)||[]).length*4);return s}
 
-  async function recognize(worker,canvas,psm='6'){try{await worker.setParameters({tessedit_pageseg_mode:String(psm),preserve_interword_spaces:'1'})}catch{}const r=await worker.recognize(canvas);return{text:String(r?.data?.text||'').trim(),confidence:Number(r?.data?.confidence||0)}}
+  function flattenLines(blocks){
+    const out=[];for(const b of blocks||[])for(const p of b.paragraphs||[])for(const l of p.lines||[]){const box=l.bbox||l.boundingBox||{};const x0=Number(box.x0??box.left??0),y0=Number(box.y0??box.top??0),x1=Number(box.x1??((box.left||0)+(box.width||0))),y1=Number(box.y1??((box.top||0)+(box.height||0)));const text=String(l.text||'').trim();if(text)out.push({text,confidence:Number(l.confidence||0),x0,y0,x1,y1,w:Math.max(1,x1-x0),h:Math.max(1,y1-y0)})}
+    return out.sort((a,b)=>Math.abs(a.y0-b.y0)<Math.max(a.h,b.h)*.45?a.x0-b.x0:a.y0-b.y0);
+  }
+
+  async function recognize(worker,canvas,psm='6',layout=false){
+    try{await worker.setParameters({tessedit_pageseg_mode:String(psm),preserve_interword_spaces:'1'})}catch{}
+    const r=await worker.recognize(canvas,{},layout?{text:true,blocks:true}:{text:true});
+    return{text:String(r?.data?.text||'').trim(),confidence:Number(r?.data?.confidence||0),lines:layout?flattenLines(r?.data?.blocks):[],canvas};
+  }
 
   async function chooseOrientation(worker,canvas,onProgress){
-    const preview=enhanceCanvas(canvas,'gray'),order=[0,90,270,180],tested=[];for(let i=0;i<order.length;i++){const deg=order[i];onProgress?.(`正在判斷原稿方向… ${i+1}/${order.length}`);const r=await recognize(worker,rotateCanvas(preview,deg),'6'),score=scoreText(r.text)+(r.confidence||0)*.25;tested.push({deg,score,textLength:r.text.length});if(score>=220&&r.text.length>=90)break}tested.sort((a,b)=>b.score-a.score);const best=tested[0]||{deg:0};return{deg:best.deg,canvas:rotateCanvas(canvas,best.deg)};
+    const preview=enhanceCanvas(canvas,'gray'),order=[0,90,270,180],tested=[];for(let i=0;i<order.length;i++){const deg=order[i];onProgress?.(`正在判斷原稿方向… ${i+1}/${order.length}`);const r=await recognize(worker,rotateCanvas(preview,deg),'11'),score=scoreText(r.text)+(r.confidence||0)*.3;tested.push({deg,score,textLength:r.text.length});if(score>=230&&r.text.length>=90)break}tested.sort((a,b)=>b.score-a.score);const best=tested[0]||{deg:0};return{deg:best.deg,canvas:rotateCanvas(canvas,best.deg)};
   }
 
   function runs(flags){const out=[];let start=null;for(let i=0;i<flags.length;i++){if(flags[i]&&start===null)start=i;if(!flags[i]&&start!==null){out.push([start,i-1]);start=null}}if(start!==null)out.push([start,flags.length-1]);return out}
@@ -119,9 +128,9 @@
 
   function detectLabelBands(canvas){
     const x=canvas.getContext('2d',{willReadFrequently:true}),im=x.getImageData(0,0,canvas.width,canvas.height),d=im.data,step=Math.max(1,Math.ceil(canvas.width/1500)),counts=new Uint32Array(canvas.height),sampled=Math.ceil(canvas.width/step);
-    for(let y=0;y<canvas.height;y++){let n=0;for(let xx=0;xx<canvas.width;xx+=step){const i=(y*canvas.width+xx)*4;if(grayAt(d,i)<225)n++}counts[y]=n}
+    for(let y=0;y<canvas.height;y++){let n=0;for(let xx=0;xx<canvas.width;xx+=step){const i=(y*canvas.width+xx)*4;if(grayAt(d,i)<228)n++}counts[y]=n}
     const threshold=Math.max(5,Math.round(sampled*.005));let rs=mergeRuns(runs([...counts].map(n=>n>threshold)),Math.max(12,Math.round(canvas.height*.022)));rs=rs.filter(r=>r[1]-r[0]>=Math.max(50,canvas.height*.045));if(rs.length<2||rs.length>8)rs=[[0,canvas.height-1]];
-    return rs.map(([a,b])=>{const py=Math.round(canvas.height*.015),y=Math.max(0,a-py),y2=Math.min(canvas.height,b+py),rough=crop(canvas,0,y,canvas.width,y2-y),cb=contentBounds(rough,238);return{x:cb.x,y:y+cb.y,w:cb.w,h:cb.h}});
+    return rs.map(([a,b])=>{const py=Math.round(canvas.height*.018),y=Math.max(0,a-py),y2=Math.min(canvas.height,b+py),rough=crop(canvas,0,y,canvas.width,y2-y),cb=contentBounds(rough,240);return{x:cb.x,y:y+cb.y,w:cb.w,h:cb.h}});
   }
 
   function cleanLine(v){return String(v||'').replace(/[\u2018\u2019]/g,"'").replace(/[\u201C\u201D]/g,'"').replace(/[|¦]+/g,' ').replace(/\s+/g,' ').trim()}
@@ -151,39 +160,94 @@
     const seen=new Set();return out.filter(f=>{const k=`${norm(f.code)}|${norm(f.name)}|${norm(f.value)}`;if(!norm(f.value)||seen.has(k))return false;seen.add(k);return true});
   }
 
+  function detectAnchor(text){
+    const t=cleanLine(text).toUpperCase();
+    for(const def of FIELD_DEFS){
+      if(def.code){const codeRx=new RegExp(`(?:\\(|\\[)?\\s*${def.code.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}\\s*(?:\\)|\\])?`,'i');if(codeRx.test(t)){const stripped=t.replace(codeRx,'').replace(/[:：=\s]/g,'');const aliasHit=def.aliases.some(a=>stripped.includes(norm(a)));if(aliasHit||stripped.length<18)return def}}
+      for(const alias of def.aliases){const rx=new RegExp(`^\\s*${aliasPattern(alias)}\\s*[:：=]?\\s*$`,'i');if(rx.test(t))return def}
+    }
+    return null;
+  }
+
+  function spatialFields(lines){
+    const out=[];const parsedLine=new Set();
+    lines.forEach((l,i)=>{const f=parseFields(l.text);if(f.length){parsedLine.add(i);out.push(...f.map(x=>({...x,spatial:true,lineConfidence:l.confidence||0})))}});
+    for(let i=0;i<lines.length;i++){
+      if(parsedLine.has(i))continue;const a=lines[i],def=detectAnchor(a.text);if(!def)continue;
+      let best=null,bestScore=Infinity;
+      for(let j=0;j<lines.length;j++){
+        if(j===i)continue;const b=lines[j],val=cleanValue(b.text);if(!val||detectAnchor(val)||!/\w/.test(val))continue;
+        const overlap=Math.max(0,Math.min(a.y1,b.y1)-Math.max(a.y0,b.y0)),sameRow=overlap/Math.max(1,Math.min(a.h,b.h))>.28&&b.x0>=a.x0+a.w*.55;
+        const below=b.y0>=a.y0&&b.y0-a.y1<Math.max(a.h,b.h)*2.8&&Math.abs((b.x0+b.x1)/2-(a.x0+a.x1)/2)<Math.max(a.w,b.w)*1.25;
+        if(!sameRow&&!below)continue;const score=(sameRow?0:600)+Math.max(0,b.x0-a.x1)+Math.abs(b.y0-a.y0)*2;if(score<bestScore){bestScore=score;best=b}
+      }
+      if(best){const value=cleanValue(best.text);if(value&&value.length<=100)out.push({code:def.code,name:def.name,value,spatial:true,lineConfidence:Math.min(a.confidence||0,best.confidence||0)})}
+    }
+    const seen=new Set();return out.filter(f=>{const k=`${norm(f.code)||norm(f.name)}|${norm(f.value)}`;if(seen.has(k))return false;seen.add(k);return true});
+  }
+
   function fieldKey(f){return norm(f.code)||norm(f.name)}
+  function passFields(pass){const fromText=parseFields(pass.text),fromLines=parseFields((pass.lines||[]).map(x=>x.text).join('\n')),fromSpatial=spatialFields(pass.lines||[]);return[...fromText,...fromLines,...fromSpatial]}
+
   function aggregateFields(passes){
-    const buckets=new Map();for(const pass of passes){for(const f of parseFields(pass.text)){const key=fieldKey(f);if(!key)continue;if(!buckets.has(key))buckets.set(key,[]);buckets.get(key).push({...f,passConfidence:pass.confidence||0})}}
-    const out=[];for(const rows of buckets.values()){const variants=new Map();for(const r of rows){const k=norm(r.value);if(!k)continue;if(!variants.has(k))variants.set(k,{count:0,confidence:0,rows:[]});const v=variants.get(k);v.count++;v.confidence+=r.passConfidence||0;v.rows.push(r)}const ranked=[...variants.entries()].sort((a,b)=>b[1].count-a[1].count||b[1].confidence-a[1].confidence);if(!ranked.length)continue;const bestMeta=ranked[0][1],base=bestMeta.rows.sort((a,b)=>(b.passConfidence||0)-(a.passConfidence||0))[0];out.push({code:base.code,name:base.name,value:base.value,repeat:bestMeta.count,conflict:ranked.length>1,alternatives:ranked.slice(1,3).map(x=>x[1].rows[0].value)})}return out;
+    const buckets=new Map();for(const pass of passes){for(const f of passFields(pass)){const key=fieldKey(f);if(!key)continue;if(!buckets.has(key))buckets.set(key,[]);buckets.get(key).push({...f,passConfidence:Math.max(pass.confidence||0,f.lineConfidence||0)})}}
+    const out=[];for(const rows of buckets.values()){
+      const variants=new Map();for(const r of rows){const k=norm(r.value);if(!k)continue;if(!variants.has(k))variants.set(k,{count:0,confidence:0,spatial:0,rows:[]});const v=variants.get(k);v.count++;v.confidence+=r.passConfidence||0;if(r.spatial)v.spatial++;v.rows.push(r)}
+      const ranked=[...variants.entries()].sort((a,b)=>(b[1].count+b[1].spatial*.35)-(a[1].count+a[1].spatial*.35)||b[1].confidence-a[1].confidence);if(!ranked.length)continue;
+      const bestMeta=ranked[0][1],base=bestMeta.rows.sort((a,b)=>(b.passConfidence||0)-(a.passConfidence||0))[0];out.push({code:base.code,name:base.name,value:base.value,repeat:bestMeta.count,spatial:bestMeta.spatial>0,conflict:ranked.length>1,alternatives:ranked.slice(1,3).map(x=>x[1].rows[0].value)});
+    }
+    return out;
   }
 
   function dedupeBarcodes(rows){const s=new Set(),out=[];for(const r of rows||[]){const k=`${r.format||''}|${r.text||''}`;if(!r.text||s.has(k))continue;s.add(k);out.push(r)}return out}
   async function scanRegionDeep(canvas,labelNo,onProgress){const core=window.LabelWorkbenchBarcodeCore;if(!core?.scanCanvas)return[];const c=trimCanvas(canvas),candidates=[{c,name:`標籤 ${labelNo} 全圖`}],h=c.height*.30;for(let i=0;i<6;i++){const y=Math.min(c.height-h,i*c.height*.14);candidates.push({c:crop(c,0,y,c.width,h),name:`標籤 ${labelNo} 區域 ${i+1}`})}const all=[];for(let i=0;i<candidates.length;i++){onProgress?.(`正在讀取標籤 ${labelNo} 的條碼… ${i+1}/${candidates.length}`);try{all.push(...await core.scanCanvas(candidates[i].c,candidates[i].name))}catch(e){console.warn('[LW interpreter barcode]',e)}}return dedupeBarcodes(all)}
   function fieldVerified(field,barcodes){const v=norm(field.value);if(v.length<2)return null;return barcodes.find(b=>{const t=norm(b.text);return t===v||t.includes(v)||(v.includes(t)&&t.length>=4)})||null}
-  function fieldState(field,barcodes){if(fieldVerified(field,barcodes))return'barcode';if(field.repeat>=2&&!field.conflict)return'repeated';return'pending'}
+  function fieldState(field,barcodes){if(fieldVerified(field,barcodes))return'barcode';if(field.repeat>=2&&!field.conflict)return'high';if(field.spatial&&!field.conflict&&field.repeat>=1)return'medium';return'pending'}
   function detectMarks(text){const t=String(text||'').toUpperCase(),out=[];if(/ROHS/.test(t))out.push('RoHS');if(/\bHF\b/.test(t))out.push('HF');if(/\bPB\b/.test(t))out.push('Pb 標誌');return out}
 
-  function makeTiles(canvas){const c=enhanceCanvas(canvas,'gray'),out=[],overlap=.08;for(let ry=0;ry<2;ry++)for(let rx=0;rx<2;rx++){const x0=Math.max(0,(rx*.5-overlap)*c.width),y0=Math.max(0,(ry*.5-overlap)*c.height),x1=Math.min(c.width,((rx+1)*.5+overlap)*c.width),y1=Math.min(c.height,((ry+1)*.5+overlap)*c.height);out.push(crop(c,x0,y0,x1-x0,y1-y0))}return out}
-  async function readRegionFields(worker,region,onProgress){const passes=[];onProgress?.('正在整理欄位內容…');passes.push(await recognize(worker,enhanceCanvas(region,'gray'),'6'));passes.push(await recognize(worker,enhanceCanvas(region,'bw'),'6'));let fields=aggregateFields(passes);if(fields.length<6||fields.some(f=>f.conflict)){const tiles=makeTiles(region);for(let i=0;i<tiles.length;i++){onProgress?.(`正在補讀細小欄位… ${i+1}/${tiles.length}`);passes.push(await recognize(worker,tiles[i],'6'))}fields=aggregateFields(passes)}return{fields,passes}}
+  function makeTiles(canvas){const c=enhanceCanvas(canvas,'gray'),out=[],overlap=.10;for(let ry=0;ry<2;ry++)for(let rx=0;rx<2;rx++){const x0=Math.max(0,(rx*.5-overlap)*c.width),y0=Math.max(0,(ry*.5-overlap)*c.height),x1=Math.min(c.width,((rx+1)*.5+overlap)*c.width),y1=Math.min(c.height,((ry+1)*.5+overlap)*c.height);out.push(crop(c,x0,y0,x1-x0,y1-y0))}return out}
 
-  async function processCanvas(canvas,sourceName,pageNo,worker,labels,onProgress){const best=await chooseOrientation(worker,canvas,onProgress),bands=detectLabelBands(best.canvas);onProgress?.(`找到 ${bands.length} 個標籤區域，正在逐張讀取…`);for(let i=0;i<bands.length;i++){const b=bands[i],region=crop(best.canvas,b.x,b.y,b.w,b.h),read=await readRegionFields(worker,region,onProgress),barcodes=await scanRegionDeep(region,labels.length+1,onProgress),allText=read.passes.map(p=>p.text).join('\n'),marks=detectMarks(allText);labels.push({sourceName,page:pageNo,index:i+1,rotation:best.deg,fields:read.fields,barcodes,marks})}}
+  async function readRegionFields(worker,region,onProgress){
+    const passes=[],gray=enhanceCanvas(region,'gray'),bw=enhanceCanvas(region,'bw');
+    onProgress?.('正在整理欄位與位置…');
+    passes.push(await recognize(worker,gray,'6',true));
+    passes.push(await recognize(worker,gray,'11',true));
+    passes.push(await recognize(worker,bw,'6',true));
+    let fields=aggregateFields(passes);
+    if(fields.length<7||fields.some(f=>f.conflict)){
+      const tiles=makeTiles(region);for(let i=0;i<tiles.length;i++){onProgress?.(`正在補讀細小區域… ${i+1}/${tiles.length}`);passes.push(await recognize(worker,tiles[i],'11',true))}fields=aggregateFields(passes);
+    }
+    return{fields,passes};
+  }
+
+  async function processCanvas(canvas,sourceName,pageNo,worker,labels,onProgress){
+    const best=await chooseOrientation(worker,canvas,onProgress),bands=detectLabelBands(best.canvas);onProgress?.(`找到 ${bands.length} 個標籤區域，正在逐張整理…`);
+    for(let i=0;i<bands.length;i++){const b=bands[i],region=crop(best.canvas,b.x,b.y,b.w,b.h),read=await readRegionFields(worker,region,onProgress),barcodes=await scanRegionDeep(region,labels.length+1,onProgress),allText=read.passes.map(p=>p.text).join('\n'),marks=detectMarks(allText);labels.push({sourceName,page:pageNo,index:i+1,rotation:best.deg,fields:read.fields,barcodes,marks})}
+  }
+
   async function interpretPdf(file,onProgress,sharedWorker){const pdfjs=await loadPdf(),pdf=await pdfjs.getDocument({data:new Uint8Array(await file.arrayBuffer())}).promise,pageLimit=Math.min(pdf.numPages,3),labels=[],own=!sharedWorker,worker=sharedWorker||await createWorker(onProgress);try{for(let p=1;p<=pageLimit;p++){onProgress?.(`正在讀取 ${file.name} 第 ${p}/${pageLimit} 頁…`);const page=await pdf.getPage(p),canvas=await renderPage(page);await processCanvas(canvas,file.name,p,worker,labels,onProgress)}}finally{if(own)try{await worker.terminate()}catch{}}return{pdfPages:pdf.numPages,labels}}
   async function interpretImage(file,onProgress,sharedWorker){const own=!sharedWorker,worker=sharedWorker||await createWorker(onProgress),labels=[];try{onProgress?.(`正在讀取圖片 ${file.name}…`);await processCanvas(await imageCanvas(file),file.name,1,worker,labels,onProgress)}finally{if(own)try{await worker.terminate()}catch{}}return{imageCount:1,labels}}
   async function interpretFiles(files,onProgress){const arr=[...files].filter(f=>ext(f)==='pdf'||isImage(f)).slice(0,4),labels=[];if(!arr.length)return{files:0,pages:0,labels:[]};const worker=await createWorker(onProgress);let pages=0;try{for(let i=0;i<arr.length;i++){const f=arr[i];onProgress?.(`正在分析 ${i+1}/${arr.length}：${f.name}`);if(ext(f)==='pdf'){const r=await interpretPdf(f,onProgress,worker);pages+=r.pdfPages;labels.push(...r.labels)}else{const r=await interpretImage(f,onProgress,worker);pages+=1;labels.push(...r.labels)}}}finally{try{await worker.terminate()}catch{}}return{files:arr.length,pages,labels}}
 
   function fieldName(f){return`${f.code?`(${f.code}) `:''}${f.name||'未命名欄位'}`}
-  function fieldTableHtml(fields,barcodes){if(!fields.length)return'<div class="note warn-note">目前沒有可靠拆出欄位。請先看條碼內容；若條碼也讀不到，這份原稿需要更清楚的檔案或人工確認。</div>';return`<div class="table-scroll"><table class="analysis-table"><tr><th>欄位</th><th>內容</th><th>可信度</th></tr>${fields.map(f=>{const state=fieldState(f,barcodes),status=state==='barcode'?'✅ 條碼已確認':state==='repeated'?'✓ 重複辨識一致':'⚠️ 請核對原稿',alt=f.conflict&&f.alternatives?.length?`<br><small>另讀到：${esc(f.alternatives.join(' / '))}</small>`:'';return`<tr><td>${esc(fieldName(f))}</td><td><b>${esc(f.value)}</b>${alt}</td><td>${status}</td></tr>`}).join('')}</table></div>`}
-  function barcodeRowsHtml(rows){if(!rows.length)return'<div class="footer-note">目前沒有成功解出條碼內容；不代表原稿沒有條碼。</div>';const core=window.LabelWorkbenchBarcodeCore;return`<div class="table-scroll"><table class="analysis-table"><tr><th>條碼類型</th><th>實際掃描內容</th></tr>${rows.map(r=>`<tr><td>${esc(r.format||'未知')}</td><td><b>${esc(core?.visibleText?core.visibleText(r.text):r.text)}</b></td></tr>`).join('')}</table></div>`}
+  function fieldTableHtml(fields,barcodes){if(!fields.length)return'<div class="analysis-empty">目前沒有可靠拆出欄位；若下方也沒有條碼結果，請向客戶索取更清楚的原稿或原始檔。</div>';return`<div class="table-scroll"><table class="analysis-table"><thead><tr><th>欄位</th><th>內容</th><th>狀態</th></tr></thead><tbody>${fields.map(f=>{const state=fieldState(f,barcodes),status=state==='barcode'?'✅ 條碼確認':state==='high'?'✓ 高可信':state==='medium'?'○ 可先整理':'⚠️ 建議核對',alt=f.conflict&&f.alternatives?.length?`<small class="analysis-alt">另讀到：${esc(f.alternatives.join(' / '))}</small>`:'';return`<tr><td><span class="analysis-field">${esc(fieldName(f))}</span></td><td><strong>${esc(f.value)}</strong>${alt}</td><td><span class="analysis-status ${state}">${status}</span></td></tr>`}).join('')}</tbody></table></div>`}
+  function barcodeRowsHtml(rows){if(!rows.length)return'<div class="analysis-empty subtle">目前沒有成功解出條碼內容；不代表原稿沒有條碼。</div>';const core=window.LabelWorkbenchBarcodeCore;return`<div class="table-scroll"><table class="analysis-table"><thead><tr><th>條碼類型</th><th>實際掃描內容</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${esc(r.format||'未知')}</td><td><strong class="mono">${esc(core?.visibleText?core.visibleText(r.text):r.text)}</strong></td></tr>`).join('')}</tbody></table></div>`}
 
   function totals(result){const labels=result.labels||[];let fields=0,barcodes=0,confirmed=0,pending=0;for(const l of labels){fields+=(l.fields||[]).length;barcodes+=(l.barcodes||[]).length;for(const f of l.fields||[]){if(fieldState(f,l.barcodes||[])==='pending')pending++;else confirmed++}}return{fields,barcodes,confirmed,pending}}
-  function productionText(result){const lines=['【客戶原稿分析結果】'];(result.labels||[]).forEach((l,i)=>{lines.push(`\n標籤 ${i+1}${l.sourceName?`｜${l.sourceName}`:''}`);(l.fields||[]).forEach(f=>{const s=fieldState(f,l.barcodes||[]);lines.push(`${fieldName(f)}：${f.value}${s==='barcode'?'（條碼已確認）':s==='repeated'?'（文字重複辨識一致）':'（待核對）'}`)});(l.barcodes||[]).forEach((b,j)=>lines.push(`條碼 ${j+1}［${b.format||'未知'}］：${b.text}`));if(l.marks?.length)lines.push(`圖示／標記：${l.marks.join('、')}`)});return lines.join('\n')}
+  function productionText(result){const lines=['【客戶原稿分析結果】'];(result.labels||[]).forEach((l,i)=>{lines.push(`\n標籤 ${i+1}${l.sourceName?`｜${l.sourceName}`:''}`);(l.fields||[]).forEach(f=>{const s=fieldState(f,l.barcodes||[]);lines.push(`${fieldName(f)}：${f.value}${s==='barcode'?'（條碼已確認）':s==='high'?'（高可信）':s==='medium'?'（可先整理）':'（待核對）'}`)});(l.barcodes||[]).forEach((b,j)=>lines.push(`條碼 ${j+1}［${b.format||'未知'}］：${b.text}`));if(l.marks?.length)lines.push(`圖示／標記：${l.marks.join('、')}`)});return lines.join('\n')}
   function questionsText(result){const q=[];(result.labels||[]).forEach((l,i)=>(l.fields||[]).forEach(f=>{if(fieldState(f,l.barcodes||[])==='pending')q.push(`標籤 ${i+1}「${fieldName(f)}」是否為 ${f.value}`)}));q.push('標籤實際尺寸（寬 × 高 mm）');q.push('字型、LOGO／圖示、線條位置是否需要完全依原稿');return`您好～原稿已收到，製作前再麻煩確認：\n${q.slice(0,14).map((x,i)=>`${i+1}. ${x}`).join('\n')}`}
   async function copyText(text,msg){try{await navigator.clipboard.writeText(text);if(typeof window.toast==='function')window.toast(msg)}catch{if(typeof window.toast==='function')window.toast('複製失敗')}}
 
-  function renderInterpretation(files,result){const labels=result.labels||[],t=totals(result),names=[...files].map(f=>f.name).join('、'),state=t.fields||t.barcodes?(t.pending?'已讀出內容，部分待確認':'主要內容已讀出'):'需要補資料';let html=`<div class="analysis-block"><div class="section-title"><div><h3>分析完成</h3><p class="muted compact">${esc(names)}</p></div><span class="pill">${state}</span></div><div class="file-chips"><span class="file-chip">標籤 ${labels.length} 張</span><span class="file-chip">欄位 ${t.fields} 個</span><span class="file-chip">條碼 ${t.barcodes} 個</span><span class="file-chip">可信 ${t.confirmed} 個</span>${t.pending?`<span class="file-chip">待確認 ${t.pending} 個</span>`:''}</div><div class="generator-actions"><button id="analysisCopyProduction" class="btn primary" type="button">複製製作資料</button><button id="analysisCopyQuestions" class="btn ghost" type="button">複製給客戶確認</button></div>`;if(!labels.length)return html+'<div class="note warn-note">沒有成功讀出可製作內容。請確認檔案是否正確，或改用更清楚的原稿。</div></div>';labels.forEach((l,idx)=>{const pending=(l.fields||[]).filter(f=>fieldState(f,l.barcodes||[])==='pending').length,good=(l.fields||[]).length-pending;html+=`<div class="analysis-block"><div class="section-title"><h3>標籤 ${idx+1}</h3><div><span class="file-chip">${esc(l.sourceName||'原稿')}</span>${l.page>1?` <span class="file-chip">第 ${l.page} 頁</span>`:''}</div></div><div class="footer-note"><b>可直接整理：</b>${good} 個欄位${pending?`；另有 ${pending} 個需要核對。`:'，目前沒有文字衝突。'}</div><h4>欄位內容</h4>${fieldTableHtml(l.fields||[],l.barcodes||[])}<h4>條碼內容</h4>${barcodeRowsHtml(l.barcodes||[])}${l.marks?.length?`<div class="footer-note"><b>圖示／標記：</b>${l.marks.map(esc).join('、')}</div>`:''}</div>`});html+=`<div class="note ${t.pending?'warn-note':''}"><b>下一步：</b>${t.pending?'先核對標成「請核對原稿」的欄位；其他一致資料可先拿去整理製作。':'主要文字內容已重複辨識一致或由條碼確認，可先進入製作整理。'} 標籤尺寸、字型、LOGO／圖示與線條位置若客戶沒有提供規格，仍需確認。</div></div>`;return html}
+  function renderInterpretation(files,result){
+    const labels=result.labels||[],t=totals(result),names=[...files].map(f=>f.name).join('、'),state=t.fields||t.barcodes?(t.pending?'已讀出內容，部分待確認':'主要內容已讀出'):'需要補資料';
+    let html=`<div class="analysis-summary"><div><span class="analysis-kicker">快速分析結果</span><h3>${esc(state)}</h3><p>${esc(names)}</p></div><div class="analysis-metrics"><span><b>${labels.length}</b>張標籤</span><span><b>${t.fields}</b>個欄位</span><span><b>${t.barcodes}</b>個條碼</span><span><b>${t.confirmed}</b>個可用</span></div></div><div class="analysis-actions"><button id="analysisCopyProduction" class="btn primary" type="button">複製製作資料</button><button id="analysisCopyQuestions" class="btn ghost" type="button">複製給客戶確認</button></div>`;
+    if(!labels.length)return html+'<div class="note warn-note">沒有成功讀出可製作內容。請確認檔案是否正確，或向客戶索取更清楚的原稿／原始檔。</div>';
+    labels.forEach((l,idx)=>{const pending=(l.fields||[]).filter(f=>fieldState(f,l.barcodes||[])==='pending').length,good=(l.fields||[]).length-pending;html+=`<article class="analysis-label-card"><div class="analysis-label-head"><div><span>標籤 ${idx+1}</span><h3>${esc(l.sourceName||'客戶原稿')}</h3></div><div class="analysis-label-count">${good} 可用${pending?` · ${pending} 待核對`:''}</div></div><section><h4>欄位內容</h4>${fieldTableHtml(l.fields||[],l.barcodes||[])}</section><section><h4>條碼內容</h4>${barcodeRowsHtml(l.barcodes||[])}</section>${l.marks?.length?`<div class="analysis-marks"><b>圖示／標記</b>${l.marks.map(x=>`<span>${esc(x)}</span>`).join('')}</div>`:''}</article>`});
+    html+=`<div class="analysis-next ${t.pending?'has-pending':''}"><b>接下來怎麼做</b><p>${t.pending?'標成「建議核對」的欄位先確認；其餘資料可以先整理或開始製作。':'主要文字內容已有一致結果或條碼確認，可以先進入製作。'} 若原稿沒有尺寸、字型、LOGO／圖示或線條規格，系統會保留為待客戶確認項目。</p></div>`;return html;
+  }
 
   function wireResultButtons(){const a=el('analysisCopyProduction'),b=el('analysisCopyQuestions');if(a)a.onclick=()=>copyText(productionText(lastResult),'已複製製作資料');if(b)b.onclick=()=>copyText(questionsText(lastResult),'已複製客戶確認內容')}
-  async function analyze(files){const arr=[...files],out=el('analysisResult');if(!out)return;const eligible=arr.filter(f=>ext(f)==='pdf'||isImage(f));if(!eligible.length||eligible.length!==arr.length){const base=window.LabelWorkbenchParsers;if(base?.analyze)return base.analyze(arr);throw new Error('文件解析器尚未載入')}lastFiles=eligible;const progress=msg=>{out.innerHTML=`<div class="scan-working"><b>正在完整讀取客戶原稿</b><br>${esc(msg)}<br><small>系統會自動分標籤、補讀小字並交叉比對條碼。</small></div>`};progress('準備分析…');lastResult=await interpretFiles(eligible,progress);out.innerHTML=renderInterpretation(eligible,lastResult);wireResultButtons();return lastResult}
+  async function analyze(files){const arr=[...files],out=el('analysisResult');if(!out)return;const eligible=arr.filter(f=>ext(f)==='pdf'||isImage(f));if(!eligible.length||eligible.length!==arr.length){const base=window.LabelWorkbenchParsers;if(base?.analyze)return base.analyze(arr);throw new Error('文件解析器尚未載入')}const progress=msg=>{out.innerHTML=`<div class="scan-working"><div class="scan-spinner"></div><b>正在完整讀取客戶原稿</b><span>${esc(msg)}</span><small>會自動判斷方向、版面、欄位位置與條碼內容。</small></div>`};progress('準備分析…');lastResult=await interpretFiles(eligible,progress);out.innerHTML=renderInterpretation(eligible,lastResult);wireResultButtons();return lastResult}
 
-  window.LabelWorkbenchInterpreter={BUILD,scoreText,parseFields,aggregateFields,detectLabelBands,rotateCanvas,interpretPdf,interpretImage,interpretFiles,productionText,questionsText,analyze};
+  window.LabelWorkbenchInterpreter={BUILD,scoreText,parseFields,spatialFields,aggregateFields,detectLabelBands,rotateCanvas,interpretPdf,interpretImage,interpretFiles,productionText,questionsText,analyze};
 })();
