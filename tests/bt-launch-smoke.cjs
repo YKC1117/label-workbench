@@ -21,7 +21,7 @@ function context(){
   if(/(?:^|\s)\/X(?:\s|$)/im.test(cmd))throw new Error('Launch helper must not auto-close BarTender');
   if(!api.templateBaseName(d).endsWith('.btw'))throw new Error('Template recommendation must map to a BTW filename');
   const readme=api.buildReadme(d);
-  if(!readme.includes('BT_Open.cmd')||!readme.includes('不會自動列印'))throw new Error('Production instructions must explain safe launch helper');
+  if(!readme.includes('BT_Open.cmd')||!readme.includes('不包含自動列印參數'))throw new Error('Production instructions must explain safe non-printing launch behavior');
   console.log('PASS: BT_Open.cmd opens a real template with BT_Data.csv and never auto-prints');
 }
 
