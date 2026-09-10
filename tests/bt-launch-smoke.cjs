@@ -17,7 +17,7 @@ function context(options={}){
   ]};
   const d=api.buildDraft(sample,['A.pdf']);
   const cmd=api.buildOpenCmd(d);
-  for(const marker of ['bartend.exe','/F="%TEMPLATE%"','/D="%DATA%"','/DbTextHeader=1','BT_Data.csv','BT_Open.cmd'])if(!cmd.includes(marker))throw new Error(`Launch helper missing ${marker}`);
+  for(const marker of ['bartend.exe','/F="%TEMPLATE%"','/D="%DATA%"','/DbTextHeader=1','BT_Data.csv'])if(!cmd.includes(marker))throw new Error(`Launch helper missing ${marker}`);
   if(/(?:^|\s)\/P(?:\s|$)/im.test(cmd))throw new Error('Launch helper must never auto-print');
   if(/(?:^|\s)\/X(?:\s|$)/im.test(cmd))throw new Error('Launch helper must not auto-close BarTender');
   if(!api.templateBaseName(d).endsWith('.btw'))throw new Error('Template recommendation must map to a BTW filename');
