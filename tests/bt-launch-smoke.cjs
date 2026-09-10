@@ -1,8 +1,9 @@
 const fs=require('fs');
 const vm=require('vm');
 
-function context(){
-  const c={console,window:{},navigator:{},localStorage:{getItem:()=>null,setItem:()=>{},removeItem:()=>{}},URL:{createObjectURL:()=>'',revokeObjectURL:()=>{}},Blob:function(){},setTimeout:()=>0,clearTimeout:()=>{},setInterval:()=>0,clearInterval:()=>{},Promise,Date,Math,document:{readyState:'loading',addEventListener:()=>{},getElementById:()=>null,querySelector:()=>null,createElement:()=>({}),head:{appendChild(){}},body:{appendChild(){}}},globalThis:null};
+function context(options={}){
+  let stored=options.stored??null;
+  const c={console,window:{},navigator:{},localStorage:{getItem:()=>stored,setItem:(_k,v)=>{stored=v},removeItem:()=>{stored=null}},URL:{createObjectURL:()=>'',revokeObjectURL:()=>{}},Blob:function(){},setTimeout:()=>0,clearTimeout:()=>{},setInterval:()=>0,clearInterval:()=>{},Promise,Date,Math,document:{readyState:options.readyState||'loading',addEventListener:()=>{},getElementById:options.getElementById||(()=>null),querySelector:()=>null,createElement:()=>({}),head:{appendChild(){}},body:{appendChild(){}}},globalThis:null};
   c.globalThis=c;c.window.window=c.window;return c;
 }
 
@@ -26,14 +27,26 @@ function context(){
 }
 
 {
+  const stale=JSON.stringify({version:1,labels:[{sourceName:'old.pdf',fields:[{code:'1P',name:'PART NO',value:'OLD001'}],barcodes:[]} ]});
+  const c=context({readyState:'complete',stored:stale,getElementById:id=>id==='bartender'?{classList:{add(){throw new Error('simulated render failure')}}}:null});
+  vm.createContext(c);
+  vm.runInContext(fs.readFileSync('assets/bt-quick.js','utf8'),c,{filename:'bt-quick.js'});
+  const api=c.window.LabelWorkbenchBtQuick;
+  if(!api?.receiveAnalysis||!api?.normalizeDraft)throw new Error('BT Quick API must survive initialization/render failure');
+  const repaired=api.normalizeDraft(JSON.parse(stale));
+  if(!repaired||repaired.version!==3||!Array.isArray(repaired.columns)||repaired.columns[0]?.btName!=='PART_NO')throw new Error('Stale BT draft must be migrated to current derived fields');
+  console.log('PASS: stale local BT draft and render failure cannot make the BT module disappear');
+}
+
+{
   const c=context();vm.createContext(c);
   vm.runInContext(fs.readFileSync('assets/bt-bridge.js','utf8'),c,{filename:'bt-bridge.js'});
   const api=c.window.LabelWorkbenchBtBridge;if(!api)throw new Error('BT bridge API missing');
-  if(typeof api.downloadProductionPack!=='function')throw new Error('BT bridge must expose one-click production pack export');
+  if(typeof api.downloadProductionPack!=='function'||typeof api.ensureBtQuick!=='function')throw new Error('BT bridge must expose export and recovery helpers');
   const result=api.tableResult(['PART NO','QTY'],[['A001','100'],['A002','200']],'data.csv');
   if(result.labels.length!==2)throw new Error('CSV/Excel table rows must become two BT label rows');
   if(result.labels[0].fields[0].name!=='PART NO'||result.labels[1].fields[1].value!=='200')throw new Error('Table-to-BT field conversion failed');
   const src=fs.readFileSync('assets/bt-bridge.js','utf8');
-  for(const marker of ['建立 BT 製作包（自動下載）','downloadProductionPack','BT_製作包_','BT_Data.csv','ZIP 建立失敗，已改下載 BT_Data.csv'])if(!src.includes(marker))throw new Error(`BT bridge auto-export marker missing: ${marker}`);
-  console.log('PASS: BT quick action has one-click ZIP export with BT_Data.csv fallback');
+  for(const marker of ['建立 BT 製作包（自動下載）','downloadProductionPack','ensureBtQuick','bt130-retry','BT_製作包_','BT_Data.csv','ZIP 建立失敗，已改下載 BT_Data.csv'])if(!src.includes(marker))throw new Error(`BT bridge auto-export/recovery marker missing: ${marker}`);
+  console.log('PASS: BT action has one-click ZIP export, CSV fallback and missing-module recovery');
 }
