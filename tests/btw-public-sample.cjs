@@ -1,7 +1,10 @@
 const zlib=require('zlib');
 const assert=require('assert');
 
-const URL='https://raw.githubusercontent.com/Seagull-Scientific/bartender-cloud-api/main/Sample_Doc1.btw';
+const SAMPLES=[
+  ['official2022','https://raw.githubusercontent.com/Seagull-Scientific/bartender-cloud-api/main/Sample_Doc1.btw'],
+  ['activexSample','https://raw.githubusercontent.com/ssapj/BartenderSampleActivexCSharp/master/BTW/ProgramSample.btw']
+];
 const END_META=Buffer.from([0xff,0xfe,0xff,0x00]);
 const SOF=Buffer.from('\r\nBar Tender Format File\r\n','latin1');
 
@@ -27,27 +30,33 @@ function scanStrings(buf){
     if(chars<1||chars>4096)continue;
     const start=i+head,end=start+chars*2;if(end>buf.length)continue;
     const text=buf.subarray(start,end).toString('utf16le');
-    if(text&&!/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/.test(text))out.push({offset:i,head,chars,text});
+    if(text&&!/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/.test(text))out.push({offset:i,head,chars,text,end});
     i=end-1;
   }
   return out;
 }
-function hexContext(buf,offset,before=48,after=96){const s=Math.max(0,offset-before),e=Math.min(buf.length,offset+after);return`${s.toString(16).padStart(8,'0')}: ${buf.subarray(s,e).toString('hex').match(/.{1,2}/g).join(' ')}`}
+function hexContext(buf,offset,before=48,after=112){const s=Math.max(0,offset-before),e=Math.min(buf.length,offset+after);return`${s.toString(16).padStart(8,'0')}: ${buf.subarray(s,e).toString('hex').match(/.{1,2}/g).join(' ')}`}
+function likelyObjects(strings){return strings.filter(s=>/^(Text|Barcode|Box|Line|Picture|Shape|obj|datacomment|Template|Layer|Background)/i.test(s.text)||/DataSource|Code 128|Data Matrix|QR Code/i.test(s.text))}
 
-(async()=>{
-  const res=await fetch(URL);assert(res.ok,`download ${res.status}`);const data=Buffer.from(await res.arrayBuffer());
-  const parsed=parse(data),strings=scanStrings(parsed.container);
+async function inspect(name,url){
+  const res=await fetch(url);assert(res.ok,`${name} download ${res.status}`);const data=Buffer.from(await res.arrayBuffer());
+  const parsed=parse(data),strings=scanStrings(parsed.container),objects=likelyObjects(strings);
+  console.log(`=== ${name} ===`);
   console.log(`BTW bytes=${data.length} metaEnd=${parsed.metaEnd} containerStart=${parsed.containerStart} zlib=${parsed.tagged}`);
   console.log('PNG blobs:',JSON.stringify(parsed.png));
-  console.log(`container bytes=${parsed.container.length}; identified strings=${strings.length}`);
-  const interesting=strings.filter(s=>/NDS_|Data Here|Document|Text|Barcode|Code|Matrix|Arial|Seagull|Sample|One|Two/i.test(s.text));
-  console.log('INTERESTING_STRINGS_START');
-  for(const s of interesting.slice(0,160))console.log(`${s.offset}\t${JSON.stringify(s.text)}\t${hexContext(parsed.container,s.offset)}`);
-  console.log('INTERESTING_STRINGS_END');
-  console.log('FIRST_STRINGS_START');
-  for(const s of strings.slice(0,220))console.log(`${s.offset}\t${JSON.stringify(s.text)}`);
-  console.log('FIRST_STRINGS_END');
+  console.log(`container bytes=${parsed.container.length}; identified strings=${strings.length}; object-like=${objects.length}`);
+  console.log('OBJECT_LIKE_START');
+  for(const s of objects.slice(0,220))console.log(`${s.offset}\t${JSON.stringify(s.text)}\t${hexContext(parsed.container,s.offset)}`);
+  console.log('OBJECT_LIKE_END');
+  const special=strings.filter(s=>/NDS_|Sample Text|Screen Data|datacomment|objcomment|12345678|Code 128|Data Matrix|QR Code/i.test(s.text));
+  console.log('SPECIAL_START');for(const s of special.slice(0,180))console.log(`${s.offset}\t${JSON.stringify(s.text)}\t${hexContext(parsed.container,s.offset)}`);console.log('SPECIAL_END');
   const recompressed=zlib.deflateSync(parsed.container),prefix=data.subarray(0,parsed.containerStart),rebuilt=Buffer.concat([prefix,recompressed]),again=parse(rebuilt);
-  assert(again.container.equals(parsed.container),'round-trip container mismatch');
-  console.log(`PASS: official 2022 BTW parsed and round-tripped; rebuilt=${rebuilt.length}`);
+  assert(again.container.equals(parsed.container),`${name} round-trip container mismatch`);
+  console.log(`PASS ${name}: round-trip container; rebuilt=${rebuilt.length}`);
+  return{data,parsed,strings,objects};
+}
+
+(async()=>{
+  for(const [name,url] of SAMPLES)await inspect(name,url);
+  console.log('PASS: public BTW samples parsed and round-tripped');
 })().catch(err=>{console.error(err);process.exit(1)});
