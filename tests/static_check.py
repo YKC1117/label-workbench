@@ -12,6 +12,8 @@ barcode_core = Path('assets/barcode-reader-core.js').read_text(encoding='utf-8')
 barcode_ui = Path('assets/barcode-reader-ui.js').read_text(encoding='utf-8')
 barcode_generator = Path('assets/barcode-generator.js').read_text(encoding='utf-8')
 interpreter_js = Path('assets/label-interpreter.js').read_text(encoding='utf-8')
+bt_quick = Path('assets/bt-quick.js').read_text(encoding='utf-8')
+bt_bridge = Path('assets/bt-bridge.js').read_text(encoding='utf-8')
 priority_js = Path('assets/workbench-priority.js').read_text(encoding='utf-8')
 ui_css = Path('assets/ui-refresh.css').read_text(encoding='utf-8')
 nav_css = Path('assets/nav-groups.css').read_text(encoding='utf-8')
@@ -34,8 +36,8 @@ required_files = [
     'assets/cloud.css', 'assets/cloud.js', 'assets/cloud-config.js',
     'assets/cloud-attachments.js', 'assets/file-parsers.js',
     'assets/barcode-reader.js', 'assets/barcode-reader-core.js', 'assets/barcode-reader-ui.js',
-    'assets/barcode-generator.js', 'assets/label-interpreter.js', 'assets/workbench-priority.js',
-    'docs/supabase-schema.sql', '.gitignore', 'README.md'
+    'assets/barcode-generator.js', 'assets/label-interpreter.js', 'assets/bt-quick.js', 'assets/bt-bridge.js',
+    'assets/workbench-priority.js', 'docs/supabase-schema.sql', '.gitignore', 'README.md'
 ]
 missing_files = [p for p in required_files if not Path(p).exists()]
 if missing_files:
@@ -49,7 +51,7 @@ if 'assets/ui-refresh.css?v=20260910-v190' not in html or 'data-lw-ui-refresh="t
     raise SystemExit('refreshed UI stylesheet must load once with the v1.9 cache key')
 if 'assets/nav-groups.css?v=20260910-v110' not in html:
     raise SystemExit('BT-first navigation stylesheet must use the v1.1 cache key')
-if 'assets/app.js?v=20260910-v181' not in html or 'assets/cloud.js?v=20260910-v187' not in html:
+if 'assets/app.js?v=20260910-v181' not in html or 'assets/cloud.js?v=20260910-v188' not in html:
     raise SystemExit('latest app/cloud cache keys are not linked')
 
 legacy_scratch = ['scratchType','scratchPrefix','scratchSuffix','scratchEncoded','scratchHuman','scratchResult','updateScratch']
@@ -107,8 +109,8 @@ if 'Local-first' not in cloud_js and '本機優先' not in cloud_js:
 for module in ['assets/cloud-attachments.js','assets/file-parsers.js','assets/barcode-reader.js']:
     if module not in cloud_js:
         raise SystemExit(f'Feature module is not wired by cloud loader: {module}')
-if '20260910-v187' not in cloud_js:
-    raise SystemExit('Cloud optional-module cache key must be v1.8.7')
+if '20260910-v188' not in cloud_js:
+    raise SystemExit('Cloud optional-module cache key must be v1.8.8')
 
 if "label-attachments" not in attachments_js or '20*1024*1024' not in attachments_js.replace(' ', ''):
     raise SystemExit('Private attachment add-on must target the expected bucket and 20 MB limit')
@@ -123,11 +125,11 @@ for marker in ['tesseract.js@7.0.0', 'createOcrWorker', 'renderPdfPage', "['eng'
     if marker not in parsers_js:
         raise SystemExit(f'Scanned PDF fallback parser is missing marker: {marker}')
 
-for module in ['barcode-reader-core.js','barcode-reader-ui.js','barcode-generator.js','label-interpreter.js','workbench-priority.js']:
+for module in ['barcode-reader-core.js','barcode-reader-ui.js','barcode-generator.js','label-interpreter.js','bt-quick.js','bt-bridge.js','workbench-priority.js']:
     if module not in barcode_loader:
         raise SystemExit(f'Barcode/workbench loader is missing {module}')
-if '20260910-v187' not in barcode_loader:
-    raise SystemExit('Barcode/workbench loader cache key must be v1.8.7')
+if '20260910-v188' not in barcode_loader:
+    raise SystemExit('Barcode/workbench loader cache key must be v1.8.8')
 
 if "const ZX='3.1.3'" not in barcode_core or 'zxing-wasm@${ZX}' not in barcode_core:
     raise SystemExit('Barcode core must pin zxing-wasm 3.1.3')
@@ -169,6 +171,15 @@ for forbidden in ['查看 OCR 原文','OCR 值','OCR 待確認']:
     if forbidden in interpreter_js:
         raise SystemExit(f'Action-focused analysis still exposes technical OCR output: {forbidden}')
 
+for marker in ['20260910-bt100','jszip@3.10.1','labelWorkbench.btDraft.v1','BT_Data.csv','BT_Field_Map.csv','BT_Barcode_Map.csv','BT_WorkPack.json','buildDraft','inferFieldUsage','mapBarcodes','recommendTemplate','下載 BT 製作包 ZIP','本批有變動','本批固定']:
+    if marker not in bt_quick:
+        raise SystemExit(f'BT quick production is missing marker: {marker}')
+for marker in ['20260910-btb100','analysisSendBt','__btQuickBridgeWrapped','receiveAnalysis','送到 BT 快速製作','wireInterpreter']:
+    if marker not in bt_bridge:
+        raise SystemExit(f'Quick Analysis -> BT bridge is missing marker: {marker}')
+if '.btw' not in bt_quick or '不會偽造' not in bt_quick:
+    raise SystemExit('BT quick production must not pretend to generate native BTW files')
+
 for marker in ['analysis-summary','analysis-label-card','analysis-metrics','generator-options','@media(max-width:820px)','barcode-mode-tabs','mobile-nav']:
     if marker not in ui_css:
         raise SystemExit(f'UI refresh stylesheet is missing marker: {marker}')
@@ -180,7 +191,7 @@ print('PASS: refreshed UI stylesheet is single-loaded with v1.9 cache key')
 print('PASS: navigation prioritizes shared tools and BT quick production; Cases are optional')
 print('PASS: quick analysis has one listener and no legacy scratch-pad path')
 print('PASS: enabled Supabase browser config is publishable-key only')
-print('PASS: optional modules have one loader and v1.8.7 cache-key chain')
+print('PASS: optional modules have one loader and v1.8.8 cache-key chain')
 print('PASS: private attachment bucket and schema path are aligned')
 print('PASS: private attachments and document parser dependency pins checked')
 print('PASS: barcode reader normalizes transparent clipboard images and auto deep-scans pasted images')
@@ -188,3 +199,4 @@ print('PASS: redundant clipboard paste button is removed')
 print('PASS: barcode generator supports draggable multi-barcode layout and clean whole-board export')
 print('PASS: quick analysis uses orientation + enhancement + layout blocks + spatial field matching')
 print('PASS: quick analysis hides OCR internals and returns action-focused results')
+print('PASS: quick analysis is bridged directly into local BT production data and ZIP export')
