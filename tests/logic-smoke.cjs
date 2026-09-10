@@ -40,11 +40,8 @@ function assert(name, condition) {
   console.log(`PASS: ${name}`);
 }
 
-assert(
-  'file classification',
-  JSON.stringify(context.classifyFiles([{ name: 'a.pdf' }, { name: 'b.xlsx' }, { name: 'c.btw' }])) ===
-    JSON.stringify({ image: 0, pdf: 1, excel: 1, word: 0, csv: 0, btw: 1, other: 0 })
-);
+assert('legacy quick analysis is not owned by app.js', typeof context.analyzeSelected === 'undefined');
+assert('legacy scratch helper is removed', typeof context.updateScratch === 'undefined');
 
 const completeCase = {
   customer: 'Test', labelName: 'Carton', width: '100', height: '80',
@@ -61,7 +58,6 @@ const incompleteCase = {
 const msg = context.customerMessage(incompleteCase);
 assert('missing dimension is detected', msg.includes('標籤實際尺寸'));
 assert('missing barcode rule is detected', msg.includes('條碼種類'));
-assert('CSV quoted field parsing', JSON.stringify(context.parseCsvLine('A,"B,C",D')) === JSON.stringify(['A', 'B,C', 'D']));
 
 const pack = context.workPackHtml(completeCase);
 assert('BarTender work pack is generated', pack.includes('BarTender 製作包'));
