@@ -80,3 +80,6 @@ jobs:
 
       - name: Map native barcode object values
         run: node tests/btw-object-map.cjs
+
+      - name: Research official template library wiring
+        run: node tests/research-template-library.cjs
