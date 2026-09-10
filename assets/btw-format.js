@@ -6,7 +6,7 @@
  */
 (function(){
   'use strict';
-  const BUILD='20260910-btw010';
+  const BUILD='20260910-btw011';
   const SOF=new Uint8Array([0x0d,0x0a,0x42,0x61,0x72,0x20,0x54,0x65,0x6e,0x64,0x65,0x72,0x20,0x46,0x6f,0x72,0x6d,0x61,0x74,0x20,0x46,0x69,0x6c,0x65,0x0d,0x0a]);
   const END_META=new Uint8Array([0xff,0xfe,0xff,0x00]);
   const ZLIB_TAG=new Uint8Array([0x00,0x01]);
@@ -45,7 +45,7 @@
   async function streamTransform(bytes,kind){
     const C=kind==='inflate'?globalThis.DecompressionStream:globalThis.CompressionStream;
     if(typeof C!=='function')throw new Error(kind==='inflate'?'此瀏覽器不支援 BTW 解壓縮':'此瀏覽器不支援 BTW 壓縮');
-    const format='deflate',stream=new Blob([bytes]).stream().pipeThrough(new C(format)),buf=await new Response(stream).arrayBuffer();return new Uint8Array(buf)
+    const stream=new Blob([bytes]).stream().pipeThrough(new C('deflate')),buf=await new Response(stream).arrayBuffer();return new Uint8Array(buf)
   }
   async function inflateContainer(parsedOrBuffer){const parsed=parsedOrBuffer?.compressedContainer?parsedOrBuffer:parseStructure(parsedOrBuffer);if(!parsed.zlibTagged)throw new Error('目前只支援 zlib 壓縮的 BTW 容器');return streamTransform(parsed.compressedContainer,'inflate')}
   async function deflateContainer(bytes){return streamTransform(u8(bytes),'deflate')}
@@ -64,11 +64,10 @@
     return out;
   }
 
-  function encodeBtwString(text){const value=String(text??''),raw=new TextEncoder();
-    // TextEncoder has no UTF-16LE mode, build explicitly.
-    const chars=[...value];if(chars.length>65535)throw new Error('BTW 字串過長');
-    const payload=new Uint8Array(chars.length*2);let p=0;for(const ch of chars){const code=ch.charCodeAt(0);payload[p++]=code&255;payload[p++]=(code>>>8)&255}
-    const head=chars.length<=254?new Uint8Array([0xff,0xfe,0xff,chars.length]):new Uint8Array([0xff,0xfe,0xff,0xff,chars.length&255,(chars.length>>>8)&255]);return concatBytes([head,payload]);
+  function encodeBtwString(text){
+    const value=String(text??''),units=value.length;if(units>65535)throw new Error('BTW 字串過長');
+    const payload=new Uint8Array(units*2);for(let i=0;i<units;i++){const code=value.charCodeAt(i);payload[i*2]=code&255;payload[i*2+1]=(code>>>8)&255}
+    const head=units<=254?new Uint8Array([0xff,0xfe,0xff,units]):new Uint8Array([0xff,0xfe,0xff,0xff,units&255,(units>>>8)&255]);return concatBytes([head,payload]);
   }
   function replaceStringAt(container,entry,newText){const data=u8(container),before=data.slice(0,entry.offset),after=data.slice(entry.end),encoded=encodeBtwString(newText);return concatBytes([before,encoded,after])}
 
