@@ -13,7 +13,7 @@ function tags(b){const out=[];for(let i=0;i+8<b.length;i++){if(b[i]!==255||b[i+1
 (async()=>{
  const endpoint=url.replace(/\/$/,'')+'/functions/v1/btw-seed';
  const r=await fetch(endpoint,{headers:{apikey:key}});
- assert.strictEqual(r.status,200,`proxy status ${r.status}: ${await r.text()}`);
+ if(r.status!==200)throw new Error(`proxy status ${r.status}: ${await r.text()}`);
  assert.strictEqual(r.headers.get('access-control-allow-origin'),'*','CORS missing');
  assert.strictEqual(r.headers.get('x-label-workbench-seed'),'CEA-2022-R5','seed identity missing');
  const data=Buffer.from(await r.arrayBuffer());assert(data.length>20000,'seed unexpectedly small');
