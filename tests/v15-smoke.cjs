@@ -43,7 +43,7 @@ function context(){
   if(!api.validate('EAN-13','4006381333932'))throw new Error('Bad EAN-13 check digit accepted');
   if(api.validate('GS1-128','(01)04712345678903'))throw new Error('GS1 bracket notation rejected');
   const linear=api.buildOptions('Code 128','ABC123');
-  if(linear.height!==6)throw new Error(`Unexpected default linear height: ${linear.height}`);
+  if(linear.height!==4)throw new Error(`Unexpected default linear height: ${linear.height}`);
   const qr=api.buildOptions('QR Code','ABC123');
   if(qr.scale!==3)throw new Error(`Unexpected default 2D scale: ${qr.scale}`);
   if(!api.TWO_D.has('Data Matrix'))throw new Error('Data Matrix must use adjustable 2D size');
@@ -82,5 +82,5 @@ function context(){
 
   const summary=api.productionText({labels:[{sourceName:'LABEL.pdf',fields:simple,barcodes:[{format:'Code 128',text:'ABC123'}],marks:['RoHS']}]});
   if(!summary.includes('PART NO')||!summary.includes('ABC123')||!summary.includes('RoHS'))throw new Error('Production summary missing useful content');
-  console.log('PASS: v1.6 compound-row, consensus and action-focused interpretation smoke tests');
+  console.log('PASS: v1.8 compound-row, consensus and action-focused interpretation smoke tests');
 }
