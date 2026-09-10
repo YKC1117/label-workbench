@@ -31,7 +31,30 @@ if(deduped[0].format!=='Code 39')throw new Error('Normalized format should be us
 if(api.key({format:'QR Code',text:'A'})===api.key({format:'QR Code',text:'B'}))throw new Error('Result key must include content');
 if(typeof api.selfTest!=='function'||typeof api.scanCanvas!=='function')throw new Error('Diagnostic/manual scan APIs missing');
 
+class MockFile extends Blob{
+  constructor(parts,name,options={}){super(parts,options);this.name=name;this.lastModified=Date.now()}
+}
+const uiContext={
+  console,
+  window:{},
+  navigator:{clipboard:{}},
+  document:{readyState:'loading',addEventListener(){},getElementById(){return null}},
+  File:MockFile,
+  Blob:global.Blob,
+  Promise,Date,Math,String,Set
+};
+vm.createContext(uiContext);
+vm.runInContext(fs.readFileSync('assets/barcode-reader-ui.js','utf8'),uiContext,{filename:'assets/barcode-reader-ui.js'});
+const uiApi=uiContext.window.LabelWorkbenchBarcodeUI;
+if(!uiApi||typeof uiApi.clipboardFiles!=='function'||typeof uiApi.pasteFromClipboard!=='function')throw new Error('Clipboard barcode reader APIs missing');
+const clip=new MockFile(['image'],'clipboard.png',{type:'image/png'});
+const pasted=uiApi.clipboardFiles({items:[{kind:'file',type:'image/png',getAsFile:()=>clip}],files:[]});
+if(pasted.length!==1||pasted[0].name!=='clipboard.png'||pasted[0].type!=='image/png')throw new Error('Clipboard image extraction failed');
+const ignored=uiApi.clipboardFiles({items:[{kind:'string',type:'text/plain',getAsFile:()=>null}],files:[]});
+if(ignored.length!==0)throw new Error('Clipboard text must not be treated as an image');
+
 console.log('PASS: barcode format normalization');
 console.log('PASS: GS/CR/LF visible control characters');
 console.log('PASS: duplicate barcode result removal');
 console.log('PASS: self-test and manual crop APIs exposed');
+console.log('PASS: clipboard image paste extraction');
