@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   qa:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -69,3 +69,6 @@ jobs:
 
       - name: Native BTW format check against official 2022 sample
         run: node tests/btw-public-sample.cjs
+
+      - name: Discover reusable public BTW seeds
+        run: node tests/btw-discovery.cjs
