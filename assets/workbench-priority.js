@@ -1,15 +1,23 @@
-/* Label Workbench priority controller v1.8
- * Keeps the engineer's most-used tools first and owns the single Quick Analysis entry point.
+/* Label Workbench priority controller v1.8.2
+ * Keeps shared tools first, makes BT quick production the main engineering path,
+ * and keeps Cases available as an optional secondary record area.
  * Does not change case data, localStorage format, Supabase tables, or attachment metadata.
  */
 (function(){
   'use strict';
 
-  const BUILD='20260910-v181';
+  const BUILD='20260910-v182';
   const el=id=>document.getElementById(id);
   const esc=(v='')=>String(v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
   const isImage=f=>!!(f?.type?.startsWith('image/')||/\.(jpe?g|png|webp|gif|bmp)$/i.test(f?.name||''));
   const isPdf=f=>/\.pdf$/i.test(f?.name||'')||f?.type==='application/pdf';
+  const headerCopy={
+    barcode:['條碼工具','常用條碼優先，直接產生、讀取與驗證一維碼、二維碼。'],
+    analysis:['快速分析','把客戶檔案整理成可回覆、可製作、可確認的內容。'],
+    bartender:['BT 快速製作','把前置資料先整理好，回公司只做 BarTender 最後建版、微調、列印與掃描。'],
+    dashboard:['工作台','查看需要注意的製作工作與暫存紀錄。'],
+    cases:['案件紀錄','選用的工作紀錄區；需要跨裝置接續或特別追蹤時再使用。']
+  };
 
   function injectUiRefresh(){
     if(document.querySelector('link[data-lw-ui-refresh]'))return;
@@ -17,15 +25,36 @@
   }
 
   function reorderNav(){
-    const order=['barcode','analysis','dashboard','cases','bartender'];
-    document.querySelectorAll('.nav,.mobile-nav').forEach(nav=>{order.forEach(id=>{const btn=nav.querySelector(`[data-view="${id}"]`);if(btn)nav.appendChild(btn)})});
-    const labels={barcode:'條碼',analysis:'分析',dashboard:'工作台',cases:'案件',bartender:'BT'},mobile=document.querySelector('.mobile-nav');
-    if(mobile)order.forEach(id=>{const btn=mobile.querySelector(`[data-view="${id}"]`);if(btn)btn.textContent=labels[id]||btn.textContent});
+    const order=['barcode','analysis','bartender','dashboard','cases'];
+    const desktopLabels={barcode:'▥ 條碼工具',analysis:'⚡ 快速分析',bartender:'🖨️ BT 快速製作',dashboard:'🏠 工作台',cases:'📂 案件紀錄'};
+    const mobileLabels={barcode:'條碼',analysis:'分析',bartender:'BT 製作',dashboard:'工作台',cases:'案件'};
+    document.querySelectorAll('.nav,.mobile-nav').forEach(nav=>{
+      order.forEach(id=>{const btn=nav.querySelector(`[data-view="${id}"]`);if(btn)nav.appendChild(btn)});
+      order.forEach(id=>{const btn=nav.querySelector(`[data-view="${id}"]`);if(!btn)return;btn.textContent=nav.classList.contains('mobile-nav')?(mobileLabels[id]||btn.textContent):(desktopLabels[id]||btn.textContent)});
+    });
+  }
+
+  function syncHeaderCopy(){
+    const active=document.querySelector('.view.active')?.id;
+    const copy=headerCopy[active];
+    if(!copy)return;
+    const title=el('pageTitle'),sub=el('pageSub');
+    if(title)title.textContent=copy[0];
+    if(sub)sub.textContent=copy[1];
+  }
+
+  function bindHeaderCopy(){
+    document.querySelectorAll('[data-view]').forEach(btn=>{
+      if(btn.dataset.priorityHeaderBound==='true')return;
+      btn.dataset.priorityHeaderBound='true';
+      btn.addEventListener('click',()=>setTimeout(syncHeaderCopy,0));
+    });
   }
 
   function openBarcodeFirst(){
     try{if(typeof window.showView==='function')window.showView('barcode');else{document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id==='barcode'));document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view==='barcode'))}}
     catch(err){console.warn('[Label Workbench] default barcode view failed',err)}
+    syncHeaderCopy();
   }
 
   function waitFor(getter,timeout=10000){const start=Date.now();return new Promise(resolve=>{const tick=()=>{const value=getter();if(value)return resolve(value);if(Date.now()-start>=timeout)return resolve(null);setTimeout(tick,80)};tick()})}
@@ -61,11 +90,23 @@
   }
 
   function updateCopy(){
-    const title=el('pageTitle');if(title&&document.querySelector('#barcode.view.active'))title.textContent='條碼工具';const small=document.querySelector('.brand small');if(small)small.textContent='標籤製作工作台 · v1.8';
+    const small=document.querySelector('.brand small');if(small)small.textContent='標籤製作工作台 · v1.8';
     const analysis=el('analysis'),drop=analysis?.querySelector('.drop > p');if(drop)drop.textContent='PDF、圖片、Excel、Word、CSV 直接丟進來，整理成可回覆、可製作、可確認的內容。';const note=analysis?.querySelector('.warn-note');if(note)note.innerHTML='<b>快速分析：</b>PDF／圖片會自動判斷方向、分標籤、讀欄位位置、補讀小字並交叉比對條碼；畫面只留下可製作內容與待確認項目。';
+
+    const bt=el('bartender');
+    const btTitle=bt?.querySelector('.bt-title');
+    if(btTitle)btTitle.textContent='BT 快速製作';
+    const btIntro=btTitle?.nextElementSibling;
+    if(btIntro)btIntro.textContent='主流程改成：客戶原稿 → 快速分析 → 整理製作資料 → 套用 BarTender 母版 → 微調、列印與掃描。案件紀錄不是必要步驟。';
+    const btPanels=bt?.querySelectorAll('.panel');
+    const queueTitle=btPanels?.[1]?.querySelector('h3');if(queueTitle)queueTitle.textContent='可接續的 BT 製作紀錄';
+    const flowTitle=btPanels?.[2]?.querySelector('h3');if(flowTitle)flowTitle.textContent='快速製作流程';
+    const flow=btPanels?.[2]?.querySelector('.workflow');if(flow)flow.innerHTML='<span>客戶原稿</span><b>→</b><span>快速分析</span><b>→</b><span>製作資料</span><b>→</b><span>BT 母版</span><b>→</b><span>微調測試</span>';
+    const btNote=btPanels?.[2]?.querySelector('.note');if(btNote)btNote.innerHTML='<b>目前方向：</b>案件只保留給需要追蹤的人使用；接下來 BT 快速製作會直接接快速分析結果，不要求先建立案件。';
+    syncHeaderCopy();
   }
 
-  function init(){injectUiRefresh();reorderNav();bindQuickAnalysis();openBarcodeFirst();updateCopy();console.info('[Label Workbench] priority controller',BUILD)}
+  function init(){injectUiRefresh();reorderNav();bindHeaderCopy();bindQuickAnalysis();openBarcodeFirst();updateCopy();console.info('[Label Workbench] priority controller',BUILD)}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
   window.LabelWorkbenchPriority={runQuickAnalysis,reorderNav,build:BUILD};
 })();
