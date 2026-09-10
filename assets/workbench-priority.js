@@ -1,11 +1,11 @@
-/* Label Workbench priority controller v1.4
+/* Label Workbench priority controller v1.5
  * Keeps the engineer's most-used tools first and gives Quick Analysis one stable entry point.
  * Does not change case data, localStorage format, Supabase tables, or attachment metadata.
  */
 (function(){
   'use strict';
 
-  const BUILD='20260910-v140';
+  const BUILD='20260910-v150';
   const el=id=>document.getElementById(id);
   const esc=(v='')=>String(v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
   const isImage=f=>!!(f?.type?.startsWith('image/')||/\.(jpe?g|png|webp|gif|bmp)$/i.test(f?.name||''));
@@ -14,20 +14,11 @@
   function reorderNav(){
     const order=['barcode','analysis','dashboard','cases','bartender'];
     document.querySelectorAll('.nav,.mobile-nav').forEach(nav=>{
-      order.forEach(id=>{
-        const btn=nav.querySelector(`[data-view="${id}"]`);
-        if(btn)nav.appendChild(btn);
-      });
+      order.forEach(id=>{const btn=nav.querySelector(`[data-view="${id}"]`);if(btn)nav.appendChild(btn)});
     });
-
     const labels={barcode:'條碼',analysis:'分析',dashboard:'工作台',cases:'案件',bartender:'BT'};
     const mobile=document.querySelector('.mobile-nav');
-    if(mobile){
-      order.forEach(id=>{
-        const btn=mobile.querySelector(`[data-view="${id}"]`);
-        if(btn)btn.textContent=labels[id]||btn.textContent;
-      });
-    }
+    if(mobile)order.forEach(id=>{const btn=mobile.querySelector(`[data-view="${id}"]`);if(btn)btn.textContent=labels[id]||btn.textContent});
   }
 
   function openBarcodeFirst(){
@@ -40,79 +31,41 @@
     }catch(err){console.warn('[Label Workbench] default barcode view failed',err)}
   }
 
-  function waitFor(getter,timeout=7000){
-    const start=Date.now();
-    return new Promise(resolve=>{
-      const tick=()=>{
-        const value=getter();
-        if(value)return resolve(value);
-        if(Date.now()-start>=timeout)return resolve(null);
-        setTimeout(tick,80);
-      };
-      tick();
+  function waitFor(getter,timeout=8000){
+    const start=Date.now();return new Promise(resolve=>{
+      const tick=()=>{const value=getter();if(value)return resolve(value);if(Date.now()-start>=timeout)return resolve(null);setTimeout(tick,80)};tick();
     });
   }
 
   async function appendBarcodeAnalysis(files){
-    const images=[...files].filter(isImage).slice(0,8);
-    if(!images.length)return;
-    const out=el('analysisResult');
-    if(!out)return;
-
-    const core=await waitFor(()=>window.LabelWorkbenchBarcodeCore,6000);
-    const box=document.createElement('div');
-    box.className='analysis-block';
-    box.dataset.quickBarcode='true';
-    out.querySelector('[data-quick-barcode="true"]')?.remove();
-
-    if(!core||typeof core.scanFile!=='function'){
-      box.innerHTML='<b>圖片條碼內容：</b><div class="footer-note">條碼模組尚未完成載入。可切到「條碼工具」重新選圖讀碼。</div>';
-      out.appendChild(box);
-      return;
-    }
-
-    box.innerHTML='<b>圖片條碼內容：</b><div class="scan-working">正在讀取圖片條碼…</div>';
-    out.appendChild(box);
-
+    const images=[...files].filter(isImage).slice(0,8);if(!images.length)return;
+    const out=el('analysisResult');if(!out)return;
+    const core=await waitFor(()=>window.LabelWorkbenchBarcodeCore,6000),box=document.createElement('div');
+    box.className='analysis-block';box.dataset.quickBarcode='true';out.querySelector('[data-quick-barcode="true"]')?.remove();
+    if(!core||typeof core.scanFile!=='function')return;
+    box.innerHTML='<b>圖片條碼內容：</b><div class="scan-working">正在讀取圖片條碼…</div>';out.appendChild(box);
     const hits=[];
-    for(const file of images){
-      try{
-        const result=await core.scanFile(file);
-        (result?.results||[]).forEach(r=>hits.push({file:file.name,...r}));
-      }catch(err){console.warn('[Label Workbench] quick barcode scan failed',file.name,err)}
-    }
-
-    if(!hits.length){
-      box.innerHTML='<b>圖片條碼內容：</b><div class="footer-note">快速掃描沒有讀到條碼。若圖片確定有條碼，請到「條碼工具」使用加強讀取。</div>';
-      return;
-    }
-
-    box.innerHTML=`<b>圖片條碼內容：</b>${hits.map(r=>`<div class="scan-row"><div class="scan-head"><span class="pill">${esc(r.format||'條碼')}</span><small>${esc(r.file)}</small></div><pre>${esc(core.visibleText?core.visibleText(r.text):r.text)}</pre></div>`).join('')}`;
+    for(const file of images){try{const result=await core.scanFile(file);(result?.results||[]).forEach(r=>hits.push({file:file.name,...r}))}catch(err){console.warn('[Label Workbench] quick barcode scan failed',file.name,err)}}
+    box.innerHTML=hits.length?`<b>圖片條碼內容：</b>${hits.map(r=>`<div class="scan-row"><div class="scan-head"><span class="pill">${esc(r.format||'條碼')}</span><small>${esc(r.file)}</small></div><pre>${esc(core.visibleText?core.visibleText(r.text):r.text)}</pre></div>`).join('')}`:'<b>圖片條碼內容：</b><div class="footer-note">沒有成功讀到條碼內容。</div>';
   }
 
   async function runQuickAnalysis(files){
-    const arr=[...files];
-    const out=el('analysisResult');
-    if(!out)return;
+    const arr=[...files],out=el('analysisResult');if(!out)return;
     if(!arr.length){out.textContent='等待檔案';return}
-
-    out.innerHTML='<div class="scan-working">正在準備快速分析…<br><small>載入本機解析元件中</small></div>';
-    const parsers=await waitFor(()=>window.LabelWorkbenchParsers,7000);
-
+    out.innerHTML='<div class="scan-working">正在準備快速分析…<br><small>讀取客戶檔案中</small></div>';
+    const parsers=await waitFor(()=>window.LabelWorkbenchParsers,8000);
     try{
-      if(arr.length===1&&isPdf(arr[0])){
-        const interpreter=await waitFor(()=>window.LabelWorkbenchInterpreter,7000);
+      const allMedia=arr.every(f=>isPdf(f)||isImage(f));
+      if(allMedia){
+        const interpreter=await waitFor(()=>window.LabelWorkbenchInterpreter,8000);
         if(interpreter?.analyze)await interpreter.analyze(arr);
         else if(parsers?.analyze)await parsers.analyze(arr);
-        else throw new Error('PDF 解析元件未載入');
+        else throw new Error('原稿解析元件未載入');
       }else if(parsers&&typeof parsers.analyze==='function'){
-        await parsers.analyze(arr);
+        await parsers.analyze(arr);await appendBarcodeAnalysis(arr);
       }else if(typeof window.analyzeSelected==='function'){
-        await window.analyzeSelected(arr);
-      }else{
-        throw new Error('快速分析元件未載入');
-      }
-      await appendBarcodeAnalysis(arr);
+        await window.analyzeSelected(arr);await appendBarcodeAnalysis(arr);
+      }else throw new Error('快速分析元件未載入');
     }catch(err){
       console.error('[Label Workbench] quick analysis failed',err);
       out.innerHTML=`<div class="note warn-note"><b>快速分析失敗：</b>${esc(err?.message||err)}<br>請重新選擇檔案再試一次。</div>`;
@@ -120,34 +73,20 @@
   }
 
   function bindQuickAnalysis(){
-    const input=el('analysisFiles');
-    if(!input||input.dataset.priorityBound==='true')return;
+    const input=el('analysisFiles');if(!input||input.dataset.priorityBound==='true')return;
     input.dataset.priorityBound='true';
-    input.addEventListener('change',async e=>{
-      e.stopImmediatePropagation();
-      const files=[...(e.target.files||[])];
-      await runQuickAnalysis(files);
-      e.target.value='';
-    },true);
+    input.addEventListener('change',async e=>{e.stopImmediatePropagation();const files=[...(e.target.files||[])];await runQuickAnalysis(files);e.target.value=''},true);
   }
 
   function updateCopy(){
-    const title=el('pageTitle');
-    if(title&&document.querySelector('#barcode.view.active'))title.textContent='條碼工具';
-    const small=document.querySelector('.brand small');
-    if(small)small.textContent='標籤製作工作台 · v1.4';
+    const title=el('pageTitle');if(title&&document.querySelector('#barcode.view.active'))title.textContent='條碼工具';
+    const small=document.querySelector('.brand small');if(small)small.textContent='標籤製作工作台 · v1.5';
+    const analysis=el('analysis');
+    const drop=analysis?.querySelector('.drop > p');if(drop)drop.textContent='客戶給 PDF、圖片、Excel、Word 或 CSV，直接丟進來整理成可製作內容。';
+    const note=analysis?.querySelector('.warn-note');if(note)note.innerHTML='<b>快速分析：</b>系統會在背景讀取文字、條碼與標籤區域；畫面只整理「可製作內容」與「需要向客戶確認的項目」。';
   }
 
-  function init(){
-    reorderNav();
-    bindQuickAnalysis();
-    openBarcodeFirst();
-    updateCopy();
-    console.info('[Label Workbench] priority controller',BUILD);
-  }
-
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});
-  else init();
-
+  function init(){reorderNav();bindQuickAnalysis();openBarcodeFirst();updateCopy();console.info('[Label Workbench] priority controller',BUILD)}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
   window.LabelWorkbenchPriority={runQuickAnalysis,reorderNav,build:BUILD};
 })();
