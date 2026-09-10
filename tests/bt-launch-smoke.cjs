@@ -17,13 +17,14 @@ function context(options={}){
   ]};
   const d=api.buildDraft(sample,['A.pdf']);
   const cmd=api.buildOpenCmd(d);
-  for(const marker of ['bartend.exe','/F="%TEMPLATE%"','/D="%DATA%"','/DbTextHeader=1','BT_Data.csv'])if(!cmd.includes(marker))throw new Error(`Launch helper missing ${marker}`);
+  for(const marker of ['bartend.exe','/F="%TEMPLATE%"','/D="%DATA%"','/DbTextHeader=1','BT_Data.csv','No .btw template was found','Opening BarTender without a template'])if(!cmd.includes(marker))throw new Error(`Launch helper missing ${marker}`);
+  if(/[^\x00-\x7F]/.test(cmd))throw new Error('BT_Open.cmd must stay ASCII-only for Windows CMD compatibility');
   if(/(?:^|\s)\/P(?:\s|$)/im.test(cmd))throw new Error('Launch helper must never auto-print');
   if(/(?:^|\s)\/X(?:\s|$)/im.test(cmd))throw new Error('Launch helper must not auto-close BarTender');
   if(!api.templateBaseName(d).endsWith('.btw'))throw new Error('Template recommendation must map to a BTW filename');
   const readme=api.buildReadme(d);
   if(!readme.includes('BT_Open.cmd')||!readme.includes('不包含自動列印參數'))throw new Error('Production instructions must explain safe non-printing launch behavior');
-  console.log('PASS: BT_Open.cmd opens a real template with BT_Data.csv and never auto-prints');
+  console.log('PASS: BT_Open.cmd is ASCII-safe, opens a template when available, and falls back without auto-printing');
 }
 
 {
@@ -47,6 +48,6 @@ function context(options={}){
   if(result.labels.length!==2)throw new Error('CSV/Excel table rows must become two BT label rows');
   if(result.labels[0].fields[0].name!=='PART NO'||result.labels[1].fields[1].value!=='200')throw new Error('Table-to-BT field conversion failed');
   const src=fs.readFileSync('assets/bt-bridge.js','utf8');
-  for(const marker of ['建立 BT 製作包（自動下載）','downloadProductionPack','ensureBtQuick','bt130-retry','BT_製作包_','BT_Data.csv','ZIP 建立失敗，已改下載 BT_Data.csv'])if(!src.includes(marker))throw new Error(`BT bridge auto-export/recovery marker missing: ${marker}`);
+  for(const marker of ['建立 BT 製作包（自動下載）','downloadProductionPack','ensureBtQuick','bt140-retry','BT_製作包_','BT_Data.csv','BT_使用方式.txt','ZIP 建立失敗，已改下載 BT_Data.csv'])if(!src.includes(marker))throw new Error(`BT bridge auto-export/recovery marker missing: ${marker}`);
   console.log('PASS: BT action has one-click ZIP export, CSV fallback and missing-module recovery');
 }
