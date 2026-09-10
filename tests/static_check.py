@@ -5,8 +5,8 @@ FILES = [
     'index.html','assets/app.css','assets/ui-refresh.css','assets/nav-groups.css','assets/app.js',
     'assets/cloud.css','assets/cloud.js','assets/cloud-config.js','assets/cloud-attachments.js','assets/file-parsers.js',
     'assets/barcode-reader.js','assets/barcode-reader-core.js','assets/barcode-reader-ui.js','assets/barcode-generator.js',
-    'assets/label-interpreter.js','assets/bt-quick.js','assets/bt-bridge.js','assets/layout-shortcuts.js','assets/workbench-priority.js',
-    'docs/supabase-schema.sql','.gitignore','README.md','tests/bt-launch-smoke.cjs'
+    'assets/label-interpreter.js','assets/bt-quick.js','assets/bt-direct-import.js','assets/bt-bridge.js','assets/layout-shortcuts.js','assets/workbench-priority.js',
+    'docs/supabase-schema.sql','.gitignore','README.md','tests/bt-launch-smoke.cjs','tests/bt-direct-import-smoke.cjs'
 ]
 missing=[p for p in FILES if not Path(p).exists()]
 if missing: raise SystemExit(f'Missing required project files: {missing}')
@@ -15,7 +15,7 @@ read=lambda p:Path(p).read_text(encoding='utf-8')
 html=read('index.html'); app=read('assets/app.js'); cloud=read('assets/cloud.js'); cfg=read('assets/cloud-config.js')
 attachments=read('assets/cloud-attachments.js'); parsers=read('assets/file-parsers.js'); loader=read('assets/barcode-reader.js')
 core=read('assets/barcode-reader-core.js'); reader_ui=read('assets/barcode-reader-ui.js'); generator=read('assets/barcode-generator.js')
-interpreter=read('assets/label-interpreter.js'); bt=read('assets/bt-quick.js'); bridge=read('assets/bt-bridge.js')
+interpreter=read('assets/label-interpreter.js'); bt=read('assets/bt-quick.js'); direct=read('assets/bt-direct-import.js'); bridge=read('assets/bt-bridge.js')
 priority=read('assets/workbench-priority.js'); ui=read('assets/ui-refresh.css'); nav=read('assets/nav-groups.css'); schema=read('docs/supabase-schema.sql')
 
 # Static app wiring / legacy cleanup
@@ -30,18 +30,18 @@ if 'stopImmediatePropagation' in priority: raise SystemExit('Quick analysis must
 if "el('analysisFiles')" not in priority or "addEventListener('change'" not in priority: raise SystemExit('Priority controller must own quick analysis input')
 
 # Current cache/load chain
-for marker in ['assets/ui-refresh.css?v=20260910-v190','assets/nav-groups.css?v=20260910-v110','assets/app.js?v=20260910-v181','assets/cloud.js?v=20260910-v193']:
+for marker in ['assets/ui-refresh.css?v=20260910-v190','assets/nav-groups.css?v=20260910-v110','assets/app.js?v=20260910-v181','assets/cloud.js?v=20260910-v194']:
     if marker not in html: raise SystemExit(f'index.html missing current cache marker: {marker}')
-for marker in ['assets/cloud-attachments.js','assets/file-parsers.js','assets/barcode-reader.js','20260910-v193']:
+for marker in ['assets/cloud-attachments.js','assets/file-parsers.js','assets/barcode-reader.js','20260910-v194']:
     if marker not in cloud: raise SystemExit(f'cloud loader missing: {marker}')
-for marker in ['barcode-reader-core.js','barcode-reader-ui.js','barcode-generator.js','label-interpreter.js','bt-quick.js','bt-bridge.js','workbench-priority.js','20260910-v193']:
+for marker in ['barcode-reader-core.js','barcode-reader-ui.js','barcode-generator.js','label-interpreter.js','bt-quick.js','bt-direct-import.js','bt-bridge.js','workbench-priority.js','20260910-v194']:
     if marker not in loader: raise SystemExit(f'workbench loader missing: {marker}')
 for duplicated in ['assets/cloud-attachments.js','assets/file-parsers.js','assets/barcode-reader.js']:
     if duplicated in cfg: raise SystemExit(f'cloud-config must not load {duplicated}')
 
 # Navigation: shared tools -> BT production -> optional case records
 if "['barcode','analysis','bartender','dashboard','cases']" not in priority: raise SystemExit('BT-first navigation order missing')
-for marker in ['BT 快速製作','案件紀錄','20260910-v182','headerCopy','syncHeaderCopy']:
+for marker in ['BT 快速製作','案件紀錄','20260910-v182','headerCopy','syncHeaderCopy','直接匯入 PNG']:
     if marker not in priority: raise SystemExit(f'Priority marker missing: {marker}')
 for marker in ['BT 製作','data-view="cases"','#topNewCase{display:none!important}']:
     if marker not in nav: raise SystemExit(f'Navigation styling marker missing: {marker}')
@@ -79,24 +79,27 @@ for marker in ['20260910-v180','chooseOrientation','enhanceCanvas','detectLabelB
 for forbidden in ['查看 OCR 原文','OCR 值','OCR 待確認']:
     if forbidden in interpreter: raise SystemExit(f'OCR internals exposed: {forbidden}')
 
-# BT Quick Production: data pack + resilient registration + ASCII-safe launcher
+# BT Quick Production advanced data pack + resilient ASCII-safe launcher
 for marker in ['20260910-bt140','jszip@3.10.1','labelWorkbench.btDraft.v1','BT_Data.csv','BT_Field_Map.csv','BT_Barcode_Map.csv','BT_WorkPack.json','BT_Open.cmd','buildOpenCmd','templateBaseName','inferFieldUsage','mapBarcodes','normalizeDraft','safeRender','window.LabelWorkbenchBtQuick=API','本批有變動','本批固定','/DbTextHeader=1','No .btw template was found','Opening BarTender without a template']:
     if marker not in bt: raise SystemExit(f'BT quick production marker missing: {marker}')
 if bt.find('window.LabelWorkbenchBtQuick=API') > bt.find("if(document.readyState==='loading')"):
     raise SystemExit('BT Quick API must be registered before UI initialization')
 if '/P /' in bt or ' /P ' in bt: raise SystemExit('BT launch helper must not contain automatic print switch')
-if '.btw' not in bt or '不會偽造' not in bt: raise SystemExit('BT Quick must keep real BTW safety guidance')
-for marker in ['20260910-btb140','analysisSendBt','receiveAnalysis','建立 BT 製作包（自動下載）','wireInterpreter','wireParsers','parseTableFiles','tableResult',"['csv','xls','xlsx']",'downloadProductionPack','ensureBtQuick','bt140-retry','BT_製作包_','BT_Data.csv','BT_使用方式.txt','ZIP 建立失敗，已改下載 BT_Data.csv']:
-    if marker not in bridge: raise SystemExit(f'BT bridge recovery/auto-export marker missing: {marker}')
+
+# UltraLite primary path: PDF/image -> directly importable PNG picture object
+for marker in ['20260910-btdi100','pdfjs-dist@6.3.289','jszip@3.10.1','BT_Import_Label_','BT_可直接匯入_','detectLabelBands','rotateCanvas','downloadFromAnalysis','圖片物件']:
+    if marker not in direct: raise SystemExit(f'BT direct import marker missing: {marker}')
+for marker in ['20260910-btb150','analysisBtDirect','下載 BT 可直接匯入圖檔','進階：下載 BT 資料包','sendDirectToBt','ensureDirectImport','LabelWorkbenchBtDirectImport','bt140-retry','btdi100-retry','BT_製作包_','BT_Data.csv']:
+    if marker not in bridge: raise SystemExit(f'BT bridge direct/advanced marker missing: {marker}')
+if 'latestFiles=[...(files||[])]' not in bridge: raise SystemExit('BT bridge must retain browser File objects for direct PNG reconstruction')
 
 for marker in ['analysis-summary','analysis-label-card','analysis-metrics','@media(max-width:820px)','barcode-mode-tabs','mobile-nav']:
     if marker not in ui: raise SystemExit(f'UI marker missing: {marker}')
 
 print(f'PASS: {len(ids)} HTML ids and {len(refs)} app DOM references checked')
 print('PASS: one Quick Analysis entry point; legacy scratch path removed')
-print('PASS: v1.9.3 cache/load chain and BT-first navigation checked')
+print('PASS: v1.9.4 cache/load chain and BT-first navigation checked')
 print('PASS: publishable-key-only cloud security and private attachment schema checked')
 print('PASS: barcode reader/generator and action-focused analysis markers checked')
-print('PASS: BT Quick registers before init, repairs stale drafts, and bridge can self-reload it')
-print('PASS: BT_Open.cmd is ASCII-safe and can fall back when no BTW exists')
-print('PASS: BT action auto-downloads ZIP and falls back to BT_Data.csv')
+print('PASS: BT Quick advanced pack remains available and launcher stays ASCII-safe')
+print('PASS: PDF/image analysis has a direct BarTender UltraLite PNG import path')
