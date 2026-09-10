@@ -46,8 +46,8 @@ if missing_scripts:
     raise SystemExit(f'Missing required script references: {missing_scripts}')
 if 'assets/ui-refresh.css?v=20260910-v190' not in html or 'data-lw-ui-refresh="true"' not in html:
     raise SystemExit('refreshed UI stylesheet must load once with the v1.9 cache key')
-if 'assets/app.js?v=20260910-v181' not in html or 'assets/cloud.js?v=20260910-v181' not in html:
-    raise SystemExit('v1.8.1 app/cloud cache keys are not linked')
+if 'assets/app.js?v=20260910-v181' not in html or 'assets/cloud.js?v=20260910-v182' not in html:
+    raise SystemExit('latest app/cloud cache keys are not linked')
 
 legacy_scratch = ['scratchType','scratchPrefix','scratchSuffix','scratchEncoded','scratchHuman','scratchResult','updateScratch']
 for marker in legacy_scratch:
@@ -90,8 +90,8 @@ if 'Local-first' not in cloud_js and '本機優先' not in cloud_js:
 for module in ['assets/cloud-attachments.js','assets/file-parsers.js','assets/barcode-reader.js']:
     if module not in cloud_js:
         raise SystemExit(f'Feature module is not wired by cloud loader: {module}')
-if '20260910-v181' not in cloud_js:
-    raise SystemExit('Cloud optional-module cache key must be v1.8.1')
+if '20260910-v182' not in cloud_js:
+    raise SystemExit('Cloud optional-module cache key must be v1.8.2')
 
 if "label-attachments" not in attachments_js or '20*1024*1024' not in attachments_js.replace(' ', ''):
     raise SystemExit('Private attachment add-on must target the expected bucket and 20 MB limit')
@@ -109,8 +109,8 @@ for marker in ['tesseract.js@7.0.0', 'createOcrWorker', 'renderPdfPage', "['eng'
 for module in ['barcode-reader-core.js','barcode-reader-ui.js','barcode-generator.js','label-interpreter.js','workbench-priority.js']:
     if module not in barcode_loader:
         raise SystemExit(f'Barcode/workbench loader is missing {module}')
-if '20260910-v181' not in barcode_loader:
-    raise SystemExit('Barcode/workbench loader cache key must be v1.8.1')
+if '20260910-v182' not in barcode_loader:
+    raise SystemExit('Barcode/workbench loader cache key must be v1.8.2')
 
 if "const ZX='3.1.3'" not in barcode_core or 'zxing-wasm@${ZX}' not in barcode_core:
     raise SystemExit('Barcode core must pin zxing-wasm 3.1.3')
@@ -125,9 +125,11 @@ for marker in ['加強讀取', 'retryDeep', '快速掃描中']:
     if marker not in barcode_ui:
         raise SystemExit(f'Barcode UI is missing simple on-demand scan marker: {marker}')
 
-for marker in ['20260910-v180','bwip-js@4.6.0','Code 128','QR Code','Data Matrix','GS1-128','GS1 DataMatrix','downloadPng','copyImage','verifyGenerated','立即產生','gen2DSize','twoDScale','min="2"','step="0.5"','貼到 BarTender']:
+for marker in ['20260910-v180','bwip-js@4.6.0','Code 128','QR Code','Data Matrix','GS1-128','GS1 DataMatrix','downloadPng','copyImage','verifyGenerated','立即產生','gen2DSize','twoDScale','min="2"','step="0.5"','貼到 BarTender','generator-toggle-track','generator-controls']:
     if marker not in barcode_generator:
-        raise SystemExit(f'Barcode generator is missing v1.8 marker: {marker}')
+        raise SystemExit(f'Barcode generator is missing compact-tool marker: {marker}')
+if '<span class="pill">v1.8</span>' in barcode_generator:
+    raise SystemExit('Barcode generator must not show a redundant version pill')
 
 for marker in [
     '20260910-v180','chooseOrientation','contentBounds','enhanceCanvas','detectLabelBands',
@@ -159,6 +161,6 @@ print('PASS: optional modules have one loader and one cache-key chain')
 print('PASS: private attachment bucket and schema path are aligned')
 print('PASS: private attachments and document parser dependency pins checked')
 print('PASS: barcode reader fast path checked')
-print('PASS: barcode generator size controls checked')
+print('PASS: barcode generator uses compact controls without oversized checkbox UI')
 print('PASS: quick analysis uses orientation + enhancement + layout blocks + spatial field matching')
 print('PASS: quick analysis hides OCR internals and returns action-focused results')
