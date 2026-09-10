@@ -14,6 +14,7 @@ barcode_generator = Path('assets/barcode-generator.js').read_text(encoding='utf-
 interpreter_js = Path('assets/label-interpreter.js').read_text(encoding='utf-8')
 priority_js = Path('assets/workbench-priority.js').read_text(encoding='utf-8')
 ui_css = Path('assets/ui-refresh.css').read_text(encoding='utf-8')
+schema_sql = Path('docs/supabase-schema.sql').read_text(encoding='utf-8')
 
 ids = set(re.findall(r'id="([^"]+)"', html))
 refs = set(re.findall(r"getElementById\('([^']+)'\)", js))
@@ -66,6 +67,10 @@ else:
     if not re.search(r'enabled\s*:\s*false', cloud_cfg, re.I):
         raise SystemExit('Cloud config must explicitly declare enabled true or false')
 
+for duplicated_module in ['assets/cloud-attachments.js', 'assets/file-parsers.js', 'assets/barcode-reader.js']:
+    if duplicated_module in cloud_cfg:
+        raise SystemExit(f'cloud-config.js must not load optional module directly: {duplicated_module}')
+
 if 'Local-first' not in cloud_js and '本機優先' not in cloud_js:
     raise SystemExit('Cloud layer must explicitly preserve local-first behavior')
 for module in ['assets/cloud-attachments.js','assets/file-parsers.js','assets/barcode-reader.js']:
@@ -76,6 +81,11 @@ if '20260910-v180' not in cloud_js:
 
 if "label-attachments" not in attachments_js or '20*1024*1024' not in attachments_js.replace(' ', ''):
     raise SystemExit('Private attachment add-on must target the expected bucket and 20 MB limit')
+if "label-attachments" not in schema_sql or "label-case-files" in schema_sql:
+    raise SystemExit('Supabase schema must match the live label-attachments bucket')
+if '<user_id>/<case_id>/<attachment_id>-<filename>' not in schema_sql:
+    raise SystemExit('Supabase schema must document the attachment path shape used by the client')
+
 if 'xlsx@0.18.5' not in parsers_js or 'mammoth@1.12.2' not in parsers_js or 'pdfjs-dist@6.3.289' not in parsers_js:
     raise SystemExit('Document parser CDN dependencies must remain version-pinned')
 for marker in ['tesseract.js@7.0.0', 'createOcrWorker', 'renderPdfPage', "['eng','chi_tra']", 'OCR_MAX_PAGES=3', 'scanPdfCanvas']:
@@ -130,6 +140,8 @@ print(f'PASS: {len(refs)} JavaScript DOM references checked')
 print(f'PASS: {len(handlers)} inline handler names checked')
 print('PASS: v1.8 cache keys and UI refresh wiring checked')
 print('PASS: enabled Supabase browser config is publishable-key only')
+print('PASS: optional modules have one loader and one cache-key chain')
+print('PASS: private attachment bucket and schema path are aligned')
 print('PASS: private attachments and document parser dependency pins checked')
 print('PASS: barcode reader fast path checked')
 print('PASS: barcode generator size controls checked')
