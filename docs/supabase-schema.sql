@@ -13,73 +13,81 @@ create table if not exists public.label_cases (
 
 alter table public.label_cases enable row level security;
 
-create policy "Users can read own label cases"
+drop policy if exists "label_cases_select_own" on public.label_cases;
+create policy "label_cases_select_own"
 on public.label_cases
 for select
 to authenticated
 using ((select auth.uid()) = user_id);
 
-create policy "Users can insert own label cases"
+drop policy if exists "label_cases_insert_own" on public.label_cases;
+create policy "label_cases_insert_own"
 on public.label_cases
 for insert
 to authenticated
 with check ((select auth.uid()) = user_id);
 
-create policy "Users can update own label cases"
+drop policy if exists "label_cases_update_own" on public.label_cases;
+create policy "label_cases_update_own"
 on public.label_cases
 for update
 to authenticated
 using ((select auth.uid()) = user_id)
 with check ((select auth.uid()) = user_id);
 
-create policy "Users can delete own label cases"
+drop policy if exists "label_cases_delete_own" on public.label_cases;
+create policy "label_cases_delete_own"
 on public.label_cases
 for delete
 to authenticated
 using ((select auth.uid()) = user_id);
 
--- Attachment bucket for the next phase. Files must live under:
---   <user_id>/<case_id>/<filename>
+-- Private attachment bucket. Files are stored as:
+--   <user_id>/<case_id>/<attachment_id>-<filename>
 insert into storage.buckets (id, name, public)
-values ('label-case-files', 'label-case-files', false)
+values ('label-attachments', 'label-attachments', false)
 on conflict (id) do update set public = false;
 
-create policy "Users can read own label attachments"
+drop policy if exists "attachments_select_own" on storage.objects;
+create policy "attachments_select_own"
 on storage.objects
 for select
 to authenticated
 using (
-  bucket_id = 'label-case-files'
+  bucket_id = 'label-attachments'
   and (storage.foldername(name))[1] = (select auth.uid())::text
 );
 
-create policy "Users can upload own label attachments"
+drop policy if exists "attachments_insert_own" on storage.objects;
+create policy "attachments_insert_own"
 on storage.objects
 for insert
 to authenticated
 with check (
-  bucket_id = 'label-case-files'
+  bucket_id = 'label-attachments'
   and (storage.foldername(name))[1] = (select auth.uid())::text
 );
 
-create policy "Users can update own label attachments"
+drop policy if exists "attachments_update_own" on storage.objects;
+create policy "attachments_update_own"
 on storage.objects
 for update
 to authenticated
 using (
-  bucket_id = 'label-case-files'
+  bucket_id = 'label-attachments'
   and (storage.foldername(name))[1] = (select auth.uid())::text
 )
 with check (
-  bucket_id = 'label-case-files'
+  bucket_id = 'label-attachments'
   and (storage.foldername(name))[1] = (select auth.uid())::text
 );
 
-create policy "Users can delete own label attachments"
+drop policy if exists "attachments_delete_own" on storage.objects;
+create policy "attachments_delete_own"
 on storage.objects
 for delete
 to authenticated
 using (
-  bucket_id = 'label-case-files'
+  bucket_id = 'label-attachments'
   and (storage.foldername(name))[1] = (select auth.uid())::text
 );
