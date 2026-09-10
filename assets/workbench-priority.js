@@ -1,11 +1,11 @@
-/* Label Workbench priority controller v1.5
+/* Label Workbench priority controller v1.6
  * Keeps the engineer's most-used tools first and gives Quick Analysis one stable entry point.
  * Does not change case data, localStorage format, Supabase tables, or attachment metadata.
  */
 (function(){
   'use strict';
 
-  const BUILD='20260910-v150';
+  const BUILD='20260910-v160';
   const el=id=>document.getElementById(id);
   const esc=(v='')=>String(v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
   const isImage=f=>!!(f?.type?.startsWith('image/')||/\.(jpe?g|png|webp|gif|bmp)$/i.test(f?.name||''));
@@ -31,7 +31,7 @@
     }catch(err){console.warn('[Label Workbench] default barcode view failed',err)}
   }
 
-  function waitFor(getter,timeout=8000){
+  function waitFor(getter,timeout=10000){
     const start=Date.now();return new Promise(resolve=>{
       const tick=()=>{const value=getter();if(value)return resolve(value);if(Date.now()-start>=timeout)return resolve(null);setTimeout(tick,80)};tick();
     });
@@ -40,7 +40,7 @@
   async function appendBarcodeAnalysis(files){
     const images=[...files].filter(isImage).slice(0,8);if(!images.length)return;
     const out=el('analysisResult');if(!out)return;
-    const core=await waitFor(()=>window.LabelWorkbenchBarcodeCore,6000),box=document.createElement('div');
+    const core=await waitFor(()=>window.LabelWorkbenchBarcodeCore,7000),box=document.createElement('div');
     box.className='analysis-block';box.dataset.quickBarcode='true';out.querySelector('[data-quick-barcode="true"]')?.remove();
     if(!core||typeof core.scanFile!=='function')return;
     box.innerHTML='<b>圖片條碼內容：</b><div class="scan-working">正在讀取圖片條碼…</div>';out.appendChild(box);
@@ -53,11 +53,11 @@
     const arr=[...files],out=el('analysisResult');if(!out)return;
     if(!arr.length){out.textContent='等待檔案';return}
     out.innerHTML='<div class="scan-working">正在準備快速分析…<br><small>讀取客戶檔案中</small></div>';
-    const parsers=await waitFor(()=>window.LabelWorkbenchParsers,8000);
+    const parsers=await waitFor(()=>window.LabelWorkbenchParsers,10000);
     try{
       const allMedia=arr.every(f=>isPdf(f)||isImage(f));
       if(allMedia){
-        const interpreter=await waitFor(()=>window.LabelWorkbenchInterpreter,8000);
+        const interpreter=await waitFor(()=>window.LabelWorkbenchInterpreter,10000);
         if(interpreter?.analyze)await interpreter.analyze(arr);
         else if(parsers?.analyze)await parsers.analyze(arr);
         else throw new Error('原稿解析元件未載入');
@@ -80,10 +80,10 @@
 
   function updateCopy(){
     const title=el('pageTitle');if(title&&document.querySelector('#barcode.view.active'))title.textContent='條碼工具';
-    const small=document.querySelector('.brand small');if(small)small.textContent='標籤製作工作台 · v1.5';
+    const small=document.querySelector('.brand small');if(small)small.textContent='標籤製作工作台 · v1.6';
     const analysis=el('analysis');
     const drop=analysis?.querySelector('.drop > p');if(drop)drop.textContent='客戶給 PDF、圖片、Excel、Word 或 CSV，直接丟進來整理成可製作內容。';
-    const note=analysis?.querySelector('.warn-note');if(note)note.innerHTML='<b>快速分析：</b>系統會在背景讀取文字、條碼與標籤區域；畫面只整理「可製作內容」與「需要向客戶確認的項目」。';
+    const note=analysis?.querySelector('.warn-note');if(note)note.innerHTML='<b>快速分析：</b>PDF／圖片會自動分標籤、補讀小字、交叉比對條碼；畫面只顯示可製作內容與待確認項目。';
   }
 
   function init(){reorderNav();bindQuickAnalysis();openBarcodeFirst();updateCopy();console.info('[Label Workbench] priority controller',BUILD)}
