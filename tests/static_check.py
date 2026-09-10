@@ -30,11 +30,11 @@ if 'stopImmediatePropagation' in priority: raise SystemExit('Quick analysis must
 if "el('analysisFiles')" not in priority or "addEventListener('change'" not in priority: raise SystemExit('Priority controller must own quick analysis input')
 
 # Current cache/load chain
-for marker in ['assets/ui-refresh.css?v=20260910-v190','assets/nav-groups.css?v=20260910-v110','assets/app.js?v=20260910-v181','assets/cloud.js?v=20260910-v190']:
+for marker in ['assets/ui-refresh.css?v=20260910-v190','assets/nav-groups.css?v=20260910-v110','assets/app.js?v=20260910-v181','assets/cloud.js?v=20260910-v191']:
     if marker not in html: raise SystemExit(f'index.html missing current cache marker: {marker}')
-for marker in ['assets/cloud-attachments.js','assets/file-parsers.js','assets/barcode-reader.js','20260910-v190']:
+for marker in ['assets/cloud-attachments.js','assets/file-parsers.js','assets/barcode-reader.js','20260910-v191']:
     if marker not in cloud: raise SystemExit(f'cloud loader missing: {marker}')
-for marker in ['barcode-reader-core.js','barcode-reader-ui.js','barcode-generator.js','label-interpreter.js','bt-quick.js','bt-bridge.js','workbench-priority.js','20260910-v190']:
+for marker in ['barcode-reader-core.js','barcode-reader-ui.js','barcode-generator.js','label-interpreter.js','bt-quick.js','bt-bridge.js','workbench-priority.js','20260910-v191']:
     if marker not in loader: raise SystemExit(f'workbench loader missing: {marker}')
 for duplicated in ['assets/cloud-attachments.js','assets/file-parsers.js','assets/barcode-reader.js']:
     if duplicated in cfg: raise SystemExit(f'cloud-config must not load {duplicated}')
@@ -79,21 +79,21 @@ for marker in ['20260910-v180','chooseOrientation','enhanceCanvas','detectLabelB
 for forbidden in ['查看 OCR 原文','OCR 值','OCR 待確認']:
     if forbidden in interpreter: raise SystemExit(f'OCR internals exposed: {forbidden}')
 
-# BT Quick Production: structured data, table bridge and safe Windows launcher
+# BT Quick Production: structured data, table bridge, safe launcher and one-click export
 for marker in ['20260910-bt110','jszip@3.10.1','labelWorkbench.btDraft.v1','BT_Data.csv','BT_Field_Map.csv','BT_Barcode_Map.csv','BT_WorkPack.json','BT_Open.cmd','buildOpenCmd','templateBaseName','inferFieldUsage','mapBarcodes','本批有變動','本批固定','/DbTextHeader=1']:
     if marker not in bt: raise SystemExit(f'BT quick production marker missing: {marker}')
 if '/P /' in bt or ' /P ' in bt: raise SystemExit('BT launch helper must not contain automatic print switch')
 if '.btw' not in bt or '不會偽造' not in bt: raise SystemExit('BT Quick must require a real mother template')
-for marker in ['20260910-btb110','analysisSendBt','receiveAnalysis','送到 BT 快速製作','wireInterpreter','wireParsers','parseTableFiles','tableResult',"['csv','xls','xlsx']"]:
-    if marker not in bridge: raise SystemExit(f'BT bridge marker missing: {marker}')
+for marker in ['20260910-btb120','analysisSendBt','receiveAnalysis','建立 BT 製作包（自動下載）','wireInterpreter','wireParsers','parseTableFiles','tableResult',"['csv','xls','xlsx']",'downloadProductionPack','jszip@3.10.1','BT_製作包_','BT_Data.csv','ZIP 建立失敗，已改下載 BT_Data.csv']:
+    if marker not in bridge: raise SystemExit(f'BT bridge auto-export marker missing: {marker}')
 
 for marker in ['analysis-summary','analysis-label-card','analysis-metrics','@media(max-width:820px)','barcode-mode-tabs','mobile-nav']:
     if marker not in ui: raise SystemExit(f'UI marker missing: {marker}')
 
 print(f'PASS: {len(ids)} HTML ids and {len(refs)} app DOM references checked')
 print('PASS: one Quick Analysis entry point; legacy scratch path removed')
-print('PASS: v1.9.0 cache/load chain and BT-first navigation checked')
+print('PASS: v1.9.1 cache/load chain and BT-first navigation checked')
 print('PASS: publishable-key-only cloud security and private attachment schema checked')
 print('PASS: barcode reader/generator and action-focused analysis markers checked')
 print('PASS: PDF/image and Excel/CSV bridge into BT Quick Production')
-print('PASS: BT ZIP includes CSV/maps/workpack plus safe non-printing BT_Open.cmd')
+print('PASS: BT action now auto-downloads ZIP and falls back to BT_Data.csv')
