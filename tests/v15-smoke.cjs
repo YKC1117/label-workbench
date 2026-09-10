@@ -64,6 +64,32 @@ function context(){
 
 {
   const c=context();vm.createContext(c);
+  vm.runInContext(fs.readFileSync('assets/layout-shortcuts.js','utf8'),c,{filename:'layout-shortcuts.js'});
+  const api=c.window.LabelWorkbenchLayoutShortcuts;
+  if(!api)throw new Error('Layout shortcut API missing');
+  const tests=[
+    [{key:'c',ctrlKey:true},'copy'],
+    [{key:'v',ctrlKey:true},'paste'],
+    [{key:'d',ctrlKey:true},'duplicate'],
+    [{key:'c',metaKey:true},'copy'],
+    [{key:'ArrowLeft'},'move'],
+    [{key:'ArrowDown',shiftKey:true},'move'],
+    [{key:'Delete'},'delete'],
+    [{key:'Escape'},'escape']
+  ];
+  for(const [event,expected] of tests){
+    const actual=api.commandFor(event);
+    if(actual!==expected)throw new Error(`Shortcut ${JSON.stringify(event)} -> ${actual}, expected ${expected}`);
+  }
+  if(api.commandFor({key:'c'})!=='')throw new Error('Plain C must not trigger a layout shortcut');
+  if(!api.editableTarget({tagName:'INPUT'}))throw new Error('Input fields must be protected from layout shortcuts');
+  if(!api.editableTarget({tagName:'TEXTAREA'}))throw new Error('Textarea fields must be protected from layout shortcuts');
+  if(api.editableTarget({tagName:'DIV',closest:()=>null}))throw new Error('Plain layout div should accept layout shortcuts');
+  console.log('PASS: barcode layout Ctrl/Cmd copy-paste, duplicate, delete, arrows and escape shortcuts');
+}
+
+{
+  const c=context();vm.createContext(c);
   vm.runInContext(fs.readFileSync('assets/label-interpreter.js','utf8'),c,{filename:'label-interpreter.js'});
   const api=c.window.LabelWorkbenchInterpreter;
   if(!api)throw new Error('Label interpreter API missing');
