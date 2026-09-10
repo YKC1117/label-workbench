@@ -33,6 +33,9 @@ jobs:
           node --check assets/barcode-reader-ui.js
           node --check assets/barcode-generator.js
           node --check assets/label-interpreter.js
+          node --check assets/bt-quick.js
+          node --check assets/bt-bridge.js
+          node --check assets/layout-shortcuts.js
           node --check assets/workbench-priority.js
 
       - name: Static HTML / JS integrity check
@@ -55,3 +58,6 @@ jobs:
 
       - name: Barcode generator and production-analysis smoke tests
         run: node tests/v15-smoke.cjs
+
+      - name: BT quick production and safe launch smoke tests
+        run: node tests/bt-launch-smoke.cjs
