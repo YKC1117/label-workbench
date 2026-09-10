@@ -1,12 +1,13 @@
-/* Label Workbench barcode reader v1.4 loader. */
+/* Label Workbench barcode reader v1.5 loader. */
 (function(){
   'use strict';
-  const BUILD='20260910-v140';
-  const modules=['assets/barcode-reader-core.js','assets/barcode-reader-ui.js','assets/label-interpreter.js','assets/workbench-priority.js'];
+  const BUILD='20260910-v150';
+  const modules=['assets/barcode-reader-core.js','assets/barcode-reader-ui.js','assets/barcode-generator.js','assets/label-interpreter.js','assets/workbench-priority.js'];
   function loadNext(){
     const src=modules.shift();if(!src)return;
     if(src.includes('core')&&window.LabelWorkbenchBarcodeCore){loadNext();return}
     if(src.includes('ui')&&window.LabelWorkbenchBarcodeUI){loadNext();return}
+    if(src.includes('barcode-generator')&&window.LabelWorkbenchBarcodeGenerator){loadNext();return}
     if(src.includes('label-interpreter')&&window.LabelWorkbenchInterpreter){loadNext();return}
     if(src.includes('workbench-priority')&&window.LabelWorkbenchPriority){loadNext();return}
     const s=document.createElement('script');
