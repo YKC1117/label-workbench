@@ -68,8 +68,8 @@ if 'Local-first' not in cloud_js and '本機優先' not in cloud_js:
 for module in ['assets/cloud-attachments.js','assets/file-parsers.js','assets/barcode-reader.js']:
     if module not in cloud_js:
         raise SystemExit(f'Feature module is not wired by cloud loader: {module}')
-if '20260910-v161' not in cloud_js:
-    raise SystemExit('Cloud optional-module cache key must be final v1.6 build')
+if '20260910-v170' not in cloud_js:
+    raise SystemExit('Cloud optional-module cache key must be v1.7')
 
 if "label-attachments" not in attachments_js or '20*1024*1024' not in attachments_js.replace(' ', ''):
     raise SystemExit('Private attachment add-on must target the expected bucket and 20 MB limit')
@@ -82,8 +82,8 @@ for marker in ['tesseract.js@7.0.0', 'createOcrWorker', 'renderPdfPage', "['eng'
 for module in ['barcode-reader-core.js','barcode-reader-ui.js','barcode-generator.js','label-interpreter.js','workbench-priority.js']:
     if module not in barcode_loader:
         raise SystemExit(f'Barcode/workbench loader is missing {module}')
-if '20260910-v161' not in barcode_loader:
-    raise SystemExit('Barcode/workbench loader cache key must be final v1.6 build')
+if '20260910-v170' not in barcode_loader:
+    raise SystemExit('Barcode/workbench loader cache key must be v1.7')
 
 if "const ZX='3.1.3'" not in barcode_core or 'zxing-wasm@${ZX}' not in barcode_core:
     raise SystemExit('Barcode core must pin zxing-wasm 3.1.3')
@@ -101,9 +101,12 @@ for legacy_marker in ['精準框選讀碼', 'barcodePreview', 'barcodeEngineStat
     if legacy_marker in barcode_ui:
         raise SystemExit(f'Barcode UI still contains legacy heavy workflow marker: {legacy_marker}')
 
-for marker in ['bwip-js@4.6.0','Code 128','QR Code','Data Matrix','GS1-128','GS1 DataMatrix','downloadPng','copyImage','verifyGenerated','立即產生']:
+for marker in [
+    '20260910-v170','bwip-js@4.6.0','Code 128','QR Code','Data Matrix','GS1-128','GS1 DataMatrix',
+    'downloadPng','copyImage','verifyGenerated','立即產生','gen2DSize','twoDScale','min="2"','step="0.5"','貼到 BarTender'
+]:
     if marker not in barcode_generator:
-        raise SystemExit(f'Barcode generator is missing marker: {marker}')
+        raise SystemExit(f'Barcode generator is missing v1.7 marker: {marker}')
 
 for marker in [
     '20260910-v161','chooseOrientation','contentBounds','enhanceCanvas','detectLabelBands',
@@ -117,17 +120,17 @@ for forbidden in ['查看 OCR 原文','OCR 值','OCR 待確認']:
     if forbidden in interpreter_js:
         raise SystemExit(f'Action-focused analysis still exposes technical OCR output: {forbidden}')
 
-for marker in ["['barcode','analysis','dashboard','cases','bartender']", 'runQuickAnalysis', 'stopImmediatePropagation', 'LabelWorkbenchParsers', 'LabelWorkbenchInterpreter', '20260910-v161', 'v1.6']:
+for marker in ["['barcode','analysis','dashboard','cases','bartender']", 'runQuickAnalysis', 'stopImmediatePropagation', 'LabelWorkbenchParsers', 'LabelWorkbenchInterpreter', '20260910-v170', 'v1.7', '同事可自行完成後續處理']:
     if marker not in priority_js:
-        raise SystemExit(f'Priority controller is missing v1.6 workflow marker: {marker}')
+        raise SystemExit(f'Priority controller is missing v1.7 workflow marker: {marker}')
 
 print(f'PASS: {len(ids)} HTML ids checked')
 print(f'PASS: {len(refs)} JavaScript DOM references checked')
 print(f'PASS: {len(handlers)} inline handler names checked')
-print('PASS: cloud files, script order and final v1.6 cache key checked')
+print('PASS: cloud files, script order and v1.7 cache key checked')
 print('PASS: enabled Supabase browser config is publishable-key only')
 print('PASS: private attachments and document parser dependency pins checked')
 print('PASS: barcode reader fast path checked')
-print('PASS: barcode generator supports direct 1D/2D creation')
+print('PASS: barcode generator supports 2 mm linear height and adjustable 2D module size')
 print('PASS: quick analysis uses trim + enhancement + coded-row parsing + repeated-read consensus')
 print('PASS: quick analysis hides recognition internals and returns production actions')
