@@ -68,19 +68,23 @@ if 'Local-first' not in cloud_js and '本機優先' not in cloud_js:
 for module in ['assets/cloud-attachments.js','assets/file-parsers.js','assets/barcode-reader.js']:
     if module not in cloud_js:
         raise SystemExit(f'Feature module is not wired by cloud loader: {module}')
-if '20260910-v150' not in cloud_js:
-    raise SystemExit('Cloud optional-module cache key must be v1.5')
+if '20260910-v161' not in cloud_js:
+    raise SystemExit('Cloud optional-module cache key must be final v1.6 build')
+
 if "label-attachments" not in attachments_js or '20*1024*1024' not in attachments_js.replace(' ', ''):
     raise SystemExit('Private attachment add-on must target the expected bucket and 20 MB limit')
 if 'xlsx@0.18.5' not in parsers_js or 'mammoth@1.12.2' not in parsers_js or 'pdfjs-dist@6.3.289' not in parsers_js:
     raise SystemExit('Document parser CDN dependencies must remain version-pinned')
 for marker in ['tesseract.js@7.0.0', 'createOcrWorker', 'renderPdfPage', "['eng','chi_tra']", 'OCR_MAX_PAGES=3', 'scanPdfCanvas']:
     if marker not in parsers_js:
-        raise SystemExit(f'Scanned PDF OCR flow is missing marker: {marker}')
+        raise SystemExit(f'Scanned PDF fallback parser is missing marker: {marker}')
 
 for module in ['barcode-reader-core.js','barcode-reader-ui.js','barcode-generator.js','label-interpreter.js','workbench-priority.js']:
     if module not in barcode_loader:
         raise SystemExit(f'Barcode/workbench loader is missing {module}')
+if '20260910-v161' not in barcode_loader:
+    raise SystemExit('Barcode/workbench loader cache key must be final v1.6 build')
+
 if "const ZX='3.1.3'" not in barcode_core or 'zxing-wasm@${ZX}' not in barcode_core:
     raise SystemExit('Barcode core must pin zxing-wasm 3.1.3')
 if '@undecaf/zbar-wasm@0.11.0' not in barcode_core:
@@ -101,26 +105,29 @@ for marker in ['bwip-js@4.6.0','Code 128','QR Code','Data Matrix','GS1-128','GS1
     if marker not in barcode_generator:
         raise SystemExit(f'Barcode generator is missing marker: {marker}')
 
-for marker in ['20260910-v150','chooseOrientation','detectLabelBands','parseFields','scanRegionDeep','fieldVerified','interpretImage','interpretFiles','複製製作資料','複製給客戶確認','正在辨識文字']:
+for marker in [
+    '20260910-v161','chooseOrientation','contentBounds','enhanceCanvas','detectLabelBands',
+    'parseCodeChunks','parseKnownNames','aggregateFields','makeTiles','scanRegionDeep','fieldVerified',
+    'interpretImage','interpretFiles','複製製作資料','複製給客戶確認','正在補讀細小欄位',
+    '重複辨識一致','請核對原稿'
+]:
     if marker not in interpreter_js:
-        raise SystemExit(f'Label interpreter is missing v1.5 workflow marker: {marker}')
+        raise SystemExit(f'Label interpreter is missing v1.6 precision marker: {marker}')
 for forbidden in ['查看 OCR 原文','OCR 值','OCR 待確認']:
     if forbidden in interpreter_js:
         raise SystemExit(f'Action-focused analysis still exposes technical OCR output: {forbidden}')
 
-if '20260910-v150' not in barcode_loader:
-    raise SystemExit('Barcode/workbench loader cache key was not bumped for v1.5')
-for marker in ["['barcode','analysis','dashboard','cases','bartender']", 'runQuickAnalysis', 'stopImmediatePropagation', 'LabelWorkbenchParsers', 'LabelWorkbenchInterpreter', 'v1.5']:
+for marker in ["['barcode','analysis','dashboard','cases','bartender']", 'runQuickAnalysis', 'stopImmediatePropagation', 'LabelWorkbenchParsers', 'LabelWorkbenchInterpreter', '20260910-v161', 'v1.6']:
     if marker not in priority_js:
-        raise SystemExit(f'Priority controller is missing workflow marker: {marker}')
+        raise SystemExit(f'Priority controller is missing v1.6 workflow marker: {marker}')
 
 print(f'PASS: {len(ids)} HTML ids checked')
 print(f'PASS: {len(refs)} JavaScript DOM references checked')
 print(f'PASS: {len(handlers)} inline handler names checked')
-print('PASS: cloud files, script order and v1.5 cache key checked')
+print('PASS: cloud files, script order and final v1.6 cache key checked')
 print('PASS: enabled Supabase browser config is publishable-key only')
 print('PASS: private attachments and document parser dependency pins checked')
 print('PASS: barcode reader fast path checked')
 print('PASS: barcode generator supports direct 1D/2D creation')
-print('PASS: quick analysis hides OCR internals and returns production actions')
-print('PASS: priority navigation and stable quick-analysis entry checked')
+print('PASS: quick analysis uses trim + enhancement + coded-row parsing + repeated-read consensus')
+print('PASS: quick analysis hides recognition internals and returns production actions')
