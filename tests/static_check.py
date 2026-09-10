@@ -5,8 +5,8 @@ FILES = [
     'index.html','assets/app.css','assets/ui-refresh.css','assets/nav-groups.css','assets/app.js',
     'assets/cloud.css','assets/cloud.js','assets/cloud-config.js','assets/cloud-attachments.js','assets/file-parsers.js',
     'assets/barcode-reader.js','assets/barcode-reader-core.js','assets/barcode-reader-ui.js','assets/barcode-generator.js',
-    'assets/label-interpreter.js','assets/bt-quick.js','assets/bt-direct-import.js','assets/bt-bridge.js','assets/layout-shortcuts.js','assets/workbench-priority.js',
-    'docs/supabase-schema.sql','.gitignore','README.md','tests/bt-launch-smoke.cjs','tests/bt-direct-import-smoke.cjs'
+    'assets/label-interpreter.js','assets/bt-quick.js','assets/btw-format.js','assets/btw-native.js','assets/bt-direct-import.js','assets/bt-bridge.js','assets/bt-native-primary.js','assets/layout-shortcuts.js','assets/workbench-priority.js',
+    'docs/supabase-schema.sql','.gitignore','README.md','tests/bt-launch-smoke.cjs','tests/bt-direct-import-smoke.cjs','tests/btw-native-smoke.cjs'
 ]
 missing=[p for p in FILES if not Path(p).exists()]
 if missing: raise SystemExit(f'Missing required project files: {missing}')
@@ -15,7 +15,7 @@ read=lambda p:Path(p).read_text(encoding='utf-8')
 html=read('index.html'); app=read('assets/app.js'); cloud=read('assets/cloud.js'); cfg=read('assets/cloud-config.js')
 attachments=read('assets/cloud-attachments.js'); parsers=read('assets/file-parsers.js'); loader=read('assets/barcode-reader.js')
 core=read('assets/barcode-reader-core.js'); reader_ui=read('assets/barcode-reader-ui.js'); generator=read('assets/barcode-generator.js')
-interpreter=read('assets/label-interpreter.js'); bt=read('assets/bt-quick.js'); direct=read('assets/bt-direct-import.js'); bridge=read('assets/bt-bridge.js')
+interpreter=read('assets/label-interpreter.js'); bt=read('assets/bt-quick.js'); btw=read('assets/btw-format.js'); native=read('assets/btw-native.js'); direct=read('assets/bt-direct-import.js'); bridge=read('assets/bt-bridge.js'); native_primary=read('assets/bt-native-primary.js')
 priority=read('assets/workbench-priority.js'); ui=read('assets/ui-refresh.css'); nav=read('assets/nav-groups.css'); schema=read('docs/supabase-schema.sql')
 
 # Static app wiring / legacy cleanup
@@ -34,7 +34,7 @@ for marker in ['assets/ui-refresh.css?v=20260910-v190','assets/nav-groups.css?v=
     if marker not in html: raise SystemExit(f'index.html missing current cache marker: {marker}')
 for marker in ['assets/cloud-attachments.js','assets/file-parsers.js','assets/barcode-reader.js','20260910-v194']:
     if marker not in cloud: raise SystemExit(f'cloud loader missing: {marker}')
-for marker in ['barcode-reader-core.js','barcode-reader-ui.js','barcode-generator.js','label-interpreter.js','bt-quick.js','bt-direct-import.js','bt-bridge.js','workbench-priority.js','20260910-v194']:
+for marker in ['barcode-reader-core.js','barcode-reader-ui.js','barcode-generator.js','label-interpreter.js','bt-quick.js','bt-direct-import.js','btw-format.js','btw-native.js','bt-bridge.js','workbench-priority.js','bt-native-primary.js','20260910-v195']:
     if marker not in loader: raise SystemExit(f'workbench loader missing: {marker}')
 for duplicated in ['assets/cloud-attachments.js','assets/file-parsers.js','assets/barcode-reader.js']:
     if duplicated in cfg: raise SystemExit(f'cloud-config must not load {duplicated}')
@@ -86,20 +86,27 @@ if bt.find('window.LabelWorkbenchBtQuick=API') > bt.find("if(document.readyState
     raise SystemExit('BT Quick API must be registered before UI initialization')
 if '/P /' in bt or ' /P ' in bt: raise SystemExit('BT launch helper must not contain automatic print switch')
 
-# UltraLite primary path: PDF/image -> directly importable PNG picture object
+# Editable native BTW primary path
+for marker in ['20260910-btw011','parseStructure','inflateContainer','rebuild','scanUtf16Strings','replaceStringAt']:
+    if marker not in btw: raise SystemExit(f'BTW format marker missing: {marker}')
+for marker in ['20260910-btwn100','Sample_Doc1.btw','BcC128Data','BcDatamatrixData','patchCode128','patchDataMatrix','generateOne','downloadFromAnalysis','BT_Editable_']:
+    if marker not in native: raise SystemExit(f'Native BTW generator marker missing: {marker}')
+for marker in ['20260910-btnp100','下載可編輯 BTW','downloadEditable','ensureNative','analysisBtNative','btNativeDownload','備用：下載 BT 匯入圖','第一次給客戶前請確認尺寸與版面']:
+    if marker not in native_primary: raise SystemExit(f'Native BTW primary UI marker missing: {marker}')
+
+# UltraLite fallback path remains available
 for marker in ['20260910-btdi100','pdfjs-dist@6.3.289','jszip@3.10.1','BT_Import_Label_','BT_可直接匯入_','detectLabelBands','rotateCanvas','downloadFromAnalysis','圖片物件']:
     if marker not in direct: raise SystemExit(f'BT direct import marker missing: {marker}')
 for marker in ['20260910-btb150','analysisBtDirect','下載 BT 可直接匯入圖檔','進階：下載 BT 資料包','sendDirectToBt','ensureDirectImport','LabelWorkbenchBtDirectImport','bt140-retry','btdi100-retry','BT_製作包_','BT_Data.csv']:
     if marker not in bridge: raise SystemExit(f'BT bridge direct/advanced marker missing: {marker}')
-if 'latestFiles=[...(files||[])]' not in bridge: raise SystemExit('BT bridge must retain browser File objects for direct PNG reconstruction')
+if 'latestFiles=[...(files||[])]' not in bridge: raise SystemExit('BT bridge must retain browser File objects for native/direct reconstruction')
 
 for marker in ['analysis-summary','analysis-label-card','analysis-metrics','@media(max-width:820px)','barcode-mode-tabs','mobile-nav']:
     if marker not in ui: raise SystemExit(f'UI marker missing: {marker}')
 
 print(f'PASS: {len(ids)} HTML ids and {len(refs)} app DOM references checked')
 print('PASS: one Quick Analysis entry point; legacy scratch path removed')
-print('PASS: v1.9.4 cache/load chain and BT-first navigation checked')
+print('PASS: v1.9.5 workbench loader includes native editable BTW path')
 print('PASS: publishable-key-only cloud security and private attachment schema checked')
 print('PASS: barcode reader/generator and action-focused analysis markers checked')
-print('PASS: BT Quick advanced pack remains available and launcher stays ASCII-safe')
-print('PASS: PDF/image analysis has a direct BarTender UltraLite PNG import path')
+print('PASS: native editable BTW is primary; PNG/data pack remain fallbacks')
