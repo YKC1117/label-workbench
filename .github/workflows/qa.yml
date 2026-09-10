@@ -34,6 +34,7 @@ jobs:
           node --check assets/barcode-generator.js
           node --check assets/label-interpreter.js
           node --check assets/bt-quick.js
+          node --check assets/btw-format.js
           node --check assets/bt-direct-import.js
           node --check assets/bt-bridge.js
           node --check assets/layout-shortcuts.js
@@ -65,3 +66,6 @@ jobs:
 
       - name: BT direct import smoke tests
         run: node tests/bt-direct-import-smoke.cjs
+
+      - name: Native BTW format check against official 2022 sample
+        run: node tests/btw-public-sample.cjs
