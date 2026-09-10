@@ -72,3 +72,6 @@ jobs:
 
       - name: Discover reusable public BTW seeds
         run: node tests/btw-discovery.cjs
+
+      - name: Map native barcode object values
+        run: node tests/btw-object-map.cjs
