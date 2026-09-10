@@ -100,19 +100,7 @@
       <div class="panel"><h3>快速分析</h3><div class="drop"><strong>把客戶檔案丟進來</strong><p>PDF、圖片、Excel、Word、CSV 直接整理成可製作內容。</p><input id="analysisFiles" type="file" multiple accept=".jpg,.jpeg,.png,.webp,.pdf,.xls,.xlsx,.doc,.docx,.csv,.btw"><div id="analysisResult" class="footer-note">等待檔案</div></div><div class="note warn-note"><b>快速分析：</b>PDF／圖片會自動判斷方向、分標籤、讀欄位位置、補讀小字並交叉比對條碼；畫面只留下可製作內容與待確認項目。</div></div>
     </section>
 
-    <section id="barcode" class="view">
-      <div class="panel">
-        <div class="section-title"><div><h3>條碼規則工具</h3><p class="muted compact">先確認「實際編碼」與「顯示文字」，避免 BarTender 建版時混在一起。</p></div></div>
-        <div class="grid-3">
-          <div class="field"><label for="scratchType">條碼種類</label><select id="scratchType"><option>Code 39</option><option>Code 128</option><option>QR Code</option><option>Data Matrix</option><option>GS1-128</option><option>GS1 DataMatrix</option><option>EAN-13</option><option>EAN-8</option><option>UPC-A</option><option>ITF-14</option><option>Interleaved 2 of 5</option><option>PDF417</option><option>Aztec</option><option>其他</option></select></div>
-          <div class="field"><label for="scratchPrefix">前綴</label><input id="scratchPrefix" placeholder="例如：P"></div>
-          <div class="field"><label for="scratchSuffix">後綴</label><input id="scratchSuffix" placeholder="可留白"></div>
-        </div>
-        <div class="grid form-gap"><div class="field"><label for="scratchEncoded">資料內容</label><input id="scratchEncoded" placeholder="例如：ABC123"></div><div class="field"><label for="scratchHuman">條碼下方顯示文字</label><input id="scratchHuman" placeholder="可與掃描內容不同"></div></div>
-        <div class="code-preview form-gap"><span>預期實際編碼</span><strong id="scratchResult">—</strong><small>這裡只是資料規則預覽，不代表已產生或驗證可掃描條碼。</small></div>
-        <div class="note"><b>常用優先：</b>Code 39、Code 128、QR Code、Data Matrix、GS1-128、GS1 DataMatrix。GS1 類別仍需確認 AI、FNC1 與客戶規範後再進 BarTender。</div>
-      </div>
-    </section>
+    <section id="barcode" class="view"></section>
 
     <section id="bartender" class="view">
       <div class="panel"><div class="status"><span class="dot"></span>公司環境已確認</div><h3 class="bt-title">BarTender Designer for Argox 2022 R2</h3><p>版本 11.3 / 64-bit，UltraLite。外面先完成需求、欄位與條碼規則，回公司再用 BarTender 正式製作、列印與掃描驗證。</p></div>
@@ -128,7 +116,7 @@
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
 <script src="assets/cloud-config.js?v=20260910-v180" defer></script>
-<script src="assets/app.js?v=20260910-v180" defer></script>
-<script src="assets/cloud.js?v=20260910-v180" defer></script>
+<script src="assets/app.js?v=20260910-v181" defer></script>
+<script src="assets/cloud.js?v=20260910-v181" defer></script>
 </body>
 </html>
