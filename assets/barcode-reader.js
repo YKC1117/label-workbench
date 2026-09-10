@@ -1,7 +1,7 @@
-/* Label Workbench barcode reader v1.5 loader. */
+/* Label Workbench barcode reader v1.6 loader. */
 (function(){
   'use strict';
-  const BUILD='20260910-v150';
+  const BUILD='20260910-v160';
   const modules=['assets/barcode-reader-core.js','assets/barcode-reader-ui.js','assets/barcode-generator.js','assets/label-interpreter.js','assets/workbench-priority.js'];
   function loadNext(){
     const src=modules.shift();if(!src)return;
