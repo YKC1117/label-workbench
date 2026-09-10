@@ -48,7 +48,18 @@ function context(){
   const qr=api.buildOptions('QR Code','ABC123');
   if(qr.scale!==3)throw new Error(`Unexpected default 2D scale: ${qr.scale}`);
   if(!api.TWO_D.has('Data Matrix'))throw new Error('Data Matrix must use adjustable 2D size');
-  console.log('PASS: barcode generator type, validation and size-control smoke tests');
+
+  const plan=api.layoutPlan([
+    {width:180,height:80},{width:180,height:80},{width:180,height:80}
+  ],420,20,20);
+  if(plan.length!==3)throw new Error('Layout plan item count mismatch');
+  if(plan[0].x!==20||plan[0].y!==20)throw new Error('Layout plan first item position mismatch');
+  if(plan[1].y!==20||plan[1].x<=plan[0].x)throw new Error('Layout plan should place second item on the first row');
+  if(plan[2].y<=plan[0].y)throw new Error('Layout plan should wrap overflowing items to a new row');
+  for(const fn of ['copyLayoutImage','downloadLayoutPng','renderComposite','autoLayout']){
+    if(typeof api[fn]!=='function')throw new Error(`Generator layout API missing ${fn}`);
+  }
+  console.log('PASS: barcode generator type, validation, size controls and layout planning smoke tests');
 }
 
 {
