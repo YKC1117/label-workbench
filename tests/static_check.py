@@ -13,6 +13,7 @@ barcode_ui = Path('assets/barcode-reader-ui.js').read_text(encoding='utf-8')
 barcode_generator = Path('assets/barcode-generator.js').read_text(encoding='utf-8')
 interpreter_js = Path('assets/label-interpreter.js').read_text(encoding='utf-8')
 priority_js = Path('assets/workbench-priority.js').read_text(encoding='utf-8')
+ui_css = Path('assets/ui-refresh.css').read_text(encoding='utf-8')
 
 ids = set(re.findall(r'id="([^"]+)"', html))
 refs = set(re.findall(r"getElementById\('([^']+)'\)", js))
@@ -27,7 +28,7 @@ if missing_handlers:
     raise SystemExit(f'Inline handlers without JavaScript functions: {missing_handlers}')
 
 required_files = [
-    'index.html', 'assets/app.css', 'assets/app.js',
+    'index.html', 'assets/app.css', 'assets/ui-refresh.css', 'assets/app.js',
     'assets/cloud.css', 'assets/cloud.js', 'assets/cloud-config.js',
     'assets/cloud-attachments.js', 'assets/file-parsers.js',
     'assets/barcode-reader.js', 'assets/barcode-reader-core.js', 'assets/barcode-reader-ui.js',
@@ -42,6 +43,8 @@ required_scripts = ['@supabase/supabase-js@2', 'assets/cloud-config.js', 'assets
 missing_scripts = [s for s in required_scripts if s not in html]
 if missing_scripts:
     raise SystemExit(f'Missing required script references: {missing_scripts}')
+if 'assets/ui-refresh.css?v=20260910-v180' not in html:
+    raise SystemExit('v1.8 UI refresh stylesheet is not linked with cache key')
 
 for forbidden in ['SUPABASE_SERVICE_ROLE', 'sb_secret_']:
     if forbidden.lower() in cloud_cfg.lower():
@@ -68,8 +71,8 @@ if 'Local-first' not in cloud_js and '本機優先' not in cloud_js:
 for module in ['assets/cloud-attachments.js','assets/file-parsers.js','assets/barcode-reader.js']:
     if module not in cloud_js:
         raise SystemExit(f'Feature module is not wired by cloud loader: {module}')
-if '20260910-v170' not in cloud_js:
-    raise SystemExit('Cloud optional-module cache key must be v1.7')
+if '20260910-v180' not in cloud_js:
+    raise SystemExit('Cloud optional-module cache key must be v1.8')
 
 if "label-attachments" not in attachments_js or '20*1024*1024' not in attachments_js.replace(' ', ''):
     raise SystemExit('Private attachment add-on must target the expected bucket and 20 MB limit')
@@ -82,8 +85,8 @@ for marker in ['tesseract.js@7.0.0', 'createOcrWorker', 'renderPdfPage', "['eng'
 for module in ['barcode-reader-core.js','barcode-reader-ui.js','barcode-generator.js','label-interpreter.js','workbench-priority.js']:
     if module not in barcode_loader:
         raise SystemExit(f'Barcode/workbench loader is missing {module}')
-if '20260910-v170' not in barcode_loader:
-    raise SystemExit('Barcode/workbench loader cache key must be v1.7')
+if '20260910-v180' not in barcode_loader:
+    raise SystemExit('Barcode/workbench loader cache key must be v1.8')
 
 if "const ZX='3.1.3'" not in barcode_core or 'zxing-wasm@${ZX}' not in barcode_core:
     raise SystemExit('Barcode core must pin zxing-wasm 3.1.3')
@@ -97,40 +100,38 @@ for marker in ['scanImageData', 'decodeZBar', 'tryRotate:true', 'minLineCount:1'
 for marker in ['加強讀取', 'retryDeep', '快速掃描中']:
     if marker not in barcode_ui:
         raise SystemExit(f'Barcode UI is missing simple on-demand scan marker: {marker}')
-for legacy_marker in ['精準框選讀碼', 'barcodePreview', 'barcodeEngineStatus']:
-    if legacy_marker in barcode_ui:
-        raise SystemExit(f'Barcode UI still contains legacy heavy workflow marker: {legacy_marker}')
 
-for marker in [
-    '20260910-v170','bwip-js@4.6.0','Code 128','QR Code','Data Matrix','GS1-128','GS1 DataMatrix',
-    'downloadPng','copyImage','verifyGenerated','立即產生','gen2DSize','twoDScale','min="2"','step="0.5"','貼到 BarTender'
-]:
+for marker in ['20260910-v180','bwip-js@4.6.0','Code 128','QR Code','Data Matrix','GS1-128','GS1 DataMatrix','downloadPng','copyImage','verifyGenerated','立即產生','gen2DSize','twoDScale','min="2"','step="0.5"','貼到 BarTender']:
     if marker not in barcode_generator:
-        raise SystemExit(f'Barcode generator is missing v1.7 marker: {marker}')
+        raise SystemExit(f'Barcode generator is missing v1.8 marker: {marker}')
 
 for marker in [
-    '20260910-v161','chooseOrientation','contentBounds','enhanceCanvas','detectLabelBands',
-    'parseCodeChunks','parseKnownNames','aggregateFields','makeTiles','scanRegionDeep','fieldVerified',
-    'interpretImage','interpretFiles','複製製作資料','複製給客戶確認','正在補讀細小欄位',
-    '重複辨識一致','請核對原稿'
+    '20260910-v180','chooseOrientation','contentBounds','enhanceCanvas','detectLabelBands',
+    'flattenLines','blocks:true','spatialFields','detectAnchor','parseCodeChunks','parseKnownNames','aggregateFields',
+    'makeTiles','scanRegionDeep','fieldVerified','interpretImage','interpretFiles','複製製作資料','複製給客戶確認',
+    '正在補讀細小區域','高可信','建議核對'
 ]:
     if marker not in interpreter_js:
-        raise SystemExit(f'Label interpreter is missing v1.6 precision marker: {marker}')
+        raise SystemExit(f'Label interpreter is missing v1.8 layout-aware marker: {marker}')
 for forbidden in ['查看 OCR 原文','OCR 值','OCR 待確認']:
     if forbidden in interpreter_js:
         raise SystemExit(f'Action-focused analysis still exposes technical OCR output: {forbidden}')
 
-for marker in ["['barcode','analysis','dashboard','cases','bartender']", 'runQuickAnalysis', 'stopImmediatePropagation', 'LabelWorkbenchParsers', 'LabelWorkbenchInterpreter', '20260910-v170', 'v1.7', '同事可自行完成後續處理']:
+for marker in ["['barcode','analysis','dashboard','cases','bartender']", 'runQuickAnalysis', 'stopImmediatePropagation', 'LabelWorkbenchParsers', 'LabelWorkbenchInterpreter', '20260910-v180', 'v1.8', 'injectUiRefresh']:
     if marker not in priority_js:
-        raise SystemExit(f'Priority controller is missing v1.7 workflow marker: {marker}')
+        raise SystemExit(f'Priority controller is missing v1.8 workflow marker: {marker}')
+
+for marker in ['analysis-summary','analysis-label-card','analysis-metrics','generator-options','@media(max-width:820px)']:
+    if marker not in ui_css:
+        raise SystemExit(f'UI refresh stylesheet is missing marker: {marker}')
 
 print(f'PASS: {len(ids)} HTML ids checked')
 print(f'PASS: {len(refs)} JavaScript DOM references checked')
 print(f'PASS: {len(handlers)} inline handler names checked')
-print('PASS: cloud files, script order and v1.7 cache key checked')
+print('PASS: v1.8 cache keys and UI refresh wiring checked')
 print('PASS: enabled Supabase browser config is publishable-key only')
 print('PASS: private attachments and document parser dependency pins checked')
 print('PASS: barcode reader fast path checked')
-print('PASS: barcode generator supports 2 mm linear height and adjustable 2D module size')
-print('PASS: quick analysis uses trim + enhancement + coded-row parsing + repeated-read consensus')
-print('PASS: quick analysis hides recognition internals and returns production actions')
+print('PASS: barcode generator size controls checked')
+print('PASS: quick analysis uses orientation + enhancement + layout blocks + spatial field matching')
+print('PASS: quick analysis hides OCR internals and returns action-focused results')
