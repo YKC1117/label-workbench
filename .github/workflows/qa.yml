@@ -34,6 +34,7 @@ jobs:
           node --check assets/barcode-generator.js
           node --check assets/label-interpreter.js
           node --check assets/bt-quick.js
+          node --check assets/bt-direct-import.js
           node --check assets/bt-bridge.js
           node --check assets/layout-shortcuts.js
           node --check assets/workbench-priority.js
@@ -61,3 +62,6 @@ jobs:
 
       - name: BT quick production and safe launch smoke tests
         run: node tests/bt-launch-smoke.cjs
+
+      - name: BT direct import smoke tests
+        run: node tests/bt-direct-import-smoke.cjs
