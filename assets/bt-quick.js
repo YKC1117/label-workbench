@@ -1,11 +1,11 @@
-/* Label Workbench BT Quick Production v1.3
+/* Label Workbench BT Quick Production v1.4
  * Robust Quick Analysis -> BarTender-ready CSV/maps/ZIP.
  * The public API is registered before UI initialization so stale local data cannot make the module disappear.
  */
 (function(){
   'use strict';
 
-  const BUILD='20260910-bt130';
+  const BUILD='20260910-bt140';
   const STORAGE_KEY='labelWorkbench.btDraft.v1';
   const JSZIP_SRC='https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js';
   let zipPromise=null,draft=null,initDone=false;
@@ -89,30 +89,32 @@
   function buildBarcodeMapCsv(d=draft){if(!d)return'';const rows=[['LABEL_NO','BT_OBJECT','BARCODE_TYPE','DATA_SOURCE','SOURCE_FIELD','EXAMPLE_CONTENT']];(d.barcodes||[]).forEach(r=>rows.push([r.label,r.objectName,r.format,r.sourceType,r.sourceField,r.text]));return rows.map(r=>r.map(csvCell).join(',')).join('\r\n')}
   function unresolved(d=draft){const out=[];(d?.labels||[]).forEach((label,i)=>(label.fields||[]).forEach(f=>{if(fieldState(f,label.barcodes||[])==='pending')out.push(`標籤 ${i+1}｜${f.code?`(${f.code}) `:''}${f.name}：${f.value}`)}));if(!d?.settings?.width||!d?.settings?.height)out.push('Label 實際尺寸（寬 × 高 mm）');return[...new Set(out)]}
 
-  function buildOpenCmd(d=draft){
-    const preferred=templateBaseName(d);
+  function buildOpenCmd(){
     return[
-      '@echo off','chcp 65001 >nul','setlocal','cd /d "%~dp0"','',
-      'set "DATA=%~dp0BT_Data.csv"',`set "PREFERRED=%~dp0${preferred}"`,'set "TEMPLATE="','set "BTEXE="','',
-      'if not exist "%DATA%" (','  echo [錯誤] 找不到 BT_Data.csv','  pause','  exit /b 1',')','',
-      'if exist "%PREFERRED%" set "TEMPLATE=%PREFERRED%"','if not defined TEMPLATE for %%F in ("%~dp0*.btw") do if not defined TEMPLATE if exist "%%~fF" set "TEMPLATE=%%~fF"','',
-      'if not defined TEMPLATE (','  echo [尚未放入母版]','  echo 請把公司最接近的 BarTender 母版 .btw 複製到這個資料夾。',`  echo 建議母版檔名：${preferred}`,'  pause','  exit /b 2',')','',
+      '@echo off','setlocal EnableExtensions','cd /d "%~dp0"','',
+      'set "DATA=%~dp0BT_Data.csv"','set "TEMPLATE="','set "BTEXE="','',
+      'if not exist "%DATA%" (','  echo ERROR: BT_Data.csv was not found.','  echo Keep BT_Open.cmd and BT_Data.csv in the same folder.','  pause','  exit /b 1',')','',
+      'for %%F in ("%~dp0*.btw") do if not defined TEMPLATE if exist "%%~fF" set "TEMPLATE=%%~fF"','',
       'for /f "delims=" %%I in (\'where bartend.exe 2^>nul\') do if not defined BTEXE set "BTEXE=%%I"',
       'if not defined BTEXE if exist "%ProgramFiles%" for /f "delims=" %%I in (\'where /r "%ProgramFiles%" bartend.exe 2^>nul\') do if not defined BTEXE set "BTEXE=%%I"',
       'if not defined BTEXE if defined ProgramFiles(x86) for /f "delims=" %%I in (\'where /r "%ProgramFiles(x86)%" bartend.exe 2^>nul\') do if not defined BTEXE set "BTEXE=%%I"','',
-      'if not defined BTEXE (','  echo [提示] 找不到 bartend.exe，先用 Windows 預設關聯開啟母版。','  start "" "%TEMPLATE%"','  pause','  exit /b 0',')','',
-      'start "" "%BTEXE%" /F="%TEMPLATE%" /D="%DATA%" /DbTextHeader=1','',
-      'echo 已開啟 BarTender；本助手不會自動列印。','timeout /t 2 >nul','exit /b 0'
+      'if not defined TEMPLATE (',
+      '  echo No .btw template was found in this folder.',
+      '  if defined BTEXE (','    echo Opening BarTender without a template...','    start "" "%BTEXE%"',') else (','    echo BarTender executable was not found automatically.',')',
+      '  echo Opening this folder so BT_Data.csv is easy to find...','  start "" "%~dp0"','  pause','  exit /b 2',')','',
+      'if not defined BTEXE (','  echo BarTender executable was not found automatically.','  echo Opening the .btw file with the Windows default association...','  start "" "%TEMPLATE%"','  pause','  exit /b 0',')','',
+      'echo Opening BarTender with the detected .btw template and BT_Data.csv...','start "" "%BTEXE%" /F="%TEMPLATE%" /D="%DATA%" /DbTextHeader=1','',
+      'echo Launch command sent. No automatic print command is used.','timeout /t 2 >nul','exit /b 0'
     ].join('\r\n')
   }
   function buildReadme(d=draft){
     if(!d)return'';const s=d.settings||{},pending=unresolved(d),src=(d.sourceFiles||[]).join('、')||'未記錄',template=templateBaseName(d);
     return[
       '【Label Workbench｜BT 快速製作包】','',`來源：${src}`,`客戶：${s.customer||'未填'}`,`標籤名稱：${s.labelName||'未填'}`,`尺寸：${s.width&&s.height?`${s.width} × ${s.height} mm`:'待確認'}`,`DPI：${s.dpi||'待確認'}`,`方向：${s.orientation||'依原稿'}`,`建議母版：${s.template==='自動判斷'?d.recommendation:s.template}`,`建議母版檔名：${template}`,'',
-      '【最快製作方式｜Windows 公司電腦】','1. 解壓縮 ZIP。',`2. 把最接近的公司母版 .btw 放進同一資料夾；建議命名 ${template}。`,'3. 雙擊 BT_Open.cmd。','4. 確認 CSV 欄位連結，再依客戶原稿微調版面。','5. 實際測印與掃碼驗證。','',
+      '【最快製作方式｜Windows 公司電腦】','1. 解壓縮 ZIP。','2. 如果已有相似的公司 .btw，把它複製到同一資料夾。','3. 雙擊 BT_Open.cmd。','4. 有 .btw 時會嘗試直接用 BT_Data.csv 開啟；沒有 .btw 時會先開 BarTender 與目前資料夾。','5. 依客戶原稿確認尺寸、版面與條碼，實際測印與掃碼驗證。','',
       '【目前分析】',`標籤：${(d.labels||[]).length} 張`,`欄位：${(d.columns||[]).length} 組`,`條碼：${(d.barcodes||[]).length} 個`,`本批有變動欄位：${(d.usage||[]).filter(x=>x.usage==='本批有變動').map(x=>x.btName).join('、')||'未發現'}`,'',
       '【製作前仍需確認】',...(pending.length?pending.map((x,i)=>`${i+1}. ${x}`):['主要資料已整理；仍需以客戶原稿與實機測試為準。']),'',
-      '【安全】','BT_Open.cmd 只開啟母版並指定 BT_Data.csv，不包含自動列印參數。','本工具不會偽造 .btw；母版必須由公司現有的 BarTender 文件提供。'
+      '【安全】','BT_Open.cmd 使用純英文 ASCII 指令，避免 Windows CMD 中文編碼造成誤判。','BT_Open.cmd 不包含自動列印參數。','本工具不會偽造 .btw；若沒有現成 BTW，仍需在 BarTender 建立一次版面。'
     ].join('\r\n')
   }
 
@@ -163,7 +165,7 @@
     draft=normalizeDraft(draft)||null;if(!draft){section.innerHTML=emptyHtml();return}
     const s=draft.settings||{},pending=unresolved(draft),variable=(draft.usage||[]).filter(x=>x.usage==='本批有變動').length,template=templateBaseName(draft);
     section.innerHTML=`<div class="btq-shell">
-      <div class="btq-hero"><div><div class="btq-kicker">BT QUICK PRODUCTION</div><h2>BT 快速製作</h2><p>分析結果已整理。可直接下載 BT_Data.csv，或下載完整 ZIP 回公司套用母版。</p></div><div class="btq-hero-actions"><button id="btBackAnalysis" class="btn ghost" type="button">回快速分析</button><button id="btZip" class="btn primary" type="button">下載完整 BT 製作包</button></div></div>
+      <div class="btq-hero"><div><div class="btq-kicker">BT QUICK PRODUCTION</div><h2>BT 快速製作</h2><p>分析結果已整理。可直接下載 BT_Data.csv，或下載完整 ZIP 回公司接續 BarTender。</p></div><div class="btq-hero-actions"><button id="btBackAnalysis" class="btn ghost" type="button">回快速分析</button><button id="btZip" class="btn primary" type="button">下載完整 BT 製作包</button></div></div>
       <div class="btq-status"><div class="btq-stat"><span>標籤</span><b>${draft.labels.length}</b></div><div class="btq-stat"><span>欄位</span><b>${draft.columns.length}</b></div><div class="btq-stat"><span>條碼</span><b>${draft.barcodes.length}</b></div><div class="btq-stat"><span>變動欄位</span><b>${variable}</b></div></div>
       <div class="btq-panel"><div class="btq-panel-head"><div><h3>1｜BT 基本設定</h3><p>不知道的資料可以先空白。</p></div><span class="pill">本機暫存</span></div><div class="btq-settings">
         <div class="btq-field"><label>客戶</label><input id="btCustomer" value="${esc(s.customer||'')}" placeholder="XX 公司"></div>
@@ -176,7 +178,7 @@
       <div class="btq-grid"><div class="btq-panel"><div class="btq-panel-head"><div><h3>2｜文字欄位</h3><p>可直接做成 BarTender 資料欄位。</p></div></div>${renderFields(draft)}</div><div class="btq-panel"><div class="btq-panel-head"><div><h3>3｜條碼物件</h3><p>條碼內容與可連結欄位。</p></div></div>${renderBarcodes(draft)}</div></div>
       <div class="btq-panel"><div class="btq-panel-head"><div><h3>4｜輸出給 BarTender</h3><p>至少先拿 BT_Data.csv；完整 ZIP 另含欄位對照、條碼對照與 Windows 開啟助手。</p></div><span id="btPendingState" class="${pending.length?'btq-pending':'btq-ok'}">${pending.length?`${pending.length} 項待確認`:'主要資料可先製作'}</span></div>
         <div class="btq-export"><button id="btCsv" class="btn primary" type="button">下載 BT_Data.csv</button><button id="btZip2" class="btn ghost" type="button">下載完整 ZIP</button><button id="btCmd" class="btn ghost" type="button">下載 BT_Open.cmd</button><button id="btCopySummary" class="btn ghost" type="button">複製製作摘要</button><button id="btClear" class="btn danger" type="button">清除本次製作</button></div>
-        <div class="btq-windows"><b>公司電腦：</b>解壓 ZIP → 放入公司母版 .btw → 雙擊 <code>BT_Open.cmd</code>。不會自動列印。</div>
+        <div class="btq-windows"><b>公司電腦：</b>有相似的 .btw 就放進解壓資料夾再雙擊 <code>BT_Open.cmd</code>；沒有 .btw 也可以直接雙擊，它會先開 BarTender 與資料夾。<b>不會自動列印。</b></div>
       </div>
     </div>`;
     for(const id of ['btCustomer','btLabelName','btWidth','btHeight','btDpi','btOrientation','btTemplate'])el(id)?.addEventListener('change',syncSettingsFromUi);
@@ -220,7 +222,7 @@
       const JSZip=await loadZip(),zip=new JSZip();
       zip.file('BT_Data.csv','\uFEFF'+buildDataCsv(draft));zip.file('BT_Field_Map.csv','\uFEFF'+buildFieldMapCsv(draft));zip.file('BT_Barcode_Map.csv','\uFEFF'+buildBarcodeMapCsv(draft));
       zip.file('BT_製作說明.txt','\uFEFF'+buildReadme(draft));zip.file('BT_Open.cmd',buildOpenCmd(draft));zip.file('BT_WorkPack.json',JSON.stringify(draft,null,2));
-      zip.file('請放入公司BT母版.txt','請將最接近的公司 BarTender 母版 .btw 放在此資料夾，再雙擊 BT_Open.cmd。\r\n建議母版檔名：'+templateBaseName(draft)+'\r\nBT_Open.cmd 不會自動列印。');
+      zip.file('BT_使用方式.txt','\uFEFF有相似的公司 .btw：放進這個資料夾後雙擊 BT_Open.cmd。\r\n沒有 .btw：也可直接雙擊 BT_Open.cmd，它會嘗試開 BarTender 並開啟本資料夾。\r\n資料檔：BT_Data.csv\r\nBT_Open.cmd 不會自動列印。');
       const blob=await zip.generateAsync({type:'blob',compression:'DEFLATE'}),url=URL.createObjectURL(blob),a=document.createElement('a'),base=safeFile([draft.settings?.customer,draft.settings?.labelName].filter(Boolean).join('_')||draft.sourceFiles?.[0]?.replace(/\.[^.]+$/,'')||'Label');
       a.href=url;a.download=`BT_製作包_${base}.zip`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);toast('BT 製作包已下載');return true
     }catch(err){console.error('[BT Quick ZIP]',err);toast('ZIP 產生失敗，已改下載 BT_Data.csv');return downloadDataCsv()}
