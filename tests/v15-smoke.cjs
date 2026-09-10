@@ -15,7 +15,15 @@ function context(){
     Uint8Array,
     Date,
     Math,
-    document:{readyState:'loading',addEventListener:()=>{},getElementById:()=>null,querySelector:()=>null,createElement:()=>({}),head:{appendChild(){}},body:{appendChild(){}}},
+    document:{
+      readyState:'loading',
+      addEventListener:()=>{},
+      getElementById:()=>null,
+      querySelector:()=>null,
+      createElement:()=>({}),
+      head:{appendChild(){}},
+      body:{appendChild(){}}
+    },
     globalThis:null
   };
   c.globalThis=c;c.window.window=c.window;return c;
@@ -34,7 +42,12 @@ function context(){
   if(api.validate('EAN-13','4006381333931'))throw new Error('Valid EAN-13 rejected');
   if(!api.validate('EAN-13','4006381333932'))throw new Error('Bad EAN-13 check digit accepted');
   if(api.validate('GS1-128','(01)04712345678903'))throw new Error('GS1 bracket notation rejected');
-  console.log('PASS: barcode generator type and validation smoke tests');
+  const linear=api.buildOptions('Code 128','ABC123');
+  if(linear.height!==6)throw new Error(`Unexpected default linear height: ${linear.height}`);
+  const qr=api.buildOptions('QR Code','ABC123');
+  if(qr.scale!==3)throw new Error(`Unexpected default 2D scale: ${qr.scale}`);
+  if(!api.TWO_D.has('Data Matrix'))throw new Error('Data Matrix must use adjustable 2D size');
+  console.log('PASS: barcode generator type, validation and size-control smoke tests');
 }
 
 {
