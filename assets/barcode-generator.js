@@ -75,7 +75,7 @@
 
   function validate(type,text){
     if(!text) return '請先輸入要製作的條碼內容。';
-    if(type === 'Code 39' && !/^[0-9A-Z .$/+%_-]+$/.test(text)){
+    if(type === 'Code 39' && !/^[0-9A-Z .$/+%-]+$/.test(text)){
       return 'Code 39 只能使用大寫英文字母、數字、空白與 - . $ / + %。';
     }
     if(type === 'EAN-13'){
