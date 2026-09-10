@@ -83,3 +83,6 @@ jobs:
 
       - name: Research official template library wiring
         run: node tests/research-template-library.cjs
+
+      - name: Map official CEA child objects
+        run: node tests/cea-child-map.cjs
