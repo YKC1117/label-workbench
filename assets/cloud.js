@@ -105,10 +105,7 @@
     const redirect = location.origin + location.pathname;
     setText('cloudMessage','正在寄送登入連結…');
     try{
-      const { error } = await state.client.auth.signInWithOtp({
-        email,
-        options: { emailRedirectTo: redirect }
-      });
+      const { error } = await state.client.auth.signInWithOtp({email,options:{emailRedirectTo:redirect}});
       if(error) throw error;
       setText('cloudMessage','登入連結已寄出。請到信箱點一下，完成後會回到 Label Workbench。');
     }catch(err){
@@ -131,88 +128,46 @@
 
   async function syncNow(options={silent:false}){
     if(!state.client || !state.session || state.syncing) return;
-    state.syncing = true;
-    renderAuth();
-    setStatus('work','同步中');
+    state.syncing = true;renderAuth();setStatus('work','同步中');
     if(!options.silent) setText('cloudMessage','正在同步案件…');
     try{
       const userId = state.session.user.id;
-      const { data: remoteRows, error: readError } = await state.client
-        .from(TABLE)
-        .select('case_id,payload,updated_at')
-        .eq('user_id', userId);
+      const { data: remoteRows, error: readError } = await state.client.from(TABLE).select('case_id,payload,updated_at').eq('user_id', userId);
       if(readError) throw readError;
-
       const localCases = typeof window.loadCases === 'function' ? window.loadCases() : [];
       const merged = mergeCases(localCases, remoteRows || []);
-      const rows = merged.map(c => ({
-        user_id: userId,
-        case_id: c.id,
-        payload: c,
-        updated_at: c.updatedAt || c.createdAt || new Date().toISOString()
-      }));
-
-      if(rows.length){
-        const { error: writeError } = await state.client
-          .from(TABLE)
-          .upsert(rows, { onConflict: 'user_id,case_id' });
-        if(writeError) throw writeError;
-      }
-
+      const rows = merged.map(c => ({user_id:userId,case_id:c.id,payload:c,updated_at:c.updatedAt || c.createdAt || new Date().toISOString()}));
+      if(rows.length){const { error: writeError } = await state.client.from(TABLE).upsert(rows, { onConflict: 'user_id,case_id' });if(writeError) throw writeError;}
       const same = JSON.stringify(localCases) === JSON.stringify(merged);
       if(!same && typeof originalSaveCases === 'function') originalSaveCases(merged);
-      state.lastSync = new Date().toISOString();
-      setStatus('ok','已同步');
+      state.lastSync = new Date().toISOString();setStatus('ok','已同步');
       setText('cloudMessage',`同步完成：${merged.length} 筆案件 · ${new Date(state.lastSync).toLocaleString()}`);
     }catch(err){
-      console.warn('[Label Workbench] cloud sync failed:', err);
-      setStatus('error','同步失敗');
+      console.warn('[Label Workbench] cloud sync failed:', err);setStatus('error','同步失敗');
       setText('cloudMessage','雲端同步失敗，但本機功能不受影響。' + describeError(err));
-    }finally{
-      state.syncing = false;
-    }
+    }finally{state.syncing = false;}
   }
 
-  function scheduleSync(){
-    if(!state.session) return;
-    clearTimeout(state.timer);
-    state.timer = setTimeout(() => syncNow({silent:true}), 900);
-  }
+  function scheduleSync(){if(!state.session) return;clearTimeout(state.timer);state.timer = setTimeout(() => syncNow({silent:true}), 900);}
 
   const originalSaveCases = window.saveCases;
   function patchLocalSave(){
     if(state.patched || typeof originalSaveCases !== 'function') return;
-    window.saveCases = function(cases){
-      originalSaveCases(cases);
-      scheduleSync();
-    };
-    state.patched = true;
+    window.saveCases = function(cases){originalSaveCases(cases);scheduleSync();};state.patched = true;
   }
 
-  async function signOut(){
-    try{ await state.client.auth.signOut(); }
-    catch(err){ console.warn('[Label Workbench] sign out failed:', err); }
-  }
+  async function signOut(){try{ await state.client.auth.signOut(); }catch(err){ console.warn('[Label Workbench] sign out failed:', err); }}
 
   async function bootClient(){
     if(!cloudReady()){ renderAuth(); return; }
     try{
-      state.client = window.supabase.createClient(cfg.url, cfg.key, {
-        auth: { persistSession:true, autoRefreshToken:true, detectSessionInUrl:true }
-      });
+      state.client = window.supabase.createClient(cfg.url, cfg.key, {auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
       patchLocalSave();
-      const { data } = await state.client.auth.getSession();
-      state.session = data?.session || null;
-      renderAuth();
-      state.client.auth.onAuthStateChange((_event, session) => {
-        state.session = session;
-        renderAuth();
-        if(session) setTimeout(() => syncNow({silent:true}), 0);
-      });
+      const { data } = await state.client.auth.getSession();state.session = data?.session || null;renderAuth();
+      state.client.auth.onAuthStateChange((_event, session) => {state.session = session;renderAuth();if(session) setTimeout(() => syncNow({silent:true}), 0);});
       if(state.session) await syncNow({silent:true});
     }catch(err){
-      console.warn('[Label Workbench] cloud bootstrap failed:', err);
-      setStatus('error','雲端初始化失敗');
+      console.warn('[Label Workbench] cloud bootstrap failed:', err);setStatus('error','雲端初始化失敗');
       setText('cloudMessage','雲端初始化失敗，本機功能仍可使用。' + describeError(err));
     }
   }
@@ -225,21 +180,18 @@
   }
 
   function init(){ injectCss(); injectPanel(); bind(); renderAuth(); bootClient(); }
-  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
-  else init();
-
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);else init();
   window.LabelWorkbenchCloud = { syncNow, mergeCases, state };
 })();
 
 /* Load optional workbench modules in a fixed order with an explicit cache key. */
 (function(){
-  const BUILD='20260910-v140';
+  const BUILD='20260910-v150';
   const queue=['assets/cloud-attachments.js','assets/file-parsers.js','assets/barcode-reader.js'];
   function next(){
     const src=queue.shift();if(!src)return;
     if(document.querySelector(`script[data-lw-module="${src}"]`)){next();return}
-    const s=document.createElement('script');
-    s.src=`${src}?v=${BUILD}`;s.dataset.lwModule=src;s.async=false;
+    const s=document.createElement('script');s.src=`${src}?v=${BUILD}`;s.dataset.lwModule=src;s.async=false;
     s.onload=next;s.onerror=()=>{console.warn('[Label Workbench] module load failed:',src);next()};document.head.appendChild(s)
   }
   next()
