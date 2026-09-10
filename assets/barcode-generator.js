@@ -1,10 +1,11 @@
-/* Label Workbench barcode generator v1.5
- * Customer gives content -> generate a scannable 1D/2D barcode directly in the browser.
+/* Label Workbench barcode generator v1.7
+ * Customer gives content -> generate a real scannable 1D/2D barcode directly in the browser.
+ * Keep module geometry intact: linear height is mm; 2D size uses integer module scale.
  */
 (function(){
   'use strict';
 
-  const BUILD='20260910-v150';
+  const BUILD='20260910-v170';
   const BWIP_SRC='https://cdn.jsdelivr.net/npm/bwip-js@4.6.0/dist/bwip-js-min.js';
   let loadPromise=null,last={type:'',text:'',canvas:null};
   const el=id=>document.getElementById(id);
@@ -64,17 +65,38 @@
     return '';
   }
 
+  function linearHeight(){
+    const raw=Number(el('genHeight')?.value||6);
+    return Math.max(2,Math.min(40,Number.isFinite(raw)?raw:6));
+  }
+
+  function twoDScale(){
+    const raw=Math.round(Number(el('gen2DSize')?.value||3));
+    return Math.max(1,Math.min(10,Number.isFinite(raw)?raw:3));
+  }
+
   function buildOptions(type,text){
-    const opts={bcid:TYPES[type],text,scale:3,paddingwidth:4,paddingheight:4,backgroundcolor:'FFFFFF'};
-    if(TWO_D.has(type)){
+    const is2d=TWO_D.has(type);
+    const opts={bcid:TYPES[type],text,scale:is2d?twoDScale():3,paddingwidth:4,paddingheight:4,backgroundcolor:'FFFFFF'};
+    if(is2d){
       if(type==='QR Code')opts.eclevel='M';
     }else{
-      opts.height=Math.max(8,Math.min(40,Number(el('genHeight')?.value||14)));
+      opts.height=linearHeight();
       opts.includetext=!!el('genHuman')?.checked;
       opts.textxalign='center';
       opts.textsize=10;
     }
     return opts;
+  }
+
+  function updateSizeControls(){
+    const type=el('genType')?.value||'Code 128',is2d=TWO_D.has(type);
+    const one=el('gen1DOptions'),two=el('gen2DOptions');
+    if(one)one.classList.toggle('hidden',is2d);
+    if(two)two.classList.toggle('hidden',!is2d);
+    if(el('genHeight'))el('genHeight').disabled=is2d;
+    if(el('genHuman'))el('genHuman').disabled=is2d;
+    if(el('gen2DSize'))el('gen2DSize').disabled=!is2d;
   }
 
   async function verifyGenerated(canvas,text){
@@ -104,7 +126,8 @@
       const canvas=el('genCanvas');
       bwip.toCanvas(canvas,buildOptions(type,text));
       last={type,text,canvas};
-      msg.innerHTML=`<div class="note"><b>已產生：</b>${esc(type)}｜實際內容：<code>${esc(text)}</code></div>`;
+      const sizeText=TWO_D.has(type)?`二維碼大小 ${twoDScale()} 級`:`高度 ${linearHeight()} mm`;
+      msg.innerHTML=`<div class="note"><b>已產生：</b>${esc(type)}｜${esc(sizeText)}｜${canvas.width} × ${canvas.height} px<br>實際內容：<code>${esc(text)}</code></div>`;
       el('genDownload').disabled=false;el('genCopyImage').disabled=false;el('genCopyText').disabled=false;
       await verifyGenerated(canvas,text);
     }catch(e){
@@ -126,7 +149,7 @@
     try{
       const blob=await new Promise(r=>last.canvas.toBlob(r,'image/png'));
       if(!blob||!navigator.clipboard||!window.ClipboardItem)throw new Error('browser');
-      await navigator.clipboard.write([new ClipboardItem({'image/png':blob})]);toast('已複製條碼圖片');
+      await navigator.clipboard.write([new ClipboardItem({'image/png':blob})]);toast('已複製條碼圖片，可貼到支援圖片貼上的軟體');
     }catch{toast('這個瀏覽器無法直接複製圖片，請使用下載 PNG')}
   }
 
@@ -149,11 +172,11 @@
     if(el('barcodeGeneratorStyle'))return;
     const s=document.createElement('style');s.id='barcodeGeneratorStyle';s.textContent=`
       .barcode-mode-tabs{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0 18px}.barcode-mode-tabs .btn{min-width:160px}
-      .generator-grid{display:grid;grid-template-columns:220px 1fr;gap:14px}.generator-options{display:grid;grid-template-columns:180px 180px;gap:12px;margin-top:12px}
+      .generator-grid{display:grid;grid-template-columns:220px 1fr;gap:14px}.generator-options{display:grid;grid-template-columns:minmax(220px,320px) minmax(220px,320px);gap:12px;margin-top:12px}
       .generator-preview{margin-top:16px;min-height:180px;border:1px dashed #cbd5e1;border-radius:14px;background:#fff;padding:18px;display:flex;align-items:center;justify-content:center;overflow:auto}
-      .generator-preview canvas{max-width:100%;height:auto}.generator-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
-      #genVerify{margin-top:10px}.generator-tip{margin-top:12px}
-      @media(max-width:820px){.generator-grid{grid-template-columns:1fr}.generator-options{grid-template-columns:1fr 1fr}.barcode-mode-tabs .btn{flex:1;min-width:0}.generator-actions .btn{flex:1}.generator-preview{min-height:150px}}
+      .generator-preview canvas{max-width:100%;height:auto;image-rendering:auto}.generator-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+      #genVerify{margin-top:10px}.generator-tip{margin-top:12px}.generator-size-help{display:block;margin-top:5px;color:#64748b;font-size:12px}
+      @media(max-width:820px){.generator-grid{grid-template-columns:1fr}.generator-options{grid-template-columns:1fr}.barcode-mode-tabs .btn{flex:1;min-width:0}.generator-actions .btn{flex:1}.generator-preview{min-height:150px}}
     `;document.head.appendChild(s);
   }
 
@@ -163,27 +186,31 @@
     const legacy=el('scratchType')?.closest('.panel');if(legacy)legacy.classList.add('hidden');
     const p=document.createElement('div');p.id='barcodeGeneratorPanel';p.className='panel';
     p.innerHTML=`
-      <div class="section-title"><div><h3>▥ 條碼工具</h3><p class="muted compact">客戶給圖片就讀碼；客戶給內容就直接生碼，不用先開 BarTender。</p></div><span class="pill">v1.5</span></div>
+      <div class="section-title"><div><h3>▥ 條碼工具</h3><p class="muted compact">客戶給圖片就讀碼；客戶給內容就直接生碼，不用先開 BarTender。</p></div><span class="pill">v1.7</span></div>
       <div class="barcode-mode-tabs"><button id="modeGenerate" class="btn primary" type="button">產生條碼</button><button id="modeRead" class="btn ghost" type="button">讀取客戶條碼</button></div>
       <div id="barcodeGenerateBody">
         <div class="generator-grid">
           <div class="field"><label for="genType">條碼種類</label><select id="genType">${Object.keys(TYPES).map(x=>`<option>${esc(x)}</option>`).join('')}</select></div>
           <div class="field"><label for="genText">客戶指定內容</label><textarea id="genText" rows="3" placeholder="例如：ABC123、LOT20260910、網址，或 (01)... 的 GS1 內容"></textarea></div>
         </div>
-        <div class="generator-options"><div class="field"><label for="genHeight">一維碼高度</label><input id="genHeight" type="number" min="8" max="40" value="14"></div><label class="field"><span>條碼下方文字</span><span><input id="genHuman" type="checkbox" checked> 顯示</span></label></div>
+        <div class="generator-options">
+          <div id="gen1DOptions" class="field"><label for="genHeight">一維碼高度（mm）</label><input id="genHeight" type="number" min="2" max="40" step="0.5" value="6"><small class="generator-size-help">可調到 2 mm；太低時仍要以實際掃碼結果為準。</small></div>
+          <label id="genHumanWrap" class="field"><span>條碼下方文字</span><span><input id="genHuman" type="checkbox" checked> 顯示</span></label>
+          <div id="gen2DOptions" class="field hidden"><label for="gen2DSize">二維碼大小</label><input id="gen2DSize" type="number" min="1" max="10" step="1" value="3"><small class="generator-size-help">1 最小、10 最大；使用整數模組縮放，避免把 QR / Data Matrix 拉糊。</small></div>
+        </div>
         <div class="generator-actions"><button id="genGo" class="btn primary" type="button">立即產生</button><button id="genCopyText" class="btn ghost" type="button" disabled>複製內容</button><button id="genCopyImage" class="btn ghost" type="button" disabled>複製圖片</button><button id="genDownload" class="btn ghost" type="button" disabled>下載 PNG</button></div>
         <div id="genMessage"></div><div id="genPreview" class="generator-preview"><div class="empty">輸入內容後按「立即產生」。</div></div><div id="genVerify" class="footer-note"></div>
-        <div class="note generator-tip"><b>工作用法：</b>這裡適合先產生、預覽與確認條碼內容。正式貼標前仍以實際印表機尺寸、DPI 與掃碼槍測試為準；GS1 請依客戶規範確認 AI / FNC1。</div>
+        <div class="note generator-tip"><b>貼到 BarTender：</b>「複製圖片」可用來貼成圖片物件，適合固定不變的條碼；它不會變成 BarTender 原生條碼物件。若條碼內容要連 Excel、流水號或每張變動，仍應使用 BarTender 原生條碼物件。圖片貼入後不要任意拉伸變形，正式列印仍要實際掃碼確認。</div>
       </div>`;
     sec.insertBefore(p,sec.firstChild);
     el('genGo').onclick=generate;el('genDownload').onclick=downloadPng;el('genCopyImage').onclick=copyImage;el('genCopyText').onclick=copyText;
     el('modeGenerate').onclick=()=>switchMode('generate');el('modeRead').onclick=()=>switchMode('read');
     el('genText').addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key==='Enter')generate()});
-    el('genType').addEventListener('change',()=>{const is2d=TWO_D.has(el('genType').value);el('genHeight').disabled=is2d;el('genHuman').disabled=is2d});
-    switchMode('generate');
+    el('genType').addEventListener('change',updateSizeControls);
+    updateSizeControls();switchMode('generate');
   }
 
   function init(){ui();}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
-  window.LabelWorkbenchBarcodeGenerator={BUILD,generate,validate,TYPES};
+  window.LabelWorkbenchBarcodeGenerator={BUILD,generate,validate,TYPES,TWO_D,linearHeight,twoDScale,buildOptions};
 })();
