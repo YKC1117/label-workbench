@@ -29,8 +29,11 @@ function context(){
   const c=context();vm.createContext(c);
   vm.runInContext(fs.readFileSync('assets/bt-bridge.js','utf8'),c,{filename:'bt-bridge.js'});
   const api=c.window.LabelWorkbenchBtBridge;if(!api)throw new Error('BT bridge API missing');
+  if(typeof api.downloadProductionPack!=='function')throw new Error('BT bridge must expose one-click production pack export');
   const result=api.tableResult(['PART NO','QTY'],[['A001','100'],['A002','200']],'data.csv');
   if(result.labels.length!==2)throw new Error('CSV/Excel table rows must become two BT label rows');
   if(result.labels[0].fields[0].name!=='PART NO'||result.labels[1].fields[1].value!=='200')throw new Error('Table-to-BT field conversion failed');
-  console.log('PASS: direct CSV/Excel rows are structured for BT Quick Production');
+  const src=fs.readFileSync('assets/bt-bridge.js','utf8');
+  for(const marker of ['建立 BT 製作包（自動下載）','downloadProductionPack','BT_製作包_','BT_Data.csv','ZIP 建立失敗，已改下載 BT_Data.csv'])if(!src.includes(marker))throw new Error(`BT bridge auto-export marker missing: ${marker}`);
+  console.log('PASS: BT quick action has one-click ZIP export with BT_Data.csv fallback');
 }
