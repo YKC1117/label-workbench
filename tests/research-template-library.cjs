@@ -1,49 +1,25 @@
 const zlib=require('zlib');
 const assert=require('assert');
 
-const TARGETS={
-  79797:'CEA Code128/DataMatrix',
-  79738:'Code39 + QR',
-  79740:'QR',
-  80092:'Small Height / PDF417 candidate',
-  79726:'Amazon PDF417 candidate',
-  79962:'Material / GS1-128 candidate',
-  80046:'Retail UPC-A candidate',
-  80047:'Retail Food / ITF candidate',
-  80008:'PDQ / pallet candidate'
-};
-const SOF=Buffer.from('\r\nBar Tender Format File\r\n','latin1');
-const END_META=Buffer.from([0xff,0xfe,0xff,0x00]);
-function skipZeroPadding(data,offset){let p=offset;while(p+4<=data.length&&data.readUInt32LE(p)===0)p+=4;return p}
-function parseBtw(data){
-  assert(data.subarray(0,SOF.length).equals(SOF),'BTW signature mismatch');
-  const metaEnd=data.indexOf(END_META,SOF.length);assert(metaEnd>=0,'metadata end marker missing');
-  let p=skipZeroPadding(data,metaEnd+END_META.length);
-  for(let i=0;i<2;i++){const size=data.readUInt32LE(p),end=p+4+size;assert(size>0&&end<=data.length,`PNG ${i+1} invalid`);p=skipZeroPadding(data,end)}
-  const tagged=data[p]===0&&data[p+1]===1;if(tagged)p+=2;
-  const compressed=data.subarray(p),container=tagged?zlib.inflateSync(compressed):compressed;
-  const head=data.subarray(0,Math.min(metaEnd,1800)).toString('latin1').replace(/\0/g,'');
-  return{container,tagged,head};
-}
-function scanTags(buf){
-  const out=[];
-  for(let i=0;i+8<buf.length;i++){
-    if(buf[i]!==0xff||buf[i+1]!==0xff||buf[i+2]!==0x01||buf[i+3]!==0x00)continue;
-    const len=buf.readUInt16LE(i+4);if(len<3||len>80||i+6+len>buf.length)continue;
-    const raw=buf.subarray(i+6,i+6+len);if(!raw.every(b=>b>=0x20&&b<=0x7e))continue;
-    const type=raw.toString('ascii');if(/Data$/i.test(type)&&!out.includes(type))out.push(type);
-  }
-  return out;
-}
+const TARGETS={79738:'Code39+QR',79726:'PDF417+GS1-128',79962:'GS1-128',80046:'UPC-A',80008:'ITF-14+GS1-128'};
+const DISCOVERY=[
+  'https://www.bartendersoftware.com/resources/library/library-tracking',
+  'https://www.bartendersoftware.com/resources/library/medical-device-udi-gs1datamatrix',
+  'https://www.bartendersoftware.com/resources/library/medical-device-gs1-data-matrix-landscape',
+  'https://www.bartendersoftware.com/resources/library/traceability'
+];
+const SOF=Buffer.from('\r\nBar Tender Format File\r\n','latin1'),END_META=Buffer.from([0xff,0xfe,0xff,0x00]);
+function skip0(b,p){while(p+4<=b.length&&b.readUInt32LE(p)===0)p+=4;return p}
+function parse(b){assert(b.subarray(0,SOF.length).equals(SOF));const m=b.indexOf(END_META,SOF.length);assert(m>=0);let p=skip0(b,m+4);for(let i=0;i<2;i++){const n=b.readUInt32LE(p);p=skip0(b,p+4+n)}const tagged=b[p]===0&&b[p+1]===1;if(tagged)p+=2;return zlib.inflateSync(b.subarray(p))}
+function strings(b){const o=[];for(let i=0;i+4<b.length;i++){if(b[i]!==255||b[i+1]!==254||b[i+2]!==255)continue;let n,h;if(b[i+3]===255){n=b.readUInt16LE(i+4);h=6}else{n=b[i+3];h=4}if(n<1||n>1000)continue;const e=i+h+n*2;if(e>b.length)continue;const t=b.subarray(i+h,e).toString('utf16le');if(t&&!/[\x00-\x08\x0b\x0c\x0e-\x1f]/.test(t))o.push({offset:i,text:t});i=e-1}return o}
+function tags(b){const o=[];for(let i=0;i+8<b.length;i++){if(b[i]!==255||b[i+1]!==255||b[i+2]!==1||b[i+3]!==0)continue;const n=b.readUInt16LE(i+4);if(n<3||n>80||i+6+n>b.length)continue;const r=b.subarray(i+6,i+6+n);if(!r.every(x=>x>=32&&x<=126))continue;const t=r.toString('ascii');if(/Data$/i.test(t))o.push({offset:i,type:t})}return o}
+function endOf(ts,i,len){for(let j=i+1;j<ts.length;j++)if(/^(TextData|Bc|PictureData|BackgroundData)/.test(ts[j].type))return ts[j].offset;return len}
 (async()=>{
+  for(const page of DISCOVERY){const r=await fetch(page),html=await r.text(),id=[...html.matchAll(/data-download\s*=\s*["']?(\d+)/gi)][0]?.[1]||'';console.log(JSON.stringify({discover:page.split('/').pop(),resourceId:id}))}
   for(const[id,label]of Object.entries(TARGETS)){
-    const url=`https://www.bartendersoftware.com/download-resource?resourceId=${id}`;
-    const r=await fetch(url,{redirect:'follow',headers:{'user-agent':'Mozilla/5.0 LabelWorkbenchResearch/compact'}}),b=Buffer.from(await r.arrayBuffer());
-    const filename=(r.headers.get('content-disposition')||'').match(/filename="?([^";]+)"?/i)?.[1]||'';
-    try{
-      const p=parseBtw(b),app=/Application:\s*Version=([^;\r\n]+)/i.exec(p.head)?.[1]?.trim()||'',compat=/Document:\s*CompatibleVersion=([^;\r\n]+)/i.exec(p.head)?.[1]?.trim()||'';
-      console.log(JSON.stringify({id,label,filename,bytes:b.length,version:app,compatible:compat,tags:scanTags(p.container)}));
-    }catch(err){console.log(JSON.stringify({id,label,filename,bytes:b.length,skip:String(err?.message||err)}))}
+    const r=await fetch(`https://www.bartendersoftware.com/download-resource?resourceId=${id}`,{headers:{'user-agent':'LabelWorkbenchResearch/slots'}}),raw=Buffer.from(await r.arrayBuffer()),b=parse(raw),ts=tags(b),ss=strings(b),file=(r.headers.get('content-disposition')||'').match(/filename="?([^";]+)/i)?.[1]||'';
+    console.log(JSON.stringify({id,label,file,barcodeTypes:ts.filter(x=>/^Bc/.test(x.type)).map(x=>x.type)}));
+    for(let i=0;i<ts.length;i++){if(!/^Bc/.test(ts[i].type))continue;const end=endOf(ts,i,b.length),vals=ss.filter(s=>s.offset>=ts[i].offset&&s.offset<end).map(s=>s.text).filter(t=>t.length<=90&&!/^(Root\.|Box Options|Box \d+|Functions and Subs|OnProcessData|OnPostSerialize|PromptOptionsPage|Enter Data|Sample Prompt|0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ|\(999\)|\(___|\[0-9A-Za-z|999999|1000000|Data ?Source|Text \d+)$/i.test(t));console.log(JSON.stringify({id,type:ts[i].type,strings:[...new Set(vals)].slice(0,30)}))}
   }
-  console.log('PASS: compact native symbology scan');
-})().catch(err=>{console.error(err);process.exit(1)});
+  console.log('PASS: native barcode payload slot map');
+})().catch(e=>{console.error(e);process.exit(1)});
