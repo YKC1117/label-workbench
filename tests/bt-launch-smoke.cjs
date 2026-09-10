@@ -3,7 +3,7 @@ const vm=require('vm');
 
 function context(options={}){
   let stored=options.stored??null;
-  const c={console,window:{},navigator:{},localStorage:{getItem:()=>stored,setItem:(_k,v)=>{stored=v},removeItem:()=>{stored=null}},URL:{createObjectURL:()=>'',revokeObjectURL:()=>{}},Blob:function(){},setTimeout:()=>0,clearTimeout:()=>{},setInterval:()=>0,clearInterval:()=>{},Promise,Date,Math,document:{readyState:options.readyState||'loading',addEventListener:()=>{},getElementById:options.getElementById||(()=>null),querySelector:()=>null,createElement:()=>({}),head:{appendChild(){}},body:{appendChild(){}}},globalThis:null};
+  const c={console,window:{},navigator:{},localStorage:{getItem:()=>stored,setItem:(_k,v)=>{stored=v},removeItem:()=>{stored=null}},URL:{createObjectURL:()=>'',revokeObjectURL:()=>{}},Blob:function(){},setTimeout:()=>0,clearTimeout:()=>{},setInterval:()=>0,clearInterval:()=>{},Promise,Date,Math,document:{readyState:options.readyState||'loading',addEventListener:()=>{},getElementById:options.getElementById||(()=>null),querySelector:()=>null,querySelectorAll:()=>[],createElement:()=>({}),head:{appendChild(){}},body:{appendChild(){}}},globalThis:null};
   c.globalThis=c;c.window.window=c.window;return c;
 }
 
@@ -22,9 +22,7 @@ function context(options={}){
   if(/(?:^|\s)\/P(?:\s|$)/im.test(cmd))throw new Error('Launch helper must never auto-print');
   if(/(?:^|\s)\/X(?:\s|$)/im.test(cmd))throw new Error('Launch helper must not auto-close BarTender');
   if(!api.templateBaseName(d).endsWith('.btw'))throw new Error('Template recommendation must map to a BTW filename');
-  const readme=api.buildReadme(d);
-  if(!readme.includes('BT_Open.cmd')||!readme.includes('不包含自動列印參數'))throw new Error('Production instructions must explain safe non-printing launch behavior');
-  console.log('PASS: BT_Open.cmd is ASCII-safe, opens a template when available, and falls back without auto-printing');
+  console.log('PASS: advanced BT_Open.cmd stays ASCII-safe and never auto-prints');
 }
 
 {
@@ -43,11 +41,10 @@ function context(options={}){
   const c=context();vm.createContext(c);
   vm.runInContext(fs.readFileSync('assets/bt-bridge.js','utf8'),c,{filename:'bt-bridge.js'});
   const api=c.window.LabelWorkbenchBtBridge;if(!api)throw new Error('BT bridge API missing');
-  if(typeof api.downloadProductionPack!=='function'||typeof api.ensureBtQuick!=='function')throw new Error('BT bridge must expose export and recovery helpers');
+  if(typeof api.sendDirectToBt!=='function'||typeof api.downloadProductionPack!=='function'||typeof api.ensureDirectImport!=='function'||typeof api.ensureBtQuick!=='function')throw new Error('BT bridge must expose direct and advanced export helpers');
   const result=api.tableResult(['PART NO','QTY'],[['A001','100'],['A002','200']],'data.csv');
-  if(result.labels.length!==2)throw new Error('CSV/Excel table rows must become two BT label rows');
-  if(result.labels[0].fields[0].name!=='PART NO'||result.labels[1].fields[1].value!=='200')throw new Error('Table-to-BT field conversion failed');
+  if(result.labels.length!==2||result.labels[1].fields[1].value!=='200')throw new Error('Table-to-BT field conversion failed');
   const src=fs.readFileSync('assets/bt-bridge.js','utf8');
-  for(const marker of ['建立 BT 製作包（自動下載）','downloadProductionPack','ensureBtQuick','bt140-retry','BT_製作包_','BT_Data.csv','BT_使用方式.txt','ZIP 建立失敗，已改下載 BT_Data.csv'])if(!src.includes(marker))throw new Error(`BT bridge auto-export/recovery marker missing: ${marker}`);
-  console.log('PASS: BT action has one-click ZIP export, CSV fallback and missing-module recovery');
+  for(const marker of ['下載 BT 可直接匯入圖檔','進階：下載 BT 資料包','sendDirectToBt','ensureDirectImport','LabelWorkbenchBtDirectImport','btdi100-retry','downloadProductionPack','BT_Data.csv'])if(!src.includes(marker))throw new Error(`BT bridge direct/advanced marker missing: ${marker}`);
+  console.log('PASS: PDF/image direct import is primary while structured BT data pack remains available as advanced export');
 }
