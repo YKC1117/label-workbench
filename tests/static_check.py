@@ -44,8 +44,8 @@ required_scripts = ['@supabase/supabase-js@2', 'assets/cloud-config.js', 'assets
 missing_scripts = [s for s in required_scripts if s not in html]
 if missing_scripts:
     raise SystemExit(f'Missing required script references: {missing_scripts}')
-if 'assets/ui-refresh.css?v=20260910-v180' not in html:
-    raise SystemExit('v1.8 UI refresh stylesheet is not linked with cache key')
+if 'assets/ui-refresh.css?v=20260910-v190' not in html or 'data-lw-ui-refresh="true"' not in html:
+    raise SystemExit('refreshed UI stylesheet must load once with the v1.9 cache key')
 if 'assets/app.js?v=20260910-v181' not in html or 'assets/cloud.js?v=20260910-v181' not in html:
     raise SystemExit('v1.8.1 app/cloud cache keys are not linked')
 
@@ -145,14 +145,14 @@ for marker in ["['barcode','analysis','dashboard','cases','bartender']", 'runQui
     if marker not in priority_js:
         raise SystemExit(f'Priority controller is missing v1.8.1 workflow marker: {marker}')
 
-for marker in ['analysis-summary','analysis-label-card','analysis-metrics','generator-options','@media(max-width:820px)']:
+for marker in ['analysis-summary','analysis-label-card','analysis-metrics','generator-options','@media(max-width:820px)','barcode-mode-tabs','mobile-nav']:
     if marker not in ui_css:
         raise SystemExit(f'UI refresh stylesheet is missing marker: {marker}')
 
 print(f'PASS: {len(ids)} HTML ids checked')
 print(f'PASS: {len(refs)} JavaScript DOM references checked')
 print(f'PASS: {len(handlers)} inline handler names checked')
-print('PASS: v1.8 cache keys and UI refresh wiring checked')
+print('PASS: refreshed UI stylesheet is single-loaded with v1.9 cache key')
 print('PASS: quick analysis has one listener and no legacy scratch-pad path')
 print('PASS: enabled Supabase browser config is publishable-key only')
 print('PASS: optional modules have one loader and one cache-key chain')
