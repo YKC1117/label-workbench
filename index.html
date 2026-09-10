@@ -46,7 +46,7 @@
       </div>
       <div class="panel"><h3>常用工作</h3><div class="quick">
         <button onclick="showView('analysis')"><strong>⚡ 客戶原稿快速分析</strong><span>把客戶檔案整理成可製作、可確認的內容</span></button>
-        <button onclick="showView('bartender')"><strong>🖨️ BT 快速製作</strong><span>整理成 BarTender 可快速接手的製作資料</span></button>
+        <button onclick="showView('bartender')"><strong>🖨️ BT 快速製作</strong><span>PDF／圖片可輸出成 BarTender 可直接匯入的 Label 圖檔</span></button>
         <button id="dashNewCase"><strong>＋ 建立案件紀錄</strong><span>只有需要跨裝置接續或特別追蹤時再使用</span></button>
       </div></div>
     </section>
@@ -108,11 +108,11 @@
       <div class="panel">
         <div class="status"><span class="dot"></span>BT 製作主流程</div>
         <h3 class="bt-title">BT 快速製作</h3>
-        <p>主流程改成：客戶原稿 → 快速分析 → 整理製作資料 → 套用 BarTender 母版 → 微調、列印與掃描。案件紀錄不是必要步驟。</p>
+        <p>PDF／圖片快速分析後，可下載成 BarTender 可直接匯入的 PNG；開啟 BT 後直接拖入或使用「圖片 → 從檔案」。</p>
         <div class="case-actions"><button class="btn primary" type="button" onclick="showView('analysis')">⚡ 從快速分析開始</button></div>
       </div>
       <div class="panel"><div class="section-title"><h3>可接續的 BT 製作紀錄</h3><span class="pill">選用</span></div><div id="bartenderQueue" class="case-list"></div></div>
-      <div class="panel"><h3>快速製作流程</h3><div class="workflow"><span>客戶原稿</span><b>→</b><span>快速分析</span><b>→</b><span>製作資料</span><b>→</b><span>BT 母版</span><b>→</b><span>微調測試</span></div><div class="note"><b>目前方向：</b>案件只保留給需要追蹤的人使用；接下來 BT 快速製作會直接接快速分析結果，不要求先建立案件。</div></div>
+      <div class="panel"><h3>快速製作流程</h3><div class="workflow"><span>客戶原稿</span><b>→</b><span>快速分析</span><b>→</b><span>下載 BT 匯入圖</span><b>→</b><span>拖進 BarTender</span><b>→</b><span>尺寸／測印</span></div><div class="note"><b>UltraLite 建議：</b>PDF／圖片以「直接匯入 PNG」為主；CSV／欄位對照保留為進階製作資料。</div></div>
     </section>
   </main>
 </div>
@@ -124,7 +124,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
 <script src="assets/cloud-config.js?v=20260910-v180" defer></script>
 <script src="assets/app.js?v=20260910-v181" defer></script>
-<script src="assets/cloud.js?v=20260910-v193" defer></script>
+<script src="assets/cloud.js?v=20260910-v194" defer></script>
 <script src="assets/layout-shortcuts.js?v=20260910-v210" defer></script>
 </body>
 </html>
