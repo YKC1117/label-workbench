@@ -3,40 +3,52 @@ const vm=require('vm');
 
 const c={
   console,Uint8Array,ArrayBuffer,DataView,TextDecoder,TextEncoder,Blob,Response,
-  CompressionStream,DecompressionStream,fetch,setTimeout,clearTimeout,Promise,Date,Math,atob,btoa,
+  CompressionStream,DecompressionStream,fetch,setTimeout,clearTimeout,Promise,Date,Math,
   document:{readyState:'loading',addEventListener(){},querySelector(){return null},createElement(){return{}},head:{appendChild(){}},body:{appendChild(){}}},
   navigator:{},URL,window:null,globalThis:null
 };
 c.window=c;c.globalThis=c;
 vm.createContext(c);
-for(const file of ['assets/btw-format.js','assets/btw-seed-2022r2.js','assets/btw-native.js'])
-  vm.runInContext(fs.readFileSync(file,'utf8'),c,{filename:file});
+vm.runInContext(fs.readFileSync('assets/cloud-config.js','utf8'),c,{filename:'cloud-config.js'});
+vm.runInContext(fs.readFileSync('assets/btw-format.js','utf8'),c,{filename:'btw-format.js'});
+vm.runInContext(fs.readFileSync('assets/btw-native.js','utf8'),c,{filename:'btw-native.js'});
 
-async function verify(label,expectedValues){
+async function verify(label,expected){
   const N=c.LabelWorkbenchBtwNative,F=c.LabelWorkbenchBtwFormat;
   if(!N?.generateOne||!F?.parseStructure)throw new Error('native BTW APIs missing');
-  if(N.BUILD!=='20260911-btwn321-safe-base64')throw new Error(`unexpected native build ${N.BUILD}`);
-  if(N.SEED_ID!=='LW-2022R2-100x65-SANITIZED')throw new Error(`unexpected seed ${N.SEED_ID}`);
+  if(N.BUILD!=='20260910-btwn210')throw new Error(`unexpected native build ${N.BUILD}`);
+  if(N.SEED_ID!=='CEA-2022-R5')throw new Error('official CEA seed identity missing');
+  const ep=N.seedEndpoint();
+  if(!/\/functions\/v1\/btw-seed$/.test(ep.url)||!ep.key.startsWith('sb_publishable_'))throw new Error('seed proxy is not wired to browser cloud config');
+
   const out=await N.generateOne(label,0);
-  if(!out?.bytes?.length||!out.name.toLowerCase().endsWith('.btw'))throw new Error('BTW output missing');
-  const parsed=F.parseStructure(out.bytes);
-  if(parsed.header.applicationVersion!=='2022 R2')throw new Error(`not BarTender 2022 R2: ${parsed.header.applicationVersion}`);
-  if(parsed.header.compatibleVersion!=='2022 R1')throw new Error(`not BarTender 2022 R1 compatible: ${parsed.header.compatibleVersion}`);
-  if(parsed.pngs.length!==2||parsed.pngs.some(x=>!x.isPng))throw new Error('preview PNG structure invalid');
-  const container=await F.inflateContainer(parsed),strings=F.scanUtf16Strings(container,{minLength:1,maxLength:6000}).map(x=>x.text);
-  for(const value of expectedValues)if(!strings.includes(value))throw new Error(`real analyzed value missing: ${value}`);
-  for(const bad of ['VALUE-1','ABC-123456','LOT-20260911','DM-ABC-123456-LOT-20260911'])if(strings.some(x=>x.includes(bad)))throw new Error(`demo value leaked: ${bad}`);
-  console.log(`PASS: ${out.name} bytes=${out.bytes.length} values=${expectedValues.length}`);
+  if(!out?.bytes?.length||out.name.slice(-4).toLowerCase()!=='.btw')throw new Error('BTW output missing');
+  if(out.seed!=='CEA-2022-R5')throw new Error('generated BTW seed identity missing');
+  if(out.kind!==expected.kind)throw new Error(`kind mismatch ${out.kind} != ${expected.kind}`);
+
+  const parsed=F.parseStructure(out.bytes),container=await F.inflateContainer(parsed),strings=F.scanUtf16Strings(container,{minLength:1,maxLength:6000}),tags=N.scanTags(container).map(x=>x.type);
+  for(const type of['TextData','BcDatamatrixData','BcC128Data'])if(!tags.includes(type))throw new Error(`native object missing: ${type}`);
+  if(parsed.header.applicationVersion!=='2022 R5')throw new Error(`not BarTender 2022 R5: ${parsed.header.applicationVersion}`);
+  if(parsed.header.compatibleVersion!=='2022')throw new Error(`not BarTender 2022 compatible: ${parsed.header.compatibleVersion}`);
+  if(!strings.some(x=>x.text===out.summary))throw new Error('editable text summary missing after rebuild');
+  for(const value of expected.values)if(!strings.some(x=>x.text===value))throw new Error(`native barcode value missing: ${value}`);
+  for(const marker of expected.markers)if(!strings.some(x=>x.text===marker))throw new Error(`native object marker missing: ${marker}`);
+  console.log(`PASS ${expected.kind}: ${out.name} bytes=${out.bytes.length} header=${parsed.header.applicationVersion} values=${expected.values.length}`);
 }
 
 (async()=>{
-  await verify({sourceName:'customer-label.pdf',page:1,fields:[
-    {name:'品名',value:'PROD-A7788'},{name:'批號',value:'BATCH-260911'},{name:'數量',value:'120PCS'}
-  ],barcodes:[{format:'Code 128',text:'PROD-A7788'},{format:'Data Matrix',text:'DM|A7788|260911'}]},
-  ['PROD-A7788','BATCH-260911','120PCS','DM|A7788|260911']);
+  await verify({sourceName:'code128.pdf',fields:[{code:'1P',name:'PART NO',value:'W25N01KVZEIR'},{code:'Q',name:'QTY',value:'4000'}],barcodes:[{format:'Code 128',text:'W25N01KVZEIR'}]},
+    {kind:'c128',values:['W25N01KVZEIR'],markers:['LW_CODE128_01','LW_DATAMATRIX_UNUSED']});
+
+  await verify({sourceName:'dm.pdf',fields:[{code:'1T',name:'LOT NO',value:'66068W100ZZ'},{code:'16D',name:'DATE',value:'20260722'}],barcodes:[{format:'Data Matrix',text:'66068W100ZZ'}]},
+    {kind:'dm',values:['66068W100ZZ'],markers:['LW_DATAMATRIX','LW_CODE128_UNUSED_01']});
+
+  await verify({sourceName:'mixed.pdf',fields:[{code:'1P',name:'PART NO',value:'W25N01KVZEIR'},{code:'1T',name:'LOT NO',value:'66068W100ZZ'}],barcodes:[{format:'Code 128',text:'W25N01KVZEIR'},{format:'Code 128',text:'66068W100ZZ'},{format:'Data Matrix',text:'[)>06|W25N01KVZEIR|66068W100ZZ'}]},
+    {kind:'mixed',values:['W25N01KVZEIR','66068W100ZZ','[)>06|W25N01KVZEIR|66068W100ZZ'],markers:['LW_CODE128_01','LW_CODE128_02','LW_DATAMATRIX']});
 
   let rejected=false;
-  try{await c.LabelWorkbenchBtwNative.generateOne({sourceName:'empty.pdf',fields:[],barcodes:[]},0)}catch(err){rejected=/沒有辨識到|避免塞入假資料/.test(String(err?.message||err))}
-  if(!rejected)throw new Error('empty analysis must stop instead of fabricating data');
-  console.log('PASS: local 2022 R2 editable BTW generation + no-demo safety');
+  try{await c.LabelWorkbenchBtwNative.generateOne({sourceName:'qr.pdf',fields:[],barcodes:[{format:'QR Code',text:'ABC'}]},0)}catch(err){rejected=/不支援/.test(String(err?.message||err))}
+  if(!rejected)throw new Error('unsupported native barcode must fall back instead of being silently rewritten');
+
+  console.log('PASS: official 2022 R5 native text + Code128 + DataMatrix generation smoke tests');
 })().catch(err=>{console.error(err);process.exit(1)});
