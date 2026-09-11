@@ -113,6 +113,10 @@ jobs:
       - name: BTW seed structure diagnostic
         run: node tests/btw-seed-diagnostic.cjs
 
+      - name: Experimental repaired local 2022 R2 object-pool diagnostic
+        continue-on-error: true
+        run: node tests/local-seed-object-map.cjs
+
       - name: Native BTW object decoder/editor smoke tests
         run: node tests/btw-object-map-smoke.cjs
 
