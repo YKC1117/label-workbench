@@ -1,14 +1,15 @@
-/* Label Workbench barcode reader v3.4 loader. */
+/* Label Workbench barcode reader v3.5 loader. */
 (function(){
   'use strict';
-  const BUILD='20260911-v270-editable-btw';
-  const modules=['assets/barcode-reader-core.js','assets/barcode-reader-ui.js','assets/barcode-generator.js','assets/label-interpreter.js','assets/btw-format.js','assets/btw-native.js','assets/bt-bridge.js','assets/workbench-priority.js','assets/bt-native-primary.js'];
+  const BUILD='20260911-v280-editable-btw-copy';
+  const modules=['assets/barcode-reader-core.js','assets/barcode-reader-ui.js','assets/barcode-generator.js','assets/label-interpreter.js','assets/analysis-copy.js','assets/btw-format.js','assets/btw-native.js','assets/bt-bridge.js','assets/workbench-priority.js','assets/bt-native-primary.js'];
   function loadNext(){
     const src=modules.shift();if(!src)return;
     if(src.includes('core')&&window.LabelWorkbenchBarcodeCore){loadNext();return}
     if(src.includes('ui')&&window.LabelWorkbenchBarcodeUI){loadNext();return}
     if(src.includes('barcode-generator')&&window.LabelWorkbenchBarcodeGenerator){loadNext();return}
     if(src.includes('label-interpreter')&&window.LabelWorkbenchInterpreter){loadNext();return}
+    if(src.includes('analysis-copy')&&window.LabelWorkbenchAnalysisCopy){loadNext();return}
     if(src.includes('btw-format')&&window.LabelWorkbenchBtwFormat){loadNext();return}
     if(src.includes('btw-native')&&window.LabelWorkbenchBtwNative){loadNext();return}
     if(src.includes('bt-bridge')&&window.LabelWorkbenchBtBridge){loadNext();return}
