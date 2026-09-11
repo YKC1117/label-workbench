@@ -5,7 +5,7 @@
 (function(){
   'use strict';
 
-  const BUILD='20260911-btnp130-safe-no-demo';
+  const BUILD='20260911-btnp131-safe-secondary';
   const FORMAT_SRC='assets/btw-format.js?v=20260910-btw011';
   const NATIVE_SRC='assets/btw-native.js?v=20260911-btwn320-safe-no-demo';
   let formatPromise=null,nativePromise=null;
@@ -72,14 +72,14 @@
     const out=el('analysisResult'),actions=out?.querySelector('.analysis-actions');
     if(!out||!actions) return;
     let native=el('analysisBtNative');
-    if(!native){native=makeButton('analysisBtNative','→ 下載可編輯 BTW',downloadEditable);actions.insertBefore(native,actions.firstChild)}
-    native.className='btn primary';
-    native.textContent='→ 下載可編輯 BTW';
-    const png=el('analysisBtDirect');if(png){png.classList.remove('primary');png.classList.add('ghost');png.textContent='備用：下載 BT 匯入圖'}
+    if(!native){native=makeButton('analysisBtNative','實驗：下載可編輯 BTW（不塞假資料）',downloadEditable);actions.appendChild(native)}
+    native.className='btn ghost';
+    native.textContent='實驗：下載可編輯 BTW（不塞假資料）';
+    const png=el('analysisBtDirect');if(png){png.classList.add('primary');png.classList.remove('ghost');png.textContent='→ 下載 BT 可直接匯入圖檔'}
     const pack=el('analysisSendBt');if(pack){pack.classList.remove('primary');pack.classList.add('ghost');pack.textContent='進階：下載 BT 資料包'}
     let hint=out.querySelector('[data-bt-native-hint]');
     if(!hint){hint=document.createElement('div');hint.dataset.btNativeHint='true';hint.className='footer-note';actions.insertAdjacentElement('afterend',hint)}
-    hint.innerHTML='<b>主流程：</b>只會寫入快速分析實際辨識到的文字／條碼；沒有辨識到就停止或留空，不塞測試資料。給客戶前請在 BarTender 確認尺寸與內容。';
+    hint.innerHTML='<b>目前安全做法：</b>正式工作先用「BT 可直接匯入圖檔」；可編輯 .BTW 仍列為實驗功能，只寫入快速分析實際辨識到的文字／條碼，沒有辨識到就停止或留空，不塞測試資料。';
     const old=out.querySelector('[data-bt-direct-hint]');if(old)old.style.display='none';
   }
 
@@ -89,9 +89,10 @@
     const intro=title?.nextElementSibling;if(intro) intro.textContent='PDF／圖片快速分析後，下載 BarTender 2022 可編輯 .btw；沒有辨識到的內容不會亂補假資料。';
     const host=section.querySelector('.btq-hero-actions');
     if(host&&hasMediaResult()){
-      let native=el('btNativeDownload');if(!native){native=makeButton('btNativeDownload','下載可編輯 BTW',downloadEditable);host.insertBefore(native,host.firstChild)}
-      native.className='btn primary';
-      const png=el('btDirectImport');if(png){png.classList.remove('primary');png.classList.add('ghost');png.textContent='備用：下載匯入圖'}
+      let native=el('btNativeDownload');if(!native){native=makeButton('btNativeDownload','實驗：下載可編輯 BTW',downloadEditable);host.appendChild(native)}
+      native.className='btn ghost';
+      native.textContent='實驗：下載可編輯 BTW';
+      const png=el('btDirectImport');if(png){png.classList.add('primary');png.classList.remove('ghost');png.textContent='下載可直接匯入 BT 圖檔'}
     }
     const panels=section.querySelectorAll('.panel'),flow=panels?.[2]?.querySelector('.workflow');
     if(flow) flow.innerHTML='<span>客戶原稿</span><b>→</b><span>快速分析</span><b>→</b><span>下載可編輯 BTW</span><b>→</b><span>BarTender 確認</span><b>→</b><span>微調／測印</span>';
