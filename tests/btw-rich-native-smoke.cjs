@@ -37,7 +37,7 @@ async function verify(label,expectedSeed,expectedKind,expectedSize,{sourceSized=
 
 (async()=>{
   const N=c.LabelWorkbenchBtwNative,R=c.LabelWorkbenchBtwRichNative,B=c.LabelWorkbenchBtwRichBridge;
-  assert(R?.BUILD==='20260911-btw-rich-130-source-size','unexpected rich generator build');
+  assert(R?.BUILD==='20260911-btw-rich-140-rich-header-size','unexpected rich generator build');
   assert(B?.installed===true&&N?.__richDonorWrapped===true,'rich bridge did not wrap native download flow');
   const metric=R.templateSizeMm({header:{text:'<TemplateSize>210 x 148 mm</TemplateSize>'}}),inch=R.templateSizeMm({header:{text:'<TemplateSize>3" x 2"</TemplateSize>'}});
   assert(near(metric.width,210)&&near(metric.height,148),'metric TemplateSize must not be multiplied by 25.4');
