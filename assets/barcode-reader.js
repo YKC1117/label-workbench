@@ -1,7 +1,7 @@
 /* Label Workbench barcode reader v4.1 loader. */
 (function(){
   'use strict';
-  const BUILD='20260911-v344-view-state-guard';
+  const BUILD='20260911-v345-bt-r5-native';
   const modules=['assets/view-state-guard.js','assets/barcode-reader-core.js','assets/barcode-reader-ui.js','assets/barcode-generator.js','assets/label-interpreter.js','assets/analysis-accuracy.js','assets/analysis-pdf-native.js','assets/analysis-field-consistency.js','assets/analysis-copy.js','assets/btw-format.js','assets/btw-native.js','assets/bt-bridge.js','assets/workbench-priority.js','assets/bt-native-primary.js','assets/analysis-confidence-guard.js','assets/analysis-final-display.js'];
   function loadNext(){
     const src=modules.shift();if(!src)return;
