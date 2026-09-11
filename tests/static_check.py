@@ -68,7 +68,7 @@ for marker in ['labelWorkbench.btDraft.v1','BT_Data.csv','BT_Field_Map.csv','BT_
 
 for marker in ['parseStructure','inflateContainer','rebuild','scanUtf16Strings','replaceStringAt']:
     if marker not in btw: raise SystemExit(f'BTW format marker missing: {marker}')
-for marker in ['LW-2022R2-100x65-SANITIZED','BarTender 2022 R2','2022 R1']:
+for marker in ['LW-2022R2-100x65-SANITIZED','20260911-local-seed-001','BASE64','SHA256']:
     if marker not in seed: raise SystemExit(f'Local BTW seed marker missing: {marker}')
 for marker in ['20260911-btwn320-safe-no-demo','LW-2022R2-100x65-SANITIZED','btw-seed-2022r2.js','BcC128Data','BcDatamatrixData','patchSeed','fetchSeed','generateOne','downloadFromAnalysis','BT_Editable_']:
     if marker not in native: raise SystemExit(f'Native BTW generator marker missing: {marker}')
