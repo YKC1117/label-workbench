@@ -33,6 +33,10 @@ jobs:
           node --check assets/barcode-reader-ui.js
           node --check assets/barcode-generator.js
           node --check assets/label-interpreter.js
+          node --check assets/analysis-accuracy.js
+          node --check assets/analysis-pdf-native.js
+          node --check assets/analysis-field-consistency.js
+          node --check assets/analysis-copy.js
           node --check assets/bt-quick.js
           node --check assets/btw-format.js
           node --check assets/btw-native.js
@@ -59,6 +63,9 @@ jobs:
 
       - name: Image barcode reader helper smoke tests
         run: node tests/barcode-reader-smoke.cjs
+
+      - name: Quick analysis boundary accuracy regression tests
+        run: node tests/analysis-accuracy-smoke.cjs
 
       - name: Barcode generator and production-analysis smoke tests
         run: node tests/v15-smoke.cjs
