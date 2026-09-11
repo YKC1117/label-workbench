@@ -3,8 +3,8 @@ const vm=require('vm');
 
 function context(options={}){
   let stored=options.stored??null;
-  const c={console,window:{},navigator:{},localStorage:{getItem:()=>stored,setItem:(_k,v)=>{stored=v},removeItem:()=>{stored=null}},URL:{createObjectURL:()=>'',revokeObjectURL:()=>{}},Blob:function(){},setTimeout:()=>0,clearTimeout:()=>{},setInterval:()=>0,clearInterval:()=>{},Promise,Date,Math,document:{readyState:options.readyState||'loading',addEventListener:()=>{},getElementById:options.getElementById||(()=>null),querySelector:()=>null,querySelectorAll:()=>[],createElement:()=>({}),head:{appendChild(){}},body:{appendChild(){}}},globalThis:null};
-  c.globalThis=c;c.window.window=c.window;return c;
+  const c={console,window:{},navigator:{},localStorage:{getItem:()=>stored,setItem:(_k,v)=>{stored=v},removeItem:()=>{stored=null}},URL:{createObjectURL:()=>'',revokeObjectURL:()=>{}},Blob:function(){},CustomEvent:function(type,init){this.type=type;this.detail=init?.detail},setTimeout:()=>0,clearTimeout:()=>{},setInterval:()=>0,clearInterval:()=>{},Promise,Date,Math,document:{readyState:options.readyState||'loading',addEventListener:()=>{},getElementById:options.getElementById||(()=>null),querySelector:()=>null,querySelectorAll:()=>[],createElement:()=>({addEventListener(){},remove(){}}),head:{appendChild(){}},body:{appendChild(){}}},globalThis:null};
+  c.globalThis=c;c.window.window=c.window;c.window.dispatchEvent=()=>{};return c;
 }
 
 {
@@ -22,7 +22,7 @@ function context(options={}){
   if(/(?:^|\s)\/P(?:\s|$)/im.test(cmd))throw new Error('Launch helper must never auto-print');
   if(/(?:^|\s)\/X(?:\s|$)/im.test(cmd))throw new Error('Launch helper must not auto-close BarTender');
   if(!api.templateBaseName(d).endsWith('.btw'))throw new Error('Template recommendation must map to a BTW filename');
-  console.log('PASS: advanced BT_Open.cmd stays ASCII-safe and never auto-prints');
+  console.log('PASS: optional table-pack BT_Open.cmd stays ASCII-safe and never auto-prints');
 }
 
 {
@@ -34,17 +34,19 @@ function context(options={}){
   if(!api?.receiveAnalysis||!api?.normalizeDraft)throw new Error('BT Quick API must survive initialization/render failure');
   const repaired=api.normalizeDraft(JSON.parse(stale));
   if(!repaired||repaired.version!==3||!Array.isArray(repaired.columns)||repaired.columns[0]?.btName!=='PART_NO')throw new Error('Stale BT draft must be migrated to current derived fields');
-  console.log('PASS: stale local BT draft and render failure cannot make the BT module disappear');
+  console.log('PASS: optional table-pack helper remains resilient');
 }
 
 {
   const c=context();vm.createContext(c);
   vm.runInContext(fs.readFileSync('assets/bt-bridge.js','utf8'),c,{filename:'bt-bridge.js'});
   const api=c.window.LabelWorkbenchBtBridge;if(!api)throw new Error('BT bridge API missing');
-  if(typeof api.sendDirectToBt!=='function'||typeof api.downloadProductionPack!=='function'||typeof api.ensureDirectImport!=='function'||typeof api.ensureBtQuick!=='function')throw new Error('BT bridge must expose direct and advanced export helpers');
+  if(typeof api.sendToBt!=='function'||typeof api.downloadProductionPack!=='function'||typeof api.ensureBtQuick!=='function'||typeof api.isMediaResult!=='function')throw new Error('BT bridge must expose editable-BTW/media routing and optional table-pack helpers');
+  if('sendDirectToBt' in api||'ensureDirectImport' in api)throw new Error('Legacy PNG direct-import must not be exposed by the primary bridge');
   const result=api.tableResult(['PART NO','QTY'],[['A001','100'],['A002','200']],'data.csv');
   if(result.labels.length!==2||result.labels[1].fields[1].value!=='200')throw new Error('Table-to-BT field conversion failed');
   const src=fs.readFileSync('assets/bt-bridge.js','utf8');
-  for(const marker of ['下載 BT 可直接匯入圖檔','進階：下載 BT 資料包','sendDirectToBt','ensureDirectImport','LabelWorkbenchBtDirectImport','btdi100-retry','downloadProductionPack','BT_Data.csv'])if(!src.includes(marker))throw new Error(`BT bridge direct/advanced marker missing: ${marker}`);
-  console.log('PASS: PDF/image direct import is primary while structured BT data pack remains available as advanced export');
+  for(const marker of ['20260911-btb200-editable-btw-primary','labelworkbench:bt-stage','isMediaResult','downloadProductionPack','BT_Data.csv'])if(!src.includes(marker))throw new Error(`BT bridge editable/advanced marker missing: ${marker}`);
+  for(const forbidden of ['sendDirectToBt','ensureDirectImport','LabelWorkbenchBtDirectImport'])if(src.includes(forbidden))throw new Error(`Legacy image-import bridge marker remains: ${forbidden}`);
+  console.log('PASS: PDF/image route is editable BTW; CSV/Excel table pack remains optional');
 }
