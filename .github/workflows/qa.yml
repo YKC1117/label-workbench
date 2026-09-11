@@ -52,6 +52,7 @@ jobs:
           node --check assets/layout-shortcuts.js
           node --check assets/workbench-priority.js
           node --check tests/btw-seed-diagnostic.cjs
+          node --check tests/local-seed-object-map.cjs
           node --check tests/btw-object-map-smoke.cjs
           node --check tests/analysis-geometry-smoke.cjs
           node --check tests/btw-layout-map-smoke.cjs
@@ -109,6 +110,9 @@ jobs:
 
       - name: BTW seed structure diagnostic
         run: node tests/btw-seed-diagnostic.cjs
+
+      - name: Repaired local 2022 R2 object-pool diagnostic
+        run: node tests/local-seed-object-map.cjs
 
       - name: Native BTW object decoder/editor smoke tests
         run: node tests/btw-object-map-smoke.cjs
