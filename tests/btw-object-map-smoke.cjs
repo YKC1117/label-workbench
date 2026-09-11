@@ -23,7 +23,7 @@ let container=concat([
   obj({root:'Root.MasterSelectedObject.DataSourceGeneral.DataSource',name:'文字 1',x:62,y:254,value:'(1P) PART NO :'}),
   obj({root:'Root.MasterSelectedObject.DataSourceGeneral.DataSource',name:'文字 2',x:737,y:254,value:'ABC123'}),
   obj({root:'Root.MasterSelectedObject.Barcode',name:'條碼 1',x:62,y:343,value:undefined,fontName:'Microsoft JhengHei',fontSize:6,markers:['TextTransforms'],components:['1P','文字 2']}),
-  obj({root:'Root.MasterSelectedObject.DataSourceGeneral.DataSource',name:'條碼 2',x:3213,y:156,value:undefined,markers:['Screen Data'],components:['DM-OLD']}),
+  obj({root:'Root.MasterSelectedObject.DataSourceGeneral.DataSource',name:'條碼 2',x:3213,y:156,value:undefined,markers:['Screen Data','Data Matrix'],components:['DM-OLD']}),
   obj({root:'Root.MasterSelectedObject.Border',name:'文字 32',x:3486,y:933,value:'RoHS',fontSize:12}),
   obj({root:'Root.MasterSelectedObject.Barcode',name:'文字 26',x:417,y:2083,value:'P1',fontSize:10}),
   obj({root:'Root.MasterSelectedObject.Text Control',name:'Text 90',x:880,y:620,value:undefined,markers:['9','Company Name']}),
