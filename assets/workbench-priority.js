@@ -1,11 +1,11 @@
-/* Label Workbench priority controller v1.9.14
+/* Label Workbench priority controller v1.9.17
  * Stable navigation + Quick Analysis + editable BTW production copy.
+ * Visible version / modified time are owned by index.html only.
  */
 (function(){
   'use strict';
 
-  const BUILD='20260911-v214-nav-race-fix';
-  const VERSION='v1.9.14';
+  const BUILD='20260911-v217-no-version-overwrite';
   const el=id=>document.getElementById(id);
   const esc=(v='')=>String(v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[m]));
   const isImage=f=>!!(f?.type?.startsWith?.('image/')||/\.(jpe?g|png|webp|gif|bmp)$/i.test(f?.name||''));
@@ -18,7 +18,7 @@
     cases:['案件紀錄','選用的工作紀錄區；需要跨裝置接續或特別追蹤時再使用。']
   };
 
-  function setVersion(){const small=document.querySelector('.brand small');if(small)small.textContent=`標籤製作工作台 · ${VERSION}`}
+  function setVersion(){return document.querySelector('.brand small')?.textContent||''}
   function injectUiRefresh(){if(document.querySelector('link[data-lw-ui-refresh]'))return;const link=document.createElement('link');link.rel='stylesheet';link.href=`assets/ui-refresh.css?v=${BUILD}`;link.dataset.lwUiRefresh='true';document.head.appendChild(link)}
   function reorderNav(){
     const order=['barcode','analysis','bartender','dashboard','cases'];
