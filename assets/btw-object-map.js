@@ -1,4 +1,4 @@
-/* Label Workbench BTW object decoder/editor v0.3.4
+/* Label Workbench BTW object decoder/editor v0.3.5
  * Interoperability-focused reverse engineering for BarTender .btw files.
  * Uses the same public-domain layout observations as Elias Oenal's Barmaid:
  * prefix + preview PNG blobs + zlib serialized container + FF FE FF UTF-16 strings.
@@ -6,7 +6,7 @@
  */
 (function(){
   'use strict';
-  const BUILD='20260911-btw-object-map-034-text-empty-skip';
+  const BUILD='20260911-btw-object-map-035-record-boundary';
   const ROOT='Root.MasterSelectedObject.';
   const FONT_MARKER=new Uint8Array([0x03,0x02,0x01,0x22]);
   const PLACEHOLDER='(???) ???-????';
@@ -33,7 +33,12 @@
     }
     return out;
   }
-  function ownerFor(tags,offset){let hit='';for(const t of tags){if(t.offset<=offset)hit=t.type;else break}return hit}
+  function ownerFor(tags,offset,maxDistance=64){
+    let hit=null;
+    for(const t of tags){if(t.offset<=offset)hit=t;else break}
+    return hit&&offset-hit.offset<=maxDistance?hit.type:''
+  }
+  function nextTagOffset(tags,offset,fallback){for(const t of tags)if(t.offset>offset)return t.offset;return fallback}
 
   function fontInfo(data,start,end){
     const marker=findBytes(data,FONT_MARKER,start,end);if(marker<0)return null;
@@ -108,7 +113,7 @@
     const data=u8(container),entries=F.scanUtf16Strings(data,{minLength:0,maxLength:10000,includeEmpty:true}),roots=entries.filter(e=>String(e.text||'').startsWith(ROOT)),tags=scanTags(data);
     const objects=[];
     for(let i=0;i<roots.length;i++){
-      const root=roots[i],recordStart=Math.max(0,root.offset-20),recordEnd=i+1<roots.length?Math.max(recordStart,roots[i+1].offset-20):data.length;
+      const root=roots[i],recordStart=Math.max(0,root.offset-20),recordEnd=i+1<roots.length?Math.max(recordStart,roots[i+1].offset-20):Math.max(recordStart,nextTagOffset(tags,root.offset,data.length));
       const strings=entries.filter(e=>e.offset>=root.offset&&e.offset<recordEnd),nameEntry=strings.find((e,j)=>j>0&&e.text&&!String(e.text).startsWith(ROOT))||null,name=String(nameEntry?.text||'');
       let x=null,y=null;if(recordStart+8<=data.length){const a=readI32(data,recordStart),b=readI32(data,recordStart+4);if(Math.abs(a)<1000000&&Math.abs(b)<1000000){x=a;y=b}}
       const rootPath=String(root.text||''),owner=ownerFor(tags,recordStart),kind=kindFor(rootPath,name),valueEntry=primaryValueEntry(strings,kind,rootPath,nameEntry),font=fontInfo(data,recordStart,recordEnd),componentEntries=kind==='barcode'?barcodeComponentEntries(strings):[],components=componentEntries.map(x=>x.value),barcodeType=kind==='barcode'?barcodeTypeFor(owner,rootPath,strings):'';
