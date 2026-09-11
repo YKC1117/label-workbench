@@ -1,4 +1,4 @@
-/* Label Workbench BTW object decoder/editor v0.1
+/* Label Workbench BTW object decoder/editor v0.2
  * Interoperability-focused reverse engineering for BarTender .btw files.
  * Uses the same public-domain layout observations as Elias Oenal's Barmaid:
  * prefix + preview PNG blobs + zlib serialized container + FF FE FF UTF-16 strings.
@@ -6,7 +6,7 @@
  */
 (function(){
   'use strict';
-  const BUILD='20260911-btw-object-map-011';
+  const BUILD='20260911-btw-object-map-020';
   const ROOT='Root.MasterSelectedObject.';
   const FONT_MARKER=new Uint8Array([0x03,0x02,0x01,0x22]);
   const PLACEHOLDER='(???) ???-????';
@@ -35,11 +35,20 @@
   }
 
   function kindFor(root,name){
-    if(/Line Options/i.test(root)||/^線條\s*\d*/.test(name))return'line';
+    if(/^文字\s*\d*/.test(name))return'text';
+    if(/^條碼\s*\d*/.test(name))return'barcode';
+    if(/^線條\s*\d*/.test(name))return'line';
+    if(/\.Barcode$/i.test(root))return'barcode';
+    if(/DataSourceGeneral\.DataSource/i.test(root))return'text';
+    if(/Line Options/i.test(root))return'line';
     if(/\.Border$/i.test(root))return'border';
-    if(/\.Barcode$/i.test(root)||/^條碼\s*\d*/.test(name))return'barcode';
-    if(/DataSourceGeneral\.DataSource/i.test(root)||/^文字\s*\d*/.test(name))return'text';
     return'object';
+  }
+  function barcodeTypeFor(root,strings){
+    const texts=strings.map(e=>String(e.text||''));
+    if(texts.includes('Screen Data'))return'Data Matrix';
+    if(/\.Barcode$/i.test(root)&&texts.includes('TextTransforms'))return'Code 128';
+    return'';
   }
   function primaryValueEntry(strings,kind){
     if(kind!=='text')return null;
@@ -71,8 +80,8 @@
       const root=roots[i],recordStart=Math.max(0,root.offset-20),recordEnd=i+1<roots.length?Math.max(recordStart,roots[i+1].offset-20):data.length;
       const strings=entries.filter(e=>e.offset>=root.offset&&e.offset<recordEnd),nameEntry=strings.find((e,j)=>j>0&&e.text&&!String(e.text).startsWith(ROOT))||null,name=String(nameEntry?.text||'');
       let x=null,y=null;if(recordStart+8<=data.length){const a=readI32(data,recordStart),b=readI32(data,recordStart+4);if(Math.abs(a)<1000000&&Math.abs(b)<1000000){x=a;y=b}}
-      const rootPath=String(root.text||''),kind=kindFor(rootPath,name),valueEntry=primaryValueEntry(strings,kind),font=fontInfo(data,recordStart,recordEnd),components=kind==='barcode'?barcodeComponents(strings):[];
-      objects.push({id:`obj-${i+1}`,index:i,kind,name,rootPath,recordStart,recordEnd,rootOffset:root.offset,xMil:x,yMil:y,xMm:milToMm(x),yMm:milToMm(y),value:valueEntry?.text||'',valueEntry:valueEntry?{offset:valueEntry.offset,end:valueEntry.end,headerLength:valueEntry.headerLength,charLength:valueEntry.charLength,text:valueEntry.text}:null,fontName:font?.name||'',fontSize:font?.size??null,fontSizeOffset:font?.sizeOffset??null,components,stringsCount:strings.length});
+      const rootPath=String(root.text||''),kind=kindFor(rootPath,name),valueEntry=primaryValueEntry(strings,kind),font=fontInfo(data,recordStart,recordEnd),components=kind==='barcode'?barcodeComponents(strings):[],barcodeType=kind==='barcode'?barcodeTypeFor(rootPath,strings):'';
+      objects.push({id:`obj-${i+1}`,index:i,kind,name,rootPath,recordStart,recordEnd,rootOffset:root.offset,xMil:x,yMil:y,xMm:milToMm(x),yMm:milToMm(y),value:valueEntry?.text||'',valueEntry:valueEntry?{offset:valueEntry.offset,end:valueEntry.end,headerLength:valueEntry.headerLength,charLength:valueEntry.charLength,text:valueEntry.text}:null,fontName:font?.name||'',fontSize:font?.size??null,fontSizeOffset:font?.sizeOffset??null,components,barcodeType,stringsCount:strings.length});
     }
     const byName=new Map(objects.filter(o=>o.name).map(o=>[o.name,o]));
     for(const o of objects){if(o.kind!=='barcode')continue;o.resolvedComponents=o.components.map(part=>{const ref=byName.get(part);return ref?{type:'object',ref:part,value:ref.value||''}:{type:'literal',value:part}});o.resolvedPreview=o.resolvedComponents.map(x=>x.value).join('')}
@@ -121,12 +130,13 @@
     }
     return o.value||'—';
   }
+  function typeLabel(o){return o.kind==='barcode'&&o.barcodeType?`${o.barcodeType}`:o.kind}
   function renderDecoded(file,decoded){
-    const h=decoded.parsed.header||{},objects=decoded.map.objects,counts={};for(const o of objects)counts[o.kind]=(counts[o.kind]||0)+1;
+    const h=decoded.parsed.header||{},objects=decoded.map.objects,counts={};for(const o of objects)counts[typeLabel(o)]=(counts[typeLabel(o)]||0)+1;
     const chips=Object.entries(counts).map(([k,n])=>`<span class="file-chip">${esc(k)} ${n}</span>`).join('');
     const size=/<TemplateSize>([^<]+)<\/TemplateSize>/i.exec(h.text||'')?.[1]||'';
-    const rows=objects.slice(0,100).map(o=>`<tr><td>${esc(o.kind)}</td><td>${esc(o.name||o.id)}</td><td>${o.xMm==null?'—':`${o.xMm} / ${o.yMm} mm`}</td><td>${esc(objectSummary(o))}</td><td>${esc(o.fontName||'—')}${o.fontSize!=null?` ${o.fontSize} pt`:''}</td></tr>`).join('');
-    return `<div class="analysis-block lw-btw-decoded"><div class="section-title"><b>BTW 原生物件解析：${esc(file.name)}</b><span class="pill">${objects.length} 個物件</span></div><div class="file-chips"><span class="file-chip">${esc(h.applicationVersion||'BarTender')}</span>${h.compatibleVersion?`<span class="file-chip">相容 ${esc(h.compatibleVersion)}</span>`:''}${size?`<span class="file-chip">${esc(size)}</span>`:''}${chips}</div><div class="note"><b>已直接讀取 BTW：</b>以下位置、文字、字型/字級與條碼資料關聯來自檔案內的原生 serialized container，不是 OCR。條碼 symbology、尺寸與部分特殊物件仍持續逆向，不確定的欄位不會硬猜。</div><div class="table-scroll"><table class="analysis-table"><thead><tr><th>類型</th><th>物件</th><th>X / Y</th><th>內容 / 資料組成</th><th>字型</th></tr></thead><tbody>${rows}</tbody></table></div>${objects.length>100?'<div class="footer-note">物件超過 100 個，畫面先顯示前 100 個。</div>':''}</div>`;
+    const rows=objects.slice(0,100).map(o=>`<tr><td>${esc(typeLabel(o))}</td><td>${esc(o.name||o.id)}</td><td>${o.xMm==null?'—':`${o.xMm} / ${o.yMm} mm`}</td><td>${esc(objectSummary(o))}</td><td>${esc(o.fontName||'—')}${o.fontSize!=null?` ${o.fontSize} pt`:''}</td></tr>`).join('');
+    return `<div class="analysis-block lw-btw-decoded"><div class="section-title"><b>BTW 原生物件解析：${esc(file.name)}</b><span class="pill">${objects.length} 個物件區段</span></div><div class="file-chips"><span class="file-chip">${esc(h.applicationVersion||'BarTender')}</span>${h.compatibleVersion?`<span class="file-chip">相容 ${esc(h.compatibleVersion)}</span>`:''}${size?`<span class="file-chip">${esc(size)}</span>`:''}${chips}</div><div class="note"><b>已直接讀取 BTW：</b>以下位置、文字、字型/字級與條碼資料關聯來自檔案內的原生 serialized container，不是 OCR。Code 128 / Data Matrix 類型以這份 2022 R2 結構特徵辨識；尺寸欄位正在做寫回驗證，不確定的欄位不會硬猜。</div><div class="table-scroll"><table class="analysis-table"><thead><tr><th>類型</th><th>物件</th><th>X / Y</th><th>內容 / 資料組成</th><th>字型</th></tr></thead><tbody>${rows}</tbody></table></div>${objects.length>100?'<div class="footer-note">物件超過 100 個，畫面先顯示前 100 個。</div>':''}</div>`;
   }
 
   async function waitBaseAnalysis(out,timeout=120000){
