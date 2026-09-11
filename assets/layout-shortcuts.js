@@ -146,9 +146,10 @@
  */
 (function(){
   'use strict';
-  const BUILD='20260911-bt-pipeline-loader-001';
+  const BUILD='20260911-bt-pipeline-loader-002';
   const queue=[
     ['assets/label-interpreter.js','20260911-bt-pipeline'],
+    ['assets/analysis-safety.js','20260911-analysis-safety-100'],
     ['assets/bt-quick.js','20260911-bt-pipeline'],
     ['assets/bt-bridge.js','20260911-bt-pipeline'],
     ['assets/bt-direct-import.js','20260911-bt-pipeline'],
