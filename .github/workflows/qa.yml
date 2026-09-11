@@ -64,6 +64,7 @@ jobs:
           node --check tests/rich-donor-pool-smoke.cjs
           node --check tests/rich-donor-sanitize-smoke.cjs
           node --check tests/btw-object-map-smoke.cjs
+          node --check tests/btw-barcode-read-slot-smoke.cjs
           node --check tests/analysis-geometry-smoke.cjs
           node --check tests/btw-layout-map-smoke.cjs
           node --check tests/cea-object-map-diagnostic.cjs
@@ -81,7 +82,7 @@ jobs:
           grep -q "UPDATED='2026/09/11 23:46'" assets/view-state-guard.js
           grep -q "BUILD='20260911-view-guard-118-btw-boundary'" assets/view-state-guard.js
           grep -q "BUILD='20260911-v354-btw-boundary'" assets/barcode-reader.js
-          grep -q "BUILD='20260911-btw-object-map-035-record-boundary'" assets/btw-object-map.js
+          grep -q "BUILD='20260911-btw-object-map-036-datasource-read-slot'" assets/btw-object-map.js
           grep -q "BUILD='20260911-analysis-copy-110-row-content-only'" assets/analysis-copy.js
           grep -q 'view-state-guard.js' assets/barcode-reader.js
           grep -q 'analysis-geometry.js' assets/barcode-reader.js
@@ -170,6 +171,9 @@ jobs:
 
       - name: Native BTW object decoder/editor smoke tests
         run: node tests/btw-object-map-smoke.cjs
+
+      - name: Real BTW barcode read-slot regression tests
+        run: node tests/btw-barcode-read-slot-smoke.cjs
 
       - name: CEA seed native object map diagnostic
         run: node tests/cea-object-map-diagnostic.cjs
