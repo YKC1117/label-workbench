@@ -8,7 +8,7 @@
   <title>Label Workbench｜標籤製作工作台</title>
   <link rel="stylesheet" href="assets/app.css?v=20260910-v180">
   <link rel="stylesheet" href="assets/ui-refresh.css?v=20260910-v190.1" data-lw-ui-refresh="true">
-  <link rel="stylesheet" href="assets/nav-groups.css?v=20260911-v130">
+  <link rel="stylesheet" href="assets/nav-groups.css?v=20260911-v140">
 </head>
 <body>
 <div class="shell">
@@ -121,11 +121,15 @@
 
 <div id="modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="modal-card"><div class="section-title"><h3 id="modalTitle">內容</h3><button class="icon-btn" id="modalClose" aria-label="關閉">✕</button></div><div id="modalBody"></div><div id="modalActions" class="case-actions"></div></div></div>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
+<script>
+// BT 快速製作只接受「本次頁面」剛完成的快速分析；每次重新載入先清掉舊 BT 草稿。
+try{localStorage.removeItem('labelWorkbench.btDraft.v1')}catch(_){}
+</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
 <script src="assets/cloud-config.js?v=20260910-v180" defer></script>
 <script src="assets/app.js?v=20260910-v181" defer></script>
-<script src="assets/barcode-reader.js?v=20260911-v250" data-lw-module="assets/barcode-reader.js" defer></script>
-<script src="assets/cloud.js?v=20260911-v250" defer></script>
-<script src="assets/layout-shortcuts.js?v=20260911-v250" defer></script>
+<script src="assets/barcode-reader.js?v=20260911-v260" data-lw-module="assets/barcode-reader.js" defer></script>
+<script src="assets/cloud.js?v=20260911-v260" defer></script>
+<script src="assets/layout-shortcuts.js?v=20260911-v260" defer></script>
 </body>
 </html>
