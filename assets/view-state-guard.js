@@ -1,9 +1,9 @@
 /* Label Workbench view-state guard v1.1 */
 (function(){
   'use strict';
-  const BUILD='20260911-view-guard-118-btw-boundary';
-  const RELEASE='v1.9.33';
-  const UPDATED='2026/09/11 23:46';
+  const BUILD='20260912-view-guard-119-btw-datasource';
+  const RELEASE='v1.9.34';
+  const UPDATED='2026/09/12 00:08';
   let desiredView=document.querySelector('.view.active')?.id||'barcode';
   let applying=false;
   let queued=false;
