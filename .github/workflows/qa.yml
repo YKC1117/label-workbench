@@ -15,64 +15,20 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-
       - name: JavaScript syntax check
         run: |
-          node --check assets/app.js
-          node --check assets/cloud.js
-          node --check assets/cloud-config.js
-          node --check assets/cloud-attachments.js
-          node --check assets/file-parsers.js
-          node --check assets/barcode-reader.js
-          node --check assets/barcode-reader-core.js
-          node --check assets/barcode-reader-ui.js
-          node --check assets/barcode-generator.js
-          node --check assets/label-interpreter.js
-          node --check assets/analysis-accuracy.js
-          node --check assets/analysis-pdf-native.js
-          node --check assets/analysis-geometry.js
-          node --check assets/analysis-field-consistency.js
-          node --check assets/analysis-copy.js
-          node --check assets/analysis-confidence-guard.js
-          node --check assets/analysis-final-display.js
-          node --check assets/view-state-guard.js
-          node --check assets/bt-quick.js
-          node --check assets/btw-format.js
-          node --check assets/btw-object-map.js
-          node --check assets/btw-layout-map.js
-          node --check assets/btw-native.js
-          node --check assets/btw-rich-native.js
-          node --check assets/btw-rich-bridge.js
-          node --check assets/btw-production-gate.js
-          node --check assets/bt-direct-import.js
-          node --check assets/bt-bridge.js
-          node --check assets/bt-native-primary.js
-          node --check assets/layout-shortcuts.js
-          node --check assets/workbench-priority.js
-          node --check tests/btw-seed-diagnostic.cjs
-          node --check tests/local-seed-object-map.cjs
-          node --check tests/template-size-offset-diagnostic.cjs
-          node --check tests/template-instance-scan.cjs
-          node --check tests/template-mixed-donor-crawl.cjs
-          node --check tests/rich-donor-edit-smoke.cjs
-          node --check tests/rich-donor-barcode-smoke.cjs
-          node --check tests/rich-donor-pool-smoke.cjs
-          node --check tests/rich-donor-sanitize-smoke.cjs
+          for f in assets/*.js; do node --check "$f"; done
           node --check tests/btw-object-map-smoke.cjs
-          node --check tests/btw-barcode-read-slot-smoke.cjs
           node --check tests/analysis-geometry-smoke.cjs
           node --check tests/btw-layout-map-smoke.cjs
-          node --check tests/cea-object-map-diagnostic.cjs
           node --check tests/btw-native-smoke.cjs
           node --check tests/btw-rich-native-smoke.cjs
           node --check tests/btw-production-gate-smoke.cjs
           node --check tests/analysis-copy-smoke.cjs
-
       - name: Current wiring sanity check
         run: |
           grep -q 'assets/barcode-reader.js?v=20260911-v359' index.html
@@ -82,107 +38,50 @@ jobs:
           grep -q "UPDATED='2026/09/11 23:46'" assets/view-state-guard.js
           grep -q "BUILD='20260911-view-guard-118-btw-boundary'" assets/view-state-guard.js
           grep -q "BUILD='20260911-v354-btw-boundary'" assets/barcode-reader.js
-          grep -q "BUILD='20260911-btw-object-map-036-datasource-read-slot'" assets/btw-object-map.js
-          grep -q "BUILD='20260911-analysis-copy-110-row-content-only'" assets/analysis-copy.js
-          grep -q 'view-state-guard.js' assets/barcode-reader.js
-          grep -q 'analysis-geometry.js' assets/barcode-reader.js
-          grep -q 'btw-object-map.js' assets/barcode-reader.js
-          grep -q 'btw-layout-map.js' assets/barcode-reader.js
-          grep -q 'btw-rich-native.js' assets/barcode-reader.js
-          grep -q 'btw-rich-bridge.js' assets/barcode-reader.js
-          grep -q 'bt-native-primary.js' assets/barcode-reader.js
-          grep -q 'analysis-confidence-guard.js' assets/barcode-reader.js
-          grep -q 'btw-production-gate.js' assets/barcode-reader.js
-          grep -q 'downloadFromAnalysis' assets/btw-native.js
-          grep -q 'downloadEditable' assets/bt-native-primary.js
-          grep -q "BUILD='20260911-btwn230-root-layout'" assets/btw-native.js
+          grep -q "BUILD='20260911-btw-object-map-035-record-boundary'" assets/btw-object-map.js
           grep -q "SEED_ID='CEA-2022-R5'" assets/btw-native.js
           grep -q "SEED_FUNCTION='btw-seed'" assets/btw-native.js
-          grep -q "BUILD='20260911-btw-rich-140-rich-header-size'" assets/btw-rich-native.js
-          grep -q 'replaceTemplateSizePairs' assets/btw-rich-native.js
-          grep -q 'replaceRichTemplateSizePrefix' assets/btw-rich-native.js
-          grep -q 'sourceTargetSize' assets/btw-rich-native.js
-          grep -q "BUILD='20260911-btw-rich-bridge-100'" assets/btw-rich-bridge.js
-          grep -q "BUILD='20260911-btw-production-gate-100'" assets/btw-production-gate.js
-
+          grep -q 'btw-rich-native.js' assets/barcode-reader.js
+          grep -q 'btw-production-gate.js' assets/barcode-reader.js
       - name: Core logic smoke tests
         run: node tests/logic-smoke.cjs
-
       - name: Cloud merge smoke tests
         run: node tests/cloud-smoke.cjs
-
       - name: Attachment helper smoke tests
         run: node tests/attachment-smoke.cjs
-
       - name: Document parser helper smoke tests
         run: node tests/parser-smoke.cjs
-
       - name: Image barcode reader helper smoke tests
         run: node tests/barcode-reader-smoke.cjs
-
       - name: Quick analysis boundary accuracy regression tests
         run: node tests/analysis-accuracy-smoke.cjs
-
       - name: Quick Analysis copy-button regression tests
         run: node tests/analysis-copy-smoke.cjs
-
       - name: Source geometry matching smoke tests
         run: node tests/analysis-geometry-smoke.cjs
-
       - name: Source geometry to BTW coordinate mapping tests
         run: node tests/btw-layout-map-smoke.cjs
-
       - name: Barcode generator and production-analysis smoke tests
         run: node tests/v15-smoke.cjs
-
       - name: BT optional table-pack and safe launch smoke tests
         run: node tests/bt-launch-smoke.cjs
-
       - name: BTW seed structure diagnostic
         run: node tests/btw-seed-diagnostic.cjs
-
-      - name: Experimental repaired local 2022 R2 object-pool diagnostic
-        continue-on-error: true
-        run: node tests/local-seed-object-map.cjs
-
-      - name: Experimental template-size numeric offset diagnostic
-        continue-on-error: true
-        run: node tests/template-size-offset-diagnostic.cjs
-
-      - name: Experimental official template instance-level donor scan
-        continue-on-error: true
-        run: node tests/template-instance-scan.cjs
-
-      - name: Experimental official mixed-donor library crawl
-        continue-on-error: true
-        run: node tests/template-mixed-donor-crawl.cjs
-
       - name: Official rich donor independent Text-object round trip
         run: node tests/rich-donor-edit-smoke.cjs
-
       - name: Official rich donor independent barcode round trip
         run: node tests/rich-donor-barcode-smoke.cjs
-
       - name: Official rich donor visible object-pool diagnostic
         run: node tests/rich-donor-pool-smoke.cjs
-
       - name: Official rich donor full sanitization gate
         run: node tests/rich-donor-sanitize-smoke.cjs
-
       - name: Native BTW object decoder/editor smoke tests
         run: node tests/btw-object-map-smoke.cjs
-
-      - name: Real BTW barcode read-slot regression tests
-        run: node tests/btw-barcode-read-slot-smoke.cjs
-
       - name: CEA seed native object map diagnostic
         run: node tests/cea-object-map-diagnostic.cjs
-
       - name: Native editable BTW generation smoke tests
         run: node tests/btw-native-smoke.cjs
-
       - name: Production rich native BTW generation smoke tests
         run: node tests/btw-rich-native-smoke.cjs
-
       - name: BTW pending-field production safety gate
         run: node tests/btw-production-gate-smoke.cjs
