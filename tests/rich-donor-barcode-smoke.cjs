@@ -11,7 +11,7 @@ const c={console,Uint8Array,ArrayBuffer,DataView,TextDecoder,TextEncoder,Blob,Re
 c.window=c;c.globalThis=c;vm.createContext(c);
 vm.runInContext(fs.readFileSync('assets/btw-format.js','utf8'),c,{filename:'btw-format.js'});
 vm.runInContext(fs.readFileSync('assets/btw-object-map.js','utf8'),c,{filename:'btw-object-map.js'});
-const M=c.LabelWorkbenchBtwObjectMap;
+const F=c.LabelWorkbenchBtwFormat,M=c.LabelWorkbenchBtwObjectMap;
 if(!M?.mapContainer||!M?.editContainer)throw new Error('BTW production object editor missing');
 
 function splitOfficial(file){
@@ -24,11 +24,13 @@ async function inspect(donor){
   const url=`https://www.bartendersoftware.com/download-resource?resourceId=${donor.id}`;
   const r=await fetch(url,{redirect:'follow',headers:{'User-Agent':'LabelWorkbench/1.0','Accept':'application/octet-stream,*/*'}});
   if(!r.ok)throw new Error(`${donor.name} fetch ${r.status}`);
-  const file=Buffer.from(await r.arrayBuffer()),parts=splitOfficial(file),before=M.mapContainer(parts.container),edits=[];
+  const file=Buffer.from(await r.arrayBuffer()),parts=splitOfficial(file),before=M.mapContainer(parts.container),allStrings=F.scanUtf16Strings(parts.container,{minLength:1,maxLength:10000}),edits=[];
   const original=[];
   donor.barcodes.forEach((spec,i)=>{
     const obj=before.objects.find(o=>o.name===spec.name);
     if(!obj)throw new Error(`${donor.name} missing ${spec.name}`);
+    const rawStrings=allStrings.filter(e=>e.offset>=obj.rootOffset&&e.offset<obj.recordEnd).map(e=>e.text).slice(0,120);
+    console.log('BARCODE_RAW',donor.name,spec.name,JSON.stringify({rootPath:obj.rootPath,kind:obj.kind,components:obj.components,componentCount:obj.componentEntries.length,rawStrings},null,2));
     if(obj.kind!=='barcode')throw new Error(`${donor.name} ${spec.name} not classified barcode: ${obj.kind}`);
     if(!obj.componentEntries.length)throw new Error(`${donor.name} ${spec.name} has no editable datasource components`);
     const components=obj.componentEntries.map((_,j)=>j===0?spec.payload:'');
