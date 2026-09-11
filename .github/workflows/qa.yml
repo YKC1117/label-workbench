@@ -24,6 +24,7 @@ jobs:
           for f in assets/*.js; do node --check "$f"; done
           node --check tests/btw-object-map-smoke.cjs
           node --check tests/btw-barcode-read-slot-smoke.cjs
+          node --check tests/btw-caption-adapter-smoke.cjs
           node --check tests/analysis-geometry-smoke.cjs
           node --check tests/btw-layout-map-smoke.cjs
           node --check tests/btw-native-smoke.cjs
@@ -40,6 +41,7 @@ jobs:
           grep -q "BUILD='20260912-view-guard-119-btw-datasource'" assets/view-state-guard.js
           grep -q "BUILD='20260912-v355-btw-datasource'" assets/barcode-reader.js
           grep -q "BUILD='20260912-btw-object-map-038-barcode-slot-mode'" assets/btw-object-map.js
+          grep -q "BUILD='20260912-btw-caption-adapter-100'" assets/btw-caption-adapter.js
           grep -q "SEED_ID='CEA-2022-R5'" assets/btw-native.js
           grep -q "SEED_FUNCTION='btw-seed'" assets/btw-native.js
           grep -q 'btw-rich-native.js' assets/barcode-reader.js
@@ -80,6 +82,8 @@ jobs:
         run: node tests/btw-object-map-smoke.cjs
       - name: Real BTW barcode read-slot regression tests
         run: node tests/btw-barcode-read-slot-smoke.cjs
+      - name: Independent BTW field-caption adapter smoke tests
+        run: node tests/btw-caption-adapter-smoke.cjs
       - name: CEA seed native object map diagnostic
         run: node tests/cea-object-map-diagnostic.cjs
       - name: Native editable BTW generation smoke tests
