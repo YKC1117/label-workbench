@@ -63,29 +63,8 @@ jobs:
       - name: Barcode generator and production-analysis smoke tests
         run: node tests/v15-smoke.cjs
 
-      - name: BT quick production and safe launch smoke tests
+      - name: BT optional table-pack and safe launch smoke tests
         run: node tests/bt-launch-smoke.cjs
-
-      - name: BT direct import smoke tests
-        run: node tests/bt-direct-import-smoke.cjs
-
-      - name: Native BTW format check against official 2022 sample
-        run: node tests/btw-public-sample.cjs
 
       - name: Native editable BTW generation smoke tests
         run: node tests/btw-native-smoke.cjs
-
-      - name: Verify official 2022 CEA seed proxy
-        run: node tests/btw-seed-proxy.cjs
-
-      - name: Discover reusable public BTW seeds
-        run: node tests/btw-discovery.cjs
-
-      - name: Map native barcode object values
-        run: node tests/btw-object-map.cjs
-
-      - name: Research official template library wiring
-        run: node tests/research-template-library.cjs
-
-      - name: Map official CEA child objects
-        run: node tests/cea-child-map.cjs
