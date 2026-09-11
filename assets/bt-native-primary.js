@@ -1,11 +1,11 @@
-/* Label Workbench editable BTW primary handoff v1.3
- * PDF/image Quick Analysis -> editable BarTender .btw.
- * Safety: no demo/fake values are injected; PNG import and structured packs remain fallbacks.
+/* Label Workbench safe BT handoff v1.4
+ * PDF/image Quick Analysis -> primary PNG import for work; editable BTW remains experimental.
+ * Safety: no demo/fake values are injected.
  */
 (function(){
   'use strict';
 
-  const BUILD='20260911-btnp131-safe-secondary';
+  const BUILD='20260911-btnp140-safe-work-primary';
   const FORMAT_SRC='assets/btw-format.js?v=20260910-btw011';
   const NATIVE_SRC='assets/btw-native.js?v=20260911-btwn320-safe-no-demo';
   let formatPromise=null,nativePromise=null;
@@ -86,7 +86,7 @@
   function decorateBt(){
     const section=el('bartender');if(!section) return;
     const title=section.querySelector('.bt-title');if(title) title.textContent='BT 快速製作';
-    const intro=title?.nextElementSibling;if(intro) intro.textContent='PDF／圖片快速分析後，下載 BarTender 2022 可編輯 .btw；沒有辨識到的內容不會亂補假資料。';
+    const intro=title?.nextElementSibling;if(intro) intro.textContent='PDF／圖片快速分析後，正式工作先下載 BT 可直接匯入圖檔；可編輯 .btw 保留實驗，不會塞測試假資料。';
     const host=section.querySelector('.btq-hero-actions');
     if(host&&hasMediaResult()){
       let native=el('btNativeDownload');if(!native){native=makeButton('btNativeDownload','實驗：下載可編輯 BTW',downloadEditable);host.appendChild(native)}
@@ -95,11 +95,11 @@
       const png=el('btDirectImport');if(png){png.classList.add('primary');png.classList.remove('ghost');png.textContent='下載可直接匯入 BT 圖檔'}
     }
     const panels=section.querySelectorAll('.panel'),flow=panels?.[2]?.querySelector('.workflow');
-    if(flow) flow.innerHTML='<span>客戶原稿</span><b>→</b><span>快速分析</span><b>→</b><span>下載可編輯 BTW</span><b>→</b><span>BarTender 確認</span><b>→</b><span>微調／測印</span>';
+    if(flow) flow.innerHTML='<span>客戶 PDF / 圖片</span><b>→</b><span>快速分析</span><b>→</b><span>下載 BT 可直接匯入圖檔</span><b>→</b><span>BarTender 微調</span><b>→</b><span>測印</span>'; 
     const note=panels?.[2]?.querySelector('.note');
     if(note) note.innerHTML='<b>安全規則：</b>只使用 PDF／圖片實際辨識到的內容；沒有辨識到就不亂套假資料。PNG 匯入與資料包保留當備用。';
   }
-  function syncHeader(){const active=document.querySelector('.view.active')?.id;if(active!=='bartender')return;const t=el('pageTitle'),s=el('pageSub');if(t)t.textContent='BT 快速製作';if(s)s.textContent='快速分析後產生 BarTender 2022 可編輯 .btw；不會塞測試資料。'}
+  function syncHeader(){const active=document.querySelector('.view.active')?.id;if(active!=='bartender')return;const t=el('pageTitle'),s=el('pageSub');if(t)t.textContent='BT 快速製作';if(s)s.textContent='正式工作先下載 BT 可直接匯入圖檔；可編輯 BTW 保留實驗，不會塞測試資料。'}
   function refresh(){decorateAnalysis();decorateBt();syncHeader()}
   function init(){
     refresh();
