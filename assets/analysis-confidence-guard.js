@@ -1,20 +1,20 @@
-/* Label Workbench final confidence guard v1.2
+/* Label Workbench final confidence guard v1.3
  * Final pass after OCR/barcode/cross-field refinements.
  * Prevents short, conflicting, empty, implausible, or cross-field-contaminated values from being presented as fully confirmed.
  */
 (function(){
   'use strict';
-  const BUILD='20260911-confidence-guard-120-field-plausibility';
+  const BUILD='20260911-confidence-guard-130-final-dom-sweep';
   const api=()=>window.LabelWorkbenchInterpreter;
   const norm=v=>String(v??'').toUpperCase().replace(/[^A-Z0-9]/g,'');
   const tokenName=f=>String(f?.name||'').toUpperCase().trim();
   const CANONICAL=['PART NO','LOT NO','SHAPE','GP','QTY','DATE NO','ASSY','DATE','MLOT NO','BIN','MC','VC','P1','P2','4Y','SERIAL','MODEL'];
   const tokenField=f=>/PART|LOT|MLOT|SERIAL|MODEL|ASSY|SHAPE|BIN|DATE|QTY|GP|MC|VC/.test(tokenName(f))||!!String(f?.code||'').trim();
-  const noisy=v=>{const s=String(v||'').trim();return !s||/[\u3400-\u9fff]/.test(s)||(/\s/.test(s)&&s.split(/\s+/).length>=3)||(/[(){}]/.test(s)&&s.length>10)||(/[:：]/.test(s)&&s.length>8)};
+  const noisy=v=>{const s=String(v||'').trim();return !s||/[\u3400-\u9fff]/.test(s)||(/\s/.test(s)&&s.split(/\s+/).length>=2)||(/[(){}]/.test(s))||(/[:：]/.test(s))};
   const compactToken=v=>/^[A-Z0-9][A-Z0-9._\/-]*$/i.test(String(v||'').trim());
 
-  function fieldPlausible(f){
-    const raw=String(f?.value||'').trim();
+  function fieldPlausible(f,value=f?.value){
+    const raw=String(value||'').trim();
     if(!raw)return true;
     const name=tokenName(f),code=String(f?.code||'').toUpperCase().trim();
     if(name==='QTY'||code==='Q')return /^\d{1,9}$/.test(raw);
@@ -55,6 +55,7 @@
           f.alternatives=f.alternatives.filter(v=>{
             const nv=norm(v);if(!nv||seen.has(nv))return false;seen.add(nv);
             if(tokenField(f)&&noisy(v))return false;
+            if(!fieldPlausible(f,v))return false;
             if(main&&nv===main)return false;
             if(candidateLooksLikeSuffixNoise(f.value,v))return false;
             if(mainValues.some(x=>x.field!==f&&x.value===nv))return false;
@@ -100,7 +101,7 @@
         const cells=row.querySelectorAll('td');if(cells.length<3)return;
         const content=cells[1],status=cells[2],strong=content.querySelector('strong');
         if(strong)strong.textContent=f.value||'';
-        content.querySelectorAll('.analysis-alt').forEach(n=>n.remove());
+        [...content.querySelectorAll('small,.analysis-alt')].forEach(n=>n.remove());
         if(f.conflict&&f.alternatives?.length){const s=document.createElement('small');s.className='analysis-alt';s.textContent='另讀到：'+f.alternatives.join(' / ');content.appendChild(s)}
         const badge=status.querySelector('.analysis-status');if(badge){const [cls,text]=stateFor(f);badge.className='analysis-status '+cls;badge.textContent=text}
       });
@@ -116,13 +117,20 @@
     return result;
   }
 
+  function finalSweep(result){
+    refine(result);patchDom(result);
+    setTimeout(()=>{refine(result);patchDom(result)},0);
+    setTimeout(()=>{refine(result);patchDom(result)},120);
+    setTimeout(()=>{refine(result);patchDom(result)},500);
+  }
+
   function install(){
     const A=api();if(!A?.analyze||A.__finalConfidenceWrapped)return false;
     const base=A.analyze.bind(A);
-    A.analyze=async function(files){const result=await base(files);refine(result);patchDom(result);stripHidden(result);return result};
+    A.analyze=async function(files){const result=await base(files);finalSweep(result);stripHidden(result);return result};
     A.__finalConfidenceWrapped=true;
     console.info('[Label Workbench] final confidence guard',BUILD);return true;
   }
   if(!install()){let tries=0;const timer=setInterval(()=>{tries++;if(install()||tries>100)clearInterval(timer)},80)}
-  window.LabelWorkbenchConfidenceGuard={BUILD,refine,stateFor,fieldPlausible,install};
+  window.LabelWorkbenchConfidenceGuard={BUILD,refine,stateFor,fieldPlausible,patchDom,finalSweep,install};
 })();
