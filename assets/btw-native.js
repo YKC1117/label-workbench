@@ -1,4 +1,4 @@
-/* Label Workbench native editable BTW generator v0.2.1
+/* Label Workbench native editable BTW generator v0.2.2
  * Quick Analysis -> native BarTender .btw with editable Text / Code 128 / Data Matrix objects.
  * Structural seed: Seagull Scientific's official CEALabelCode-128.btw (BarTender 2022 R5),
  * fetched through the fixed btw-seed CORS proxy. Customer label values are patched locally in the browser.
@@ -6,7 +6,7 @@
 (function(){
   'use strict';
 
-  const BUILD='20260910-btwn210';
+  const BUILD='20260911-btwn220-geometry-safe-c128';
   const SEED_ID='CEA-2022-R5';
   const SEED_FUNCTION='btw-seed';
   const JSZIP_SRC='https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js';
@@ -57,16 +57,22 @@
   function addAll(map,entries,value){for(const e of entries)addReplacement(map,e,value)}
   function applyReplacements(F,container,map){let out=container;for(const r of[...map.values()].sort((a,b)=>b.entry.offset-a.entry.offset))out=F.replaceStringAt(out,r.entry,r.value);return out}
   function setI32(data,offset,value){if(offset<0||offset+4>data.length)return false;new DataView(data.buffer,data.byteOffset,data.byteLength).setInt32(offset,Math.trunc(value),true);return true}
+  function getI32(data,offset){if(offset<0||offset+4>data.length)return null;return new DataView(data.buffer,data.byteOffset,data.byteLength).getInt32(offset,true)}
   function moveTopObject(data,tags,type,x,y){const t=tags.find(v=>v.type===type);if(!t)return false;return setI32(data,t.coordOffset,x)&&setI32(data,t.coordOffset+4,y)}
+  function topObjectPosition(data,tags,type){const t=tags.find(v=>v.type===type);if(!t)return null;return{xMil:getI32(data,t.coordOffset),yMil:getI32(data,t.coordOffset+4)}}
+  function sourceBarcodeLayout(label,kind){
+    const L=window.LabelWorkbenchBtwLayout,row=supportedBarcode(label,kind);
+    if(!L?.boxToLayout||!row?.sourceBox)return null;
+    try{return L.boxToLayout(row.sourceBox)}catch{return null}
+  }
 
   function sourcePlan(label){
     const dmRows=supportedBarcodes(label,'dm'),c128Rows=supportedBarcodes(label,'c128'),unsupported=unsupportedBarcodes(label);
     if(unsupported.length)throw new Error(`目前原生 BTW 尚不支援：${unsupported.map(b=>b.format||'未知條碼').join('、')}`);
     if(dmRows.length>1)throw new Error('單張標籤目前最多建立 1 個原生 Data Matrix；已保留 PNG 製作備援');
-    if(dmRows.length&&c128Rows.length>2)throw new Error('同張含 Data Matrix 時目前最多建立 2 個原生 Code 128；已保留 PNG 製作備援');
-    if(!dmRows.length&&c128Rows.length>3)throw new Error('單張標籤目前最多建立 3 個原生 Code 128；已保留 PNG 製作備援');
+    if(c128Rows.length>1)throw new Error('目前已驗證的 CEA 種子只有 1 個獨立 Code 128 物件；多支 Code 128 請先使用 PNG／BarTender 人工製作備援');
     const dm=barcodeText(dmRows[0]),c128=c128Rows.map(barcodeText);
-    const named={part:c128[0]||'',serial:c128[1]||'',cage:dm?'':(c128[2]||'')};
+    const named={part:c128[0]||'',serial:'',cage:''};
     return{dm,c128,named,kind:barcodeKind(label)};
   }
 
@@ -74,6 +80,7 @@
     const data=new Uint8Array(container),tags=scanTags(data),textRange=tagRange(tags,'TextData',data.length),dmRange=tagRange(tags,'BcDatamatrixData',data.length),c128Range=tagRange(tags,'BcC128Data',data.length);
     if(!textRange||!dmRange||!c128Range)throw new Error('官方 CEA BTW 種子缺少文字、Data Matrix 或 Code 128 原生物件');
     const entries=F.scanUtf16Strings(data,{minLength:1,maxLength:6000}),summary=fieldSummary(label),plan=sourcePlan(label),rep=new Map(),globalRange={start:0,end:textRange.start};
+    const layout={dataMatrix:sourceBarcodeLayout(label,'dm'),code128:sourceBarcodeLayout(label,'c128')};
 
     addAll(rep,entriesIn(entries,globalRange,e=>e.text===CEA_DEFAULTS.part),plan.named.part);
     addAll(rep,entriesIn(entries,globalRange,e=>e.text===CEA_DEFAULTS.serial),plan.named.serial);
@@ -83,25 +90,28 @@
     if(!summaryEntry)throw new Error('找不到官方 CEA 文字資料欄位');
     addReplacement(rep,summaryEntry,summary);
     addReplacement(rep,entriesIn(entries,textRange,e=>e.text==='Text 1')[0],'LW_FIELDS');
-    addAll(rep,entriesIn(entries,textRange,e=>e.text==='(S) '),plan.named.serial?'Code128: ':'');
+    addAll(rep,entriesIn(entries,textRange,e=>e.text==='(S) '),'');
 
     const dmPrefix=entriesIn(entries,dmRange,e=>e.text==='[)>«RS»06«GS»')[0];
     if(!dmPrefix)throw new Error('找不到官方 CEA Data Matrix 主資料欄位');
     addReplacement(rep,dmPrefix,plan.dm);
     for(const token of DM_FIXED)addAll(rep,entriesIn(entries,dmRange,e=>e.text===token),'');
-    addAll(rep,entriesIn(entries,dmRange,e=>e.text==='SERIAL'||e.text==='PART'),'CAGE');
+    addAll(rep,entriesIn(entries,dmRange,e=>e.text==='SERIAL'||e.text==='PART'),'');
     addReplacement(rep,entriesIn(entries,dmRange,e=>e.text==='Barcode 1')[0],plan.dm?'LW_DATAMATRIX':'LW_DATAMATRIX_UNUSED');
-    if(!plan.dm)moveTopObject(data,tags,'BcDatamatrixData',50000,50000);
+    if(plan.dm&&layout.dataMatrix?.mil)moveTopObject(data,tags,'BcDatamatrixData',layout.dataMatrix.mil.x,layout.dataMatrix.mil.y);
+    else if(!plan.dm)moveTopObject(data,tags,'BcDatamatrixData',50000,50000);
 
     const names=[
       ['Barcode 4',plan.named.part?'LW_CODE128_01':'LW_CODE128_UNUSED_01'],
-      ['Barcode 3',plan.named.serial?'LW_CODE128_02':'LW_CODE128_UNUSED_02'],
-      ['Barcode 2',plan.named.cage?'LW_CODE128_03':'LW_CODE128_UNUSED_03']
+      ['Barcode 3','LW_CODE128_UNUSED_02'],
+      ['Barcode 2','LW_CODE128_UNUSED_03']
     ];
     for(const[n,v]of names)addReplacement(rep,entriesIn(entries,c128Range,e=>e.text===n)[0],v);
     addAll(rep,entriesIn(entries,c128Range,e=>e.text==='(1P) SPLR PART'),'');
+    if(plan.c128[0]&&layout.code128?.mil)moveTopObject(data,tags,'BcC128Data',layout.code128.mil.x,layout.code128.mil.y);
+    else if(!plan.c128[0])moveTopObject(data,tags,'BcC128Data',50000,50000);
 
-    return{container:applyReplacements(F,data,rep),summary,plan,seed:SEED_ID};
+    return{container:applyReplacements(F,data,rep),summary,plan,layout,seed:SEED_ID};
   }
 
   function seedEndpoint(){
@@ -133,7 +143,7 @@
     if(patched.plan.dm&&!strings.some(e=>e.text===patched.plan.dm))throw new Error('BTW Data Matrix 資料驗證失敗');
     for(const value of patched.plan.c128)if(value&&!strings.some(e=>e.text===value))throw new Error('BTW Code 128 資料驗證失敗');
     if(check.header?.applicationVersion!=='2022 R5'||check.header?.compatibleVersion!=='2022')throw new Error('BTW 重建後版本驗證失敗');
-    return{name:outputName(label,index),bytes:rebuilt,kind:patched.plan.kind,summary:patched.summary,barcodeValue:patched.plan.dm||patched.plan.c128[0]||'',barcodes:{dataMatrix:patched.plan.dm,code128:patched.plan.c128},header:check.header,seed:SEED_ID};
+    return{name:outputName(label,index),bytes:rebuilt,kind:patched.plan.kind,summary:patched.summary,barcodeValue:patched.plan.dm||patched.plan.c128[0]||'',barcodes:{dataMatrix:patched.plan.dm,code128:patched.plan.c128},layout:patched.layout,header:check.header,seed:SEED_ID};
   }
 
   function loadZip(){if(window.JSZip)return Promise.resolve(window.JSZip);if(zipPromise)return zipPromise;zipPromise=new Promise((resolve,reject)=>{const s=document.createElement('script');s.src=JSZIP_SRC;s.async=true;s.crossOrigin='anonymous';s.onload=()=>window.JSZip?resolve(window.JSZip):reject(new Error('ZIP 元件載入不完整'));s.onerror=()=>reject(new Error('ZIP 元件載入失敗'));document.head.appendChild(s)});return zipPromise}
@@ -145,5 +155,5 @@
     const JSZip=await loadZip(),zip=new JSZip();for(const out of outputs)zip.file(out.name,out.bytes);zip.file('README.txt','These BTW files preserve native editable Text, Data Matrix and Code 128 objects from Seagull Scientific\'s official BarTender 2022 R5 CEA template structure. Quick Analysis values are patched locally in the browser. Open each file in BarTender and verify layout/content before printing.');const blob=await zip.generateAsync({type:'blob',compression:'DEFLATE'}),base=safeFile(String(labels[0]?.sourceName||files?.[0]?.name||'Label').replace(/\.[^.]+$/,''));downloadBlob(blob,`BT_Editable_${base}.zip`);return{ok:true,type:'zip',count:outputs.length,outputs}
   }
 
-  window.LabelWorkbenchBtwNative={BUILD,SEED_ID,SEED_FUNCTION,CEA_DEFAULTS,barcodeKind,supportedBarcode,supportedBarcodes,unsupportedBarcodes,fieldSummary,scanTags,tagRange,sourcePlan,patchCea,seedEndpoint,fetchSeed,generateOne,downloadFromAnalysis};
+  window.LabelWorkbenchBtwNative={BUILD,SEED_ID,SEED_FUNCTION,CEA_DEFAULTS,barcodeKind,supportedBarcode,supportedBarcodes,unsupportedBarcodes,fieldSummary,scanTags,tagRange,sourcePlan,patchCea,topObjectPosition,seedEndpoint,fetchSeed,generateOne,downloadFromAnalysis};
 })();
