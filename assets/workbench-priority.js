@@ -1,12 +1,12 @@
-/* Label Workbench priority controller v1.9.9
+/* Label Workbench priority controller v1.9.10
  * Safe UI controller: keep version stable, keep BT menu visually consistent,
  * and keep Quick Analysis workflow usable. No fake/demo values are injected here.
  */
 (function(){
   'use strict';
 
-  const BUILD='20260911-v199-safe-ui';
-  const VERSION='v1.9.9';
+  const BUILD='20260911-v200-safe-layout';
+  const VERSION='v1.9.10';
   const el=id=>document.getElementById(id);
   const esc=(v='')=>String(v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
   const isImage=f=>!!(f?.type?.startsWith?.('image/')||/\.(jpe?g|png|webp|gif|bmp)$/i.test(f?.name||''));
@@ -125,6 +125,26 @@
       e.target.value='';
     });
   }
+  function cleanupBtRecords(){
+    const queue=el('bartenderQueue');
+    if(queue){
+      queue.innerHTML='';
+      const panel=queue.closest('.panel');
+      if(panel){
+        panel.classList.add('hidden','bt-records-panel');
+        panel.setAttribute('aria-hidden','true');
+        panel.style.display='none';
+      }
+    }
+    document.querySelectorAll('#bartender .panel').forEach(panel=>{
+      const text=(panel.textContent||'').replace(/\s+/g,'');
+      if(text.includes('可接續的BT製作紀錄')){
+        panel.classList.add('hidden','bt-records-panel');
+        panel.setAttribute('aria-hidden','true');
+        panel.style.display='none';
+      }
+    });
+  }
   function updateCopy(){
     setVersion();
     const analysis=el('analysis');
@@ -137,14 +157,15 @@
     const btTitle=bt?.querySelector('.bt-title');
     if(btTitle) btTitle.textContent='BT 快速製作';
     const btIntro=btTitle?.nextElementSibling;
-    if(btIntro) btIntro.textContent='PDF／圖片快速分析後，正式工作先下載 BT 可直接匯入圖檔；可編輯 .btw 保留實驗功能，不會塞測試假資料。';
-    const btPanels=bt?.querySelectorAll('.panel');
-    const queueTitle=btPanels?.[1]?.querySelector('h3'); if(queueTitle) queueTitle.textContent='可接續的 BT 製作紀錄';
-    const flowTitle=btPanels?.[2]?.querySelector('h3'); if(flowTitle) flowTitle.textContent='快速製作流程';
-    const flow=btPanels?.[2]?.querySelector('.workflow');
+    if(btIntro) btIntro.textContent='此頁不放案件紀錄、不自動帶資料。請先到「快速分析」處理客戶 PDF／圖片，再回來下載 BT 可直接匯入圖檔。';
+    cleanupBtRecords();
+    const btPanels=[...(bt?.querySelectorAll('.panel')||[])];
+    const flowPanel=btPanels.find(panel=>panel.querySelector('.workflow'));
+    const flowTitle=flowPanel?.querySelector('h3'); if(flowTitle) flowTitle.textContent='快速製作流程';
+    const flow=flowPanel?.querySelector('.workflow');
     if(flow) flow.innerHTML='<span>客戶 PDF / 圖片</span><b>→</b><span>快速分析</span><b>→</b><span>下載 BT 可直接匯入圖檔</span><b>→</b><span>BarTender 微調</span><b>→</b><span>測印</span>';
-    const btNote=btPanels?.[2]?.querySelector('.note');
-    if(btNote) btNote.innerHTML='<b>安全規則：</b>正式工作先用 BT 可直接匯入圖檔；可編輯 .btw 僅作實驗，且只寫入實際辨識到的文字／條碼，不會亂補假資料。';
+    const btNote=flowPanel?.querySelector('.note');
+    if(btNote) btNote.innerHTML='<b>安全規則：</b>BT 快速製作頁不顯示舊案件資料、不自動套資料；正式工作只走「BT 可直接匯入圖檔」。';
     syncHeaderCopy();
   }
   function init(){
@@ -154,11 +175,11 @@
     bindQuickAnalysis();
     openBarcodeFirst();
     updateCopy();
-    // 防止舊快取腳本晚載入後又把版本洗回 v1.8。
+    // 防止舊快取腳本晚載入後又把版本或 BT 頁面洗回舊狀態。
     setTimeout(updateCopy,250);
     setTimeout(updateCopy,1000);
     console.info('[Label Workbench] priority controller',BUILD);
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init,{once:true}); else init();
-  window.LabelWorkbenchPriority={runQuickAnalysis,reorderNav,setVersion,updateCopy,build:BUILD};
+  window.LabelWorkbenchPriority={runQuickAnalysis,reorderNav,setVersion,updateCopy,cleanupBtRecords,build:BUILD};
 })();
