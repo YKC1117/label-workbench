@@ -35,6 +35,7 @@ jobs:
           node --check assets/label-interpreter.js
           node --check assets/analysis-accuracy.js
           node --check assets/analysis-pdf-native.js
+          node --check assets/analysis-geometry.js
           node --check assets/analysis-field-consistency.js
           node --check assets/analysis-copy.js
           node --check assets/analysis-confidence-guard.js
@@ -52,6 +53,7 @@ jobs:
           node --check tests/btw-seed-diagnostic.cjs
           node --check tests/btw-object-map-smoke.cjs
           node --check tests/public-btw-sample-smoke.cjs
+          node --check tests/analysis-geometry-smoke.cjs
 
       - name: Current wiring sanity check
         run: |
@@ -61,6 +63,7 @@ jobs:
           grep -q "RELEASE='v1.9.28'" assets/view-state-guard.js
           grep -q "UPDATED='2026/09/11 18:56'" assets/view-state-guard.js
           grep -q 'view-state-guard.js' assets/barcode-reader.js
+          grep -q 'analysis-geometry.js' assets/barcode-reader.js
           grep -q 'btw-object-map.js' assets/barcode-reader.js
           grep -q 'bt-native-primary.js' assets/barcode-reader.js
           grep -q 'analysis-confidence-guard.js' assets/barcode-reader.js
@@ -86,6 +89,9 @@ jobs:
 
       - name: Quick analysis boundary accuracy regression tests
         run: node tests/analysis-accuracy-smoke.cjs
+
+      - name: Source geometry matching smoke tests
+        run: node tests/analysis-geometry-smoke.cjs
 
       - name: Barcode generator and production-analysis smoke tests
         run: node tests/v15-smoke.cjs
