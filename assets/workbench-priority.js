@@ -1,11 +1,11 @@
-/* Label Workbench priority controller v1.9.11
+/* Label Workbench priority controller v1.9.14
  * Stable navigation + Quick Analysis + editable BTW production copy.
  */
 (function(){
   'use strict';
 
-  const BUILD='20260911-v211-editable-btw';
-  const VERSION='v1.9.11';
+  const BUILD='20260911-v214-nav-race-fix';
+  const VERSION='v1.9.14';
   const el=id=>document.getElementById(id);
   const esc=(v='')=>String(v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[m]));
   const isImage=f=>!!(f?.type?.startsWith?.('image/')||/\.(jpe?g|png|webp|gif|bmp)$/i.test(f?.name||''));
@@ -31,7 +31,19 @@
   }
   function syncHeaderCopy(){const active=document.querySelector('.view.active')?.id,copy=headerCopy[active];if(!copy)return;const title=el('pageTitle'),sub=el('pageSub');if(title)title.textContent=copy[0];if(sub)sub.textContent=copy[1]}
   function bindHeaderCopy(){document.querySelectorAll('[data-view]').forEach(btn=>{if(btn.dataset.priorityHeaderBound==='true')return;btn.dataset.priorityHeaderBound='true';btn.addEventListener('click',()=>setTimeout(()=>{setVersion();syncHeaderCopy();},0))})}
-  function openBarcodeFirst(){try{if(typeof window.showView==='function')window.showView('barcode');else{document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id==='barcode'));document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view==='barcode'))}}catch(err){console.warn('[Label Workbench] default barcode view failed',err)}syncHeaderCopy()}
+  function preserveActiveView(){
+    const active=document.querySelector('.view.active');
+    if(active){
+      document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===active.id));
+      syncHeaderCopy();
+      return active.id;
+    }
+    const fallback='barcode';
+    document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id===fallback));
+    document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===fallback));
+    syncHeaderCopy();
+    return fallback;
+  }
   function waitFor(getter,timeout=10000){const start=Date.now();return new Promise(resolve=>{const tick=()=>{const value=getter();if(value)return resolve(value);if(Date.now()-start>=timeout)return resolve(null);setTimeout(tick,80)};tick()})}
 
   async function appendBarcodeAnalysis(files){
@@ -68,7 +80,7 @@
     const btNote=flow?.parentElement?.querySelector('.note');if(btNote)btNote.innerHTML='<b>輸出：</b>正式工作輸出 <code>.btw</code>，不是 PNG/JPG 圖片。未辨識到的資料不會亂補假值。';
     syncHeaderCopy()
   }
-  function init(){injectUiRefresh();reorderNav();bindHeaderCopy();bindQuickAnalysis();openBarcodeFirst();updateCopy();setTimeout(updateCopy,250);setTimeout(updateCopy,1000);console.info('[Label Workbench] priority controller',BUILD)}
+  function init(){injectUiRefresh();reorderNav();bindHeaderCopy();bindQuickAnalysis();preserveActiveView();updateCopy();setTimeout(()=>{preserveActiveView();updateCopy()},250);setTimeout(()=>{preserveActiveView();updateCopy()},1000);console.info('[Label Workbench] priority controller',BUILD)}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
-  window.LabelWorkbenchPriority={runQuickAnalysis,reorderNav,setVersion,updateCopy,cleanupBtRecords,build:BUILD};
+  window.LabelWorkbenchPriority={runQuickAnalysis,reorderNav,setVersion,updateCopy,cleanupBtRecords,preserveActiveView,build:BUILD};
 })();
