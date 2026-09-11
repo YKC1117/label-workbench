@@ -56,6 +56,7 @@ jobs:
           node --check tests/public-btw-sample-smoke.cjs
           node --check tests/hibc-official-sample-smoke.cjs
           node --check tests/template-library-page-diagnostic.cjs
+          node --check tests/hibcc-template-seed-smoke.cjs
           node --check tests/analysis-geometry-smoke.cjs
           node --check tests/btw-layout-map-smoke.cjs
           node --check tests/cea-object-map-diagnostic.cjs
@@ -122,6 +123,9 @@ jobs:
 
       - name: Template library raw form diagnostic
         run: node tests/template-library-page-diagnostic.cjs
+
+      - name: Official HIBCC resource 79898 donor verification
+        run: node tests/hibcc-template-seed-smoke.cjs
 
       - name: CEA seed native object map diagnostic
         run: node tests/cea-object-map-diagnostic.cjs
