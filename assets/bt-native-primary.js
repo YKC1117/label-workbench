@@ -1,13 +1,13 @@
-/* Label Workbench editable BTW primary handoff v1.1
+/* Label Workbench editable BTW primary handoff v1.2
  * Promotes native editable .btw generation for PDF/image Quick Analysis.
- * Keeps PNG import and structured packs as fallbacks.
+ * Uses the local sanitized BarTender 2022 R2 seed; PNG import and structured packs remain fallbacks.
  */
 (function(){
   'use strict';
 
-  const BUILD='20260910-btnp110';
+  const BUILD='20260911-btnp120-local-seed';
   const FORMAT_SRC='assets/btw-format.js?v=20260910-btw011';
-  const NATIVE_SRC='assets/btw-native.js?v=20260910-btwn210';
+  const NATIVE_SRC='assets/btw-native.js?v=20260911-btwn300-local-seed';
   let formatPromise=null,nativePromise=null;
 
   const el=id=>document.getElementById(id);
@@ -49,7 +49,7 @@
     const png=el('analysisBtDirect');if(png){png.classList.remove('primary');png.classList.add('ghost');png.textContent='備用：下載 BT 匯入圖'}
     const pack=el('analysisSendBt');if(pack){pack.classList.remove('primary');pack.classList.add('ghost');pack.textContent='進階：下載 BT 資料包'}
     let hint=out.querySelector('[data-bt-native-hint]');if(!hint){hint=document.createElement('div');hint.dataset.btNativeHint='true';hint.className='footer-note';actions.insertAdjacentElement('afterend',hint)}
-    hint.innerHTML='<b>主要流程：</b>直接產生 BarTender 2022 格式的 .btw；文字、Code 128、Data Matrix 保留原生可編輯物件。第一次給客戶前請確認尺寸與版面。';
+    hint.innerHTML='<b>主要流程：</b>PDF／圖片分析後，直接產生 BarTender 2022 R2 可編輯 .btw。這版使用本機內建範本，不再抓官方種子，所以不會有 502。第一次請先用公司 BarTender 確認能開與可編輯。';
     const old=out.querySelector('[data-bt-direct-hint]');if(old)old.style.display='none';
   }
 
@@ -61,11 +61,11 @@
       let native=el('btNativeDownload');if(!native){native=makeButton('btNativeDownload','下載可編輯 BTW',downloadEditable);host.insertBefore(native,host.firstChild)}native.className='btn primary';
       const png=el('btDirectImport');if(png){png.classList.remove('primary');png.classList.add('ghost');png.textContent='備用：下載匯入圖'}
     }
-    const panels=section.querySelectorAll('.panel'),flow=panels?.[2]?.querySelector('.workflow');if(flow)flow.innerHTML='<span>客戶原稿</span><b>→</b><span>快速分析</span><b>→</b><span>下載可編輯 BTW</span><b>→</b><span>BarTender 微調</span><b>→</b><span>尺寸／測印</span>';
-    const note=panels?.[2]?.querySelector('.note');if(note)note.innerHTML='<b>目前原生 BTW：</b>以官方 BarTender 2022 R5 CEA 結構為基底，支援文字、Code 128、Data Matrix；PNG 匯入與資料包保留當備用。';
+    const panels=section.querySelectorAll('.panel'),flow=panels?.[2]?.querySelector('.workflow');if(flow)flow.innerHTML='<span>客戶 PDF / 圖片</span><b>→</b><span>快速分析</span><b>→</b><span>下載可編輯 BTW</span><b>→</b><span>BarTender 微調</span><b>→</b><span>測印</span>';
+    const note=panels?.[2]?.querySelector('.note');if(note)note.innerHTML='<b>目前原生 BTW：</b>使用本機 BarTender 2022 R2 範本封包，支援把分析到的文字與條碼資料寫入可編輯 .btw；PNG 匯入與資料包保留當備用。';
   }
 
-  function syncHeader(){const active=document.querySelector('.view.active')?.id;if(active!=='bartender')return;const t=el('pageTitle'),s=el('pageSub');if(t)t.textContent='BT 快速製作';if(s)s.textContent='快速分析後直接產生 BarTender 2022 可編輯 .btw，再到 BarTender 微調尺寸與版面。'}
+  function syncHeader(){const active=document.querySelector('.view.active')?.id;if(active!=='bartender')return;const t=el('pageTitle'),s=el('pageSub');if(t)t.textContent='BT 快速製作';if(s)s.textContent='PDF／圖片快速分析後直接產生 BarTender 2022 可編輯 .btw，再到 BarTender 微調尺寸與版面。'}
   function refresh(){decorateAnalysis();decorateBt();syncHeader()}
   function init(){
     refresh();
