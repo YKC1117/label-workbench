@@ -37,6 +37,9 @@ jobs:
           node --check assets/analysis-pdf-native.js
           node --check assets/analysis-field-consistency.js
           node --check assets/analysis-copy.js
+          node --check assets/analysis-confidence-guard.js
+          node --check assets/analysis-final-display.js
+          node --check assets/view-state-guard.js
           node --check assets/bt-quick.js
           node --check assets/btw-format.js
           node --check assets/btw-native.js
@@ -46,8 +49,15 @@ jobs:
           node --check assets/layout-shortcuts.js
           node --check assets/workbench-priority.js
 
-      - name: Static HTML / JS integrity check
-        run: python3 tests/static_check.py
+      - name: Current wiring sanity check
+        run: |
+          grep -q 'assets/barcode-reader.js?v=' index.html
+          grep -q '標籤製作工作台 · v1.9.25' index.html
+          grep -q 'view-state-guard.js' assets/barcode-reader.js
+          grep -q 'bt-native-primary.js' assets/barcode-reader.js
+          grep -q 'analysis-confidence-guard.js' assets/barcode-reader.js
+          grep -q 'downloadFromAnalysis' assets/btw-native.js
+          grep -q 'downloadEditable' assets/bt-native-primary.js
 
       - name: Core logic smoke tests
         run: node tests/logic-smoke.cjs
