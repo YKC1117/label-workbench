@@ -3,7 +3,16 @@ const fs=require('fs');const vm=require('vm');const zlib=require('zlib');
 const c={console,Uint8Array,ArrayBuffer,DataView,TextDecoder,TextEncoder,Blob,Response,CompressionStream,DecompressionStream,fetch,setTimeout,clearTimeout,Promise,Date,Math,navigator:{},URL:global.URL,document:{readyState:'loading',addEventListener(){},querySelector(){return null},createElement(){return{}},head:{appendChild(){}},body:{appendChild(){}}},window:null,globalThis:null};c.window=c;c.globalThis=c;vm.createContext(c);for(const f of['assets/cloud-config.js','assets/btw-format.js','assets/btw-native.js'])vm.runInContext(fs.readFileSync(f,'utf8'),c,{filename:f});
 const F=c.LabelWorkbenchBtwFormat,N=c.LabelWorkbenchBtwNative,BASE='https://www.bartendersoftware.com/resources/library/';
 const slugs=['material-label','retailfoodlabel','pallet-label','individual-carton-label','mixed-pallet-label','small-package-master-carton-label'];
-function parseSize(head){const raw=/<TemplateSize>([^<]+)<\/TemplateSize>/i.exec(head)?.[1]?.trim()||'';const m=/([0-9.]+)\s*x\s*([0-9.]+)\s*(mm|cm|in|inch|inches)?/i.exec(raw);if(!m)return null;let w=+m[1],h=+m[2],u=(m[3]||'mm').toLowerCase();if(u==='cm'){w*=10;h*=10}else if(u!=='mm'){w*=25.4;h*=25.4}return{raw,wMm:w,hMm:h}}
+function parseSize(head){
+  const raw=/<TemplateSize>([^<]+)<\/TemplateSize>/i.exec(head)?.[1]?.trim()||'';
+  if(!raw)return null;
+  const m=/([0-9.]+)\s*(?:"|in(?:ch(?:es)?)?|mm|cm)?\s*x\s*([0-9.]+)\s*(?:"|in(?:ch(?:es)?)?|mm|cm)?/i.exec(raw);
+  if(!m)return null;
+  let w=+m[1],h=+m[2];
+  const lower=raw.toLowerCase(),isCm=/\bcm\b/.test(lower),isMm=/\bmm\b/.test(lower),isInch=raw.includes('"')||/\bin(?:ch(?:es)?)?\b/.test(lower);
+  if(isCm){w*=10;h*=10}else if(isInch||(!isMm&&!isCm)){w*=25.4;h*=25.4}
+  return{raw,wMm:w,hMm:h}
+}
 function findI32(buf,target,tol=1){const out=[];for(let i=0;i<=buf.length-4;i++){const v=buf.readInt32LE(i);if(Math.abs(v-target)<=tol)out.push({o:i,v})}return out}
 function findF32(buf,target,tol){const out=[];for(let i=0;i<=buf.length-4;i++){const v=buf.readFloatLE(i);if(Number.isFinite(v)&&Math.abs(v-target)<=tol)out.push({o:i,v})}return out}
 function findF64(buf,target,tol){const out=[];for(let i=0;i<=buf.length-8;i++){const v=buf.readDoubleLE(i);if(Number.isFinite(v)&&Math.abs(v-target)<=tol)out.push({o:i,v})}return out}
