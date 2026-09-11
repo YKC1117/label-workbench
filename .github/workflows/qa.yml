@@ -39,7 +39,7 @@ jobs:
           grep -q "UPDATED='2026/09/11 23:46'" assets/view-state-guard.js
           grep -q "BUILD='20260911-view-guard-118-btw-boundary'" assets/view-state-guard.js
           grep -q "BUILD='20260911-v354-btw-boundary'" assets/barcode-reader.js
-          grep -q "BUILD='20260912-btw-object-map-037-datasource-sample-filter'" assets/btw-object-map.js
+          grep -q "BUILD='20260912-btw-object-map-038-barcode-slot-mode'" assets/btw-object-map.js
           grep -q "SEED_ID='CEA-2022-R5'" assets/btw-native.js
           grep -q "SEED_FUNCTION='btw-seed'" assets/btw-native.js
           grep -q 'btw-rich-native.js' assets/barcode-reader.js
