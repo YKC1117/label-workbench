@@ -58,6 +58,7 @@ jobs:
           node --check tests/template-library-page-diagnostic.cjs
           node --check tests/hibcc-template-seed-smoke.cjs
           node --check tests/hibcc-object-map-diagnostic.cjs
+          node --check tests/multicode128-template-scan.cjs
           node --check tests/analysis-geometry-smoke.cjs
           node --check tests/btw-layout-map-smoke.cjs
           node --check tests/cea-object-map-diagnostic.cjs
@@ -130,6 +131,9 @@ jobs:
 
       - name: Official HIBCC native object map diagnostic
         run: node tests/hibcc-object-map-diagnostic.cjs
+
+      - name: Scan official templates for multi-Code128 donors
+        run: node tests/multicode128-template-scan.cjs
 
       - name: CEA seed native object map diagnostic
         run: node tests/cea-object-map-diagnostic.cjs
