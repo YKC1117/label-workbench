@@ -5,7 +5,7 @@
 (function(){
   'use strict';
 
-  const BUILD='20260911-btwn300-local-seed';
+  const BUILD='20260911-btwn310-local-seed-verified';
   const SEED_ID='LW-2022R2-100x65-SANITIZED';
   const SEED_SRC='assets/btw-seed-2022r2.js?v=20260911-local-seed-001';
   const JSZIP_SRC='https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js';
@@ -102,6 +102,15 @@
       }
     }
   }
+  function addWhere(reps,entries,predicate,value,limit=Infinity){
+    let count=0;
+    for(const e of entries){
+      if(predicate(e.text,e) && count<limit){
+        reps.push({entry:e,value:String(value??'')});
+        count++;
+      }
+    }
+  }
   function applyReplacements(F,container,reps){
     let out=container;
     const seen=new Set();
@@ -116,17 +125,32 @@
     const data=new Uint8Array(container);
     const entries=F.scanUtf16Strings(data,{minLength:1,maxLength:5000});
     const p=plan(label),reps=[];
+
+    // Label text captions from the 2022 R2 sample seed.
     addExact(reps,entries,'(1P) PART NO :',p.label1,1);
-    addExact(reps,entries,'LW_PART_VALUE',compact(p.value1),1);
     addExact(reps,entries,'(1T) LOT NO :',p.label2,1);
-    addExact(reps,entries,'LW_LOT_VALUE',compact(p.value2),1);
     addExact(reps,entries,'(Q)QTY:',p.value3?p.label3:'備註：',2);
-    addExact(reps,entries,'LW_QTY_VALUE',compact(p.value3||'請在 BarTender 內微調版面'),1);
+
+    // Support both the new generic placeholder names and the actual sanitized 2022 R2 seed values.
+    addExact(reps,entries,'LW_PART_VALUE',compact(p.value1),5);
+    addExact(reps,entries,'PART00000001',compact(p.value1),5);
+    addExact(reps,entries,'LW_LOT_VALUE',compact(p.value2),5);
+    addExact(reps,entries,'LOT000001',compact(p.value2),5);
+    addExact(reps,entries,'LW_QTY_VALUE',compact(p.value3||'請在 BarTender 內微調版面'),5);
+    addExact(reps,entries,'0001',compact(p.value3||'0001'),2);
+    addExact(reps,entries,'LOT00000100',compact(p.value3||p.value2),2);
+
+    // Data Matrix / barcode data placeholders. The seed has the same DM string in more than one object setting.
     addExact(reps,entries,'LW_DM_VALUE',compact(p.dmValue),10);
-    addExact(reps,entries,'Label_Workbench_Source.pdf',compact(p.source),1);
-    addExact(reps,entries,'NOTE','來源：'+compact(p.source),1);
-    addExact(reps,entries,'COMPLIANT','開啟後請確認尺寸與位置',1);
-    addExact(reps,entries,'文字範例',p.summary,2);
+    addWhere(reps,entries,text=>/^LWDM\|PART00000001\|LOT000001\|/.test(text),compact(p.dmValue),10);
+
+    // Source / note fields.
+    addExact(reps,entries,'Label_Workbench_Source.pdf',compact(p.source),2);
+    addWhere(reps,entries,text=>/範本檔\.pdf$/.test(text)||/Label_Workbench_Source\.pdf$/.test(text),compact(p.source),2);
+    addExact(reps,entries,'NOTE','來源：'+compact(p.source),2);
+    addExact(reps,entries,'COMPLIANT','開啟後請確認尺寸與位置',2);
+    addExact(reps,entries,'文字範例',p.summary,4);
+
     const patched=applyReplacements(F,data,reps);
     return {container:patched,summary:p.summary,plan:p,replacements:reps.length,seed:SEED_ID};
   }
