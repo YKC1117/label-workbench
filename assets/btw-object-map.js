@@ -1,4 +1,4 @@
-/* Label Workbench BTW object decoder/editor v0.3
+/* Label Workbench BTW object decoder/editor v0.3.1
  * Interoperability-focused reverse engineering for BarTender .btw files.
  * Uses the same public-domain layout observations as Elias Oenal's Barmaid:
  * prefix + preview PNG blobs + zlib serialized container + FF FE FF UTF-16 strings.
@@ -6,13 +6,13 @@
  */
 (function(){
   'use strict';
-  const BUILD='20260911-btw-object-map-030-barcode-write';
+  const BUILD='20260911-btw-object-map-031-english-text-control';
   const ROOT='Root.MasterSelectedObject.';
   const FONT_MARKER=new Uint8Array([0x03,0x02,0x01,0x22]);
   const PLACEHOLDER='(???) ???-????';
 
   const u8=v=>v instanceof Uint8Array?v:new Uint8Array(v);
-  const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[m]));
   function readI32(data,offset){return new DataView(data.buffer,data.byteOffset,data.byteLength).getInt32(offset,true)}
   function writeI32(data,offset,value){new DataView(data.buffer,data.byteOffset,data.byteLength).setInt32(offset,Math.trunc(value),true)}
   function readF32(data,offset){return new DataView(data.buffer,data.byteOffset,data.byteLength).getFloat32(offset,true)}
@@ -36,11 +36,11 @@
   }
 
   function kindFor(root,name){
-    if(/^文字\s*\d*/.test(name))return'text';
-    if(/^條碼\s*\d*/.test(name))return'barcode';
-    if(/^線條\s*\d*/.test(name))return'line';
+    if(/^(?:文字|Text)\s*\d*/i.test(name))return'text';
+    if(/^(?:條碼|Barcode)\s*\d*/i.test(name))return'barcode';
+    if(/^(?:線條|Line)\s*\d*/i.test(name))return'line';
     if(/\.Barcode$/i.test(root))return'barcode';
-    if(/DataSourceGeneral\.DataSource/i.test(root))return'text';
+    if(/DataSourceGeneral\.DataSource|\.Text Control$/i.test(root))return'text';
     if(/Line Options/i.test(root))return'line';
     if(/\.Border$/i.test(root))return'border';
     return'object';
@@ -51,15 +51,25 @@
     if(/\.Barcode$/i.test(root)&&texts.includes('TextTransforms'))return'Code 128';
     return'';
   }
-  function primaryValueEntry(strings,kind){
+  function simpleTextControlCandidate(strings,nameEntry){
+    const after=strings.filter(e=>e.offset>(nameEntry?.offset??-1));
+    const blocked=/^(?:\d+(?:\.\d+)?|Text \d+|Box Options|DataSource|Screen Data|GeneralDsPage|ValidationPage|PromptOptionsPage|Functions and Subs|OnProcessData|OnPostSerialize)$/i;
+    const candidates=after.filter(e=>{
+      const v=String(e.text||'').trim();
+      return v&&v.length<=240&&!blocked.test(v)&&!/^Root\./.test(v)&&!/^<ErrorHandling>/.test(v)&&!/^\[[^\]]+\]\*$/.test(v)&&!/^0123456789/.test(v)&&!/^\(___\)/.test(v)&&!/^\(999\)/.test(v)&&!/^Sample Prompt$/i.test(v);
+    });
+    return candidates.at(-1)||null;
+  }
+  function primaryValueEntry(strings,kind,root,nameEntry){
     if(kind!=='text')return null;
     let hit=null;
     for(let i=0;i<strings.length-1;i++){
       if(strings[i].text!==PLACEHOLDER)continue;
       const n=strings[i+1];
-      if(!n?.text||/^(?:Box Options|DataSource|Text 1|文字範例)$/i.test(n.text))continue;
+      if(!n?.text||/^(?:Box Options|DataSource|Text \d+|文字範例)$/i.test(n.text))continue;
       hit=n;
     }
+    if(!hit&&/\.Text Control$/i.test(String(root||'')))hit=simpleTextControlCandidate(strings,nameEntry);
     return hit;
   }
   function barcodeComponentEntries(strings){
@@ -67,7 +77,7 @@
     for(let i=0;i<strings.length-1;i++){
       if(strings[i].text!==PLACEHOLDER)continue;
       const entry=strings[i+1],v=String(entry?.text||'').trim();
-      if(!v||/^(?:文字範例|Box Options|DataSource|Text 1)$/i.test(v))continue;
+      if(!v||/^(?:文字範例|Box Options|DataSource|Text \d+)$/i.test(v))continue;
       out.push({value:v,entry:compactEntry(entry)});
     }
     return out;
@@ -81,7 +91,7 @@
       const root=roots[i],recordStart=Math.max(0,root.offset-20),recordEnd=i+1<roots.length?Math.max(recordStart,roots[i+1].offset-20):data.length;
       const strings=entries.filter(e=>e.offset>=root.offset&&e.offset<recordEnd),nameEntry=strings.find((e,j)=>j>0&&e.text&&!String(e.text).startsWith(ROOT))||null,name=String(nameEntry?.text||'');
       let x=null,y=null;if(recordStart+8<=data.length){const a=readI32(data,recordStart),b=readI32(data,recordStart+4);if(Math.abs(a)<1000000&&Math.abs(b)<1000000){x=a;y=b}}
-      const rootPath=String(root.text||''),kind=kindFor(rootPath,name),valueEntry=primaryValueEntry(strings,kind),font=fontInfo(data,recordStart,recordEnd),componentEntries=kind==='barcode'?barcodeComponentEntries(strings):[],components=componentEntries.map(x=>x.value),barcodeType=kind==='barcode'?barcodeTypeFor(rootPath,strings):'';
+      const rootPath=String(root.text||''),kind=kindFor(rootPath,name),valueEntry=primaryValueEntry(strings,kind,rootPath,nameEntry),font=fontInfo(data,recordStart,recordEnd),componentEntries=kind==='barcode'?barcodeComponentEntries(strings):[],components=componentEntries.map(x=>x.value),barcodeType=kind==='barcode'?barcodeTypeFor(rootPath,strings):'';
       objects.push({id:`obj-${i+1}`,index:i,kind,name,rootPath,recordStart,recordEnd,rootOffset:root.offset,xMil:x,yMil:y,xMm:milToMm(x),yMm:milToMm(y),value:valueEntry?.text||'',valueEntry:compactEntry(valueEntry),fontName:font?.name||'',fontSize:font?.size??null,fontSizeOffset:font?.sizeOffset??null,components,componentEntries,barcodeType,stringsCount:strings.length});
     }
     const byName=new Map(objects.filter(o=>o.name).map(o=>[o.name,o]));
