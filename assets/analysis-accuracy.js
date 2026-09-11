@@ -1,21 +1,27 @@
-/* Label Workbench analysis accuracy guard v1.0
+/* Label Workbench analysis accuracy guard v1.1
  * Restores tolerant field-code cleanup and removes obvious OCR cross-field contamination.
  * Runs after label-interpreter and before the BT bridge so refined values are what BTW export receives.
  */
 (function(){
   'use strict';
-  const BUILD='20260911-analysis-accuracy-100';
+  const BUILD='20260911-analysis-accuracy-110';
   const api=()=>window.LabelWorkbenchInterpreter;
   const norm=v=>String(v??'').toUpperCase().replace(/[^A-Z0-9]/g,'');
   const clean=v=>String(v??'').replace(/\s+/g,' ').trim();
   const KNOWN_CODES=['1P','1T','30P','31P','Q','10D','21L','16D','31T','33P','23L','24L','1Y','2Y','4Y'];
 
+  function fuzzyChar(ch){
+    if(ch==='1') return '[1IL|]';
+    if(ch==='0') return '[0O]';
+    return ch.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+  }
   function fuzzyCodePattern(code){
-    return code.split('').map(ch=>{
-      if(ch==='1') return '[1IL|]';
-      if(ch==='0') return '[0O]';
-      return ch.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-    }).join('\\s*');
+    const chars=code.split('');
+    if(chars[0]==='1'){
+      // OCR 常把 (1T) / (1P) 讀成 (IT)、(I1T)、(1IT)；首碼允許多一個 I/L。
+      return '[1IL|]\\s*[IL|]?\\s*'+chars.slice(1).map(fuzzyChar).join('\\s*');
+    }
+    return chars.map(fuzzyChar).join('\\s*');
   }
   const FUZZY_CODE_ALT=KNOWN_CODES.map(fuzzyCodePattern).join('|');
   const TAIL_CODE_RX=new RegExp('\\s*[\\(\\[]\\s*(?:'+FUZZY_CODE_ALT+')\\s*[\\)\\]]\\s*.*$','i');
@@ -101,7 +107,7 @@
         const k=norm(c);if(!k||k===chosenNorm)return false;
         // If this candidate is clearly another field's primary value, don't show it as an alternative here.
         if(otherPrimary.has(k)&&!norm(original).includes(k))return false;
-        // Hide obvious OCR junk instead of frightening the operator with meaningless alternatives.
+        // Hide obvious OCR junk instead of showing meaningless one-letter / punctuation tails.
         if(quality(f,c,bars)<12)return false;
         return true;
       }).slice(0,2);
