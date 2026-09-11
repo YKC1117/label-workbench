@@ -1,35 +1,15 @@
-/* Label Workbench final confidence guard v1.3
- * Final pass after OCR/barcode/cross-field refinements.
- * Prevents short, conflicting, empty, implausible, or cross-field-contaminated values from being presented as fully confirmed.
+/* Label Workbench final confidence guard v1.4
+ * Conservative final pass: do not destroy OCR candidates or rewrite accepted values.
+ * Only adjusts display confidence and suppresses clearly redundant/noisy alternatives.
  */
 (function(){
   'use strict';
-  const BUILD='20260911-confidence-guard-130-final-dom-sweep';
+  const BUILD='20260911-confidence-guard-140-conservative';
   const api=()=>window.LabelWorkbenchInterpreter;
   const norm=v=>String(v??'').toUpperCase().replace(/[^A-Z0-9]/g,'');
   const tokenName=f=>String(f?.name||'').toUpperCase().trim();
+  const coded=f=>!!String(f?.code||'').trim();
   const CANONICAL=['PART NO','LOT NO','SHAPE','GP','QTY','DATE NO','ASSY','DATE','MLOT NO','BIN','MC','VC','P1','P2','4Y','SERIAL','MODEL'];
-  const tokenField=f=>/PART|LOT|MLOT|SERIAL|MODEL|ASSY|SHAPE|BIN|DATE|QTY|GP|MC|VC/.test(tokenName(f))||!!String(f?.code||'').trim();
-  const noisy=v=>{const s=String(v||'').trim();return !s||/[\u3400-\u9fff]/.test(s)||(/\s/.test(s)&&s.split(/\s+/).length>=2)||(/[(){}]/.test(s))||(/[:：]/.test(s))};
-  const compactToken=v=>/^[A-Z0-9][A-Z0-9._\/-]*$/i.test(String(v||'').trim());
-
-  function fieldPlausible(f,value=f?.value){
-    const raw=String(value||'').trim();
-    if(!raw)return true;
-    const name=tokenName(f),code=String(f?.code||'').toUpperCase().trim();
-    if(name==='QTY'||code==='Q')return /^\d{1,9}$/.test(raw);
-    if((name==='DATE'||code==='16D')&&/^\d+$/.test(raw))return /^\d{8}$/.test(raw);
-    if(['SHAPE','GP','ASSY','BIN','MC','VC'].includes(name)||['30P','31P','21L','33P','23L','24L'].includes(code))return raw.length<=16&&compactToken(raw);
-    if(name==='DATE NO'||code==='10D')return raw.length<=24&&compactToken(raw);
-    if(['PART NO','LOT NO','MLOT NO'].includes(name)||['1P','1T','31T'].includes(code))return raw.length<=36&&compactToken(raw);
-    return true;
-  }
-
-  function candidateLooksLikeSuffixNoise(main,candidate){
-    const a=norm(main),b=norm(candidate);if(!a||!b||!b.startsWith(a)||b===a)return false;
-    const tail=b.slice(a.length);
-    return tail.length<=4&&/^[A-Z]+$/.test(tail);
-  }
 
   function fragmentName(name){
     const n=String(name||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
@@ -37,38 +17,36 @@
     return CANONICAL.some(x=>{const c=x.replace(/[^A-Z0-9]/g,'');return c!==n&&c.endsWith(n)});
   }
 
+  function obviousSuffixNoise(main,candidate){
+    const a=norm(main),b=norm(candidate);if(!a||!b||b===a||!b.startsWith(a))return false;
+    const tail=b.slice(a.length);
+    return tail.length<=4&&/^[A-Z]+$/.test(tail);
+  }
+
+  function displayAlternatives(f,allFields){
+    const main=norm(f?.value),seen=new Set(),others=(allFields||[]).map(x=>x===f?'':norm(x?.value)).filter(Boolean);
+    return (Array.isArray(f?.alternatives)?f.alternatives:[]).filter(v=>{
+      const nv=norm(v);if(!nv||seen.has(nv))return false;seen.add(nv);
+      if(main&&nv===main)return false;
+      if(others.includes(nv))return false;
+      const name=tokenName(f),code=String(f?.code||'').toUpperCase();
+      if((name==='QTY'||code==='Q'||name==='DATE'||code==='16D')&&obviousSuffixNoise(f.value,v))return false;
+      return true;
+    }).slice(0,2);
+  }
+
   function refine(result){
     for(const label of result?.labels||[]){
       const fields=label?.fields||[];
-      const codedNames=new Set(fields.filter(f=>String(f?.code||'').trim()).map(f=>tokenName(f)));
-      const mainValues=fields.map(f=>({field:f,value:norm(f?.value)})).filter(x=>x.value);
-
+      const codedNames=new Set(fields.filter(coded).map(tokenName));
       for(const f of fields){
-        const main=norm(f.value);
-        const name=tokenName(f);
-        const code=String(f?.code||'').trim();
-
+        const main=norm(f?.value),name=tokenName(f),code=String(f?.code||'').trim();
         f.__finalHidden=(!code&&fragmentName(name))||(!code&&codedNames.has(name));
-
-        if(Array.isArray(f.alternatives)){
-          const seen=new Set();
-          f.alternatives=f.alternatives.filter(v=>{
-            const nv=norm(v);if(!nv||seen.has(nv))return false;seen.add(nv);
-            if(tokenField(f)&&noisy(v))return false;
-            if(!fieldPlausible(f,v))return false;
-            if(main&&nv===main)return false;
-            if(candidateLooksLikeSuffixNoise(f.value,v))return false;
-            if(mainValues.some(x=>x.field!==f&&x.value===nv))return false;
-            return true;
-          }).slice(0,2);
-          f.conflict=f.alternatives.length>0;
-        }
-
-        f.__finalImplausible=!!main&&!fieldPlausible(f);
-        f.__finalShortBarcode=!!((f.barcodeVerified||f.barcodeAligned)&&main.length>0&&main.length<=2);
-        if(f.__finalShortBarcode)f.barcodeVerified=false;
-        if(f.__finalImplausible)f.barcodeVerified=false;
+        f.__displayAlternatives=displayAlternatives(f,fields);
+        f.__displayConflict=f.__displayAlternatives.length>0;
         f.__finalEmpty=!main;
+        // Very short coded values are valid possibilities, but not enough evidence for "high confidence".
+        f.__finalShortToken=!!(code&&main.length>0&&main.length<=2);
       }
     }
     return result;
@@ -76,11 +54,10 @@
 
   function stateFor(f){
     if(f?.__finalEmpty)return['pending','⚠️ 未確認'];
-    if(f?.__finalImplausible)return['pending','⚠️ 內容異常待核對'];
-    if(f?.conflict)return['pending','⚠️ 有異讀待核對'];
+    if(f?.__displayConflict)return['pending','⚠️ 有異讀待核對'];
     if(f?.__consistencyResolved)return['pending','⚠️ 欄位交叉修正待核對'];
     if(f?.__boundaryTrimmed)return['pending','⚠️ 邊界修正待核對'];
-    if(f?.__finalShortBarcode)return['medium','○ 條碼對應，建議核對'];
+    if(f?.__finalShortToken)return['medium','○ 條碼對應，建議核對'];
     if(f?.barcodeVerified)return['barcode','✅ 條碼確認'];
     if(f?.barcodeAligned)return['medium','○ 條碼對應，建議核對'];
     if(Number(f?.repeat)>=3)return['high','✓ 高可信'];
@@ -97,12 +74,13 @@
       const rows=[...(section?.querySelectorAll('tbody tr')||[])];
       (label.fields||[]).forEach((f,i)=>{
         const row=rows[i];if(!row)return;
-        if(f.__finalHidden){row.remove();return;}
+        if(f.__finalHidden){row.style.display='none';return;}
+        row.style.display='';
         const cells=row.querySelectorAll('td');if(cells.length<3)return;
         const content=cells[1],status=cells[2],strong=content.querySelector('strong');
         if(strong)strong.textContent=f.value||'';
-        [...content.querySelectorAll('small,.analysis-alt')].forEach(n=>n.remove());
-        if(f.conflict&&f.alternatives?.length){const s=document.createElement('small');s.className='analysis-alt';s.textContent='另讀到：'+f.alternatives.join(' / ');content.appendChild(s)}
+        content.querySelectorAll('.analysis-alt').forEach(n=>n.remove());
+        if(f.__displayAlternatives?.length){const s=document.createElement('small');s.className='analysis-alt';s.textContent='另讀到：'+f.__displayAlternatives.join(' / ');content.appendChild(s)}
         const badge=status.querySelector('.analysis-status');if(badge){const [cls,text]=stateFor(f);badge.className='analysis-status '+cls;badge.textContent=text}
       });
       const visible=(label.fields||[]).filter(f=>!f.__finalHidden);
@@ -112,25 +90,18 @@
     });
   }
 
-  function stripHidden(result){
-    for(const label of result?.labels||[])if(Array.isArray(label.fields))label.fields=label.fields.filter(f=>!f.__finalHidden);
-    return result;
-  }
-
-  function finalSweep(result){
-    refine(result);patchDom(result);
-    setTimeout(()=>{refine(result);patchDom(result)},0);
-    setTimeout(()=>{refine(result);patchDom(result)},120);
-    setTimeout(()=>{refine(result);patchDom(result)},500);
-  }
-
   function install(){
     const A=api();if(!A?.analyze||A.__finalConfidenceWrapped)return false;
     const base=A.analyze.bind(A);
-    A.analyze=async function(files){const result=await base(files);finalSweep(result);stripHidden(result);return result};
+    A.analyze=async function(files){
+      const result=await base(files);
+      refine(result);patchDom(result);
+      setTimeout(()=>patchDom(result),120);
+      return result;
+    };
     A.__finalConfidenceWrapped=true;
     console.info('[Label Workbench] final confidence guard',BUILD);return true;
   }
   if(!install()){let tries=0;const timer=setInterval(()=>{tries++;if(install()||tries>100)clearInterval(timer)},80)}
-  window.LabelWorkbenchConfidenceGuard={BUILD,refine,stateFor,fieldPlausible,patchDom,finalSweep,install};
+  window.LabelWorkbenchConfidenceGuard={BUILD,refine,stateFor,displayAlternatives,patchDom,install};
 })();
