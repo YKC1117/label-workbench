@@ -1,9 +1,9 @@
-/* Label Workbench quick-analysis cell copy v1.0
- * Adds a small copy button to every result table cell for fast BarTender paste workflow.
+/* Label Workbench quick-analysis cell copy v1.1
+ * Keeps one copy button per result row, attached to the content/value cell only.
  */
 (function(){
   'use strict';
-  const BUILD='20260911-analysis-copy-100';
+  const BUILD='20260911-analysis-copy-110-row-content-only';
   const ROOT_ID='analysisResult';
 
   function toast(msg){ if(typeof window.toast==='function') window.toast(msg); }
@@ -27,30 +27,44 @@
       }catch{ toast('複製失敗'); }
     }
   }
+  function newButton(td){
+    const btn=document.createElement('button');
+    btn.type='button';
+    btn.className='analysis-cell-copy';
+    btn.dataset.analysisCellCopy='1';
+    btn.textContent='複製';
+    btn.title='複製內容';
+    btn.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();copyText(cleanCellText(td),btn)});
+    return btn
+  }
+  function normalizeRow(row){
+    const cells=row?.cells?[...row.cells]:[...(row?.querySelectorAll?.('td')||[])];
+    if(cells.length<2)return 0;
+    const target=cells[1];
+    cells.forEach((td,i)=>{
+      const buttons=[...(td.querySelectorAll?.('[data-analysis-cell-copy]')||[])];
+      if(i!==1){buttons.forEach(n=>n.remove());delete td.dataset.analysisCopyReady;return}
+      buttons.slice(1).forEach(n=>n.remove());
+      if(buttons[0]){td.dataset.analysisCopyReady='1';return}
+      delete td.dataset.analysisCopyReady;
+      td.appendChild(newButton(td));
+      td.dataset.analysisCopyReady='1'
+    });
+    return 1
+  }
   function decorate(root=document){
     const host=root.getElementById?root.getElementById(ROOT_ID):document.getElementById(ROOT_ID);
-    if(!host) return;
-    host.querySelectorAll('.analysis-table tbody td').forEach(td=>{
-      if(td.dataset.analysisCopyReady==='1') return;
-      td.dataset.analysisCopyReady='1';
-      const btn=document.createElement('button');
-      btn.type='button';
-      btn.className='analysis-cell-copy';
-      btn.dataset.analysisCellCopy='1';
-      btn.textContent='複製';
-      btn.title='複製這一格';
-      btn.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();copyText(cleanCellText(td),btn)});
-      td.appendChild(btn);
-    });
+    if(!host)return;
+    host.querySelectorAll('.analysis-table tbody tr').forEach(normalizeRow);
   }
   function style(){
     if(document.getElementById('analysisCopyStyle')) return;
     const s=document.createElement('style');s.id='analysisCopyStyle';s.textContent=`
-      #analysisResult .analysis-table tbody td{position:relative;padding-right:58px}
+      #analysisResult .analysis-table tbody td:nth-child(2){position:relative;padding-right:58px}
       #analysisResult .analysis-cell-copy{position:absolute;right:7px;top:50%;transform:translateY(-50%);border:1px solid #cbd5e1;background:#fff;color:#475569;border-radius:7px;padding:4px 7px;font-size:10px;font-weight:800;line-height:1;cursor:pointer;opacity:.82}
       #analysisResult .analysis-cell-copy:hover{opacity:1;border-color:#93b4ff;color:#1d4ed8;background:#f8fbff}
       #analysisResult .analysis-cell-copy.copied{color:#087a55;border-color:#86efac;background:#f0fdf4}
-      @media(max-width:820px){#analysisResult .analysis-table tbody td{padding-right:52px}.analysis-cell-copy{font-size:9px!important;padding:4px 6px!important}}
+      @media(max-width:820px){#analysisResult .analysis-table tbody td:nth-child(2){padding-right:52px}.analysis-cell-copy{font-size:9px!important;padding:4px 6px!important}}
     `;document.head.appendChild(s);
   }
   function init(){
@@ -60,5 +74,5 @@
     console.info('[Label Workbench] analysis cell copy',BUILD);
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init,{once:true}); else init();
-  window.LabelWorkbenchAnalysisCopy={BUILD,decorate,cleanCellText};
+  window.LabelWorkbenchAnalysisCopy={BUILD,decorate,normalizeRow,cleanCellText};
 })();
