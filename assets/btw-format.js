@@ -1,12 +1,10 @@
-/* Label Workbench BTW binary format helper v0.1
- * Experimental parser/rebuilder for native BarTender .btw files.
- * Based on the documented/reverse-engineered BTW layout used by the public-domain barmaid project:
- * text header + PNG preview blobs + zlib-compressed serialized object container.
- * This module does NOT invent a BTW file from scratch; it first proves safe round-trip handling of an existing BTW.
+/* Label Workbench BTW binary format helper v0.2
+ * Robust parser/rebuilder for native BarTender .btw files.
+ * Reads the text header, preview PNG blobs and zlib-compressed serialized object container.
  */
 (function(){
   'use strict';
-  const BUILD='20260910-btw011';
+  const BUILD='20260911-btw020-robust-png';
   const SOF=new Uint8Array([0x0d,0x0a,0x42,0x61,0x72,0x20,0x54,0x65,0x6e,0x64,0x65,0x72,0x20,0x46,0x6f,0x72,0x6d,0x61,0x74,0x20,0x46,0x69,0x6c,0x65,0x0d,0x0a]);
   const END_META=new Uint8Array([0xff,0xfe,0xff,0x00]);
   const ZLIB_TAG=new Uint8Array([0x00,0x01]);
@@ -16,6 +14,7 @@
   function eqAt(data,seq,offset){if(offset<0||offset+seq.length>data.length)return false;for(let i=0;i<seq.length;i++)if(data[offset+i]!==seq[i])return false;return true}
   function findSeq(data,seq,start=0){for(let i=Math.max(0,start);i<=data.length-seq.length;i++)if(eqAt(data,seq,i))return i;return-1}
   function readU32LE(data,offset){return(data[offset]|(data[offset+1]<<8)|(data[offset+2]<<16)|(data[offset+3]<<24))>>>0}
+  function readU32BE(data,offset){return(((data[offset]<<24)>>>0)|(data[offset+1]<<16)|(data[offset+2]<<8)|data[offset+3])>>>0}
   function skipZeroPadding(data,offset){let p=offset;while(p+4<=data.length&&data[p]===0&&data[p+1]===0&&data[p+2]===0&&data[p+3]===0)p+=4;return p}
   function concatBytes(parts){const arrays=parts.map(u8),size=arrays.reduce((n,a)=>n+a.length,0),out=new Uint8Array(size);let o=0;for(const a of arrays){out.set(a,o);o+=a.length}return out}
   function ascii(bytes){return new TextDecoder('latin1').decode(bytes)}
@@ -27,17 +26,56 @@
     return{text,applicationVersion:app?.[1]?.trim()||'',build:app?.[2]?.trim()||'',edition:app?.[3]?.trim()||'',compatibleVersion:doc?.[1]?.trim()||'',archiveVersion:doc?.[2]?.trim()||''};
   }
 
+  function pngEnd(data,start){
+    if(!eqAt(data,PNG_MAGIC,start))return-1;
+    let p=start+PNG_MAGIC.length,guard=0;
+    while(p+12<=data.length&&guard++<10000){
+      const len=readU32BE(data,p);
+      if(len>0x10000000||p+12+len>data.length)return-1;
+      const type=String.fromCharCode(data[p+4],data[p+5],data[p+6],data[p+7]);
+      const end=p+12+len;
+      if(type==='IEND')return end;
+      p=end;
+    }
+    return-1;
+  }
+
+  function bytesAreZero(data,start,end){for(let i=start;i<end;i++)if(data[i]!==0)return false;return true}
+
+  function parsePreview(data,offset,index){
+    let p=offset,declaredSize=0,start=-1;
+    if(p+4<=data.length){
+      declaredSize=readU32LE(data,p);
+      if(declaredSize>0&&eqAt(data,PNG_MAGIC,p+4))start=p+4;
+    }
+    if(start<0){
+      start=findSeq(data,PNG_MAGIC,p);
+      if(start<0)throw new Error(`BTW PNG #${index+1} 找不到 PNG 標頭`);
+      if(start-p>32)throw new Error(`BTW PNG #${index+1} 前置資料異常`);
+      if(start>=4)declaredSize=readU32LE(data,start-4);
+    }
+    const actualEnd=pngEnd(data,start);
+    if(actualEnd<0)throw new Error(`BTW PNG #${index+1} 結構不完整`);
+    const declaredEnd=declaredSize?start+declaredSize:-1;
+    let next=actualEnd;
+    if(declaredEnd>=actualEnd&&declaredEnd<=data.length&&bytesAreZero(data,actualEnd,declaredEnd))next=declaredEnd;
+    return{size:actualEnd-start,declaredSize,start,end:actualEnd,isPng:true,nextOffset:skipZeroPadding(data,next)};
+  }
+
   function parseStructure(buffer){
     const data=u8(buffer);if(!eqAt(data,SOF,0))throw new Error('不是可辨識的 BarTender BTW 檔案');
     const metaEnd=findSeq(data,END_META,SOF.length);if(metaEnd<0)throw new Error('找不到 BTW metadata 結尾');
     let p=skipZeroPadding(data,metaEnd+END_META.length),pngs=[];
     for(let i=0;i<2;i++){
-      if(p+4>data.length)throw new Error('BTW 預覽區不完整');
-      const size=readU32LE(data,p),start=p+4,end=start+size;
-      if(!size||end>data.length)throw new Error(`BTW PNG #${i+1} 長度異常`);
-      pngs.push({size,start,end,isPng:eqAt(data,PNG_MAGIC,start)});p=skipZeroPadding(data,end);
+      const preview=parsePreview(data,p,i);pngs.push(preview);p=preview.nextOffset;
     }
-    const tagOffset=p,zlibTagged=eqAt(data,ZLIB_TAG,p);if(zlibTagged)p+=2;
+    let tagOffset=p,zlibTagged=eqAt(data,ZLIB_TAG,p);
+    if(!zlibTagged){
+      const nearby=findSeq(data,ZLIB_TAG,p);
+      if(nearby>=p&&nearby-p<=16){tagOffset=nearby;p=nearby;zlibTagged=true}
+    }
+    if(zlibTagged)p+=2;
+    if(p>=data.length)throw new Error('BTW 壓縮資料區不存在');
     const header=parseHeaderText(data,metaEnd);
     return{BUILD,byteLength:data.length,metaEnd,tagOffset,containerOffset:p,zlibTagged,prefix:data.slice(0,p),compressedContainer:data.slice(p),pngs,header};
   }
@@ -73,5 +111,5 @@
 
   async function roundTrip(buffer){const original=u8(buffer),parsed=parseStructure(original),container=await inflateContainer(parsed),rebuilt=await rebuild(parsed,container),reparsed=parseStructure(rebuilt),roundContainer=await inflateContainer(reparsed);let same=container.length===roundContainer.length;for(let i=0;same&&i<container.length;i++)if(container[i]!==roundContainer[i])same=false;return{ok:same,originalBytes:original.length,rebuiltBytes:rebuilt.length,containerBytes:container.length,parsed,rebuilt,strings:scanUtf16Strings(container,{minLength:2}).slice(0,500)}}
 
-  window.LabelWorkbenchBtwFormat={BUILD,SOF,END_META,ZLIB_TAG,PNG_MAGIC,findSeq,readU32LE,skipZeroPadding,parseHeaderText,parseStructure,inflateContainer,deflateContainer,rebuild,scanUtf16Strings,encodeBtwString,replaceStringAt,roundTrip};
+  window.LabelWorkbenchBtwFormat={BUILD,SOF,END_META,ZLIB_TAG,PNG_MAGIC,findSeq,readU32LE,readU32BE,skipZeroPadding,parseHeaderText,pngEnd,parsePreview,parseStructure,inflateContainer,deflateContainer,rebuild,scanUtf16Strings,encodeBtwString,replaceStringAt,roundTrip};
 })();
