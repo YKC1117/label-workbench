@@ -1,4 +1,4 @@
-/* Label Workbench BTW object decoder/editor v0.3.3
+/* Label Workbench BTW object decoder/editor v0.3.4
  * Interoperability-focused reverse engineering for BarTender .btw files.
  * Uses the same public-domain layout observations as Elias Oenal's Barmaid:
  * prefix + preview PNG blobs + zlib serialized container + FF FE FF UTF-16 strings.
@@ -6,7 +6,7 @@
  */
 (function(){
   'use strict';
-  const BUILD='20260911-btw-object-map-033-empty-barcode-slots';
+  const BUILD='20260911-btw-object-map-034-text-empty-skip';
   const ROOT='Root.MasterSelectedObject.';
   const FONT_MARKER=new Uint8Array([0x03,0x02,0x01,0x22]);
   const PLACEHOLDER='(???) ???-????';
@@ -81,9 +81,10 @@
   function primaryValueEntry(strings,kind,root,nameEntry){
     if(kind!=='text')return null;
     let hit=null;
-    for(let i=0;i<strings.length-1;i++){
-      if(strings[i].text!==PLACEHOLDER)continue;
-      const n=strings[i+1];
+    const dense=strings.filter(e=>String(e.text??'')!=='');
+    for(let i=0;i<dense.length-1;i++){
+      if(dense[i].text!==PLACEHOLDER)continue;
+      const n=dense[i+1];
       if(!n?.text||/^(?:Box Options|DataSource|Text \d+|文字範例)$/i.test(n.text))continue;
       hit=n;
     }
