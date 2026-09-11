@@ -5,9 +5,9 @@
 (function(){
   'use strict';
 
-  const BUILD='20260911-btnp120-local-seed';
+  const BUILD='20260911-btnp121-local-seed-verified';
   const FORMAT_SRC='assets/btw-format.js?v=20260910-btw011';
-  const NATIVE_SRC='assets/btw-native.js?v=20260911-btwn300-local-seed';
+  const NATIVE_SRC='assets/btw-native.js?v=20260911-btwn310-local-seed-verified';
   let formatPromise=null,nativePromise=null;
 
   const el=id=>document.getElementById(id);
