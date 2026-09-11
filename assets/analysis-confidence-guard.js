@@ -1,10 +1,10 @@
-/* Label Workbench final confidence guard v1.5
+/* Label Workbench final confidence guard v1.6
  * Conservative final pass: never rewrite accepted values or destroy OCR evidence.
  * Only adjusts display confidence and cleans clearly redundant/noisy candidate text.
  */
 (function(){
   'use strict';
-  const BUILD='20260911-confidence-guard-150-display-cleanup';
+  const BUILD='20260911-confidence-guard-160-dedup-candidates';
   const api=()=>window.LabelWorkbenchInterpreter;
   const norm=v=>String(v??'').toUpperCase().replace(/[^A-Z0-9]/g,'');
   const tokenName=f=>String(f?.name||'').toUpperCase().trim();
@@ -83,6 +83,10 @@
       if(!/^候選\s*[:：]/.test(text))return;
       const raw=text.replace(/^候選\s*[:：]\s*/,'').trim();
       if(!raw){node.remove();return}
+
+      // If the final display already has an explicit "另讀到" alternative,
+      // the old raw candidate line is duplicate evidence and only makes the row noisier.
+      if(mainNorm&&f?.__displayAlternatives?.length){node.remove();return}
 
       if(mainNorm){
         const pieces=raw.split(/\s*\/\s*|\s+/).map(x=>x.trim()).filter(Boolean);
