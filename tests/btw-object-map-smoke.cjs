@@ -23,7 +23,7 @@ let container=concat([
   obj({root:'Root.MasterSelectedObject.DataSourceGeneral.DataSource',name:'文字 1',x:62,y:254,value:'(1P) PART NO :'}),
   obj({root:'Root.MasterSelectedObject.DataSourceGeneral.DataSource',name:'文字 2',x:737,y:254,value:'ABC123'}),
   obj({root:'Root.MasterSelectedObject.Barcode',name:'條碼 1',x:62,y:343,value:undefined,fontName:'Microsoft JhengHei',fontSize:6,markers:['TextTransforms'],components:['1P','文字 2']}),
-  obj({root:'Root.MasterSelectedObject.DataSourceGeneral.DataSource',name:'條碼 2',x:3213,y:156,value:undefined,markers:['Screen Data'],components:['文字 2']}),
+  obj({root:'Root.MasterSelectedObject.DataSourceGeneral.DataSource',name:'條碼 2',x:3213,y:156,value:undefined,markers:['Screen Data'],components:['DM-OLD']}),
   obj({root:'Root.MasterSelectedObject.Border',name:'文字 32',x:3486,y:933,value:'RoHS',fontSize:12}),
   obj({root:'Root.MasterSelectedObject.Barcode',name:'文字 26',x:417,y:2083,value:'P1',fontSize:10})
 ]);
@@ -34,18 +34,29 @@ const t=map.objects.find(o=>o.name==='文字 2'),bc=map.objects.find(o=>o.name==
 if(!t||t.value!=='ABC123'||t.xMil!==737||t.yMil!==254)throw new Error('text decode mismatch');
 if(t.fontName!=='Arial'||t.fontSize!==10)throw new Error('font decode mismatch');
 if(!bc||bc.kind!=='barcode'||bc.barcodeType!=='Code 128'||bc.resolvedPreview!=='1PABC123')throw new Error(`Code128 relation mismatch: ${bc?.barcodeType}/${bc?.resolvedPreview}`);
-if(!dm||dm.kind!=='barcode'||dm.barcodeType!=='Data Matrix'||dm.resolvedPreview!=='ABC123')throw new Error(`DataMatrix classification mismatch: ${dm?.barcodeType}`);
+if(!dm||dm.kind!=='barcode'||dm.barcodeType!=='Data Matrix'||dm.resolvedPreview!=='DM-OLD')throw new Error(`DataMatrix classification mismatch: ${dm?.barcodeType}/${dm?.resolvedPreview}`);
 if(borderText?.kind!=='text'||borderText.value!=='RoHS')throw new Error('text name must override Border property root');
 if(barcodeRootText?.kind!=='text'||barcodeRootText.value!=='P1')throw new Error('text name must override Barcode property root');
-console.log('PASS: BTW names, positions, fonts, Code128/DataMatrix structures and misleading property roots decode');
+if(bc.componentEntries.length!==2||dm.componentEntries.length!==1)throw new Error('barcode component offsets missing');
+console.log('PASS: BTW names, positions, fonts, barcode structures and datasource offsets decode');
 
-container=M.editContainer(container,[{name:'文字 2',value:'LONGER-PART-987654',xMm:25.4,yMil:400,fontSize:14}]);
+container=M.editContainer(container,[
+  {name:'文字 2',value:'LONGER-PART-987654',xMm:25.4,yMil:400,fontSize:14},
+  {name:'條碼 1',barcodeComponents:['PREFIX-LONG-','CODE128-RAW-987654321']},
+  {name:'條碼 2',barcodeValue:'[)>06|DM-NEW-LONG-PAYLOAD|987654321'}
+]);
 map=M.mapContainer(container);
-const edited=map.objects.find(o=>o.name==='文字 2'),after=map.objects.find(o=>o.name==='條碼 1'),afterDm=map.objects.find(o=>o.name==='條碼 2');
-if(edited.value!=='LONGER-PART-987654')throw new Error('variable-length value edit failed');
+const edited=map.objects.find(o=>o.name==='文字 2'),after=map.objects.find(o=>o.name==='條碼 1'),afterDm=map.objects.find(o=>o.name==='條碼 2'),last=map.objects.find(o=>o.name==='文字 26');
+if(edited.value!=='LONGER-PART-987654')throw new Error('variable-length text edit failed');
 if(edited.xMil!==1000||edited.yMil!==400)throw new Error(`position edit failed ${edited.xMil}/${edited.yMil}`);
 if(edited.fontSize!==14)throw new Error(`font edit failed ${edited.fontSize}`);
-if(after.resolvedPreview!=='1PLONGER-PART-987654')throw new Error('downstream Code128 offsets broken after longer edit');
-if(afterDm.resolvedPreview!=='LONGER-PART-987654')throw new Error('downstream DataMatrix offsets broken after longer edit');
-console.log('PASS: variable-length BTW text + X/Y + font-size edits keep later barcode objects decodable');
+if(after.components.join('|')!=='PREFIX-LONG-|CODE128-RAW-987654321')throw new Error(`Code128 payload write failed: ${after.components.join('|')}`);
+if(after.resolvedPreview!=='PREFIX-LONG-CODE128-RAW-987654321')throw new Error('Code128 rebuilt preview mismatch');
+if(afterDm.components[0]!=='[)>06|DM-NEW-LONG-PAYLOAD|987654321'||afterDm.resolvedPreview!==afterDm.components[0])throw new Error('DataMatrix payload write failed');
+if(last?.value!=='P1')throw new Error('later object corrupted after multiple variable-length barcode edits');
+console.log('PASS: variable-length text, Code128 datasource and DataMatrix payload edits keep later objects decodable');
+
+let rejected=false;try{M.editContainer(container,[{name:'條碼 1',barcodeValue:'SHOULD-NOT-FLATTEN'}])}catch(err){rejected=/barcodeComponents/.test(String(err?.message||err))}
+if(!rejected)throw new Error('multi-source Code128 must reject unsafe single barcodeValue flattening');
+console.log('PASS: unsafe multi-source Code128 flattening is blocked');
 console.log('PASS: BTW object map smoke tests');
