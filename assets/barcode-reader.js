@@ -1,8 +1,8 @@
 /* Label Workbench barcode reader v4.1 loader. */
 (function(){
   'use strict';
-  const BUILD='20260911-v346-btw-object-map';
-  const modules=['assets/view-state-guard.js','assets/barcode-reader-core.js','assets/barcode-reader-ui.js','assets/barcode-generator.js','assets/label-interpreter.js','assets/analysis-accuracy.js','assets/analysis-pdf-native.js','assets/analysis-field-consistency.js','assets/analysis-copy.js','assets/btw-format.js','assets/btw-object-map.js','assets/btw-native.js','assets/bt-bridge.js','assets/workbench-priority.js','assets/bt-native-primary.js','assets/analysis-confidence-guard.js','assets/analysis-final-display.js'];
+  const BUILD='20260911-v347-btw-geometry';
+  const modules=['assets/view-state-guard.js','assets/barcode-reader-core.js','assets/barcode-reader-ui.js','assets/barcode-generator.js','assets/label-interpreter.js','assets/analysis-accuracy.js','assets/analysis-pdf-native.js','assets/analysis-geometry.js','assets/analysis-field-consistency.js','assets/analysis-copy.js','assets/btw-format.js','assets/btw-object-map.js','assets/btw-native.js','assets/bt-bridge.js','assets/workbench-priority.js','assets/bt-native-primary.js','assets/analysis-confidence-guard.js','assets/analysis-final-display.js'];
   function loadNext(){
     const src=modules.shift();if(!src)return;
     if(src.includes('view-state-guard')&&window.LabelWorkbenchViewGuard){loadNext();return}
@@ -12,6 +12,7 @@
     if(src.includes('label-interpreter')&&window.LabelWorkbenchInterpreter){loadNext();return}
     if(src.includes('analysis-accuracy')&&window.LabelWorkbenchAnalysisAccuracy){loadNext();return}
     if(src.includes('analysis-pdf-native')&&window.LabelWorkbenchPdfNative){loadNext();return}
+    if(src.includes('analysis-geometry')&&window.LabelWorkbenchAnalysisGeometry){loadNext();return}
     if(src.includes('analysis-field-consistency')&&window.LabelWorkbenchFieldConsistency){loadNext();return}
     if(src.includes('analysis-copy')&&window.LabelWorkbenchAnalysisCopy){loadNext();return}
     if(src.includes('btw-format')&&window.LabelWorkbenchBtwFormat){loadNext();return}
