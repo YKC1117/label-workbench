@@ -46,6 +46,8 @@ jobs:
           node --check assets/btw-object-map.js
           node --check assets/btw-layout-map.js
           node --check assets/btw-native.js
+          node --check assets/btw-rich-native.js
+          node --check assets/btw-rich-bridge.js
           node --check assets/bt-direct-import.js
           node --check assets/bt-bridge.js
           node --check assets/bt-native-primary.js
@@ -65,6 +67,7 @@ jobs:
           node --check tests/btw-layout-map-smoke.cjs
           node --check tests/cea-object-map-diagnostic.cjs
           node --check tests/btw-native-smoke.cjs
+          node --check tests/btw-rich-native-smoke.cjs
 
       - name: Current wiring sanity check
         run: |
@@ -79,6 +82,8 @@ jobs:
           grep -q 'analysis-geometry.js' assets/barcode-reader.js
           grep -q 'btw-object-map.js' assets/barcode-reader.js
           grep -q 'btw-layout-map.js' assets/barcode-reader.js
+          grep -q 'btw-rich-native.js' assets/barcode-reader.js
+          grep -q 'btw-rich-bridge.js' assets/barcode-reader.js
           grep -q 'bt-native-primary.js' assets/barcode-reader.js
           grep -q 'analysis-confidence-guard.js' assets/barcode-reader.js
           grep -q 'downloadFromAnalysis' assets/btw-native.js
@@ -86,6 +91,8 @@ jobs:
           grep -q "BUILD='20260911-btwn230-root-layout'" assets/btw-native.js
           grep -q "SEED_ID='CEA-2022-R5'" assets/btw-native.js
           grep -q "SEED_FUNCTION='btw-seed'" assets/btw-native.js
+          grep -q "BUILD='20260911-btw-rich-100'" assets/btw-rich-native.js
+          grep -q "BUILD='20260911-btw-rich-bridge-100'" assets/btw-rich-bridge.js
 
       - name: Core logic smoke tests
         run: node tests/logic-smoke.cjs
@@ -156,3 +163,6 @@ jobs:
 
       - name: Native editable BTW generation smoke tests
         run: node tests/btw-native-smoke.cjs
+
+      - name: Production rich native BTW generation smoke tests
+        run: node tests/btw-rich-native-smoke.cjs
