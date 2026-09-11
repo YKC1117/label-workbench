@@ -1,4 +1,4 @@
-/* Label Workbench BTW binary format helper v0.1
+/* Label Workbench BTW binary format helper v0.1.2
  * Experimental parser/rebuilder for native BarTender .btw files.
  * Based on the documented/reverse-engineered BTW layout used by the public-domain barmaid project:
  * text header + PNG preview blobs + zlib-compressed serialized object container.
@@ -6,7 +6,7 @@
  */
 (function(){
   'use strict';
-  const BUILD='20260910-btw011';
+  const BUILD='20260911-btw012-template-size';
   const SOF=new Uint8Array([0x0d,0x0a,0x42,0x61,0x72,0x20,0x54,0x65,0x6e,0x64,0x65,0x72,0x20,0x46,0x6f,0x72,0x6d,0x61,0x74,0x20,0x46,0x69,0x6c,0x65,0x0d,0x0a]);
   const END_META=new Uint8Array([0xff,0xfe,0xff,0x00]);
   const ZLIB_TAG=new Uint8Array([0x00,0x01]);
@@ -19,6 +19,7 @@
   function skipZeroPadding(data,offset){let p=offset;while(p+4<=data.length&&data[p]===0&&data[p+1]===0&&data[p+2]===0&&data[p+3]===0)p+=4;return p}
   function concatBytes(parts){const arrays=parts.map(u8),size=arrays.reduce((n,a)=>n+a.length,0),out=new Uint8Array(size);let o=0;for(const a of arrays){out.set(a,o);o+=a.length}return out}
   function ascii(bytes){return new TextDecoder('latin1').decode(bytes)}
+  function asciiBytes(text){return new TextEncoder().encode(String(text??''))}
 
   function parseHeaderText(data,limit){
     const text=ascii(data.slice(0,Math.max(0,limit))).replace(/\0/g,'');
@@ -51,6 +52,16 @@
   async function deflateContainer(bytes){return streamTransform(u8(bytes),'deflate')}
   async function rebuild(parsedOrBuffer,containerBytes){const parsed=parsedOrBuffer?.prefix?parsedOrBuffer:parseStructure(parsedOrBuffer),compressed=await deflateContainer(containerBytes);return concatBytes([parsed.prefix,compressed])}
 
+  function formatMm(v){const n=Math.round(Number(v)*100)/100;if(!Number.isFinite(n)||n<=0)throw new Error('BTW 標籤尺寸無效');return String(n).replace(/\.0+$/,'').replace(/(\.\d*?)0+$/,'$1')}
+  function replaceTemplateSize(buffer,widthMm,heightMm){
+    const data=u8(buffer),parsed=parseStructure(data),open=asciiBytes('<TemplateSize>'),close=asciiBytes('</TemplateSize>'),startTag=findSeq(data,open,0),closeAt=findSeq(data,close,startTag+open.length);
+    if(startTag<0||closeAt<0||startTag>=parsed.metaEnd||closeAt>=parsed.metaEnd)throw new Error('找不到 BTW TemplateSize metadata');
+    const value=asciiBytes(`${formatMm(widthMm)} x ${formatMm(heightMm)} mm`),before=data.slice(0,startTag+open.length),after=data.slice(closeAt);
+    const out=concatBytes([before,value,after]),check=parseStructure(out),text=check.header.text;
+    if(!text.includes(`<TemplateSize>${formatMm(widthMm)} x ${formatMm(heightMm)} mm</TemplateSize>`))throw new Error('BTW TemplateSize metadata 寫入驗證失敗');
+    return out;
+  }
+
   function scanUtf16Strings(container,{minLength=1,maxLength=10000}={}){
     const data=u8(container),decoder=new TextDecoder('utf-16le'),out=[];
     for(let i=0;i+4<=data.length;i++){
@@ -73,5 +84,5 @@
 
   async function roundTrip(buffer){const original=u8(buffer),parsed=parseStructure(original),container=await inflateContainer(parsed),rebuilt=await rebuild(parsed,container),reparsed=parseStructure(rebuilt),roundContainer=await inflateContainer(reparsed);let same=container.length===roundContainer.length;for(let i=0;same&&i<container.length;i++)if(container[i]!==roundContainer[i])same=false;return{ok:same,originalBytes:original.length,rebuiltBytes:rebuilt.length,containerBytes:container.length,parsed,rebuilt,strings:scanUtf16Strings(container,{minLength:2}).slice(0,500)}}
 
-  window.LabelWorkbenchBtwFormat={BUILD,SOF,END_META,ZLIB_TAG,PNG_MAGIC,findSeq,readU32LE,skipZeroPadding,parseHeaderText,parseStructure,inflateContainer,deflateContainer,rebuild,scanUtf16Strings,encodeBtwString,replaceStringAt,roundTrip};
+  window.LabelWorkbenchBtwFormat={BUILD,SOF,END_META,ZLIB_TAG,PNG_MAGIC,findSeq,readU32LE,skipZeroPadding,parseHeaderText,parseStructure,inflateContainer,deflateContainer,rebuild,formatMm,replaceTemplateSize,scanUtf16Strings,encodeBtwString,replaceStringAt,roundTrip};
 })();
