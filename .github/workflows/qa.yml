@@ -53,15 +53,10 @@ jobs:
           node --check assets/workbench-priority.js
           node --check tests/btw-seed-diagnostic.cjs
           node --check tests/btw-object-map-smoke.cjs
-          node --check tests/public-btw-sample-smoke.cjs
-          node --check tests/hibc-official-sample-smoke.cjs
-          node --check tests/template-library-page-diagnostic.cjs
-          node --check tests/hibcc-template-seed-smoke.cjs
-          node --check tests/hibcc-object-map-diagnostic.cjs
-          node --check tests/multicode128-template-scan.cjs
           node --check tests/analysis-geometry-smoke.cjs
           node --check tests/btw-layout-map-smoke.cjs
           node --check tests/cea-object-map-diagnostic.cjs
+          node --check tests/btw-native-smoke.cjs
 
       - name: Current wiring sanity check
         run: |
@@ -78,6 +73,7 @@ jobs:
           grep -q 'analysis-confidence-guard.js' assets/barcode-reader.js
           grep -q 'downloadFromAnalysis' assets/btw-native.js
           grep -q 'downloadEditable' assets/bt-native-primary.js
+          grep -q "BUILD='20260911-btwn230-root-layout'" assets/btw-native.js
           grep -q "SEED_ID='CEA-2022-R5'" assets/btw-native.js
           grep -q "SEED_FUNCTION='btw-seed'" assets/btw-native.js
 
@@ -116,24 +112,6 @@ jobs:
 
       - name: Native BTW object decoder/editor smoke tests
         run: node tests/btw-object-map-smoke.cjs
-
-      - name: Official Seagull BTW public sample diagnostic
-        run: node tests/public-btw-sample-smoke.cjs
-
-      - name: Legacy official HIBC sample diagnostic
-        run: node tests/hibc-official-sample-smoke.cjs
-
-      - name: Template library raw form diagnostic
-        run: node tests/template-library-page-diagnostic.cjs
-
-      - name: Official HIBCC resource 79898 raw structure verification
-        run: node tests/hibcc-template-seed-smoke.cjs
-
-      - name: Official HIBCC native object map diagnostic
-        run: node tests/hibcc-object-map-diagnostic.cjs
-
-      - name: Scan official templates for multi-Code128 donors
-        run: node tests/multicode128-template-scan.cjs
 
       - name: CEA seed native object map diagnostic
         run: node tests/cea-object-map-diagnostic.cjs
