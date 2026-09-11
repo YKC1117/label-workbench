@@ -32,13 +32,13 @@ jobs:
           node --check tests/analysis-copy-smoke.cjs
       - name: Current wiring sanity check
         run: |
-          grep -q 'assets/barcode-reader.js?v=20260911-v359' index.html
-          grep -q '標籤製作工作台 · v1.9.33' index.html
-          grep -q '更新：2026/09/11 23:46' index.html
-          grep -q "RELEASE='v1.9.33'" assets/view-state-guard.js
-          grep -q "UPDATED='2026/09/11 23:46'" assets/view-state-guard.js
-          grep -q "BUILD='20260911-view-guard-118-btw-boundary'" assets/view-state-guard.js
-          grep -q "BUILD='20260911-v354-btw-boundary'" assets/barcode-reader.js
+          grep -q 'assets/barcode-reader.js?v=20260912-v360' index.html
+          grep -q '標籤製作工作台 · v1.9.34' index.html
+          grep -q '更新：2026/09/12 00:08' index.html
+          grep -q "RELEASE='v1.9.34'" assets/view-state-guard.js
+          grep -q "UPDATED='2026/09/12 00:08'" assets/view-state-guard.js
+          grep -q "BUILD='20260912-view-guard-119-btw-datasource'" assets/view-state-guard.js
+          grep -q "BUILD='20260912-v355-btw-datasource'" assets/barcode-reader.js
           grep -q "BUILD='20260912-btw-object-map-038-barcode-slot-mode'" assets/btw-object-map.js
           grep -q "SEED_ID='CEA-2022-R5'" assets/btw-native.js
           grep -q "SEED_FUNCTION='btw-seed'" assets/btw-native.js
