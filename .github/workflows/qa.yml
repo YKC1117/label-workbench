@@ -59,6 +59,7 @@ jobs:
           node --check tests/rich-donor-edit-smoke.cjs
           node --check tests/rich-donor-barcode-smoke.cjs
           node --check tests/rich-donor-pool-smoke.cjs
+          node --check tests/rich-donor-sanitize-smoke.cjs
           node --check tests/btw-object-map-smoke.cjs
           node --check tests/analysis-geometry-smoke.cjs
           node --check tests/btw-layout-map-smoke.cjs
@@ -143,6 +144,9 @@ jobs:
 
       - name: Official rich donor visible object-pool diagnostic
         run: node tests/rich-donor-pool-smoke.cjs
+
+      - name: Official rich donor full sanitization gate
+        run: node tests/rich-donor-sanitize-smoke.cjs
 
       - name: Native BTW object decoder/editor smoke tests
         run: node tests/btw-object-map-smoke.cjs
