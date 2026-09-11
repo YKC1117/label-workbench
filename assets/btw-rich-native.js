@@ -1,13 +1,16 @@
-/* Label Workbench rich editable BTW generator v0.1.2
+/* Label Workbench rich editable BTW generator v0.1.3
  * Reuses verified official BarTender donor templates as an editable object pool.
  * Every unused donor root is moved off-canvas before Quick Analysis fields/barcodes are restored.
+ * When Quick Analysis has reliable physical source dimensions, both object coordinates and
+ * BarTender TemplateSize are rewritten to the source label size.
  */
 (function(){
   'use strict';
-  const BUILD='20260911-btw-rich-120-unit-safe';
+  const BUILD='20260911-btw-rich-130-source-size';
   const SEED_FUNCTION='btw-seed';
   const OFF=50000;
   const MAX_TEXT=29;
+  const MAX_SIZE_PAIRS=24;
   const CONTAINER_MARKER=new Uint8Array([0x49,0x45,0x4e,0x44,0xae,0x42,0x60,0x82,0x00,0x01]);
   const seeds={
     'gtl-a5':{id:'GTL-A5-2022-R1'},
@@ -21,6 +24,7 @@
   const isDm=b=>/datamatrix/.test(normalizeFormat(b?.format));
   const isC128=b=>/code128|c128/.test(normalizeFormat(b?.format));
   const outputName=(label,index=0)=>`BT_Editable_${safeFile(String(label?.sourceName||'Label').replace(/\.[^.]+$/,''))}_L${String(index+1).padStart(2,'0')}.btw`;
+  const near=(a,b,t=.03)=>Math.abs(Number(a)-Number(b))<=t;
 
   function cloudEndpoint(seedKey){
     const cfg=window.LABEL_WORKBENCH_CLOUD||window.LabelWorkbenchCloudConfig||{},base=String(cfg.url||'').replace(/\/$/,'');
@@ -91,6 +95,38 @@
     }
     return{width:76.2,height:50.8,raw:raw||'fallback 3x2in'}
   }
+  function sourceTargetSize(label,donor){
+    const g=label?.sourceGeometry||{},width=Number(g.widthMm),height=Number(g.heightMm);
+    if(width>=5&&height>=5&&width<=1000&&height<=1000)return{width,height,raw:`source ${width.toFixed(3)} x ${height.toFixed(3)} mm`,source:true};
+    return{width:donor.width,height:donor.height,raw:donor.raw,source:false}
+  }
+  function mmToMil(v){return Math.round(Number(v)/0.0254)}
+  function findTemplateSizePairs(container,size){
+    const data=container instanceof Uint8Array?container:new Uint8Array(container),w=mmToMil(size?.width),h=mmToMil(size?.height),out=[];
+    if(!(w>0&&h>0)||data.byteLength<8)return out;
+    const dv=new DataView(data.buffer,data.byteOffset,data.byteLength);
+    for(let i=0;i<=data.byteLength-8;i++)if(dv.getInt32(i,true)===w&&dv.getInt32(i+4,true)===h)out.push(i);
+    return out
+  }
+  function replaceTemplateSizePairs(container,current,target){
+    const same=near(current?.width,target?.width)&&near(current?.height,target?.height);
+    if(same)return{container:container instanceof Uint8Array?new Uint8Array(container):new Uint8Array(container),changed:false,offsets:[],from:{width:mmToMil(current.width),height:mmToMil(current.height)},to:{width:mmToMil(target.width),height:mmToMil(target.height)}};
+    const offsets=findTemplateSizePairs(container,current);
+    if(!offsets.length)throw new Error(`BTW 內部找不到 donor 尺寸 ${current.width}×${current.height}mm 的相鄰 mil pair`);
+    if(offsets.length>MAX_SIZE_PAIRS)throw new Error(`BTW donor 尺寸 pair 過多 (${offsets.length})，停止自動改尺寸`);
+    const out=new Uint8Array(container),dv=new DataView(out.buffer,out.byteOffset,out.byteLength),w=mmToMil(target.width),h=mmToMil(target.height);
+    for(const off of offsets){dv.setInt32(off,w,true);dv.setInt32(off+4,h,true)}
+    return{container:out,changed:true,offsets,from:{width:mmToMil(current.width),height:mmToMil(current.height)},to:{width:w,height:h}}
+  }
+  function sameMappedObjects(a,b){
+    if(!a?.objects||!b?.objects||a.objects.length!==b.objects.length)return false;
+    for(let i=0;i<a.objects.length;i++){
+      const x=a.objects[i],y=b.objects[i];
+      if(x.index!==y.index||x.xMil!==y.xMil||x.yMil!==y.yMil||String(x.value??'')!==String(y.value??''))return false;
+      if(JSON.stringify(x.components||[])!==JSON.stringify(y.components||[]))return false;
+    }
+    return true
+  }
   function sourceLayout(box,target){
     const L=window.LabelWorkbenchBtwLayout;if(!L?.boxToLayout||!box)return null;
     try{return L.boxToLayout(box,target)}catch{return null}
@@ -108,9 +144,9 @@
 
   async function generateOne(label,index=0){
     const plan=selectPlan(label);if(!plan)throw new Error('此標籤超出 rich donor 可安全建立範圍');
-    const M=window.LabelWorkbenchBtwObjectMap;
+    const M=window.LabelWorkbenchBtwObjectMap,F=window.LabelWorkbenchBtwFormat;
     if(!M?.mapContainer||!M?.editContainer||typeof DecompressionStream!=='function'||typeof CompressionStream!=='function')throw new Error('BTW rich donor 元件尚未載入');
-    const seed=await fetchSeed(plan.seedKey),parsed=await splitOfficialBtw(seed),container=parsed.container,before=M.mapContainer(container),target=templateSizeMm(parsed),texts=reusableText(before.objects);
+    const seed=await fetchSeed(plan.seedKey),parsed=await splitOfficialBtw(seed),container=parsed.container,before=M.mapContainer(container),donorTarget=templateSizeMm(parsed),target=sourceTargetSize(label,donorTarget),texts=reusableText(before.objects);
     if(texts.length<plan.fields.length)throw new Error(`rich donor 可編輯文字不足：${texts.length}/${plan.fields.length}`);
 
     const edits=new Map();for(const o of before.objects)edits.set(o.index,{index:o.index,xMil:OFF,yMil:OFF});
@@ -127,14 +163,27 @@
       edits.set(obj.index,{index:obj.index,barcodeComponents:components,...pos});expectedBarcode.push({index:obj.index,type:spec.type,value,...pos})
     });
 
-    const edited=M.editContainer(container,[...edits.values()]),rebuilt=await rebuildOfficialBtw(parsed.prefix,edited),check=await splitOfficialBtw(rebuilt),after=M.mapContainer(check.container);
+    const edited=M.editContainer(container,[...edits.values()]),editedMap=M.mapContainer(edited),sizeMutation=replaceTemplateSizePairs(edited,donorTarget,target),sizedMap=M.mapContainer(sizeMutation.container);
+    if(sizeMutation.changed&&!sameMappedObjects(editedMap,sizedMap))throw new Error('改寫 BTW 內部標籤尺寸時碰到物件資料，已停止產檔');
+    let rebuilt=await rebuildOfficialBtw(parsed.prefix,sizeMutation.container);
+    if(sizeMutation.changed){
+      if(!F?.replaceTemplateSize)throw new Error('BTW TemplateSize metadata 元件未載入');
+      rebuilt=F.replaceTemplateSize(rebuilt,target.width,target.height)
+    }
+    const check=await splitOfficialBtw(rebuilt),after=M.mapContainer(check.container),finalSize=templateSizeMm(check);
+    if(!near(finalSize.width,target.width)||!near(finalSize.height,target.height))throw new Error(`BTW TemplateSize 驗證失敗：${finalSize.width}×${finalSize.height}mm`);
+    if(sizeMutation.changed){
+      const newPairs=findTemplateSizePairs(check.container,target),oldPairs=findTemplateSizePairs(check.container,donorTarget);
+      if(newPairs.length<sizeMutation.offsets.length)throw new Error(`BTW 內部新尺寸 pair 驗證失敗：${newPairs.length}/${sizeMutation.offsets.length}`);
+      if(oldPairs.length)throw new Error(`BTW 內部仍殘留 ${oldPairs.length} 組舊 donor 尺寸 pair`)
+    }
     if(after.objects.length!==before.objects.length)throw new Error(`rich donor root 數改變：${before.objects.length}→${after.objects.length}`);
     for(const e of expectedText){const o=after.objects.find(x=>x.index===e.index);if(!o||o.value!==e.value||o.xMil!==e.xMil||o.yMil!==e.yMil)throw new Error(`rich Text 驗證失敗：${e.index}`)}
     for(const e of expectedBarcode){const o=after.objects.find(x=>x.index===e.index);if(!o||o.components.join('')!==e.value||o.xMil!==e.xMil||o.yMil!==e.yMil)throw new Error(`rich ${e.type} 驗證失敗：${e.index}`)}
     const active=new Set([...expectedText.map(x=>x.index),...expectedBarcode.map(x=>x.index)]),leaks=after.objects.filter(o=>!active.has(o.index)&&(o.xMil!==OFF||o.yMil!==OFF));
     if(leaks.length)throw new Error(`rich donor 清場驗證失敗：${leaks.length} 個物件仍在畫布`);
-    return{name:outputName(label,index),bytes:rebuilt,kind:plan.kind,summary:plan.fields.map(f=>String(f.value??'')).join('\r'),barcodeValue:expectedBarcode[0]?.value||'',barcodes:{dataMatrix:plan.dm.map(barcodeText),code128:plan.c128.map(barcodeText)},layout:{target,fields:expectedText,barcodes:expectedBarcode},header:check.header,seed:plan.seedId,seedKey:plan.seedKey,rich:true,editableTextCount:expectedText.length}
+    return{name:outputName(label,index),bytes:rebuilt,kind:plan.kind,summary:plan.fields.map(f=>String(f.value??'')).join('\r'),barcodeValue:expectedBarcode[0]?.value||'',barcodes:{dataMatrix:plan.dm.map(barcodeText),code128:plan.c128.map(barcodeText)},layout:{target,donorTarget,fields:expectedText,barcodes:expectedBarcode,sizeMutation:{changed:sizeMutation.changed,count:sizeMutation.offsets.length,from:sizeMutation.from,to:sizeMutation.to}},header:check.header,seed:plan.seedId,seedKey:plan.seedKey,rich:true,editableTextCount:expectedText.length}
   }
 
-  window.LabelWorkbenchBtwRichNative={BUILD,OFF,MAX_TEXT,seeds,selectPlan,canGenerate,fetchSeed,splitOfficialBtw,rebuildOfficialBtw,templateSizeMm,reusableText,generateOne};
+  window.LabelWorkbenchBtwRichNative={BUILD,OFF,MAX_TEXT,seeds,selectPlan,canGenerate,fetchSeed,splitOfficialBtw,rebuildOfficialBtw,templateSizeMm,sourceTargetSize,mmToMil,findTemplateSizePairs,replaceTemplateSizePairs,sameMappedObjects,reusableText,generateOne};
 })();
