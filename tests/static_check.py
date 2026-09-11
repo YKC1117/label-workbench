@@ -70,7 +70,7 @@ for marker in ['parseStructure','inflateContainer','rebuild','scanUtf16Strings',
     if marker not in btw: raise SystemExit(f'BTW format marker missing: {marker}')
 for marker in ['LW-2022R2-100x65-SANITIZED','20260911-local-seed-001','BASE64','SHA256']:
     if marker not in seed: raise SystemExit(f'Local BTW seed marker missing: {marker}')
-for marker in ['20260911-btwn320-safe-no-demo','LW-2022R2-100x65-SANITIZED','btw-seed-2022r2.js','BcC128Data','BcDatamatrixData','patchSeed','fetchSeed','generateOne','downloadFromAnalysis','BT_Editable_']:
+for marker in ['20260911-btwn321-safe-base64','LW-2022R2-100x65-SANITIZED','btw-seed-2022r2.js','BcC128Data','BcDatamatrixData','patchSeed','fetchSeed','decodeSeedBase64','generateOne','downloadFromAnalysis','BT_Editable_']:
     if marker not in native: raise SystemExit(f'Native BTW generator marker missing: {marker}')
 for forbidden in ['VALUE-1','ABC-123456','LOT-20260911','DM-ABC-123456-LOT-20260911']:
     if forbidden in native: raise SystemExit(f'Demo value leaked into native generator: {forbidden}')
