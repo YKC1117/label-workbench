@@ -1,9 +1,10 @@
-/* Label Workbench cross-field consistency guard v1.0
+/* Label Workbench cross-field consistency guard v1.1
  * Prevents PART / LOT / MLOT values from being swapped when OCR/barcode candidates overlap.
+ * Cross-field cleanup is not treated as proof by itself.
  */
 (function(){
   'use strict';
-  const BUILD='20260911-field-consistency-100';
+  const BUILD='20260911-field-consistency-110-conservative';
   const api=()=>window.LabelWorkbenchInterpreter;
   const norm=v=>String(v??'').toUpperCase().replace(/[^A-Z0-9]/g,'');
   const code=f=>String(f?.code||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
@@ -64,7 +65,10 @@
         const strong=cells[1].querySelector('strong');if(strong)strong.textContent=f.value;
         cells[1].querySelectorAll('.analysis-alt').forEach(n=>n.remove());
         if(f.alternatives?.length){const s=document.createElement('small');s.className='analysis-alt';s.textContent='另讀到：'+f.alternatives.join(' / ');cells[1].appendChild(s)}
-        if(f.__consistencyResolved){const badge=cells[2].querySelector('.analysis-status');if(badge){badge.className='analysis-status high';badge.textContent='✓ 欄位交叉確認'}}
+        if(f.__consistencyResolved){
+          const badge=cells[2].querySelector('.analysis-status');
+          if(badge){badge.className='analysis-status pending';badge.textContent='⚠️ 欄位交叉修正待核對'}
+        }
       });
     });
     window.LabelWorkbenchAnalysisCopy?.decorate?.();
