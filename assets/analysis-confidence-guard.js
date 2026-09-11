@@ -1,17 +1,29 @@
-/* Label Workbench final confidence guard v1.1
+/* Label Workbench final confidence guard v1.2
  * Final pass after OCR/barcode/cross-field refinements.
- * Prevents short, conflicting, empty, or cross-field-contaminated values from being presented as fully confirmed.
+ * Prevents short, conflicting, empty, implausible, or cross-field-contaminated values from being presented as fully confirmed.
  */
 (function(){
   'use strict';
-  const BUILD='20260911-confidence-guard-110-candidate-cleanup';
+  const BUILD='20260911-confidence-guard-120-field-plausibility';
   const api=()=>window.LabelWorkbenchInterpreter;
   const norm=v=>String(v??'').toUpperCase().replace(/[^A-Z0-9]/g,'');
   const tokenName=f=>String(f?.name||'').toUpperCase().trim();
   const CANONICAL=['PART NO','LOT NO','SHAPE','GP','QTY','DATE NO','ASSY','DATE','MLOT NO','BIN','MC','VC','P1','P2','4Y','SERIAL','MODEL'];
   const tokenField=f=>/PART|LOT|MLOT|SERIAL|MODEL|ASSY|SHAPE|BIN|DATE|QTY|GP|MC|VC/.test(tokenName(f))||!!String(f?.code||'').trim();
-  const noisy=v=>{const s=String(v||'').trim();return !s||/[\u3400-\u9fff]/.test(s)||(/\s/.test(s)&&s.split(/\s+/).length>=3)||(/[(){}]/.test(s)&&s.length>10)};
-  const same=(a,b)=>{const x=norm(a),y=norm(b);return !!x&&x===y};
+  const noisy=v=>{const s=String(v||'').trim();return !s||/[\u3400-\u9fff]/.test(s)||(/\s/.test(s)&&s.split(/\s+/).length>=3)||(/[(){}]/.test(s)&&s.length>10)||(/[:：]/.test(s)&&s.length>8)};
+  const compactToken=v=>/^[A-Z0-9][A-Z0-9._\/-]*$/i.test(String(v||'').trim());
+
+  function fieldPlausible(f){
+    const raw=String(f?.value||'').trim();
+    if(!raw)return true;
+    const name=tokenName(f),code=String(f?.code||'').toUpperCase().trim();
+    if(name==='QTY'||code==='Q')return /^\d{1,9}$/.test(raw);
+    if((name==='DATE'||code==='16D')&&/^\d+$/.test(raw))return /^\d{8}$/.test(raw);
+    if(['SHAPE','GP','ASSY','BIN','MC','VC'].includes(name)||['30P','31P','21L','33P','23L','24L'].includes(code))return raw.length<=16&&compactToken(raw);
+    if(name==='DATE NO'||code==='10D')return raw.length<=24&&compactToken(raw);
+    if(['PART NO','LOT NO','MLOT NO'].includes(name)||['1P','1T','31T'].includes(code))return raw.length<=36&&compactToken(raw);
+    return true;
+  }
 
   function candidateLooksLikeSuffixNoise(main,candidate){
     const a=norm(main),b=norm(candidate);if(!a||!b||!b.startsWith(a)||b===a)return false;
@@ -36,8 +48,6 @@
         const name=tokenName(f);
         const code=String(f?.code||'').trim();
 
-        // Hide obvious OCR label-name fragments (e.g. ATE from DATE), and uncoded duplicates
-        // when a proper coded field with the same canonical name already exists.
         f.__finalHidden=(!code&&fragmentName(name))||(!code&&codedNames.has(name));
 
         if(Array.isArray(f.alternatives)){
@@ -47,16 +57,16 @@
             if(tokenField(f)&&noisy(v))return false;
             if(main&&nv===main)return false;
             if(candidateLooksLikeSuffixNoise(f.value,v))return false;
-            // A candidate identical to another field's accepted main value is almost always
-            // a neighbouring-field leak (e.g. MLOT leaking into LOT).
             if(mainValues.some(x=>x.field!==f&&x.value===nv))return false;
             return true;
           }).slice(0,2);
           f.conflict=f.alternatives.length>0;
         }
 
+        f.__finalImplausible=!!main&&!fieldPlausible(f);
         f.__finalShortBarcode=!!((f.barcodeVerified||f.barcodeAligned)&&main.length>0&&main.length<=2);
         if(f.__finalShortBarcode)f.barcodeVerified=false;
+        if(f.__finalImplausible)f.barcodeVerified=false;
         f.__finalEmpty=!main;
       }
     }
@@ -65,6 +75,7 @@
 
   function stateFor(f){
     if(f?.__finalEmpty)return['pending','⚠️ 未確認'];
+    if(f?.__finalImplausible)return['pending','⚠️ 內容異常待核對'];
     if(f?.conflict)return['pending','⚠️ 有異讀待核對'];
     if(f?.__consistencyResolved)return['pending','⚠️ 欄位交叉修正待核對'];
     if(f?.__boundaryTrimmed)return['pending','⚠️ 邊界修正待核對'];
@@ -93,6 +104,10 @@
         if(f.conflict&&f.alternatives?.length){const s=document.createElement('small');s.className='analysis-alt';s.textContent='另讀到：'+f.alternatives.join(' / ');content.appendChild(s)}
         const badge=status.querySelector('.analysis-status');if(badge){const [cls,text]=stateFor(f);badge.className='analysis-status '+cls;badge.textContent=text}
       });
+      const visible=(label.fields||[]).filter(f=>!f.__finalHidden);
+      const pending=visible.filter(f=>stateFor(f)[0]==='pending').length;
+      const usable=visible.length-pending;
+      const count=card.querySelector('.analysis-label-count');if(count)count.textContent=`${usable} 可用 · ${pending} 待核對`;
     });
   }
 
@@ -109,5 +124,5 @@
     console.info('[Label Workbench] final confidence guard',BUILD);return true;
   }
   if(!install()){let tries=0;const timer=setInterval(()=>{tries++;if(install()||tries>100)clearInterval(timer)},80)}
-  window.LabelWorkbenchConfidenceGuard={BUILD,refine,stateFor,install};
+  window.LabelWorkbenchConfidenceGuard={BUILD,refine,stateFor,fieldPlausible,install};
 })();
