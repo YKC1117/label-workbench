@@ -1,11 +1,13 @@
-/* Label Workbench analysis accuracy guard v1.2
- * Field-aware OCR cleanup and barcode validation.
- * Important: a value is only "條碼確認" when the barcode segment belongs to the SAME field code.
- * Runs after label-interpreter and before the BT bridge, so BTW export receives the refined values.
+/* Label Workbench analysis accuracy guard v1.3
+ * Field-aware OCR cleanup, boundary isolation and barcode validation.
+ * Important:
+ * - A value is only "條碼確認" when the barcode segment belongs to the SAME field code.
+ * - OCR text that leaks into the next data identifier is cut at that boundary and downgraded for review.
+ * - Repeated OCR alone must be stronger before it can be labelled high confidence.
  */
 (function(){
   'use strict';
-  const BUILD='20260911-analysis-accuracy-120-field-aware';
+  const BUILD='20260911-analysis-accuracy-130-boundary-strict';
   const api=()=>window.LabelWorkbenchInterpreter;
   const norm=v=>String(v??'').toUpperCase().replace(/[^A-Z0-9]/g,'');
   const clean=v=>String(v??'').replace(/\s+/g,' ').trim();
@@ -23,11 +25,37 @@
     return chars.map(fuzzyChar).join('\\s*');
   }
   const FUZZY_CODE_ALT=KNOWN_CODES.map(fuzzyCodePattern).join('|');
-  const TAIL_CODE_RX=new RegExp('\\s*[\\(\\[]\\s*(?:'+FUZZY_CODE_ALT+')\\s*[\\)\\]]\\s*.*$','i');
+  const EXACT_CODE_ALT=KNOWN_CODES.slice().sort((a,b)=>b.length-a.length).map(escapeRx).join('|');
+  const TAIL_CODE_RX=new RegExp('\\s*(?:[#＃]+|[\\(\\[]\\s*)(?:'+FUZZY_CODE_ALT+')(?:\\s*[\\)\\]])?\\s*.*$','i');
+  const EMBEDDED_CODE_RX=new RegExp('(?:[#＃]+|[¦|]+|[\\(\\[]\\s*|\\s{2,})(?:'+EXACT_CODE_ALT+')(?:\\s*[\\)\\]])?','i');
 
-  function compactTokenValue(value){
+  function findForeignBoundary(field,value){
+    const own=String(field?.code||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+    const s=String(value??'');
+    if(!s)return null;
+    const rx=new RegExp('(?:[#＃]+|[¦|]+|[\\(\\[]\\s*|\\s{2,})('+EXACT_CODE_ALT+')(?:\\s*[\\)\\]])?','ig');
+    let m;
+    while((m=rx.exec(s))){
+      const code=String(m[1]||'').toUpperCase();
+      if(code&&code!==own){
+        return {index:m.index,code,raw:m[0]};
+      }
+      if(rx.lastIndex===m.index)rx.lastIndex++;
+    }
+    return null;
+  }
+
+  function trimForeignTail(field,value){
     let s=clean(value).replace(/[¦|]+/g,' ').replace(/\s*[;；:,，]+\s*$/,'').trim();
-    s=s.replace(TAIL_CODE_RX,'').trim();
+    const hit=findForeignBoundary(field,s);
+    if(hit&&hit.index>0)s=s.slice(0,hit.index).trim();
+    return s;
+  }
+
+  function compactTokenValue(value,field){
+    let s=clean(value).replace(/[¦|]+/g,' ').replace(/\s*[;；:,，]+\s*$/,'').trim();
+    if(field)s=trimForeignTail(field,s);
+    else s=s.replace(TAIL_CODE_RX,'').trim();
     const m=s.match(/^([A-Z0-9][A-Z0-9._\/-]{5,})(?:\s+(.+))?$/i);
     if(m&&m[2]){
       const tail=m[2].trim(),pieces=tail.split(/\s+/).filter(Boolean);
@@ -41,9 +69,9 @@
   function fieldKind(field){return fieldCode(field)||norm(field?.name)}
   function tokenField(field){return /PART|LOT|SERIAL|MODEL|ASSY|SHAPE|BIN|DATE|QTY|MLOT|^1P$|^1T$|^Q$/.test(fieldKind(field))}
   function cleanFieldValue(field,value){
-    let s=compactTokenValue(value);
+    let s=compactTokenValue(value,field);
     if(tokenField(field)){
-      const m=s.match(/^([A-Z0-9][A-Z0-9._\/-]{2,})(?:\s+.+)?$/i);
+      const m=s.match(/^([A-Z0-9][A-Z0-9._\/-]{0,})(?:\s+.+)?$/i);
       if(m&&/\s/.test(s)){
         const first=m[1],rest=s.slice(first.length).trim();
         const noisy=/^(?:[()\[\]{};:,.!?'"`~\-]|[A-Z0-9]{1,2}|[\u3400-\u9fff])(?:\s+(?:[()\[\]{};:,.!?'"`~\-]|[A-Z0-9]{1,2}|[\u3400-\u9fff]))*$/i.test(rest);
@@ -55,16 +83,18 @@
 
   function rawBarcodeText(barcode){return String(barcode?.text??barcode?.value??barcode?.data??'')}
   function normalizedBarcodeParts(raw){
-    return String(raw||'')
+    let s=String(raw||'')
       .replace(/(?:<GS>|\[GS\]|\{GS\}|␝)/gi,'\x1d')
-      .replace(/(?:<RS>|\[RS\]|\{RS\}|␞)/gi,'\x1e')
+      .replace(/(?:<RS>|\[RS\]|\{RS\}|␞)/gi,'\x1e');
+    // Some scanners/renderers expose printed # separators instead of GS. Treat # as a separator
+    // only when it is immediately followed by a known data identifier.
+    s=s.replace(new RegExp('#(?=(?:'+EXACT_CODE_ALT+'))','ig'),'\x1d');
+    return s
       .split(/[\x1d\x1e\x04]+/)
       .map(x=>clean(x).replace(/^\]>[A-Z0-9]{0,6}/i,'').replace(/^RS\s*0?6/i,'').trim())
       .filter(Boolean);
   }
   function codeRegex(code){
-    // Barcode scanners normally return the exact data identifier (1P, 1T, 30P...).
-    // Keep this stricter than OCR: do not let a LOT segment confirm PART NO just because both exist in one Data Matrix.
     return new RegExp('^(?:[\\(\\[]\\s*)?'+escapeRx(code)+'(?:\\s*[\\)\\]])?\\s*[:=]?\\s*(.+)$','i');
   }
   function extractCodeValuesFromBarcode(code,barcode){
@@ -74,10 +104,9 @@
       const m=part.match(codeRegex(code));
       if(m){const v=compactTokenValue(m[1]);if(v)out.push(v)}
     }
-    // Fallback for raw scanner strings where separators survived but the split did not catch a prefix/header.
-    const boundary='(?:^|[\\x1d\\x1e\\x04])';
-    const stop='(?=[\\x1d\\x1e\\x04]|$)';
-    const rx=new RegExp(boundary+'\\s*(?:[\\(\\[]\\s*)?'+escapeRx(code)+'(?:\\s*[\\)\\]])?\\s*[:=]?\\s*([^\\x1d\\x1e\\x04]+?)'+stop,'ig');
+    const boundary='(?:^|[\\x1d\\x1e\\x04]|#(?='+EXACT_CODE_ALT+'))';
+    const stop='(?=[\\x1d\\x1e\\x04]|#(?='+EXACT_CODE_ALT+')|$)';
+    const rx=new RegExp(boundary+'\\s*(?:[\\(\\[]\\s*)?'+escapeRx(code)+'(?:\\s*[\\)\\]])?\\s*[:=]?\\s*([^\\x1d\\x1e\\x04#]+?)'+stop,'ig');
     let m;while((m=rx.exec(raw))){const v=compactTokenValue(m[1]);if(v)out.push(v)}
     const seen=new Set();return out.filter(v=>{const k=norm(v);if(!k||seen.has(k))return false;seen.add(k);return true});
   }
@@ -104,10 +133,9 @@
     });
   }
   function barcodeMatch(field,value,barcodes=[]){
-    const v=norm(value);if(v.length<3)return false;
+    const v=norm(value);if(v.length<1)return false;
     const code=fieldCode(field);
     if(code){
-      // Coded fields must match THEIR OWN data-identifier segment only.
       return codeValues(field,barcodes).some(x=>norm(x)===v);
     }
     return genericBarcodeMatch(value,barcodes);
@@ -121,6 +149,7 @@
     if(/\s/.test(s))score-=10;
     if(/[;；]/.test(s))score-=14;
     if(/[\u3400-\u9fff]/.test(s)&&tokenField(field))score-=18;
+    if(findForeignBoundary(field,value))score-=80;
     return score;
   }
 
@@ -138,8 +167,12 @@
     const coded=allCodedValues(bars);
 
     for(const f of fields){
-      const primary=cleanFieldValue(f,f?.value);
-      const alts=(Array.isArray(f?.alternatives)?f.alternatives:[]).map(v=>cleanFieldValue(f,v)).filter(Boolean);
+      const originalPrimary=String(f?.value??'');
+      const originalAlts=Array.isArray(f?.alternatives)?f.alternatives.map(v=>String(v??'')):[];
+      const primaryBoundary=findForeignBoundary(f,originalPrimary);
+      const altBoundaries=originalAlts.map(v=>findForeignBoundary(f,v)).filter(Boolean);
+      const primary=cleanFieldValue(f,originalPrimary);
+      const alts=originalAlts.map(v=>cleanFieldValue(f,v)).filter(Boolean);
       const candidates=[primary,...alts].filter(Boolean);
       const dedup=[],seen=new Set();
       for(const c of candidates){const k=norm(c);if(!k||seen.has(k))continue;seen.add(k);dedup.push(c)}
@@ -155,8 +188,8 @@
 
       const cleanedAlts=dedup.filter(c=>{
         const k=norm(c);if(!k||k===chosenNorm)return false;
-        // A value proven to belong to a different data identifier must not be shown as an alternative here.
         if(otherCodeValues.has(k))return false;
+        if(findForeignBoundary(f,c))return false;
         if(quality(f,c,bars)<12)return false;
         return true;
       }).slice(0,2);
@@ -165,6 +198,9 @@
       f.alternatives=cleanedAlts;
       f.conflict=cleanedAlts.length>0;
       f.barcodeVerified=barcodeMatch(f,chosen,bars);
+      f.__boundaryTrimmed=!!(primaryBoundary||altBoundaries.length);
+      f.__boundaryCode=primaryBoundary?.code||altBoundaries[0]?.code||'';
+      if(f.barcodeVerified){f.__boundaryTrimmed=false;f.__boundaryCode=''}
     }
     return label;
   }
@@ -172,7 +208,10 @@
   function refineResult(result){if(!result?.labels?.length)return result;result.labels.forEach(refineLabel);return result}
   function stateFor(field,barcodes){
     if(barcodeMatch(field,field?.value,barcodes))return['barcode','✅ 條碼確認'];
-    if(Number(field?.repeat)>=2&&!field?.conflict)return['high','✓ 高可信'];
+    if(field?.__boundaryTrimmed)return['pending','⚠️ 邊界修正待核對'];
+    if(field?.conflict)return['pending','⚠️ 有異讀待核對'];
+    if(Number(field?.repeat)>=3)return['high','✓ 高可信'];
+    if(Number(field?.repeat)>=2&&field?.spatial)return['medium','○ 可先整理'];
     if(field?.spatial&&!field?.conflict)return['medium','○ 可先整理'];
     return['pending','⚠️ 建議核對'];
   }
@@ -190,8 +229,9 @@
         const cells=row.querySelectorAll('td');if(cells.length<3)return;
         const content=cells[1],status=cells[2];
         const strong=content.querySelector('strong');if(strong)strong.textContent=field.value;
-        content.querySelectorAll('.analysis-alt').forEach(n=>n.remove());
+        content.querySelectorAll('.analysis-alt,.analysis-boundary-note').forEach(n=>n.remove());
         if(field.conflict&&field.alternatives?.length){const small=document.createElement('small');small.className='analysis-alt';small.textContent='另讀到：'+field.alternatives.join(' / ');content.appendChild(small)}
+        if(field.__boundaryTrimmed){const small=document.createElement('small');small.className='analysis-boundary-note';small.textContent='已排除疑似下一欄 '+(field.__boundaryCode?`(${field.__boundaryCode})`:'')+' 的混入內容';content.appendChild(small)}
         const [cls,text]=stateFor(field,label.barcodes||[]),badge=status.querySelector('.analysis-status');if(badge){badge.className='analysis-status '+cls;badge.textContent=text}
       });
     });
@@ -203,9 +243,9 @@
     const base=A.analyze.bind(A);
     A.analyze=async function(files){const result=await base(files);refineResult(result);patchDom(result);return result};
     A.__accuracyWrapped=true;
-    A.refineResult=refineResult;A.refineLabel=refineLabel;A.cleanFieldValue=cleanFieldValue;A.extractCodeValuesFromBarcode=extractCodeValuesFromBarcode;
+    A.refineResult=refineResult;A.refineLabel=refineLabel;A.cleanFieldValue=cleanFieldValue;A.extractCodeValuesFromBarcode=extractCodeValuesFromBarcode;A.findForeignBoundary=findForeignBoundary;
     console.info('[Label Workbench] analysis accuracy guard',BUILD);return true;
   }
   if(!install()){let tries=0;const timer=setInterval(()=>{tries++;if(install()||tries>80)clearInterval(timer)},80)}
-  window.LabelWorkbenchAnalysisAccuracy={BUILD,refineResult,refineLabel,cleanFieldValue,extractCodeValuesFromBarcode,install};
+  window.LabelWorkbenchAnalysisAccuracy={BUILD,refineResult,refineLabel,cleanFieldValue,extractCodeValuesFromBarcode,findForeignBoundary,install};
 })();
