@@ -1,8 +1,8 @@
-/* Label Workbench barcode reader v3.9 loader. */
+/* Label Workbench barcode reader v4.0 loader. */
 (function(){
   'use strict';
-  const BUILD='20260911-v320-pdf-native-accuracy';
-  const modules=['assets/barcode-reader-core.js','assets/barcode-reader-ui.js','assets/barcode-generator.js','assets/label-interpreter.js','assets/analysis-accuracy.js','assets/analysis-pdf-native.js','assets/analysis-field-consistency.js','assets/analysis-copy.js','assets/btw-format.js','assets/btw-native.js','assets/bt-bridge.js','assets/workbench-priority.js','assets/bt-native-primary.js'];
+  const BUILD='20260911-v330-analysis-btw-focus';
+  const modules=['assets/barcode-reader-core.js','assets/barcode-reader-ui.js','assets/barcode-generator.js','assets/label-interpreter.js','assets/analysis-accuracy.js','assets/analysis-pdf-native.js','assets/analysis-field-consistency.js','assets/analysis-copy.js','assets/btw-format.js','assets/btw-native.js','assets/bt-bridge.js','assets/workbench-priority.js','assets/bt-native-primary.js','assets/final-ui-sync.js'];
   function loadNext(){
     const src=modules.shift();if(!src)return;
     if(src.includes('core')&&window.LabelWorkbenchBarcodeCore){loadNext();return}
@@ -18,6 +18,7 @@
     if(src.includes('bt-bridge')&&window.LabelWorkbenchBtBridge){loadNext();return}
     if(src.includes('workbench-priority')&&window.LabelWorkbenchPriority){loadNext();return}
     if(src.includes('bt-native-primary')&&window.LabelWorkbenchBtNativePrimary){loadNext();return}
+    if(src.includes('final-ui-sync')&&window.LabelWorkbenchFinalUiSync){loadNext();return}
     const s=document.createElement('script');
     s.src=`${src}?v=${BUILD}&t=${Date.now()}`;
     s.async=false;
