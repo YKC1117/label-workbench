@@ -1,11 +1,10 @@
-/* Label Workbench rich editable BTW generator v0.1.1
+/* Label Workbench rich editable BTW generator v0.1.2
  * Reuses verified official BarTender donor templates as an editable object pool.
  * Every unused donor root is moved off-canvas before Quick Analysis fields/barcodes are restored.
  */
 (function(){
   'use strict';
-
-  const BUILD='20260911-btw-rich-110-official-container';
+  const BUILD='20260911-btw-rich-120-unit-safe';
   const SEED_FUNCTION='btw-seed';
   const OFF=50000;
   const MAX_TEXT=29;
@@ -81,10 +80,15 @@
 
   function templateSizeMm(parsed){
     const text=String(parsed?.header?.text||''),raw=/<TemplateSize>([^<]+)<\/TemplateSize>/i.exec(text)?.[1]?.trim()||'';
-    let m=/([0-9.]+)\s*(?:in|inch|inches|\")?\s*[x×]\s*([0-9.]+)\s*(?:in|inch|inches|\")?/i.exec(raw);
-    if(m){const w=Number(m[1]),h=Number(m[2]);if(w>0&&h>0)return{width:w*25.4,height:h*25.4,raw}}
-    m=/([0-9.]+)\s*mm\s*[x×]\s*([0-9.]+)\s*mm/i.exec(raw);
-    if(m){const w=Number(m[1]),h=Number(m[2]);if(w>0&&h>0)return{width:w,height:h,raw}}
+    const m=/([0-9.]+)\s*(?:"|mm|cm|in(?:ch(?:es)?)?)?\s*[x×]\s*([0-9.]+)\s*(?:"|mm|cm|in(?:ch(?:es)?)?)?/i.exec(raw);
+    if(m){
+      let width=Number(m[1]),height=Number(m[2]);
+      if(!(width>0&&height>0))return{width:76.2,height:50.8,raw:raw||'fallback 3x2in'};
+      const lower=raw.toLowerCase();
+      if(/\bmm\b/.test(lower))return{width,height,raw};
+      if(/\bcm\b/.test(lower))return{width:width*10,height:height*10,raw};
+      if(raw.includes('"')||/\bin(?:ch(?:es)?)?\b/.test(lower)||!/[a-z]/i.test(raw))return{width:width*25.4,height:height*25.4,raw};
+    }
     return{width:76.2,height:50.8,raw:raw||'fallback 3x2in'}
   }
   function sourceLayout(box,target){
