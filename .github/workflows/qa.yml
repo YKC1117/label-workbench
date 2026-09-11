@@ -54,9 +54,11 @@ jobs:
 
       - name: Current wiring sanity check
         run: |
-          grep -q 'assets/barcode-reader.js?v=' index.html
-          grep -q '標籤製作工作台 · v1.9.26' index.html
-          grep -q '更新：2026/09/11 18:13' index.html
+          grep -q 'assets/barcode-reader.js?v=20260911-v353' index.html
+          grep -q '標籤製作工作台 · v1.9.27' index.html
+          grep -q '更新：2026/09/11 18:47' index.html
+          grep -q "RELEASE='v1.9.27'" assets/view-state-guard.js
+          grep -q "UPDATED='2026/09/11 18:47'" assets/view-state-guard.js
           grep -q 'view-state-guard.js' assets/barcode-reader.js
           grep -q 'btw-object-map.js' assets/barcode-reader.js
           grep -q 'bt-native-primary.js' assets/barcode-reader.js
