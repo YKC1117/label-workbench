@@ -70,6 +70,7 @@ jobs:
           node --check tests/btw-native-smoke.cjs
           node --check tests/btw-rich-native-smoke.cjs
           node --check tests/btw-production-gate-smoke.cjs
+          node --check tests/analysis-copy-smoke.cjs
 
       - name: Current wiring sanity check
         run: |
@@ -80,6 +81,7 @@ jobs:
           grep -q "UPDATED='2026/09/11 23:06'" assets/view-state-guard.js
           grep -q "BUILD='20260911-view-guard-116-production-gate'" assets/view-state-guard.js
           grep -q "BUILD='20260911-v352-production-gate'" assets/barcode-reader.js
+          grep -q "BUILD='20260911-analysis-copy-110-row-content-only'" assets/analysis-copy.js
           grep -q 'view-state-guard.js' assets/barcode-reader.js
           grep -q 'analysis-geometry.js' assets/barcode-reader.js
           grep -q 'btw-object-map.js' assets/barcode-reader.js
@@ -115,6 +117,9 @@ jobs:
 
       - name: Quick analysis boundary accuracy regression tests
         run: node tests/analysis-accuracy-smoke.cjs
+
+      - name: Quick Analysis copy-button regression tests
+        run: node tests/analysis-copy-smoke.cjs
 
       - name: Source geometry matching smoke tests
         run: node tests/analysis-geometry-smoke.cjs
