@@ -12,8 +12,8 @@ function concat(parts){const n=parts.reduce((s,p)=>s+p.length,0),o=new Uint8Arra
 function i32(v){const a=new Uint8Array(4);new DataView(a.buffer).setInt32(0,v,true);return a}
 function f32(v){const a=new Uint8Array(4);new DataView(a.buffer).setFloat32(0,v,true);return a}
 function font(name,size){const marker=new Uint8Array([3,2,1,0x22]),buf=new Uint8Array(64);for(let i=0;i<Math.min(name.length,32);i++){const code=name.charCodeAt(i);buf[i*2]=code&255;buf[i*2+1]=code>>>8}return concat([marker,buf,f32(size),new Uint8Array(24)])}
-function obj({root,name,x,y,value,fontName='Arial',fontSize=10,components=[]}){
-  const strings=[F.encodeBtwString(root),F.encodeBtwString(name)];
+function obj({root,name,x,y,value,fontName='Arial',fontSize=10,components=[],markers=[]}){
+  const strings=[F.encodeBtwString(root),F.encodeBtwString(name),...markers.map(F.encodeBtwString)];
   if(value!==undefined)strings.push(F.encodeBtwString('(???) ???-????'),F.encodeBtwString(value));
   for(const v of components)strings.push(F.encodeBtwString('(???) ???-????'),F.encodeBtwString(v));
   return concat([i32(x),i32(y),new Uint8Array(12),...strings,font(fontName,fontSize),new Uint8Array(12)]);
@@ -22,23 +22,30 @@ function obj({root,name,x,y,value,fontName='Arial',fontSize=10,components=[]}){
 let container=concat([
   obj({root:'Root.MasterSelectedObject.DataSourceGeneral.DataSource',name:'文字 1',x:62,y:254,value:'(1P) PART NO :'}),
   obj({root:'Root.MasterSelectedObject.DataSourceGeneral.DataSource',name:'文字 2',x:737,y:254,value:'ABC123'}),
-  obj({root:'Root.MasterSelectedObject.Barcode',name:'條碼 1',x:62,y:343,value:undefined,fontName:'Microsoft JhengHei',fontSize:6,components:['1P','文字 2']})
+  obj({root:'Root.MasterSelectedObject.Barcode',name:'條碼 1',x:62,y:343,value:undefined,fontName:'Microsoft JhengHei',fontSize:6,markers:['TextTransforms'],components:['1P','文字 2']}),
+  obj({root:'Root.MasterSelectedObject.DataSourceGeneral.DataSource',name:'條碼 2',x:3213,y:156,value:undefined,markers:['Screen Data'],components:['文字 2']}),
+  obj({root:'Root.MasterSelectedObject.Border',name:'文字 32',x:3486,y:933,value:'RoHS',fontSize:12}),
+  obj({root:'Root.MasterSelectedObject.Barcode',name:'文字 26',x:417,y:2083,value:'P1',fontSize:10})
 ]);
 
 let map=M.mapContainer(container);
-if(map.objects.length!==3)throw new Error(`object count ${map.objects.length}`);
-const t=map.objects.find(o=>o.name==='文字 2'),bc=map.objects.find(o=>o.name==='條碼 1');
+if(map.objects.length!==6)throw new Error(`object count ${map.objects.length}`);
+const t=map.objects.find(o=>o.name==='文字 2'),bc=map.objects.find(o=>o.name==='條碼 1'),dm=map.objects.find(o=>o.name==='條碼 2'),borderText=map.objects.find(o=>o.name==='文字 32'),barcodeRootText=map.objects.find(o=>o.name==='文字 26');
 if(!t||t.value!=='ABC123'||t.xMil!==737||t.yMil!==254)throw new Error('text decode mismatch');
 if(t.fontName!=='Arial'||t.fontSize!==10)throw new Error('font decode mismatch');
-if(!bc||bc.kind!=='barcode'||bc.resolvedPreview!=='1PABC123')throw new Error(`barcode relation mismatch: ${bc?.resolvedPreview}`);
-console.log('PASS: BTW object names, values, coordinates, font and barcode references decode');
+if(!bc||bc.kind!=='barcode'||bc.barcodeType!=='Code 128'||bc.resolvedPreview!=='1PABC123')throw new Error(`Code128 relation mismatch: ${bc?.barcodeType}/${bc?.resolvedPreview}`);
+if(!dm||dm.kind!=='barcode'||dm.barcodeType!=='Data Matrix'||dm.resolvedPreview!=='ABC123')throw new Error(`DataMatrix classification mismatch: ${dm?.barcodeType}`);
+if(borderText?.kind!=='text'||borderText.value!=='RoHS')throw new Error('text name must override Border property root');
+if(barcodeRootText?.kind!=='text'||barcodeRootText.value!=='P1')throw new Error('text name must override Barcode property root');
+console.log('PASS: BTW names, positions, fonts, Code128/DataMatrix structures and misleading property roots decode');
 
 container=M.editContainer(container,[{name:'文字 2',value:'LONGER-PART-987654',xMm:25.4,yMil:400,fontSize:14}]);
 map=M.mapContainer(container);
-const edited=map.objects.find(o=>o.name==='文字 2'),after=map.objects.find(o=>o.name==='條碼 1');
+const edited=map.objects.find(o=>o.name==='文字 2'),after=map.objects.find(o=>o.name==='條碼 1'),afterDm=map.objects.find(o=>o.name==='條碼 2');
 if(edited.value!=='LONGER-PART-987654')throw new Error('variable-length value edit failed');
 if(edited.xMil!==1000||edited.yMil!==400)throw new Error(`position edit failed ${edited.xMil}/${edited.yMil}`);
 if(edited.fontSize!==14)throw new Error(`font edit failed ${edited.fontSize}`);
-if(after.resolvedPreview!=='1PLONGER-PART-987654')throw new Error('downstream object offsets broken after longer edit');
-console.log('PASS: variable-length BTW text + X/Y + font-size edits keep later objects decodable');
+if(after.resolvedPreview!=='1PLONGER-PART-987654')throw new Error('downstream Code128 offsets broken after longer edit');
+if(afterDm.resolvedPreview!=='LONGER-PART-987654')throw new Error('downstream DataMatrix offsets broken after longer edit');
+console.log('PASS: variable-length BTW text + X/Y + font-size edits keep later barcode objects decodable');
 console.log('PASS: BTW object map smoke tests');
