@@ -54,6 +54,7 @@ jobs:
           node --check tests/btw-object-map-smoke.cjs
           node --check tests/public-btw-sample-smoke.cjs
           node --check tests/analysis-geometry-smoke.cjs
+          node --check tests/cea-object-map-diagnostic.cjs
 
       - name: Current wiring sanity check
         run: |
@@ -107,6 +108,9 @@ jobs:
 
       - name: Official Seagull BTW public sample diagnostic
         run: node tests/public-btw-sample-smoke.cjs
+
+      - name: CEA seed native object map diagnostic
+        run: node tests/cea-object-map-diagnostic.cjs
 
       - name: Native editable BTW generation smoke tests
         run: node tests/btw-native-smoke.cjs
