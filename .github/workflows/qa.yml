@@ -48,6 +48,7 @@ jobs:
           node --check assets/bt-native-primary.js
           node --check assets/layout-shortcuts.js
           node --check assets/workbench-priority.js
+          node --check tests/btw-seed-diagnostic.cjs
 
       - name: Current wiring sanity check
         run: |
@@ -82,6 +83,9 @@ jobs:
 
       - name: BT optional table-pack and safe launch smoke tests
         run: node tests/bt-launch-smoke.cjs
+
+      - name: BTW seed structure diagnostic
+        run: node tests/btw-seed-diagnostic.cjs
 
       - name: Native editable BTW generation smoke tests
         run: node tests/btw-native-smoke.cjs
