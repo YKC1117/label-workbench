@@ -1,14 +1,11 @@
-/* Label Workbench navigation grouping v1.3
- * Required layout:
- * 1) 常用工具：條碼工具、快速分析
- * 2) BT / 工作：BT 快速製作、工作台
- * 3) 其他：案件紀錄
- * All buttons share the same normal/hover/active colors. Section headers only separate groups.
+/* Label Workbench navigation grouping v1.4
+ * Layout requested by user:
+ * - 常用工具：條碼工具、快速分析
+ * - 製作 / 工作：BT 快速製作、工作台
+ * - 其他：案件紀錄
+ * All buttons share the same visual treatment; headers only separate groups.
  */
-
-.nav{
-  gap:7px;
-}
+.nav{gap:7px}
 .nav::before{
   content:"常用工具";
   display:block;
@@ -19,11 +16,9 @@
   letter-spacing:.13em;
   line-height:1.4;
 }
-.nav button{
-  position:relative;
-}
+.nav button{position:relative}
 
-/* Reset all grouped buttons to the same base style; do not give BT a special blue outline/background. */
+/* Keep every navigation item on the same base/hover/active style. */
 .nav button[data-view="barcode"],
 .nav button[data-view="analysis"],
 .nav button[data-view="bartender"],
@@ -56,25 +51,23 @@
   box-shadow:0 8px 20px rgba(37,99,235,.24);
 }
 
-/* Second group: BT 快速製作 + 工作台. */
-.nav button[data-view="bartender"]{
-  margin-top:34px;
-}
+/* Group 2: BT 快速製作 + 工作台. */
+.nav button[data-view="bartender"]{margin-top:38px}
 .nav button[data-view="bartender"]::before{
   content:"";
   position:absolute;
   left:10px;
   right:10px;
-  top:-18px;
+  top:-20px;
   height:1px;
   background:rgba(148,163,184,.20);
   pointer-events:none;
 }
 .nav button[data-view="bartender"]::after{
-  content:"BT / 工作";
+  content:"製作 / 工作";
   position:absolute;
   left:12px;
-  top:-33px;
+  top:-36px;
   color:#7f8ba1;
   font-size:10px;
   font-weight:900;
@@ -83,20 +76,16 @@
   white-space:nowrap;
   pointer-events:none;
 }
-.nav button[data-view="dashboard"]{
-  margin-top:0;
-}
+.nav button[data-view="dashboard"]{margin-top:0}
 
-/* Third group: optional records. */
-.nav button[data-view="cases"]{
-  margin-top:34px;
-}
+/* Group 3: optional records. */
+.nav button[data-view="cases"]{margin-top:38px}
 .nav button[data-view="cases"]::before{
   content:"";
   position:absolute;
   left:10px;
   right:10px;
-  top:-18px;
+  top:-20px;
   height:1px;
   background:rgba(148,163,184,.16);
   pointer-events:none;
@@ -105,7 +94,7 @@
   content:"其他";
   position:absolute;
   left:12px;
-  top:-33px;
+  top:-36px;
   color:#64748b;
   font-size:10px;
   font-weight:900;
@@ -115,16 +104,12 @@
   pointer-events:none;
 }
 
-/* BT page cleanup: no old queue / record panel visible. */
+/* Old BT queue must not appear on the BT quick-production page. */
 #bartenderQueue,
-#bartenderQueue:empty,
-#bartender .bt-records-panel{
-  display:none!important;
-}
+.bt-records-panel{display:none!important}
 #topNewCase{display:none!important}
 
 @media(max-width:820px){
   .mobile-nav{grid-template-columns:repeat(4,1fr)!important}
   .mobile-nav button[data-view="cases"]{display:none!important}
-  .mobile-nav button[data-view="bartender"]{font-weight:900}
 }
