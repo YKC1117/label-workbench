@@ -160,7 +160,7 @@
     addExact(reps,entries,'(1T) LOT NO :',p.label2,1);
     addExact(reps,entries,'(Q)QTY:',p.label3,2);
 
-    // Values. Never use VALUE-1 / ABC / LOT demo defaults.
+    // Replace seed placeholders only with values actually read from this analysis.
     addExact(reps,entries,'LW_PART_VALUE',compact(p.value1),5);
     addExact(reps,entries,'PART00000001',compact(p.value1),5);
     addExact(reps,entries,'LW_LOT_VALUE',compact(p.value2),5);
