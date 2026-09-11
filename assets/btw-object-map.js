@@ -6,7 +6,7 @@
  */
 (function(){
   'use strict';
-  const BUILD='20260911-btw-object-map-010';
+  const BUILD='20260911-btw-object-map-011';
   const ROOT='Root.MasterSelectedObject.';
   const FONT_MARKER=new Uint8Array([0x03,0x02,0x01,0x22]);
   const PLACEHOLDER='(???) ???-????';
@@ -90,7 +90,11 @@
   function editContainer(container,edits){
     const F=window.LabelWorkbenchBtwFormat;if(!F?.replaceStringAt)throw new Error('BTW 字串寫回元件尚未載入');
     let out=u8(container).slice(),map=mapContainer(out),jobs=(edits||[]).map(edit=>({edit,obj:resolveObject(map,edit)}));
-    for(const j of jobs)if(!j.obj)throw new Error(`找不到 BTW 物件：${j.edit?.name||j.edit?.id||j.edit?.index??'未指定'}`);
+    for(const j of jobs){
+      if(j.obj)continue;
+      const label=j.edit?.name||j.edit?.id||(j.edit?.index??'未指定');
+      throw new Error(`找不到 BTW 物件：${label}`);
+    }
     jobs.sort((a,b)=>b.obj.recordStart-a.obj.recordStart);
     for(const {edit,obj} of jobs){
       if(edit.xMil!=null||edit.xMm!=null){const v=edit.xMil!=null?Number(edit.xMil):mmToMil(edit.xMm);writeI32(out,obj.recordStart,v)}
