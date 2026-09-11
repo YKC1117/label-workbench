@@ -51,6 +51,7 @@ jobs:
           node --check assets/workbench-priority.js
           node --check tests/btw-seed-diagnostic.cjs
           node --check tests/btw-object-map-smoke.cjs
+          node --check tests/public-btw-sample-smoke.cjs
 
       - name: Current wiring sanity check
         run: |
@@ -97,6 +98,9 @@ jobs:
 
       - name: Native BTW object decoder/editor smoke tests
         run: node tests/btw-object-map-smoke.cjs
+
+      - name: Official Seagull BTW public sample diagnostic
+        run: node tests/public-btw-sample-smoke.cjs
 
       - name: Native editable BTW generation smoke tests
         run: node tests/btw-native-smoke.cjs
