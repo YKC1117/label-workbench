@@ -1,4 +1,4 @@
-/* Label Workbench BTW object decoder/editor v0.3.7
+/* Label Workbench BTW object decoder/editor v0.3.8
  * Interoperability-focused reverse engineering for BarTender .btw files.
  * Uses the same public-domain layout observations as Elias Oenal's Barmaid:
  * prefix + preview PNG blobs + zlib serialized object container + FF FE FF UTF-16 strings.
@@ -6,7 +6,7 @@
  */
 (function(){
   'use strict';
-  const BUILD='20260912-btw-object-map-037-datasource-sample-filter';
+  const BUILD='20260912-btw-object-map-038-barcode-slot-mode';
   const ROOT='Root.MasterSelectedObject.';
   const FONT_MARKER=new Uint8Array([0x03,0x02,0x01,0x22]);
   const PLACEHOLDER='(???) ???-????';
@@ -66,18 +66,22 @@
   function primaryValueEntry(strings,kind,root,nameEntry){if(kind!=='text')return null;let hit=null;const dense=strings.filter(e=>String(e.text??'')!=='');for(let i=0;i<dense.length-1;i++){if(dense[i].text!==PLACEHOLDER)continue;const n=dense[i+1];if(!n?.text||/^(?:Box Options|DataSource|Text \d+|文字範例)$/i.test(n.text))continue;hit=n}if(!hit&&/\.Text Control$/i.test(String(root||'')))hit=simpleTextControlCandidate(strings,nameEntry);return hit}
   function blockedBarcodeGroupValue(v){return /^(?:文字範例|Sample Text|Sample Prompt|Enter Data|Box Options|DataSource|Screen Data|GeneralDsPage|ValidationPage|PromptOptionsPage|Functions and Subs|OnProcessData|OnPostSerialize)$/i.test(v)||/^<ErrorHandling>/i.test(v)||/^Root\./.test(v)}
   function barcodeComponentEntries(strings){
-    const out=[];
+    const groups=[];
     for(let i=0;i<strings.length-1;i++){
       if(strings[i].text!==PLACEHOLDER)continue;
       const slot=strings[i+1];if(!slot)continue;
       let groupEnd=strings.length;
       for(let j=i+1;j<strings.length;j++){if(strings[j].text===PLACEHOLDER){groupEnd=j;break}}
-      const slotValue=String(slot.text??'').trim();let readEntry=slotValue?slot:null;
-      if(!readEntry){for(let j=i+2;j<groupEnd;j++){const candidate=strings[j],v=String(candidate?.text??'').trim();if(!v)continue;readEntry=candidate;break}}
-      const value=String(readEntry?.text??'').trim();if(value&&blockedBarcodeGroupValue(value))continue;
-      out.push({value,entry:compactEntry(slot),readEntry:compactEntry(readEntry||slot)});
+      const slotValue=String(slot.text??'').trim();let mirrorEntry=null;
+      for(let j=i+2;j<groupEnd;j++){const candidate=strings[j],v=String(candidate?.text??'').trim();if(!v)continue;mirrorEntry=candidate;break}
+      const probe=slotValue||String(mirrorEntry?.text??'').trim();if(probe&&blockedBarcodeGroupValue(probe))continue;
+      groups.push({slot,mirrorEntry});
     }
-    return out;
+    const explicitMode=groups.some(g=>String(g.slot?.text??'').trim()!=='');
+    return groups.map(g=>{
+      const slotValue=String(g.slot?.text??'').trim(),mirrorValue=String(g.mirrorEntry?.text??'').trim(),readEntry=explicitMode?g.slot:(g.mirrorEntry||g.slot);
+      return{value:explicitMode?slotValue:mirrorValue,entry:compactEntry(g.slot),readEntry:compactEntry(readEntry)};
+    });
   }
   function mapContainer(container){
     const F=window.LabelWorkbenchBtwFormat;if(!F?.scanUtf16Strings)throw new Error('BTW 格式解析器尚未載入');
