@@ -1,4 +1,4 @@
-/* Label Workbench BTW object decoder/editor v0.3.1
+/* Label Workbench BTW object decoder/editor v0.3.2
  * Interoperability-focused reverse engineering for BarTender .btw files.
  * Uses the same public-domain layout observations as Elias Oenal's Barmaid:
  * prefix + preview PNG blobs + zlib serialized container + FF FE FF UTF-16 strings.
@@ -6,13 +6,13 @@
  */
 (function(){
   'use strict';
-  const BUILD='20260911-btw-object-map-031-english-text-control';
+  const BUILD='20260911-btw-object-map-032-owner-type';
   const ROOT='Root.MasterSelectedObject.';
   const FONT_MARKER=new Uint8Array([0x03,0x02,0x01,0x22]);
   const PLACEHOLDER='(???) ???-????';
 
   const u8=v=>v instanceof Uint8Array?v:new Uint8Array(v);
-  const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#39;'}[m]));
+  const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
   function readI32(data,offset){return new DataView(data.buffer,data.byteOffset,data.byteLength).getInt32(offset,true)}
   function writeI32(data,offset,value){new DataView(data.buffer,data.byteOffset,data.byteLength).setInt32(offset,Math.trunc(value),true)}
   function readF32(data,offset){return new DataView(data.buffer,data.byteOffset,data.byteLength).getFloat32(offset,true)}
@@ -21,6 +21,19 @@
   function milToMm(v){return Number.isFinite(v)?Math.round(v*0.0254*100)/100:null}
   function mmToMil(v){return Math.round(Number(v)/0.0254)}
   function compactEntry(entry){return entry?{offset:entry.offset,end:entry.end,headerLength:entry.headerLength,charLength:entry.charLength,text:entry.text}:null}
+
+  function scanTags(container){
+    const data=u8(container),out=[];
+    for(let i=0;i+8<data.length;i++){
+      if(data[i]!==0xff||data[i+1]!==0xff||data[i+2]!==0x01||data[i+3]!==0x00)continue;
+      const len=data[i+4]|(data[i+5]<<8);if(len<3||len>80||i+6+len>data.length)continue;
+      let ok=true;for(let j=0;j<len;j++){const b=data[i+6+j];if(b<0x20||b>0x7e){ok=false;break}}if(!ok)continue;
+      let type='';for(let j=0;j<len;j++)type+=String.fromCharCode(data[i+6+j]);
+      if(/Data$/i.test(type))out.push({offset:i,type});
+    }
+    return out;
+  }
+  function ownerFor(tags,offset){let hit='';for(const t of tags){if(t.offset<=offset)hit=t.type;else break}return hit}
 
   function fontInfo(data,start,end){
     const marker=findBytes(data,FONT_MARKER,start,end);if(marker<0)return null;
@@ -45,10 +58,15 @@
     if(/\.Border$/i.test(root))return'border';
     return'object';
   }
-  function barcodeTypeFor(root,strings){
+  function barcodeTypeFor(owner,root,strings){
+    if(owner==='BcDatamatrixData')return'Data Matrix';
+    if(owner==='BcC128Data')return'Code 128';
+    if(owner==='BcUCCEAN128Data')return'GS1-128';
+    if(owner==='BcPdf417Data')return'PDF417';
+    if(owner==='BcITF14Data')return'ITF-14';
     const texts=strings.map(e=>String(e.text||''));
-    if(texts.includes('Screen Data'))return'Data Matrix';
     if(/\.Barcode$/i.test(root)&&texts.includes('TextTransforms'))return'Code 128';
+    if(texts.includes('Screen Data')&&texts.some(x=>/Data ?Matrix/i.test(x)))return'Data Matrix';
     return'';
   }
   function simpleTextControlCandidate(strings,nameEntry){
@@ -85,14 +103,14 @@
 
   function mapContainer(container){
     const F=window.LabelWorkbenchBtwFormat;if(!F?.scanUtf16Strings)throw new Error('BTW 格式解析器尚未載入');
-    const data=u8(container),entries=F.scanUtf16Strings(data,{minLength:1,maxLength:10000}),roots=entries.filter(e=>String(e.text||'').startsWith(ROOT));
+    const data=u8(container),entries=F.scanUtf16Strings(data,{minLength:1,maxLength:10000}),roots=entries.filter(e=>String(e.text||'').startsWith(ROOT)),tags=scanTags(data);
     const objects=[];
     for(let i=0;i<roots.length;i++){
       const root=roots[i],recordStart=Math.max(0,root.offset-20),recordEnd=i+1<roots.length?Math.max(recordStart,roots[i+1].offset-20):data.length;
       const strings=entries.filter(e=>e.offset>=root.offset&&e.offset<recordEnd),nameEntry=strings.find((e,j)=>j>0&&e.text&&!String(e.text).startsWith(ROOT))||null,name=String(nameEntry?.text||'');
       let x=null,y=null;if(recordStart+8<=data.length){const a=readI32(data,recordStart),b=readI32(data,recordStart+4);if(Math.abs(a)<1000000&&Math.abs(b)<1000000){x=a;y=b}}
-      const rootPath=String(root.text||''),kind=kindFor(rootPath,name),valueEntry=primaryValueEntry(strings,kind,rootPath,nameEntry),font=fontInfo(data,recordStart,recordEnd),componentEntries=kind==='barcode'?barcodeComponentEntries(strings):[],components=componentEntries.map(x=>x.value),barcodeType=kind==='barcode'?barcodeTypeFor(rootPath,strings):'';
-      objects.push({id:`obj-${i+1}`,index:i,kind,name,rootPath,recordStart,recordEnd,rootOffset:root.offset,xMil:x,yMil:y,xMm:milToMm(x),yMm:milToMm(y),value:valueEntry?.text||'',valueEntry:compactEntry(valueEntry),fontName:font?.name||'',fontSize:font?.size??null,fontSizeOffset:font?.sizeOffset??null,components,componentEntries,barcodeType,stringsCount:strings.length});
+      const rootPath=String(root.text||''),owner=ownerFor(tags,recordStart),kind=kindFor(rootPath,name),valueEntry=primaryValueEntry(strings,kind,rootPath,nameEntry),font=fontInfo(data,recordStart,recordEnd),componentEntries=kind==='barcode'?barcodeComponentEntries(strings):[],components=componentEntries.map(x=>x.value),barcodeType=kind==='barcode'?barcodeTypeFor(owner,rootPath,strings):'';
+      objects.push({id:`obj-${i+1}`,index:i,kind,name,owner,rootPath,recordStart,recordEnd,rootOffset:root.offset,xMil:x,yMil:y,xMm:milToMm(x),yMm:milToMm(y),value:valueEntry?.text||'',valueEntry:compactEntry(valueEntry),fontName:font?.name||'',fontSize:font?.size??null,fontSizeOffset:font?.sizeOffset??null,components,componentEntries,barcodeType,stringsCount:strings.length});
     }
     const byName=new Map(objects.filter(o=>o.name).map(o=>[o.name,o]));
     for(const o of objects){if(o.kind!=='barcode')continue;o.resolvedComponents=o.components.map(part=>{const ref=byName.get(part);return ref?{type:'object',ref:part,value:ref.value||''}:{type:'literal',value:part}});o.resolvedPreview=o.resolvedComponents.map(x=>x.value).join('')}
