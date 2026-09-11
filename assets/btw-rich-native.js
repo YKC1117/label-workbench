@@ -1,14 +1,15 @@
-/* Label Workbench rich editable BTW generator v0.1.0
+/* Label Workbench rich editable BTW generator v0.1.1
  * Reuses verified official BarTender donor templates as an editable object pool.
  * Every unused donor root is moved off-canvas before Quick Analysis fields/barcodes are restored.
  */
 (function(){
   'use strict';
 
-  const BUILD='20260911-btw-rich-100';
+  const BUILD='20260911-btw-rich-110-official-container';
   const SEED_FUNCTION='btw-seed';
   const OFF=50000;
   const MAX_TEXT=29;
+  const CONTAINER_MARKER=new Uint8Array([0x49,0x45,0x4e,0x44,0xae,0x42,0x60,0x82,0x00,0x01]);
   const seeds={
     'gtl-a5':{id:'GTL-A5-2022-R1'},
     'ford-gtl':{id:'FORD-GTL-MIXED-2022-R8'}
@@ -52,6 +53,32 @@
     seedCache.set(seedKey,p);return p
   }
 
+  function findMarker(data){
+    outer:for(let i=0;i<=data.length-CONTAINER_MARKER.length;i++){
+      for(let j=0;j<CONTAINER_MARKER.length;j++)if(data[i+j]!==CONTAINER_MARKER[j])continue outer;
+      return i
+    }
+    return-1
+  }
+  async function inflateDeflate(bytes){
+    const stream=new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate'));
+    return new Uint8Array(await new Response(stream).arrayBuffer())
+  }
+  async function deflate(bytes){
+    const stream=new Blob([bytes]).stream().pipeThrough(new CompressionStream('deflate'));
+    return new Uint8Array(await new Response(stream).arrayBuffer())
+  }
+  function concatBytes(a,b){const out=new Uint8Array(a.length+b.length);out.set(a,0);out.set(b,a.length);return out}
+  async function splitOfficialBtw(input){
+    const file=input instanceof Uint8Array?input:new Uint8Array(input),at=findMarker(file);
+    if(at<0)throw new Error('找不到官方 BTW 容器標記');
+    const end=at+CONTAINER_MARKER.length,prefix=file.slice(0,end),compressed=file.slice(end),container=await inflateDeflate(compressed),head=new TextDecoder('latin1').decode(file.slice(0,Math.min(file.length,4096))).replace(/\0/g,'');
+    const applicationVersion=/Application:\s*Version=([^;\r\n]+)/i.exec(head)?.[1]?.trim()||'',compatibleVersion=/Document:\s*CompatibleVersion=([^;\r\n]+)/i.exec(head)?.[1]?.trim()||'';
+    if(!/Bar Tender Format File/.test(head)||!/^2022\b/i.test(applicationVersion))throw new Error(`rich donor 版本驗證失敗：${applicationVersion||'未知'}`);
+    return{prefix,container,header:{text:head,applicationVersion,compatibleVersion}}
+  }
+  async function rebuildOfficialBtw(prefix,container){return concatBytes(prefix,await deflate(container))}
+
   function templateSizeMm(parsed){
     const text=String(parsed?.header?.text||''),raw=/<TemplateSize>([^<]+)<\/TemplateSize>/i.exec(text)?.[1]?.trim()||'';
     let m=/([0-9.]+)\s*(?:in|inch|inches|\")?\s*[x×]\s*([0-9.]+)\s*(?:in|inch|inches|\")?/i.exec(raw);
@@ -77,9 +104,9 @@
 
   async function generateOne(label,index=0){
     const plan=selectPlan(label);if(!plan)throw new Error('此標籤超出 rich donor 可安全建立範圍');
-    const F=window.LabelWorkbenchBtwFormat,M=window.LabelWorkbenchBtwObjectMap;
-    if(!F?.parseStructure||!F?.inflateContainer||!F?.rebuild||!M?.mapContainer||!M?.editContainer)throw new Error('BTW rich donor 元件尚未載入');
-    const seed=await fetchSeed(plan.seedKey),parsed=F.parseStructure(seed),container=await F.inflateContainer(parsed),before=M.mapContainer(container),target=templateSizeMm(parsed),texts=reusableText(before.objects);
+    const M=window.LabelWorkbenchBtwObjectMap;
+    if(!M?.mapContainer||!M?.editContainer||typeof DecompressionStream!=='function'||typeof CompressionStream!=='function')throw new Error('BTW rich donor 元件尚未載入');
+    const seed=await fetchSeed(plan.seedKey),parsed=await splitOfficialBtw(seed),container=parsed.container,before=M.mapContainer(container),target=templateSizeMm(parsed),texts=reusableText(before.objects);
     if(texts.length<plan.fields.length)throw new Error(`rich donor 可編輯文字不足：${texts.length}/${plan.fields.length}`);
 
     const edits=new Map();for(const o of before.objects)edits.set(o.index,{index:o.index,xMil:OFF,yMil:OFF});
@@ -96,15 +123,14 @@
       edits.set(obj.index,{index:obj.index,barcodeComponents:components,...pos});expectedBarcode.push({index:obj.index,type:spec.type,value,...pos})
     });
 
-    const edited=M.editContainer(container,[...edits.values()]),rebuilt=await F.rebuild(parsed,edited),check=F.parseStructure(rebuilt),round=await F.inflateContainer(check),after=M.mapContainer(round);
+    const edited=M.editContainer(container,[...edits.values()]),rebuilt=await rebuildOfficialBtw(parsed.prefix,edited),check=await splitOfficialBtw(rebuilt),after=M.mapContainer(check.container);
     if(after.objects.length!==before.objects.length)throw new Error(`rich donor root 數改變：${before.objects.length}→${after.objects.length}`);
     for(const e of expectedText){const o=after.objects.find(x=>x.index===e.index);if(!o||o.value!==e.value||o.xMil!==e.xMil||o.yMil!==e.yMil)throw new Error(`rich Text 驗證失敗：${e.index}`)}
     for(const e of expectedBarcode){const o=after.objects.find(x=>x.index===e.index);if(!o||o.components.join('')!==e.value||o.xMil!==e.xMil||o.yMil!==e.yMil)throw new Error(`rich ${e.type} 驗證失敗：${e.index}`)}
     const active=new Set([...expectedText.map(x=>x.index),...expectedBarcode.map(x=>x.index)]),leaks=after.objects.filter(o=>!active.has(o.index)&&(o.xMil!==OFF||o.yMil!==OFF));
     if(leaks.length)throw new Error(`rich donor 清場驗證失敗：${leaks.length} 個物件仍在畫布`);
-    if(!/^2022\b/i.test(String(check.header?.applicationVersion||'')))throw new Error('rich donor 重建後版本驗證失敗');
     return{name:outputName(label,index),bytes:rebuilt,kind:plan.kind,summary:plan.fields.map(f=>String(f.value??'')).join('\r'),barcodeValue:expectedBarcode[0]?.value||'',barcodes:{dataMatrix:plan.dm.map(barcodeText),code128:plan.c128.map(barcodeText)},layout:{target,fields:expectedText,barcodes:expectedBarcode},header:check.header,seed:plan.seedId,seedKey:plan.seedKey,rich:true,editableTextCount:expectedText.length}
   }
 
-  window.LabelWorkbenchBtwRichNative={BUILD,OFF,MAX_TEXT,seeds,selectPlan,canGenerate,fetchSeed,templateSizeMm,reusableText,generateOne};
+  window.LabelWorkbenchBtwRichNative={BUILD,OFF,MAX_TEXT,seeds,selectPlan,canGenerate,fetchSeed,splitOfficialBtw,rebuildOfficialBtw,templateSizeMm,reusableText,generateOne};
 })();
