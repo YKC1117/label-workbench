@@ -55,6 +55,7 @@ jobs:
           node --check tests/local-seed-object-map.cjs
           node --check tests/template-size-offset-diagnostic.cjs
           node --check tests/template-instance-scan.cjs
+          node --check tests/template-mixed-donor-crawl.cjs
           node --check tests/btw-object-map-smoke.cjs
           node --check tests/analysis-geometry-smoke.cjs
           node --check tests/btw-layout-map-smoke.cjs
@@ -126,6 +127,10 @@ jobs:
       - name: Experimental official template instance-level donor scan
         continue-on-error: true
         run: node tests/template-instance-scan.cjs
+
+      - name: Experimental official mixed-donor library crawl
+        continue-on-error: true
+        run: node tests/template-mixed-donor-crawl.cjs
 
       - name: Native BTW object decoder/editor smoke tests
         run: node tests/btw-object-map-smoke.cjs
