@@ -1,4 +1,4 @@
-/* Label Workbench rich editable BTW generator v0.1.3
+/* Label Workbench rich editable BTW generator v0.1.4
  * Reuses verified official BarTender donor templates as an editable object pool.
  * Every unused donor root is moved off-canvas before Quick Analysis fields/barcodes are restored.
  * When Quick Analysis has reliable physical source dimensions, both object coordinates and
@@ -6,7 +6,7 @@
  */
 (function(){
   'use strict';
-  const BUILD='20260911-btw-rich-130-source-size';
+  const BUILD='20260911-btw-rich-140-rich-header-size';
   const SEED_FUNCTION='btw-seed';
   const OFF=50000;
   const MAX_TEXT=29;
@@ -56,13 +56,14 @@
     seedCache.set(seedKey,p);return p
   }
 
-  function findMarker(data){
-    outer:for(let i=0;i<=data.length-CONTAINER_MARKER.length;i++){
-      for(let j=0;j<CONTAINER_MARKER.length;j++)if(data[i+j]!==CONTAINER_MARKER[j])continue outer;
+  function findSeq(data,seq,start=0){
+    outer:for(let i=Math.max(0,start);i<=data.length-seq.length;i++){
+      for(let j=0;j<seq.length;j++)if(data[i+j]!==seq[j])continue outer;
       return i
     }
     return-1
   }
+  function findMarker(data){return findSeq(data,CONTAINER_MARKER,0)}
   async function inflateDeflate(bytes){
     const stream=new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate'));
     return new Uint8Array(await new Response(stream).arrayBuffer())
@@ -71,7 +72,11 @@
     const stream=new Blob([bytes]).stream().pipeThrough(new CompressionStream('deflate'));
     return new Uint8Array(await new Response(stream).arrayBuffer())
   }
-  function concatBytes(a,b){const out=new Uint8Array(a.length+b.length);out.set(a,0);out.set(b,a.length);return out}
+  function concatBytes(...parts){
+    const arrays=parts.map(x=>x instanceof Uint8Array?x:new Uint8Array(x)),size=arrays.reduce((n,x)=>n+x.length,0),out=new Uint8Array(size);let at=0;
+    for(const part of arrays){out.set(part,at);at+=part.length}
+    return out
+  }
   async function splitOfficialBtw(input){
     const file=input instanceof Uint8Array?input:new Uint8Array(input),at=findMarker(file);
     if(at<0)throw new Error('找不到官方 BTW 容器標記');
@@ -82,6 +87,31 @@
   }
   async function rebuildOfficialBtw(prefix,container){return concatBytes(prefix,await deflate(container))}
 
+  function formatMm(v){
+    const n=Math.round(Number(v)*1000)/1000;
+    if(!Number.isFinite(n)||n<=0)throw new Error('BTW 標籤尺寸無效');
+    return String(n).replace(/\.0+$/,'').replace(/(\.\d*?)0+$/,'$1')
+  }
+  function asciiBytes(text){return new TextEncoder().encode(String(text??''))}
+  function utf16leBytes(text){
+    const s=String(text??''),out=new Uint8Array(s.length*2);
+    for(let i=0;i<s.length;i++){const c=s.charCodeAt(i);out[i*2]=c&255;out[i*2+1]=(c>>>8)&255}
+    return out
+  }
+  function replaceRichTemplateSizePrefix(prefix,widthMm,heightMm){
+    const data=prefix instanceof Uint8Array?prefix:new Uint8Array(prefix),valueText=`${formatMm(widthMm)} x ${formatMm(heightMm)} mm`,openText='<TemplateSize>',closeText='</TemplateSize>',modes=[
+      {open:asciiBytes(openText),close:asciiBytes(closeText),value:asciiBytes(valueText),name:'ascii'},
+      {open:utf16leBytes(openText),close:utf16leBytes(closeText),value:utf16leBytes(valueText),name:'utf16le'}
+    ];
+    for(const mode of modes){
+      const start=findSeq(data,mode.open,0);if(start<0)continue;
+      const valueStart=start+mode.open.length,closeAt=findSeq(data,mode.close,valueStart);if(closeAt<0)throw new Error(`BTW rich TemplateSize ${mode.name} 結尾不存在`);
+      const out=concatBytes(data.slice(0,valueStart),mode.value,data.slice(closeAt)),check=new TextDecoder('latin1').decode(out).replace(/\0/g,'');
+      if(!check.includes(`${openText}${valueText}${closeText}`))throw new Error('BTW rich TemplateSize header 寫入驗證失敗');
+      return out
+    }
+    throw new Error('找不到 BTW rich TemplateSize header')
+  }
   function templateSizeMm(parsed){
     const text=String(parsed?.header?.text||''),raw=/<TemplateSize>([^<]+)<\/TemplateSize>/i.exec(text)?.[1]?.trim()||'';
     const m=/([0-9.]+)\s*(?:"|mm|cm|in(?:ch(?:es)?)?)?\s*[x×]\s*([0-9.]+)\s*(?:"|mm|cm|in(?:ch(?:es)?)?)?/i.exec(raw);
@@ -144,7 +174,7 @@
 
   async function generateOne(label,index=0){
     const plan=selectPlan(label);if(!plan)throw new Error('此標籤超出 rich donor 可安全建立範圍');
-    const M=window.LabelWorkbenchBtwObjectMap,F=window.LabelWorkbenchBtwFormat;
+    const M=window.LabelWorkbenchBtwObjectMap;
     if(!M?.mapContainer||!M?.editContainer||typeof DecompressionStream!=='function'||typeof CompressionStream!=='function')throw new Error('BTW rich donor 元件尚未載入');
     const seed=await fetchSeed(plan.seedKey),parsed=await splitOfficialBtw(seed),container=parsed.container,before=M.mapContainer(container),donorTarget=templateSizeMm(parsed),target=sourceTargetSize(label,donorTarget),texts=reusableText(before.objects);
     if(texts.length<plan.fields.length)throw new Error(`rich donor 可編輯文字不足：${texts.length}/${plan.fields.length}`);
@@ -165,12 +195,7 @@
 
     const edited=M.editContainer(container,[...edits.values()]),editedMap=M.mapContainer(edited),sizeMutation=replaceTemplateSizePairs(edited,donorTarget,target),sizedMap=M.mapContainer(sizeMutation.container);
     if(sizeMutation.changed&&!sameMappedObjects(editedMap,sizedMap))throw new Error('改寫 BTW 內部標籤尺寸時碰到物件資料，已停止產檔');
-    let rebuilt=await rebuildOfficialBtw(parsed.prefix,sizeMutation.container);
-    if(sizeMutation.changed){
-      if(!F?.replaceTemplateSize)throw new Error('BTW TemplateSize metadata 元件未載入');
-      rebuilt=F.replaceTemplateSize(rebuilt,target.width,target.height)
-    }
-    const check=await splitOfficialBtw(rebuilt),after=M.mapContainer(check.container),finalSize=templateSizeMm(check);
+    const prefix=sizeMutation.changed?replaceRichTemplateSizePrefix(parsed.prefix,target.width,target.height):parsed.prefix,rebuilt=await rebuildOfficialBtw(prefix,sizeMutation.container),check=await splitOfficialBtw(rebuilt),after=M.mapContainer(check.container),finalSize=templateSizeMm(check);
     if(!near(finalSize.width,target.width)||!near(finalSize.height,target.height))throw new Error(`BTW TemplateSize 驗證失敗：${finalSize.width}×${finalSize.height}mm`);
     if(sizeMutation.changed){
       const newPairs=findTemplateSizePairs(check.container,target),oldPairs=findTemplateSizePairs(check.container,donorTarget);
@@ -185,5 +210,5 @@
     return{name:outputName(label,index),bytes:rebuilt,kind:plan.kind,summary:plan.fields.map(f=>String(f.value??'')).join('\r'),barcodeValue:expectedBarcode[0]?.value||'',barcodes:{dataMatrix:plan.dm.map(barcodeText),code128:plan.c128.map(barcodeText)},layout:{target,donorTarget,fields:expectedText,barcodes:expectedBarcode,sizeMutation:{changed:sizeMutation.changed,count:sizeMutation.offsets.length,from:sizeMutation.from,to:sizeMutation.to}},header:check.header,seed:plan.seedId,seedKey:plan.seedKey,rich:true,editableTextCount:expectedText.length}
   }
 
-  window.LabelWorkbenchBtwRichNative={BUILD,OFF,MAX_TEXT,seeds,selectPlan,canGenerate,fetchSeed,splitOfficialBtw,rebuildOfficialBtw,templateSizeMm,sourceTargetSize,mmToMil,findTemplateSizePairs,replaceTemplateSizePairs,sameMappedObjects,reusableText,generateOne};
+  window.LabelWorkbenchBtwRichNative={BUILD,OFF,MAX_TEXT,seeds,selectPlan,canGenerate,fetchSeed,splitOfficialBtw,rebuildOfficialBtw,formatMm,replaceRichTemplateSizePrefix,templateSizeMm,sourceTargetSize,mmToMil,findTemplateSizePairs,replaceTemplateSizePairs,sameMappedObjects,reusableText,generateOne};
 })();
