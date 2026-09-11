@@ -54,6 +54,7 @@ jobs:
           node --check tests/btw-seed-diagnostic.cjs
           node --check tests/btw-object-map-smoke.cjs
           node --check tests/public-btw-sample-smoke.cjs
+          node --check tests/hibc-official-sample-smoke.cjs
           node --check tests/analysis-geometry-smoke.cjs
           node --check tests/btw-layout-map-smoke.cjs
           node --check tests/cea-object-map-diagnostic.cjs
@@ -114,6 +115,9 @@ jobs:
 
       - name: Official Seagull BTW public sample diagnostic
         run: node tests/public-btw-sample-smoke.cjs
+
+      - name: Official HIBC multi-Code128 sample diagnostic
+        run: node tests/hibc-official-sample-smoke.cjs
 
       - name: CEA seed native object map diagnostic
         run: node tests/cea-object-map-diagnostic.cjs
