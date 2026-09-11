@@ -53,6 +53,7 @@ jobs:
           node --check assets/workbench-priority.js
           node --check tests/btw-seed-diagnostic.cjs
           node --check tests/local-seed-object-map.cjs
+          node --check tests/template-size-offset-diagnostic.cjs
           node --check tests/btw-object-map-smoke.cjs
           node --check tests/analysis-geometry-smoke.cjs
           node --check tests/btw-layout-map-smoke.cjs
@@ -116,6 +117,10 @@ jobs:
       - name: Experimental repaired local 2022 R2 object-pool diagnostic
         continue-on-error: true
         run: node tests/local-seed-object-map.cjs
+
+      - name: Experimental template-size numeric offset diagnostic
+        continue-on-error: true
+        run: node tests/template-size-offset-diagnostic.cjs
 
       - name: Native BTW object decoder/editor smoke tests
         run: node tests/btw-object-map-smoke.cjs
