@@ -1,4 +1,4 @@
-/* Label Workbench BTW object decoder/editor v0.3.2
+/* Label Workbench BTW object decoder/editor v0.3.3
  * Interoperability-focused reverse engineering for BarTender .btw files.
  * Uses the same public-domain layout observations as Elias Oenal's Barmaid:
  * prefix + preview PNG blobs + zlib serialized container + FF FE FF UTF-16 strings.
@@ -6,7 +6,7 @@
  */
 (function(){
   'use strict';
-  const BUILD='20260911-btw-object-map-032-owner-type';
+  const BUILD='20260911-btw-object-map-033-empty-barcode-slots';
   const ROOT='Root.MasterSelectedObject.';
   const FONT_MARKER=new Uint8Array([0x03,0x02,0x01,0x22]);
   const PLACEHOLDER='(???) ???-????';
@@ -94,8 +94,9 @@
     const out=[];
     for(let i=0;i<strings.length-1;i++){
       if(strings[i].text!==PLACEHOLDER)continue;
-      const entry=strings[i+1],v=String(entry?.text||'').trim();
-      if(!v||/^(?:文字範例|Box Options|DataSource|Text \d+)$/i.test(v))continue;
+      const entry=strings[i+1];if(!entry)continue;
+      const v=String(entry.text??'').trim();
+      if(v&&/^(?:文字範例|Box Options|DataSource|Text \d+)$/i.test(v))continue;
       out.push({value:v,entry:compactEntry(entry)});
     }
     return out;
@@ -103,7 +104,7 @@
 
   function mapContainer(container){
     const F=window.LabelWorkbenchBtwFormat;if(!F?.scanUtf16Strings)throw new Error('BTW 格式解析器尚未載入');
-    const data=u8(container),entries=F.scanUtf16Strings(data,{minLength:1,maxLength:10000}),roots=entries.filter(e=>String(e.text||'').startsWith(ROOT)),tags=scanTags(data);
+    const data=u8(container),entries=F.scanUtf16Strings(data,{minLength:0,maxLength:10000,includeEmpty:true}),roots=entries.filter(e=>String(e.text||'').startsWith(ROOT)),tags=scanTags(data);
     const objects=[];
     for(let i=0;i<roots.length;i++){
       const root=roots[i],recordStart=Math.max(0,root.offset-20),recordEnd=i+1<roots.length?Math.max(recordStart,roots[i+1].offset-20):data.length;
