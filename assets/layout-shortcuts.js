@@ -1,10 +1,10 @@
-/* Label Workbench barcode layout keyboard shortcuts v2.1
+/* Label Workbench barcode layout keyboard shortcuts v2.2
  * Keeps editing fields untouched; shortcuts only run in the barcode Generate layout workspace.
  */
 (function(){
   'use strict';
 
-  const BUILD='20260910-v210';
+  const BUILD='20260911-v220';
   let copiedId=null;
   let bound=false;
 
@@ -141,18 +141,35 @@
   };
 })();
 
-/* Load local BTW template lab. This avoids the external BarTender seed endpoint that caused 502 errors. */
+/* Load the PDF/Image -> editable BTW pipeline.
+ * 客戶給 PDF / 圖片時，快速分析後會優先下載 .BTW；不再要求客戶提供 BTW 範本。
+ */
 (function(){
   'use strict';
-  const BUILD='20260911-btw-template-lab-001';
-  function load(){
-    if(window.LabelWorkbenchBtwTemplateLab||document.querySelector('script[data-lw-module="assets/btw-template-lab.js"]')) return;
+  const BUILD='20260911-bt-pipeline-loader-001';
+  const queue=[
+    ['assets/label-interpreter.js','20260911-bt-pipeline'],
+    ['assets/bt-quick.js','20260911-bt-pipeline'],
+    ['assets/bt-bridge.js','20260911-bt-pipeline'],
+    ['assets/bt-direct-import.js','20260911-bt-pipeline'],
+    ['assets/bt-native-primary.js','20260911-bt-pipeline']
+  ];
+  function already(path){
+    return document.querySelector(`script[data-lw-bt-pipeline="${path}"],script[src^="${path}?"]`);
+  }
+  function next(){
+    const item=queue.shift();
+    if(!item) return;
+    const [path,version]=item;
+    if(already(path)){ next(); return; }
     const s=document.createElement('script');
-    s.src=`assets/btw-template-lab.js?v=${BUILD}&t=${Date.now()}`;
-    s.dataset.lwModule='assets/btw-template-lab.js';
+    s.src=`${path}?v=${version}&t=${Date.now()}`;
+    s.dataset.lwBtPipeline=path;
     s.async=false;
-    s.onerror=()=>console.warn('[Label Workbench] BTW template lab load failed');
+    s.onload=next;
+    s.onerror=()=>{ console.warn('[Label Workbench] BT pipeline module load failed:',path); next(); };
     document.head.appendChild(s);
   }
+  function load(){ next(); }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',load,{once:true}); else load();
 })();
