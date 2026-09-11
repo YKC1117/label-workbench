@@ -1,8 +1,8 @@
-/* Label Workbench barcode reader v3.8 loader. */
+/* Label Workbench barcode reader v3.9 loader. */
 (function(){
   'use strict';
-  const BUILD='20260911-v310-field-consistency';
-  const modules=['assets/barcode-reader-core.js','assets/barcode-reader-ui.js','assets/barcode-generator.js','assets/label-interpreter.js','assets/analysis-accuracy.js','assets/analysis-field-consistency.js','assets/analysis-copy.js','assets/btw-format.js','assets/btw-native.js','assets/bt-bridge.js','assets/workbench-priority.js','assets/bt-native-primary.js'];
+  const BUILD='20260911-v320-pdf-native-accuracy';
+  const modules=['assets/barcode-reader-core.js','assets/barcode-reader-ui.js','assets/barcode-generator.js','assets/label-interpreter.js','assets/analysis-accuracy.js','assets/analysis-pdf-native.js','assets/analysis-field-consistency.js','assets/analysis-copy.js','assets/btw-format.js','assets/btw-native.js','assets/bt-bridge.js','assets/workbench-priority.js','assets/bt-native-primary.js'];
   function loadNext(){
     const src=modules.shift();if(!src)return;
     if(src.includes('core')&&window.LabelWorkbenchBarcodeCore){loadNext();return}
@@ -10,6 +10,7 @@
     if(src.includes('barcode-generator')&&window.LabelWorkbenchBarcodeGenerator){loadNext();return}
     if(src.includes('label-interpreter')&&window.LabelWorkbenchInterpreter){loadNext();return}
     if(src.includes('analysis-accuracy')&&window.LabelWorkbenchAnalysisAccuracy){loadNext();return}
+    if(src.includes('analysis-pdf-native')&&window.LabelWorkbenchPdfNative){loadNext();return}
     if(src.includes('analysis-field-consistency')&&window.LabelWorkbenchFieldConsistency){loadNext();return}
     if(src.includes('analysis-copy')&&window.LabelWorkbenchAnalysisCopy){loadNext();return}
     if(src.includes('btw-format')&&window.LabelWorkbenchBtwFormat){loadNext();return}
