@@ -140,3 +140,19 @@
     get copiedId(){ return copiedId; }
   };
 })();
+
+/* Load local BTW template lab. This avoids the external BarTender seed endpoint that caused 502 errors. */
+(function(){
+  'use strict';
+  const BUILD='20260911-btw-template-lab-001';
+  function load(){
+    if(window.LabelWorkbenchBtwTemplateLab||document.querySelector('script[data-lw-module="assets/btw-template-lab.js"]')) return;
+    const s=document.createElement('script');
+    s.src=`assets/btw-template-lab.js?v=${BUILD}&t=${Date.now()}`;
+    s.dataset.lwModule='assets/btw-template-lab.js';
+    s.async=false;
+    s.onerror=()=>console.warn('[Label Workbench] BTW template lab load failed');
+    document.head.appendChild(s);
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',load,{once:true}); else load();
+})();
