@@ -15,7 +15,7 @@ for(const file of ['assets/btw-format.js','assets/btw-seed-2022r2.js','assets/bt
 async function verify(label,expectedValues){
   const N=c.LabelWorkbenchBtwNative,F=c.LabelWorkbenchBtwFormat;
   if(!N?.generateOne||!F?.parseStructure)throw new Error('native BTW APIs missing');
-  if(N.BUILD!=='20260911-btwn320-safe-no-demo')throw new Error(`unexpected native build ${N.BUILD}`);
+  if(N.BUILD!=='20260911-btwn321-safe-base64')throw new Error(`unexpected native build ${N.BUILD}`);
   if(N.SEED_ID!=='LW-2022R2-100x65-SANITIZED')throw new Error(`unexpected seed ${N.SEED_ID}`);
   const out=await N.generateOne(label,0);
   if(!out?.bytes?.length||!out.name.toLowerCase().endsWith('.btw'))throw new Error('BTW output missing');
