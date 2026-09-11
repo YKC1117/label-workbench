@@ -3,9 +3,9 @@
  */
 (function(){
   'use strict';
-  const BUILD='20260911-view-guard-113-btw-types';
-  const RELEASE='v1.9.28';
-  const UPDATED='2026/09/11 18:56';
+  const BUILD='20260911-view-guard-114-root-layout';
+  const RELEASE='v1.9.29';
+  const UPDATED='2026/09/11 21:48';
   let desiredView=document.querySelector('.view.active')?.id||'barcode';
   let applying=false;
   let queued=false;
