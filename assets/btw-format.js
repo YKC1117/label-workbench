@@ -1,4 +1,4 @@
-/* Label Workbench BTW binary format helper v0.1.2
+/* Label Workbench BTW binary format helper v0.1.3
  * Experimental parser/rebuilder for native BarTender .btw files.
  * Based on the documented/reverse-engineered BTW layout used by the public-domain barmaid project:
  * text header + PNG preview blobs + zlib-compressed serialized object container.
@@ -6,7 +6,7 @@
  */
 (function(){
   'use strict';
-  const BUILD='20260911-btw012-template-size';
+  const BUILD='20260911-btw013-empty-strings';
   const SOF=new Uint8Array([0x0d,0x0a,0x42,0x61,0x72,0x20,0x54,0x65,0x6e,0x64,0x65,0x72,0x20,0x46,0x6f,0x72,0x6d,0x61,0x74,0x20,0x46,0x69,0x6c,0x65,0x0d,0x0a]);
   const END_META=new Uint8Array([0xff,0xfe,0xff,0x00]);
   const ZLIB_TAG=new Uint8Array([0x00,0x01]);
@@ -62,14 +62,17 @@
     return out;
   }
 
-  function scanUtf16Strings(container,{minLength=1,maxLength=10000}={}){
+  function scanUtf16Strings(container,{minLength=1,maxLength=10000,includeEmpty=false}={}){
     const data=u8(container),decoder=new TextDecoder('utf-16le'),out=[];
     for(let i=0;i+4<=data.length;i++){
       if(data[i]!==0xff||data[i+1]!==0xfe||data[i+2]!==0xff)continue;
       let chars=0,head=4;
       if(data[i+3]===0xff){if(i+6>data.length)continue;chars=data[i+4]|(data[i+5]<<8);head=6}else chars=data[i+3];
       if(chars<minLength||chars>maxLength)continue;const start=i+head,end=start+chars*2;if(end>data.length)continue;
-      try{const text=decoder.decode(data.slice(start,end));if(text&&!/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/.test(text))out.push({offset:i,headerLength:head,charLength:chars,start,end,text})}catch{}
+      try{
+        const text=decoder.decode(data.slice(start,end));
+        if((text||includeEmpty&&chars===0)&&!/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/.test(text))out.push({offset:i,headerLength:head,charLength:chars,start,end,text});
+      }catch{}
       i=end-1;
     }
     return out;
