@@ -1,12 +1,19 @@
-/* Label Workbench view-state guard v1.0
+/* Label Workbench view-state guard v1.1
  * Keeps the user's selected workspace visible when delayed modules finish loading.
  */
 (function(){
   'use strict';
-  const BUILD='20260911-view-guard-100';
+  const BUILD='20260911-view-guard-110';
+  const RELEASE='v1.9.25';
+  const UPDATED='2026/09/11 17:50';
   let desiredView=document.querySelector('.view.active')?.id||'barcode';
   let applying=false;
   let queued=false;
+
+  function stampRelease(){
+    const marker=document.querySelector('.brand small');
+    if(marker)marker.innerHTML='標籤製作工作台 · '+RELEASE+'<br>更新：'+UPDATED;
+  }
 
   function validView(id){
     return !!id && !!document.getElementById(id) && document.getElementById(id).classList.contains('view');
@@ -20,7 +27,6 @@
     const viewOk=activeViews.length===1&&activeViews[0].id===desiredView;
     const navOk=activeNav.length>0&&activeNav.every(el=>el.dataset.view===desiredView);
     if(viewOk&&navOk)return;
-
     applying=true;
     try{
       document.querySelectorAll('.view').forEach(el=>el.classList.toggle('active',el.id===desiredView));
@@ -69,6 +75,7 @@
   });
   observer.observe(document.documentElement,{subtree:true,attributes:true,attributeFilter:['class']});
 
+  stampRelease();
   if(!wrapShowView()){
     let tries=0;
     const timer=setInterval(function(){
@@ -77,6 +84,6 @@
     },50);
   }
 
-  window.LabelWorkbenchViewGuard={BUILD,get activeView(){return desiredView;},enforce,remember};
-  console.info('[Label Workbench] view-state guard',BUILD);
+  window.LabelWorkbenchViewGuard={BUILD,RELEASE,UPDATED,get activeView(){return desiredView;},enforce,remember};
+  console.info('[Label Workbench] view-state guard',BUILD,RELEASE,UPDATED);
 })();
