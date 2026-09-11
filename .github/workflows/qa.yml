@@ -96,8 +96,9 @@ jobs:
           grep -q "BUILD='20260911-btwn230-root-layout'" assets/btw-native.js
           grep -q "SEED_ID='CEA-2022-R5'" assets/btw-native.js
           grep -q "SEED_FUNCTION='btw-seed'" assets/btw-native.js
-          grep -q "BUILD='20260911-btw-rich-130-source-size'" assets/btw-rich-native.js
+          grep -q "BUILD='20260911-btw-rich-140-rich-header-size'" assets/btw-rich-native.js
           grep -q 'replaceTemplateSizePairs' assets/btw-rich-native.js
+          grep -q 'replaceRichTemplateSizePrefix' assets/btw-rich-native.js
           grep -q 'sourceTargetSize' assets/btw-rich-native.js
           grep -q "BUILD='20260911-btw-rich-bridge-100'" assets/btw-rich-bridge.js
           grep -q "BUILD='20260911-btw-production-gate-100'" assets/btw-production-gate.js
