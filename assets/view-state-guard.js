@@ -3,9 +3,9 @@
  */
 (function(){
   'use strict';
-  const BUILD='20260911-view-guard-112-btw-map';
-  const RELEASE='v1.9.27';
-  const UPDATED='2026/09/11 18:47';
+  const BUILD='20260911-view-guard-113-btw-types';
+  const RELEASE='v1.9.28';
+  const UPDATED='2026/09/11 18:56';
   let desiredView=document.querySelector('.view.active')?.id||'barcode';
   let applying=false;
   let queued=false;
