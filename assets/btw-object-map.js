@@ -1,4 +1,4 @@
-/* Label Workbench BTW object decoder/editor v0.2
+/* Label Workbench BTW object decoder/editor v0.3
  * Interoperability-focused reverse engineering for BarTender .btw files.
  * Uses the same public-domain layout observations as Elias Oenal's Barmaid:
  * prefix + preview PNG blobs + zlib serialized container + FF FE FF UTF-16 strings.
@@ -6,7 +6,7 @@
  */
 (function(){
   'use strict';
-  const BUILD='20260911-btw-object-map-020';
+  const BUILD='20260911-btw-object-map-030-barcode-write';
   const ROOT='Root.MasterSelectedObject.';
   const FONT_MARKER=new Uint8Array([0x03,0x02,0x01,0x22]);
   const PLACEHOLDER='(???) ???-????';
@@ -20,6 +20,7 @@
   function findBytes(data,needle,start=0,end=data.length){outer:for(let i=Math.max(0,start);i<=Math.min(end,data.length)-needle.length;i++){for(let j=0;j<needle.length;j++)if(data[i+j]!==needle[j])continue outer;return i}return-1}
   function milToMm(v){return Number.isFinite(v)?Math.round(v*0.0254*100)/100:null}
   function mmToMil(v){return Math.round(Number(v)/0.0254)}
+  function compactEntry(entry){return entry?{offset:entry.offset,end:entry.end,headerLength:entry.headerLength,charLength:entry.charLength,text:entry.text}:null}
 
   function fontInfo(data,start,end){
     const marker=findBytes(data,FONT_MARKER,start,end);if(marker<0)return null;
@@ -61,13 +62,13 @@
     }
     return hit;
   }
-  function barcodeComponents(strings){
+  function barcodeComponentEntries(strings){
     const out=[];
     for(let i=0;i<strings.length-1;i++){
       if(strings[i].text!==PLACEHOLDER)continue;
-      const v=String(strings[i+1]?.text||'').trim();
+      const entry=strings[i+1],v=String(entry?.text||'').trim();
       if(!v||/^(?:文字範例|Box Options|DataSource|Text 1)$/i.test(v))continue;
-      out.push(v);
+      out.push({value:v,entry:compactEntry(entry)});
     }
     return out;
   }
@@ -80,8 +81,8 @@
       const root=roots[i],recordStart=Math.max(0,root.offset-20),recordEnd=i+1<roots.length?Math.max(recordStart,roots[i+1].offset-20):data.length;
       const strings=entries.filter(e=>e.offset>=root.offset&&e.offset<recordEnd),nameEntry=strings.find((e,j)=>j>0&&e.text&&!String(e.text).startsWith(ROOT))||null,name=String(nameEntry?.text||'');
       let x=null,y=null;if(recordStart+8<=data.length){const a=readI32(data,recordStart),b=readI32(data,recordStart+4);if(Math.abs(a)<1000000&&Math.abs(b)<1000000){x=a;y=b}}
-      const rootPath=String(root.text||''),kind=kindFor(rootPath,name),valueEntry=primaryValueEntry(strings,kind),font=fontInfo(data,recordStart,recordEnd),components=kind==='barcode'?barcodeComponents(strings):[],barcodeType=kind==='barcode'?barcodeTypeFor(rootPath,strings):'';
-      objects.push({id:`obj-${i+1}`,index:i,kind,name,rootPath,recordStart,recordEnd,rootOffset:root.offset,xMil:x,yMil:y,xMm:milToMm(x),yMm:milToMm(y),value:valueEntry?.text||'',valueEntry:valueEntry?{offset:valueEntry.offset,end:valueEntry.end,headerLength:valueEntry.headerLength,charLength:valueEntry.charLength,text:valueEntry.text}:null,fontName:font?.name||'',fontSize:font?.size??null,fontSizeOffset:font?.sizeOffset??null,components,barcodeType,stringsCount:strings.length});
+      const rootPath=String(root.text||''),kind=kindFor(rootPath,name),valueEntry=primaryValueEntry(strings,kind),font=fontInfo(data,recordStart,recordEnd),componentEntries=kind==='barcode'?barcodeComponentEntries(strings):[],components=componentEntries.map(x=>x.value),barcodeType=kind==='barcode'?barcodeTypeFor(rootPath,strings):'';
+      objects.push({id:`obj-${i+1}`,index:i,kind,name,rootPath,recordStart,recordEnd,rootOffset:root.offset,xMil:x,yMil:y,xMm:milToMm(x),yMm:milToMm(y),value:valueEntry?.text||'',valueEntry:compactEntry(valueEntry),fontName:font?.name||'',fontSize:font?.size??null,fontSizeOffset:font?.sizeOffset??null,components,componentEntries,barcodeType,stringsCount:strings.length});
     }
     const byName=new Map(objects.filter(o=>o.name).map(o=>[o.name,o]));
     for(const o of objects){if(o.kind!=='barcode')continue;o.resolvedComponents=o.components.map(part=>{const ref=byName.get(part);return ref?{type:'object',ref:part,value:ref.value||''}:{type:'literal',value:part}});o.resolvedPreview=o.resolvedComponents.map(x=>x.value).join('')}
@@ -109,7 +110,24 @@
       if(edit.xMil!=null||edit.xMm!=null){const v=edit.xMil!=null?Number(edit.xMil):mmToMil(edit.xMm);writeI32(out,obj.recordStart,v)}
       if(edit.yMil!=null||edit.yMm!=null){const v=edit.yMil!=null?Number(edit.yMil):mmToMil(edit.yMm);writeI32(out,obj.recordStart+4,v)}
       if(edit.fontSize!=null){if(obj.fontSizeOffset==null)throw new Error(`${obj.name||obj.id} 尚未定位可安全寫入的字級欄位`);writeF32(out,obj.fontSizeOffset,Number(edit.fontSize))}
-      if(Object.prototype.hasOwnProperty.call(edit,'value')){if(!obj.valueEntry)throw new Error(`${obj.name||obj.id} 尚未定位可安全寫入的文字值`);out=F.replaceStringAt(out,obj.valueEntry,String(edit.value??''))}
+
+      const replacements=[];
+      if(Object.prototype.hasOwnProperty.call(edit,'value')){
+        if(!obj.valueEntry)throw new Error(`${obj.name||obj.id} 尚未定位可安全寫入的文字值`);
+        replacements.push({entry:obj.valueEntry,value:String(edit.value??'')});
+      }
+      if(Object.prototype.hasOwnProperty.call(edit,'barcodeValue')){
+        if(obj.kind!=='barcode')throw new Error(`${obj.name||obj.id} 不是條碼物件`);
+        if(obj.componentEntries.length!==1)throw new Error(`${obj.name||obj.id} 有 ${obj.componentEntries.length} 段資料來源；請使用 barcodeComponents 精準寫回`);
+        replacements.push({entry:obj.componentEntries[0].entry,value:String(edit.barcodeValue??'')});
+      }
+      if(Object.prototype.hasOwnProperty.call(edit,'barcodeComponents')){
+        if(obj.kind!=='barcode')throw new Error(`${obj.name||obj.id} 不是條碼物件`);
+        if(!Array.isArray(edit.barcodeComponents)||edit.barcodeComponents.length!==obj.componentEntries.length)throw new Error(`${obj.name||obj.id} 條碼資料段數不符：需要 ${obj.componentEntries.length} 段`);
+        obj.componentEntries.forEach((c,i)=>replacements.push({entry:c.entry,value:String(edit.barcodeComponents[i]??'')}));
+      }
+      replacements.sort((a,b)=>b.entry.offset-a.entry.offset);
+      for(const r of replacements)out=F.replaceStringAt(out,r.entry,r.value);
     }
     return out;
   }
@@ -136,7 +154,7 @@
     const chips=Object.entries(counts).map(([k,n])=>`<span class="file-chip">${esc(k)} ${n}</span>`).join('');
     const size=/<TemplateSize>([^<]+)<\/TemplateSize>/i.exec(h.text||'')?.[1]||'';
     const rows=objects.slice(0,100).map(o=>`<tr><td>${esc(typeLabel(o))}</td><td>${esc(o.name||o.id)}</td><td>${o.xMm==null?'—':`${o.xMm} / ${o.yMm} mm`}</td><td>${esc(objectSummary(o))}</td><td>${esc(o.fontName||'—')}${o.fontSize!=null?` ${o.fontSize} pt`:''}</td></tr>`).join('');
-    return `<div class="analysis-block lw-btw-decoded"><div class="section-title"><b>BTW 原生物件解析：${esc(file.name)}</b><span class="pill">${objects.length} 個物件區段</span></div><div class="file-chips"><span class="file-chip">${esc(h.applicationVersion||'BarTender')}</span>${h.compatibleVersion?`<span class="file-chip">相容 ${esc(h.compatibleVersion)}</span>`:''}${size?`<span class="file-chip">${esc(size)}</span>`:''}${chips}</div><div class="note"><b>已直接讀取 BTW：</b>以下位置、文字、字型/字級與條碼資料關聯來自檔案內的原生 serialized container，不是 OCR。Code 128 / Data Matrix 類型以這份 2022 R2 結構特徵辨識；尺寸欄位正在做寫回驗證，不確定的欄位不會硬猜。</div><div class="table-scroll"><table class="analysis-table"><thead><tr><th>類型</th><th>物件</th><th>X / Y</th><th>內容 / 資料組成</th><th>字型</th></tr></thead><tbody>${rows}</tbody></table></div>${objects.length>100?'<div class="footer-note">物件超過 100 個，畫面先顯示前 100 個。</div>':''}</div>`;
+    return `<div class="analysis-block lw-btw-decoded"><div class="section-title"><b>BTW 原生物件解析：${esc(file.name)}</b><span class="pill">${objects.length} 個物件區段</span></div><div class="file-chips"><span class="file-chip">${esc(h.applicationVersion||'BarTender')}</span>${h.compatibleVersion?`<span class="file-chip">相容 ${esc(h.compatibleVersion)}</span>`:''}${size?`<span class="file-chip">${esc(size)}</span>`:''}${chips}</div><div class="note"><b>已直接讀取 BTW：</b>位置、文字、字型/字級與條碼資料來源都來自檔案原生 serialized container，不是 OCR。Data Matrix 單一 payload 與 Code 128 多段 datasource 已具備安全寫回底層；尺寸欄位仍待 BarTender 實機驗證後才開放正式寫入。</div><div class="table-scroll"><table class="analysis-table"><thead><tr><th>類型</th><th>物件</th><th>X / Y</th><th>內容 / 資料組成</th><th>字型</th></tr></thead><tbody>${rows}</tbody></table></div>${objects.length>100?'<div class="footer-note">物件超過 100 個，畫面先顯示前 100 個。</div>':''}</div>`;
   }
 
   async function waitBaseAnalysis(out,timeout=120000){
