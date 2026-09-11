@@ -8,12 +8,12 @@
   <title>Label Workbench｜標籤製作工作台</title>
   <link rel="stylesheet" href="assets/app.css?v=20260910-v180">
   <link rel="stylesheet" href="assets/ui-refresh.css?v=20260910-v190.1" data-lw-ui-refresh="true">
-  <link rel="stylesheet" href="assets/nav-groups.css?v=20260911-v120">
+  <link rel="stylesheet" href="assets/nav-groups.css?v=20260911-v130">
 </head>
 <body>
 <div class="shell">
   <aside class="side">
-    <div class="brand">🏷️ Label Workbench<small>標籤製作工作台 · v1.9.9</small></div>
+    <div class="brand">🏷️ Label Workbench<small>標籤製作工作台 · v1.9.10</small></div>
     <nav class="nav" aria-label="主要導覽">
       <button class="active" data-view="barcode">▥ 條碼工具</button>
       <button data-view="analysis">⚡ 快速分析</button>
@@ -46,7 +46,7 @@
       </div>
       <div class="panel"><h3>常用工作</h3><div class="quick">
         <button onclick="showView('analysis')"><strong>⚡ 客戶原稿快速分析</strong><span>把客戶檔案整理成可製作、可確認的內容</span></button>
-        <button onclick="showView('bartender')"><strong>🖨️ BT 快速製作</strong><span>PDF／圖片快速分析後先下載 BT 可直接匯入圖檔；可編輯 BTW 保留實驗</span></button>
+        <button onclick="showView('bartender')"><strong>🖨️ BT 快速製作</strong><span>快速分析完成後，再進來下載 BT 可直接匯入圖檔</span></button>
         <button id="dashNewCase"><strong>＋ 建立案件紀錄</strong><span>只有需要跨裝置接續或特別追蹤時再使用</span></button>
       </div></div>
     </section>
@@ -106,13 +106,13 @@
 
     <section id="bartender" class="view">
       <div class="panel">
-        <div class="status"><span class="dot"></span>BT 製作主流程</div>
+        <div class="status"><span class="dot"></span>BT 製作</div>
         <h3 class="bt-title">BT 快速製作</h3>
-        <p>PDF／圖片快速分析後，正式工作先下載 BT 可直接匯入圖檔；可編輯 .btw 保留實驗功能，不會塞測試假資料。</p>
+        <p>此頁不放案件紀錄、不自動帶資料。請先到「快速分析」處理客戶 PDF／圖片，再回來下載 BT 可直接匯入圖檔。</p>
         <div class="case-actions"><button class="btn primary" type="button" onclick="showView('analysis')">⚡ 從快速分析開始</button></div>
       </div>
-      <div class="panel"><div class="section-title"><h3>可接續的 BT 製作紀錄</h3><span class="pill">選用</span></div><div id="bartenderQueue" class="case-list"></div></div>
-      <div class="panel"><h3>快速製作流程</h3><div class="workflow"><span>客戶 PDF / 圖片</span><b>→</b><span>快速分析</span><b>→</b><span>下載 BT 可直接匯入圖檔</span><b>→</b><span>BarTender 微調</span><b>→</b><span>測印</span></div><div class="note"><b>安全規則：</b>正式工作先用 BT 可直接匯入圖檔；可編輯 .btw 僅作實驗，且只寫入實際辨識到的文字／條碼，不會亂補假資料。</div></div>
+      <div class="hidden" aria-hidden="true"><div id="bartenderQueue" class="case-list"></div></div>
+      <div class="panel"><h3>快速製作流程</h3><div class="workflow"><span>客戶 PDF / 圖片</span><b>→</b><span>快速分析</span><b>→</b><span>下載 BT 可直接匯入圖檔</span><b>→</b><span>BarTender 微調</span><b>→</b><span>測印</span></div><div class="note"><b>安全規則：</b>BT 快速製作頁不顯示舊案件資料、不自動套資料；正式工作只走「BT 可直接匯入圖檔」。</div></div>
     </section>
   </main>
 </div>
@@ -124,8 +124,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
 <script src="assets/cloud-config.js?v=20260910-v180" defer></script>
 <script src="assets/app.js?v=20260910-v181" defer></script>
-<script src="assets/barcode-reader.js?v=20260911-v240" data-lw-module="assets/barcode-reader.js" defer></script>
-<script src="assets/cloud.js?v=20260911-v240" defer></script>
-<script src="assets/layout-shortcuts.js?v=20260911-v240" defer></script>
+<script src="assets/barcode-reader.js?v=20260911-v250" data-lw-module="assets/barcode-reader.js" defer></script>
+<script src="assets/cloud.js?v=20260911-v250" defer></script>
+<script src="assets/layout-shortcuts.js?v=20260911-v250" defer></script>
 </body>
 </html>
