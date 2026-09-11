@@ -99,7 +99,7 @@
     </section>
 
     <section id="analysis" class="view">
-      <div class="panel"><h3>快速分析</h3><div class="drop"><strong>把客戶檔案丟進來</strong><p>PDF、圖片、Excel、Word、CSV 直接整理成可製作內容。</p><input id="analysisFiles" type="file" multiple accept=".jpg,.jpeg,.png,.webp,.pdf,.xls,.xlsx,.doc,.docx,.csv,.btw"><div id="analysisResult" class="footer-note">等待檔案</div></div><div class="note warn-note"><b>快速分析：</b>PDF／圖片會先用 PDF 原文、同欄位條碼、OCR 與版面位置交叉比對；有衝突就保留待核對，不會硬塞進 BTW。</div></div>
+      <div class="panel"><h3>快速分析</h3><div class="drop"><strong>把客戶檔案丟進來</strong><p>PDF、圖片、Excel、Word、CSV 直接整理成可製作內容。</p><input id="analysisFiles" type="file" multiple accept=".jpg,.jpeg,.png,.webp,.pdf,.xls,.xlsx,.doc,.docx,.csv,.btw"><div id="analysisResult" class="footer-note">等待檔案</div></div><div class="note warn-note"><b>快速分析：</b>PDF／圖片會自動判斷方向、分標籤、讀欄位位置、補讀小字並交叉比對條碼；畫面只留下可製作內容與待確認項目。</div></div>
     </section>
 
     <section id="barcode" class="view active"></section>
@@ -108,11 +108,11 @@
       <div class="panel">
         <div class="status"><span class="dot"></span>BT 製作</div>
         <h3 class="bt-title">BT 快速製作</h3>
-        <p>此頁不放舊案件資料。請先到「快速分析」處理客戶 PDF／圖片並確認內容，再直接下載 BarTender 2022 可編輯 .BTW。</p>
+        <p>此頁不放舊案件資料。請先到「快速分析」處理客戶 PDF／圖片，再直接下載 BarTender 2022 可編輯 .BTW。</p>
         <div class="case-actions"><button class="btn primary" type="button" onclick="showView('analysis')">⚡ 從快速分析開始</button></div>
       </div>
       <div class="hidden" aria-hidden="true"><div id="bartenderQueue" class="case-list"></div></div>
-      <div class="panel"><h3>快速製作流程</h3><div class="workflow"><span>客戶 PDF / 圖片</span><b>→</b><span>快速分析</span><b>→</b><span>建立可編輯 .BTW</span><b>→</b><span>BarTender 開啟編輯</span><b>→</b><span>測印</span></div><div class="note"><b>輸出格式：</b>正式工作輸出 <code>.btw</code>，不是 PNG/JPG 圖片；開啟後可在 BarTender 2022 繼續編輯。</div></div>
+      <div class="panel"><h3>快速製作流程</h3><div class="workflow"><span>客戶 PDF / 圖片</span><b>→</b><span>快速分析</span><b>→</b><span>建立可編輯 .BTW</span><b>→</b><span>BarTender 開啟編輯</span><b>→</b><span>測印</span></div><div class="note"><b>輸出格式：</b>正式工作下載 <code>.btw</code>，不是 PNG/JPG 圖片；開啟後可在 BarTender 2022 繼續編輯。</div></div>
     </section>
   </main>
 </div>
@@ -127,8 +127,8 @@ try{localStorage.removeItem('labelWorkbench.btDraft.v1')}catch(_){}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
 <script src="assets/cloud-config.js?v=20260910-v180" defer></script>
 <script src="assets/app.js?v=20260910-v181" defer></script>
-<script src="assets/barcode-reader.js?v=20260911-v330" data-lw-module="assets/barcode-reader.js" defer></script>
-<script src="assets/cloud.js?v=20260911-v330" defer></script>
-<script src="assets/layout-shortcuts.js?v=20260911-v330" defer></script>
+<script src="assets/barcode-reader.js?v=20260911-v340" data-lw-module="assets/barcode-reader.js" defer></script>
+<script src="assets/cloud.js?v=20260911-v300" defer></script>
+<script src="assets/layout-shortcuts.js?v=20260911-v300" defer></script>
 </body>
 </html>
