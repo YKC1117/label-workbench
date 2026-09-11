@@ -48,6 +48,7 @@ jobs:
           node --check assets/btw-native.js
           node --check assets/btw-rich-native.js
           node --check assets/btw-rich-bridge.js
+          node --check assets/btw-production-gate.js
           node --check assets/bt-direct-import.js
           node --check assets/bt-bridge.js
           node --check assets/bt-native-primary.js
@@ -68,6 +69,7 @@ jobs:
           node --check tests/cea-object-map-diagnostic.cjs
           node --check tests/btw-native-smoke.cjs
           node --check tests/btw-rich-native-smoke.cjs
+          node --check tests/btw-production-gate-smoke.cjs
 
       - name: Current wiring sanity check
         run: |
@@ -77,7 +79,7 @@ jobs:
           grep -q "RELEASE='v1.9.30'" assets/view-state-guard.js
           grep -q "UPDATED='2026/09/11 22:53'" assets/view-state-guard.js
           grep -q "BUILD='20260911-view-guard-115-rich-production'" assets/view-state-guard.js
-          grep -q "BUILD='20260911-v350-rich-production'" assets/barcode-reader.js
+          grep -q "BUILD='20260911-v351-pending-production-gate'" assets/barcode-reader.js
           grep -q 'view-state-guard.js' assets/barcode-reader.js
           grep -q 'analysis-geometry.js' assets/barcode-reader.js
           grep -q 'btw-object-map.js' assets/barcode-reader.js
@@ -86,6 +88,7 @@ jobs:
           grep -q 'btw-rich-bridge.js' assets/barcode-reader.js
           grep -q 'bt-native-primary.js' assets/barcode-reader.js
           grep -q 'analysis-confidence-guard.js' assets/barcode-reader.js
+          grep -q 'btw-production-gate.js' assets/barcode-reader.js
           grep -q 'downloadFromAnalysis' assets/btw-native.js
           grep -q 'downloadEditable' assets/bt-native-primary.js
           grep -q "BUILD='20260911-btwn230-root-layout'" assets/btw-native.js
@@ -93,6 +96,7 @@ jobs:
           grep -q "SEED_FUNCTION='btw-seed'" assets/btw-native.js
           grep -q "BUILD='20260911-btw-rich-110-official-container'" assets/btw-rich-native.js
           grep -q "BUILD='20260911-btw-rich-bridge-100'" assets/btw-rich-bridge.js
+          grep -q "BUILD='20260911-btw-production-gate-100'" assets/btw-production-gate.js
 
       - name: Core logic smoke tests
         run: node tests/logic-smoke.cjs
@@ -166,3 +170,6 @@ jobs:
 
       - name: Production rich native BTW generation smoke tests
         run: node tests/btw-rich-native-smoke.cjs
+
+      - name: BTW pending-field production safety gate
+        run: node tests/btw-production-gate-smoke.cjs
