@@ -5,7 +5,7 @@
 (function(){
   'use strict';
 
-  const BUILD='20260911-btwn320-safe-no-demo';
+  const BUILD='20260911-btwn321-safe-base64';
   const SEED_ID='LW-2022R2-100x65-SANITIZED';
   const SEED_SRC='assets/btw-seed-2022r2.js?v=20260911-local-seed-001';
   const JSZIP_SRC='https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js';
@@ -83,17 +83,26 @@
     });
   }
   async function ensureSeedApi(){
-    if(window.LabelWorkbenchBtwSeed2022R2?.bytes) return window.LabelWorkbenchBtwSeed2022R2;
+    if(window.LabelWorkbenchBtwSeed2022R2?.BASE64) return window.LabelWorkbenchBtwSeed2022R2;
     if(seedScriptPromise) return seedScriptPromise;
     seedScriptPromise=loadScript(SEED_SRC,()=>window.LabelWorkbenchBtwSeed2022R2,'BTW seed').finally(()=>{seedScriptPromise=null});
     return seedScriptPromise;
+  }
+  function decodeSeedBase64(value){
+    const core=String(value||'').replace(/[^A-Za-z0-9+/]/g,'');
+    if(!core) throw new Error('BTW 本機種子內容為空');
+    const padded=core+'='.repeat((4-(core.length%4))%4);
+    const bin=atob(padded);
+    const out=new Uint8Array(bin.length);
+    for(let i=0;i<bin.length;i++) out[i]=bin.charCodeAt(i);
+    return out.buffer;
   }
   async function fetchSeed(){
     if(seedPromise) return seedPromise;
     seedPromise=(async()=>{
       const api=await ensureSeedApi();
       if(api.ID!==SEED_ID) throw new Error('BTW 本機種子版本不正確');
-      return api.bytes();
+      return decodeSeedBase64(api.BASE64);
     })().catch(err=>{seedPromise=null; throw err});
     return seedPromise;
   }
@@ -155,12 +164,10 @@
     const p=plan(label),reps=[];
     if(!p.hasRealContent) throw new Error('快速分析沒有辨識到可寫入 BTW 的實際文字或條碼；已停止產生，避免塞入假資料。');
 
-    // Captions. Blank if we cannot identify a real field name.
     addExact(reps,entries,'(1P) PART NO :',p.label1,1);
     addExact(reps,entries,'(1T) LOT NO :',p.label2,1);
     addExact(reps,entries,'(Q)QTY:',p.label3,2);
 
-    // Replace seed placeholders only with values actually read from this analysis.
     addExact(reps,entries,'LW_PART_VALUE',compact(p.value1),5);
     addExact(reps,entries,'PART00000001',compact(p.value1),5);
     addExact(reps,entries,'LW_LOT_VALUE',compact(p.value2),5);
@@ -169,13 +176,11 @@
     addExact(reps,entries,'0001',compact(p.value3),2);
     addExact(reps,entries,'LOT00000100',compact(p.value3),2);
 
-    // Barcode values. If a real barcode was not detected, hide barcode objects instead of inventing data.
     addExact(reps,entries,'LW_DM_VALUE',compact(p.dmValue),10);
     addWhere(reps,entries,text=>/^LWDM\|PART00000001\|LOT000001\|/.test(text),compact(p.dmValue),10);
     if(!p.hasDm && !p.dmValue) moveObjects(data,tags,'BcDatamatrixData',50000,50000);
     if(!p.hasCode128) moveObjects(data,tags,'BcC128Data',50000,50000);
 
-    // Source / note fields are only production reminders, not fake label data.
     addExact(reps,entries,'Label_Workbench_Source.pdf',compact(p.source),2);
     addWhere(reps,entries,text=>/範本檔\.pdf$/.test(text)||/Label_Workbench_Source\.pdf$/.test(text),compact(p.source),2);
     addExact(reps,entries,'NOTE',p.source?`來源：${compact(p.source)}`:'',2);
@@ -238,5 +243,5 @@
     return{ok:true,type:'zip',count:outputs.length,outputs};
   }
 
-  window.LabelWorkbenchBtwNative={BUILD,SEED_ID,seedSource:SEED_SRC,fetchSeed,fieldSummary,plan,patchSeed,generateOne,downloadFromAnalysis,scanTags};
+  window.LabelWorkbenchBtwNative={BUILD,SEED_ID,seedSource:SEED_SRC,fetchSeed,decodeSeedBase64,fieldSummary,plan,patchSeed,generateOne,downloadFromAnalysis,scanTags};
 })();
