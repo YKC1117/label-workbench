@@ -1,3 +1,4 @@
+// v1.9.29 local-seed recovery diagnostic
 const fs=require('fs');const vm=require('vm');const zlib=require('zlib');
 const c={console,Uint8Array,ArrayBuffer,DataView,TextDecoder,TextEncoder,atob,btoa,Blob,Response,CompressionStream,DecompressionStream,setTimeout,clearTimeout,setInterval,clearInterval,Promise,Date,Math,navigator:{},URL:global.URL,document:{readyState:'loading',addEventListener(){},querySelector(){return null},querySelectorAll(){return[]},getElementById(){return null},createElement(){return{}},head:{appendChild(){}},body:{appendChild(){}}},window:null,globalThis:null};c.window=c;c.globalThis=c;vm.createContext(c);
 for(const f of['assets/btw-seed-2022r2.js','assets/btw-format.js','assets/btw-object-map.js'])vm.runInContext(fs.readFileSync(f,'utf8'),c,{filename:f});
