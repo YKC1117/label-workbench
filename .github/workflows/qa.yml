@@ -53,12 +53,15 @@ jobs:
       - name: Current wiring sanity check
         run: |
           grep -q 'assets/barcode-reader.js?v=' index.html
-          grep -q '標籤製作工作台 · v1.9.25' index.html
+          grep -q '標籤製作工作台 · v1.9.26' index.html
+          grep -q '更新：2026/09/11 18:13' index.html
           grep -q 'view-state-guard.js' assets/barcode-reader.js
           grep -q 'bt-native-primary.js' assets/barcode-reader.js
           grep -q 'analysis-confidence-guard.js' assets/barcode-reader.js
           grep -q 'downloadFromAnalysis' assets/btw-native.js
           grep -q 'downloadEditable' assets/bt-native-primary.js
+          grep -q "SEED_ID='CEA-2022-R5'" assets/btw-native.js
+          grep -q "SEED_FUNCTION='btw-seed'" assets/btw-native.js
 
       - name: Core logic smoke tests
         run: node tests/logic-smoke.cjs
