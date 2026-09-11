@@ -13,7 +13,7 @@
 <body>
 <div class="shell">
   <aside class="side">
-    <div class="brand">🏷️ Label Workbench<small>標籤製作工作台 · v1.9.26<br>更新：2026/09/11 18:13</small></div>
+    <div class="brand">🏷️ Label Workbench<small>標籤製作工作台 · v1.9.27<br>更新：2026/09/11 18:47</small></div>
     <nav class="nav" aria-label="主要導覽">
       <button class="active" data-view="barcode">▥ 條碼工具</button>
       <button data-view="analysis">⚡ 快速分析</button>
@@ -99,7 +99,7 @@
     </section>
 
     <section id="analysis" class="view">
-      <div class="panel"><h3>快速分析</h3><div class="drop"><strong>把客戶檔案丟進來</strong><p>PDF、圖片、Excel、Word、CSV 直接整理成可製作內容。</p><input id="analysisFiles" type="file" multiple accept=".jpg,.jpeg,.png,.webp,.pdf,.xls,.xlsx,.doc,.docx,.csv,.btw"><div id="analysisResult" class="footer-note">等待檔案</div></div><div class="note warn-note"><b>快速分析：</b>PDF／圖片會自動判斷方向、分標籤、讀欄位位置、補讀小字並交叉比對條碼；畫面只留下可製作內容與待確認項目。</div></div>
+      <div class="panel"><h3>快速分析</h3><div class="drop"><strong>把客戶檔案丟進來</strong><p>PDF、圖片、Excel、Word、CSV、BarTender .BTW 直接整理成可製作內容。</p><input id="analysisFiles" type="file" multiple accept=".jpg,.jpeg,.png,.webp,.pdf,.xls,.xlsx,.doc,.docx,.csv,.btw"><div id="analysisResult" class="footer-note">等待檔案</div></div><div class="note warn-note"><b>快速分析：</b>PDF／圖片會自動判斷方向、分標籤、讀欄位位置、補讀小字並交叉比對條碼；.BTW 會直接解析原生物件位置、文字、字型／字級與條碼資料關聯。</div></div>
     </section>
 
     <section id="barcode" class="view active"></section>
@@ -127,7 +127,7 @@ try{localStorage.removeItem('labelWorkbench.btDraft.v1')}catch(_){}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
 <script src="assets/cloud-config.js?v=20260910-v180" defer></script>
 <script src="assets/app.js?v=20260910-v181" defer></script>
-<script src="assets/barcode-reader.js?v=20260911-v352" data-lw-module="assets/barcode-reader.js" defer></script>
+<script src="assets/barcode-reader.js?v=20260911-v353" data-lw-module="assets/barcode-reader.js" defer></script>
 <script src="assets/cloud.js?v=20260911-v300" defer></script>
 <script src="assets/layout-shortcuts.js?v=20260911-v300" defer></script>
 </body>
