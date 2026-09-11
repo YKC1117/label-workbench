@@ -71,13 +71,13 @@ jobs:
 
       - name: Current wiring sanity check
         run: |
-          grep -q 'assets/barcode-reader.js?v=20260911-v355' index.html
-          grep -q '標籤製作工作台 · v1.9.29' index.html
-          grep -q '更新：2026/09/11 21:48' index.html
-          grep -q "RELEASE='v1.9.29'" assets/view-state-guard.js
-          grep -q "UPDATED='2026/09/11 21:48'" assets/view-state-guard.js
-          grep -q "BUILD='20260911-view-guard-114-root-layout'" assets/view-state-guard.js
-          grep -q "BUILD='20260911-v349-btw-root-layout'" assets/barcode-reader.js
+          grep -q 'assets/barcode-reader.js?v=20260911-v356' index.html
+          grep -q '標籤製作工作台 · v1.9.30' index.html
+          grep -q '更新：2026/09/11 22:53' index.html
+          grep -q "RELEASE='v1.9.30'" assets/view-state-guard.js
+          grep -q "UPDATED='2026/09/11 22:53'" assets/view-state-guard.js
+          grep -q "BUILD='20260911-view-guard-115-rich-production'" assets/view-state-guard.js
+          grep -q "BUILD='20260911-v350-rich-production'" assets/barcode-reader.js
           grep -q 'view-state-guard.js' assets/barcode-reader.js
           grep -q 'analysis-geometry.js' assets/barcode-reader.js
           grep -q 'btw-object-map.js' assets/barcode-reader.js
