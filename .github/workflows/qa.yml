@@ -44,6 +44,7 @@ jobs:
           node --check assets/bt-quick.js
           node --check assets/btw-format.js
           node --check assets/btw-object-map.js
+          node --check assets/btw-layout-map.js
           node --check assets/btw-native.js
           node --check assets/bt-direct-import.js
           node --check assets/bt-bridge.js
@@ -54,6 +55,7 @@ jobs:
           node --check tests/btw-object-map-smoke.cjs
           node --check tests/public-btw-sample-smoke.cjs
           node --check tests/analysis-geometry-smoke.cjs
+          node --check tests/btw-layout-map-smoke.cjs
           node --check tests/cea-object-map-diagnostic.cjs
 
       - name: Current wiring sanity check
@@ -66,6 +68,7 @@ jobs:
           grep -q 'view-state-guard.js' assets/barcode-reader.js
           grep -q 'analysis-geometry.js' assets/barcode-reader.js
           grep -q 'btw-object-map.js' assets/barcode-reader.js
+          grep -q 'btw-layout-map.js' assets/barcode-reader.js
           grep -q 'bt-native-primary.js' assets/barcode-reader.js
           grep -q 'analysis-confidence-guard.js' assets/barcode-reader.js
           grep -q 'downloadFromAnalysis' assets/btw-native.js
@@ -93,6 +96,9 @@ jobs:
 
       - name: Source geometry matching smoke tests
         run: node tests/analysis-geometry-smoke.cjs
+
+      - name: Source geometry to BTW coordinate mapping tests
+        run: node tests/btw-layout-map-smoke.cjs
 
       - name: Barcode generator and production-analysis smoke tests
         run: node tests/v15-smoke.cjs
