@@ -5,7 +5,7 @@
  */
 (function(){
   'use strict';
-  const BUILD='20260914-barcode-crosscheck-104';
+  const BUILD='20260914-barcode-crosscheck-105';
   const api=()=>window.LabelWorkbenchInterpreter;
   const CODES=['31P','30P','31T','33P','23L','24L','21L','16D','10D','1P','1T','1Y','2Y','4Y','Q'];
   const CODE_ALT=CODES.slice().sort((a,b)=>b.length-a.length).join('|');
@@ -28,7 +28,7 @@
       markerRx.lastIndex=start;
       const next=markerRx.exec(raw);
       const end=next?next.index:raw.length;
-      const v=clean(raw.slice(start,end).replace(/^[\s\)\]\:=]+|[\s\)\]\:=]+$/g,''));
+      const v=clean(raw.slice(start,end).replace(/^[\s\(\)\]\:=]+|[\s\(\)\]\:=]+$/g,''));
       if(v)compact.push(v);
     }
     if(compact.length)return uniq(compact);
