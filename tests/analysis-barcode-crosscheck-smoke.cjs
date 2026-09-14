@@ -8,9 +8,15 @@ vm.createContext(context);vm.runInContext(source,context,{filename:'analysis-bar
 const A=window.LabelWorkbenchBarcodeCrosscheck;
 assert(A,'barcode cross-check API should export');
 const barcode={text:'(1P)W25NO1GWZEIR(30P)T(31P)D(Q)4000(10D)2628(21L)G(16D)20260722(31T)6612D7800(33P)1(23L)G(24L)PS(1Y)105T43B'};
-assert.deepStrictEqual(Array.from(A.extractCodeValues('1P',barcode)),['W25NO1GWZEIR']);
-assert.deepStrictEqual(Array.from(A.extractCodeValues('Q',barcode)),['4000']);
-assert.deepStrictEqual(Array.from(A.extractCodeValues('31T',barcode)),['6612D7800']);
+assert.deepStrictEqual([...A.extractCodeValues('1P',barcode)],['W25NO1GWZEIR']);
+assert.deepStrictEqual([...A.extractCodeValues('Q',barcode)],['4000']);
+assert.deepStrictEqual([...A.extractCodeValues('31T',barcode)],['6612D7800']);
+const compact={text:'1PW668GG6TB-061TK5494D9CJ'};
+assert.deepStrictEqual([...A.extractCodeValues('1P',compact)],['W668GG6TB-06']);
+assert.deepStrictEqual([...A.extractCodeValues('1T',compact)],['K5494D9CJ']);
+const separated={text:'1P:W25NO1GWZEIR\x1dQ:4000\x1d31T:6612D7800'};
+assert.deepStrictEqual([...A.extractCodeValues('1P',separated)],['W25NO1GWZEIR']);
+assert.deepStrictEqual([...A.extractCodeValues('Q',separated)],['4000']);
 const label={fields:[
  {code:'1P',name:'PART NO',value:'W25NO1GWZEIR',alternatives:['W25NO1GWZE1R']},
  {code:'31T',name:'MLOT NO',value:'6612D7800',alternatives:[]},
