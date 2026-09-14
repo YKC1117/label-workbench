@@ -1,9 +1,9 @@
-/* Label Workbench view-state guard v1.2 — prevents view rollback without fighting legitimate navigation. */
+/* Label Workbench view-state guard v1.3 — explicit-navigation only; prevents async rollback/jumps. */
 (function(){
   'use strict';
-  const BUILD='20260914-view-guard-130-state-rollback-fix';
-  const RELEASE='v1.9.38';
-  const UPDATED='2026/09/14 10:05';
+  const BUILD='20260914-view-guard-139-race-safe';
+  const RELEASE='v1.9.39';
+  const UPDATED='2026/09/14 10:20';
   let desiredView=document.querySelector('.view.active')?.id||'barcode';
   let applying=false;
   let queued=false;
@@ -43,7 +43,7 @@
     if(wrapped||typeof window.showView!=='function')return false;
     const original=window.showView;
     window.showView=function(id){
-      if(validView(id))desiredView=id;
+      if(validView(id))setDesired(id);
       return original.apply(this,arguments);
     };
     wrapped=true;
@@ -55,36 +55,16 @@
       const t=e.target.closest?.('[data-view]');
       if(t)setDesired(t.dataset.view);
     },true);
-
     wrapShowView();
 
     const observer=new MutationObserver(mutations=>{
       if(applying)return;
       let relevant=false;
       for(const m of mutations){
-        const el=m.target;
-        if(el?.classList?.contains('view') || el?.matches?.('[data-view]')){
-          relevant=true;
-          break;
-        }
+        const target=m.target;
+        if(target?.classList?.contains('view') || target?.matches?.('[data-view]')){relevant=true;break}
       }
-      if(!relevant)return;
-
-      /*
-       * A real navigation can be initiated by code that does not call showView().
-       * If exactly one view is active, accept that state as the new desired view.
-       * This is deliberately deferred until the DOM mutation batch settles so the
-       * guard never sees the intermediate half-switched state and rolls it back.
-       */
-      queueMicrotask(()=>{
-        if(applying)return;
-        const active=[...document.querySelectorAll('.view.active')];
-        if(active.length===1&&validView(active[0].id)){
-          desiredView=active[0].id;
-          stampRelease();
-        }
-        schedule();
-      });
+      if(relevant)schedule();
     });
     observer.observe(document.body,{subtree:true,attributes:true,attributeFilter:['class']});
 
