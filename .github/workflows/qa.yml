@@ -31,15 +31,17 @@ jobs:
           node --check tests/btw-rich-native-smoke.cjs
           node --check tests/btw-production-gate-smoke.cjs
           node --check tests/analysis-copy-smoke.cjs
+          node --check tests/analysis-barcode-crosscheck-smoke.cjs
       - name: Current wiring sanity check
         run: |
-          grep -q 'assets/barcode-reader.js?v=20260912-v360' index.html
-          grep -q '標籤製作工作台 · v1.9.34' index.html
-          grep -q '更新：2026/09/12 00:08' index.html
-          grep -q "RELEASE='v1.9.34'" assets/view-state-guard.js
-          grep -q "UPDATED='2026/09/12 00:08'" assets/view-state-guard.js
-          grep -q "BUILD='20260912-view-guard-119-btw-datasource'" assets/view-state-guard.js
-          grep -q "BUILD='20260912-v355-btw-datasource'" assets/barcode-reader.js
+          grep -q 'assets/barcode-reader.js?v=20260914-v366' index.html
+          grep -q '標籤製作工作台 · v1.9.35' index.html
+          grep -q '更新：2026/09/14 09:10' index.html
+          grep -q "RELEASE='v1.9.35'" assets/view-state-guard.js
+          grep -q "UPDATED='2026/09/14 09:10'" assets/view-state-guard.js
+          grep -q "BUILD='20260914-view-guard-121-barcode-crosscheck'" assets/view-state-guard.js
+          grep -q "BUILD='20260914-v366-barcode-crosscheck'" assets/barcode-reader.js
+          grep -q "analysis-barcode-crosscheck.js'" assets/barcode-reader.js
           grep -q "BUILD='20260912-btw-object-map-038-barcode-slot-mode'" assets/btw-object-map.js
           grep -q "BUILD='20260912-btw-caption-adapter-100'" assets/btw-caption-adapter.js
           grep -q "SEED_ID='CEA-2022-R5'" assets/btw-native.js
@@ -60,6 +62,8 @@ jobs:
         run: node tests/analysis-accuracy-smoke.cjs
       - name: Quick Analysis copy-button regression tests
         run: node tests/analysis-copy-smoke.cjs
+      - name: Barcode cross-check regression tests
+        run: node tests/analysis-barcode-crosscheck-smoke.cjs
       - name: Source geometry matching smoke tests
         run: node tests/analysis-geometry-smoke.cjs
       - name: Source geometry to BTW coordinate mapping tests
