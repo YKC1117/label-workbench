@@ -5,7 +5,7 @@
  */
 (function(){
   'use strict';
-  const BUILD='20260914-barcode-crosscheck-105';
+  const BUILD='20260914-barcode-crosscheck-106';
   const api=()=>window.LabelWorkbenchInterpreter;
   const CODES=['31P','30P','31T','33P','23L','24L','21L','16D','10D','1P','1T','1Y','2Y','4Y','Q'];
   const CODE_ALT=CODES.slice().sort((a,b)=>b.length-a.length).join('|');
@@ -14,16 +14,19 @@
   const rawBarcode=b=>String(b?.text??b?.value??b?.data??'');
   function splitRaw(raw){return String(raw||'').replace(/(?:<GS>|\[GS\]|\{GS\}|␝)/gi,'\x1d').replace(/(?:<RS>|\[RS\]|\{RS\}|␞)/gi,'\x1e').replace(/\r?\n/g,'\x1d')}
   function uniq(values){const seen=new Set();return values.filter(v=>{const k=norm(v);if(!k||seen.has(k))return false;seen.add(k);return true})}
+  function isSuffixOfLongerCode(raw,index,code){return CODES.some(other=>other.length>code.length&&other.endsWith(code)&&raw.slice(index-(other.length-code.length),index+code.length).toUpperCase()===other)}
   function extractCodeValues(code,barcode){
     const raw=splitRaw(rawBarcode(barcode));if(!raw)return[];
-    const esc=String(code).replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+    const normalizedCode=String(code).toUpperCase();
+    const esc=normalizedCode.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
     const compact=[];
     // Parse separatorless payloads by marker positions, e.g. 1Pvalue1Tvalue.
-    // This avoids relying on word boundaries that do not exist in compact AI data.
+    // Skip suffix matches inside longer known AIs such as 1P inside 31P.
     const targetRx=new RegExp(esc,'ig');
     const markerRx=new RegExp(CODE_ALT,'ig');
     let m;
     while((m=targetRx.exec(raw))){
+      if(isSuffixOfLongerCode(raw,m.index,normalizedCode))continue;
       const start=m.index+m[0].length;
       markerRx.lastIndex=start;
       const next=markerRx.exec(raw);
