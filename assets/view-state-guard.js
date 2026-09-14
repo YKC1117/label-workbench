@@ -1,9 +1,9 @@
 /* Label Workbench view-state guard v1.1 */
 (function(){
   'use strict';
-  const BUILD='20260914-view-guard-121-barcode-crosscheck';
+  const BUILD='20260914-view-guard-122-barcode-crosscheck';
   const RELEASE='v1.9.35';
-  const UPDATED='2026/09/14 09:10';
+  const UPDATED='2026/09/14 09:14';
   let desiredView=document.querySelector('.view.active')?.id||'barcode';
   let applying=false;
   let queued=false;
