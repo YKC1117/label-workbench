@@ -5,7 +5,7 @@
  */
 (function(){
   'use strict';
-  const BUILD='20260914-barcode-crosscheck-101';
+  const BUILD='20260914-barcode-crosscheck-102';
   const api=()=>window.LabelWorkbenchInterpreter;
   const CODES=['31P','30P','31T','33P','23L','24L','21L','16D','10D','1P','1T','1Y','2Y','4Y','Q'];
   const CODE_ALT=CODES.slice().sort((a,b)=>b.length-a.length).join('|');
@@ -18,7 +18,7 @@
     const raw=splitRaw(rawBarcode(barcode));if(!raw)return[];
     const esc=String(code).replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
     const compact=[];
-    const compactRx=new RegExp('(?:^|\\x1d|\\x1e|\\(|\\[|\\s)\\s*'+esc+'\\s*[\\)\\]]?\\s*[:=]?\\s*([A-Z0-9._\\/-]+?)(?=\\s*(?:\\(?'+CODE_ALT+'\\)?\\s*[:=]?|\\x1d|\\x1e|$))','ig');
+    const compactRx=new RegExp('(?:^|\\x1d|\\x1e|\\(|\\[|\\s)\\s*'+esc+'\\s*[\\)\\]]?\\s*[:=]?\\s*([A-Z0-9._\\/-]+?)(?=\\s*(?:\\(?(?:'+CODE_ALT+')\\)?\\s*[:=]?|\\x1d|\\x1e|$))','ig');
     let m;while((m=compactRx.exec(raw))){const v=clean(m[1]);if(v)compact.push(v)}
     if(compact.length)return uniq(compact);
     const delimited=[];
