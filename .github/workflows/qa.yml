@@ -35,8 +35,8 @@ jobs:
       - name: Current wiring sanity check
         run: |
           grep -q 'assets/barcode-reader.js?v=20260914-v380' index.html
-          grep -q '標籤製作工作台 · v1.9.39' index.html
-          grep -q '更新：2026/09/14 10:20' index.html
+          grep -q '標籤製作工作台 · v1.9.41' index.html
+          grep -q '更新：2026/09/14 11:14' index.html
           grep -q 'assets/analysis-race-guard.js?v=20260914-v139' index.html
           grep -q "RELEASE='v1.9.39'" assets/view-state-guard.js
           grep -q "UPDATED='2026/09/14 10:20'" assets/view-state-guard.js
@@ -52,6 +52,8 @@ jobs:
           grep -q 'btw-production-gate.js' assets/barcode-reader.js
           grep -q "BUILD='20260914-v139-race-guard'" assets/analysis-race-guard.js
           grep -q "BUILD='20260914-v139-race-safe-display'" assets/analysis-final-display.js
+          grep -q "BUILD='20260914-v141-dom-ready-confidence-patch'" assets/analysis-confidence-guard.js
+          ! grep -q 'setTimeout(()=>patchDom(result),120)' assets/analysis-confidence-guard.js
       - name: Core logic smoke tests
         run: node tests/logic-smoke.cjs
       - name: Cloud merge smoke tests
