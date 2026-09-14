@@ -38,9 +38,9 @@ jobs:
           grep -q '標籤製作工作台 · v1.9.39' index.html
           grep -q '更新：2026/09/14 10:20' index.html
           grep -q 'assets/analysis-race-guard.js?v=20260914-v139' index.html
-          grep -q "RELEASE='v1.9.37'" assets/view-state-guard.js
-          grep -q "UPDATED='2026/09/14 09:45'" assets/view-state-guard.js
-          grep -q "BUILD='20260914-view-guard-126-barcode-crosscheck'" assets/view-state-guard.js
+          grep -q "RELEASE='v1.9.39'" assets/view-state-guard.js
+          grep -q "UPDATED='2026/09/14 10:20'" assets/view-state-guard.js
+          grep -q "BUILD='20260914-view-guard-139-race-safe'" assets/view-state-guard.js
           grep -q "BUILD='20260914-v371-barcode-crosscheck'" assets/barcode-reader.js
           grep -q "BUILD='20260914-barcode-crosscheck-107'" assets/analysis-barcode-crosscheck.js
           grep -q "analysis-barcode-crosscheck.js'" assets/barcode-reader.js
