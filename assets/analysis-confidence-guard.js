@@ -1,10 +1,11 @@
-/* Label Workbench final confidence guard v1.6
+/* Label Workbench final confidence guard v1.7
  * Conservative final pass: never rewrite accepted values or destroy OCR evidence.
  * Only adjusts display confidence and cleans clearly redundant/noisy candidate text.
+ * v1.9.41 fix: preserve the required post-render patch without a blind 120ms rewrite.
  */
 (function(){
   'use strict';
-  const BUILD='20260911-confidence-guard-160-dedup-candidates';
+  const BUILD='20260914-v141-dom-ready-confidence-patch';
   const api=()=>window.LabelWorkbenchInterpreter;
   const norm=v=>String(v??'').toUpperCase().replace(/[^A-Z0-9]/g,'');
   const tokenName=f=>String(f?.name||'').toUpperCase().trim();
@@ -83,11 +84,7 @@
       if(!/^候選\s*[:：]/.test(text))return;
       const raw=text.replace(/^候選\s*[:：]\s*/,'').trim();
       if(!raw){node.remove();return}
-
-      // If the final display already has an explicit "另讀到" alternative,
-      // the old raw candidate line is duplicate evidence and only makes the row noisier.
       if(mainNorm&&f?.__displayAlternatives?.length){node.remove();return}
-
       if(mainNorm){
         const pieces=raw.split(/\s*\/\s*|\s+/).map(x=>x.trim()).filter(Boolean);
         const useful=pieces.filter(x=>/^[A-Z0-9._-]+$/i.test(x));
@@ -96,9 +93,6 @@
         if(first&&nearSame(main,first)&&pieces.slice(1).every(x=>/^[A-Z]{1,4}$/i.test(x))){node.remove();return}
         return;
       }
-
-      // No accepted main value: keep one compact leading token as a visible candidate,
-      // instead of exposing an entire OCR line contaminated by neighbouring fields.
       const m=raw.match(/[A-Z0-9][A-Z0-9._\/-]{4,}/i);
       if(m){node.textContent='候選：'+m[0]}
       else node.remove();
@@ -106,12 +100,15 @@
   }
 
   function patchDom(result){
-    const host=document.getElementById('analysisResult');if(!host)return;
+    const host=document.getElementById('analysisResult');if(!host)return false;
     const cards=[...host.querySelectorAll('.analysis-label-card')].filter(card=>card.querySelector('section h4'));
+    let matched=0;
     (result?.labels||[]).forEach((label,idx)=>{
       const card=cards[idx];if(!card)return;
       const section=[...card.querySelectorAll('section')].find(s=>(s.querySelector('h4')?.textContent||'').includes('欄位內容'));
       const rows=[...(section?.querySelectorAll('tbody tr')||[])];
+      if(!rows.length)return;
+      matched++;
       (label.fields||[]).forEach((f,i)=>{
         const row=rows[i];if(!row)return;
         if(f.__finalHidden){row.style.display='none';return;}
@@ -129,6 +126,32 @@
       const usable=visible.length-pending;
       const count=card.querySelector('.analysis-label-count');if(count)count.textContent=`${usable} 可用 · ${pending} 待核對`;
     });
+    return matched>0;
+  }
+
+  function scheduleReadyPatch(result){
+    const host=document.getElementById('analysisResult');
+    if(!host)return;
+    let done=false,observer=null,timer=null,raf=0;
+    const finish=ok=>{
+      if(done)return;
+      done=true;
+      if(observer)observer.disconnect();
+      if(timer)clearTimeout(timer);
+      if(raf)cancelAnimationFrame(raf);
+      if(ok)patchDom(result);
+    };
+    const attempt=()=>{
+      if(done)return;
+      if(patchDom(result))finish(true);
+      else raf=requestAnimationFrame(attempt);
+    };
+    observer=new MutationObserver(()=>{
+      if(!done)attempt();
+    });
+    observer.observe(host,{childList:true,subtree:true});
+    timer=setTimeout(()=>finish(false),1500);
+    attempt();
   }
 
   function install(){
@@ -136,13 +159,14 @@
     const base=A.analyze.bind(A);
     A.analyze=async function(files){
       const result=await base(files);
-      refine(result);patchDom(result);
-      setTimeout(()=>patchDom(result),120);
+      refine(result);
+      if(!patchDom(result))scheduleReadyPatch(result);
       return result;
     };
     A.__finalConfidenceWrapped=true;
+    A.__finalConfidenceBuild=BUILD;
     console.info('[Label Workbench] final confidence guard',BUILD);return true;
   }
   if(!install()){let tries=0;const timer=setInterval(()=>{tries++;if(install()||tries>100)clearInterval(timer)},80)}
-  window.LabelWorkbenchConfidenceGuard={BUILD,refine,stateFor,displayAlternatives,cleanBaseCandidateNodes,patchDom,install};
+  window.LabelWorkbenchConfidenceGuard={BUILD,refine,stateFor,displayAlternatives,cleanBaseCandidateNodes,patchDom,scheduleReadyPatch,install};
 })();
