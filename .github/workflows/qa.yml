@@ -41,7 +41,7 @@ jobs:
           grep -q "UPDATED='2026/09/14 09:45'" assets/view-state-guard.js
           grep -q "BUILD='20260914-view-guard-126-barcode-crosscheck'" assets/view-state-guard.js
           grep -q "BUILD='20260914-v371-barcode-crosscheck'" assets/barcode-reader.js
-          grep -q "BUILD='20260914-barcode-crosscheck-106'" assets/analysis-barcode-crosscheck.js
+          grep -q "BUILD='20260914-barcode-crosscheck-107'" assets/analysis-barcode-crosscheck.js
           grep -q "analysis-barcode-crosscheck.js'" assets/barcode-reader.js
           grep -q "BUILD='20260912-btw-object-map-038-barcode-slot-mode'" assets/btw-object-map.js
           grep -q "BUILD='20260912-btw-caption-adapter-100'" assets/btw-caption-adapter.js
