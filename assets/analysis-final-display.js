@@ -1,10 +1,13 @@
-/* Label Workbench final analysis display stabilizer v1.0 */
+/* Label Workbench analysis race-safe final display stabilizer v1.9.39 - 2026/09/14 10:20 */
 (function(){
   'use strict';
-  const BUILD='20260911-final-display-100';
+  const BUILD='20260914-v139-race-safe-display';
   const norm=v=>String(v??'').toUpperCase().replace(/[^A-Z0-9]/g,'');
   let lastResult=null;
   let patching=false;
+  let generation=0;
+  let latestGoodHTML=null;
+  let latestGoodView=null;
 
   function removeDuplicateEvidence(){
     const host=document.getElementById('analysisResult');
@@ -25,13 +28,20 @@
     });
   }
 
-  function enforce(){
-    if(patching||!lastResult)return;
+  function activeView(){return document.querySelector('.view.active')?.id||null}
+  function snapshot(){const h=document.getElementById('analysisResult');return h?h.innerHTML:null}
+  function restore(html,view){
+    if(html!==null){const h=document.getElementById('analysisResult');if(h)h.innerHTML=html}
+    if(view){document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id===view));document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===view))}
+  }
+
+  function enforce(result=lastResult){
+    if(patching||!result)return;
     patching=true;
     try{
       const guard=window.LabelWorkbenchConfidenceGuard;
-      guard?.refine?.(lastResult);
-      guard?.patchDom?.(lastResult);
+      guard?.refine?.(result);
+      guard?.patchDom?.(result);
       removeDuplicateEvidence();
     }finally{patching=false}
   }
@@ -41,22 +51,29 @@
     if(!A?.analyze||A.__finalDisplayWrapped)return false;
     const base=A.analyze.bind(A);
     A.analyze=async function(files){
+      const my=++generation;
+      const previousHTML=latestGoodHTML??snapshot();
+      const previousView=latestGoodView??activeView();
       const result=await base(files);
+      if(my!==generation){
+        restore(latestGoodHTML??previousHTML,latestGoodView??previousView);
+        return result;
+      }
       lastResult=result;
-      enforce();
-      setTimeout(enforce,120);
-      setTimeout(enforce,500);
-      setTimeout(enforce,1200);
+      enforce(result);
+      latestGoodHTML=snapshot();
+      latestGoodView=activeView();
       return result;
     };
     A.__finalDisplayWrapped=true;
-    console.info('[Label Workbench] final display stabilizer',BUILD);
+    A.__finalDisplayBuild=BUILD;
+    window.LabelWorkbenchFinalDisplay={BUILD,enforce,removeDuplicateEvidence,generation:()=>generation};
+    console.info('[Label Workbench] race-safe final display stabilizer',BUILD);
     return true;
   }
 
   if(!install()){
     let tries=0;
-    const timer=setInterval(()=>{tries++;if(install()||tries>100)clearInterval(timer)},80);
+    const timer=setInterval(()=>{tries++;if(install()||tries>250)clearInterval(timer)},80);
   }
-  window.LabelWorkbenchFinalDisplay={BUILD,enforce,removeDuplicateEvidence};
 })();
