@@ -34,9 +34,10 @@ jobs:
           node --check tests/analysis-barcode-crosscheck-smoke.cjs
       - name: Current wiring sanity check
         run: |
-          grep -q 'assets/barcode-reader.js?v=20260914-v371' index.html
-          grep -q '標籤製作工作台 · v1.9.37' index.html
-          grep -q '更新：2026/09/14 09:45' index.html
+          grep -q 'assets/barcode-reader.js?v=20260914-v380' index.html
+          grep -q '標籤製作工作台 · v1.9.39' index.html
+          grep -q '更新：2026/09/14 10:20' index.html
+          grep -q 'assets/analysis-race-guard.js?v=20260914-v139' index.html
           grep -q "RELEASE='v1.9.37'" assets/view-state-guard.js
           grep -q "UPDATED='2026/09/14 09:45'" assets/view-state-guard.js
           grep -q "BUILD='20260914-view-guard-126-barcode-crosscheck'" assets/view-state-guard.js
@@ -49,6 +50,8 @@ jobs:
           grep -q "SEED_FUNCTION='btw-seed'" assets/btw-native.js
           grep -q 'btw-rich-native.js' assets/barcode-reader.js
           grep -q 'btw-production-gate.js' assets/barcode-reader.js
+          grep -q "BUILD='20260914-v139-race-guard'" assets/analysis-race-guard.js
+          grep -q "BUILD='20260914-v139-race-safe-display'" assets/analysis-final-display.js
       - name: Core logic smoke tests
         run: node tests/logic-smoke.cjs
       - name: Cloud merge smoke tests
