@@ -5,7 +5,7 @@
  */
 (function(){
   'use strict';
-  const BUILD='20260914-barcode-crosscheck-103';
+  const BUILD='20260914-barcode-crosscheck-104';
   const api=()=>window.LabelWorkbenchInterpreter;
   const CODES=['31P','30P','31T','33P','23L','24L','21L','16D','10D','1P','1T','1Y','2Y','4Y','Q'];
   const CODE_ALT=CODES.slice().sort((a,b)=>b.length-a.length).join('|');
@@ -18,12 +18,19 @@
     const raw=splitRaw(rawBarcode(barcode));if(!raw)return[];
     const esc=String(code).replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
     const compact=[];
-    // Compact AI payloads may have no separator at all: 1Pvalue1Tvalue.
-    // Therefore the target AI cannot require a word boundary; the next known
-    // AI marker terminates the value. This is intentionally exact and does not
-    // perform edit-distance guessing.
-    const compactRx=new RegExp(esc+'\\s*[\\)\\]]?\\s*[:=]?\\s*([A-Z0-9._\\/-]+?)(?=\\s*(?:\\(?'+CODE_ALT+'\\)?\\s*[:=]?|\\x1d|\\x1e|$))','ig');
-    let m;while((m=compactRx.exec(raw))){const v=clean(m[1]);if(v)compact.push(v)}
+    // Parse separatorless payloads by marker positions, e.g. 1Pvalue1Tvalue.
+    // This avoids relying on word boundaries that do not exist in compact AI data.
+    const targetRx=new RegExp(esc,'ig');
+    const markerRx=new RegExp(CODE_ALT,'ig');
+    let m;
+    while((m=targetRx.exec(raw))){
+      const start=m.index+m[0].length;
+      markerRx.lastIndex=start;
+      const next=markerRx.exec(raw);
+      const end=next?next.index:raw.length;
+      const v=clean(raw.slice(start,end).replace(/^[\s\)\]\:=]+|[\s\)\]\:=]+$/g,''));
+      if(v)compact.push(v);
+    }
     if(compact.length)return uniq(compact);
     const delimited=[];
     const rx=new RegExp('(?:^|[\\x1d\\x1e#|;])\\s*\\(?'+esc+'\\)?\\s*[:=]?\\s*([A-Z0-9._\\/-]+?)(?=(?:\\x1d|\\x1e|#|\\||;|$))','ig');
