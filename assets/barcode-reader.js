@@ -2,7 +2,7 @@
 (function(){
   'use strict';
   const BUILD='20260912-v355-btw-datasource';
-  const modules=['assets/view-state-guard.js','assets/barcode-reader-core.js','assets/barcode-reader-ui.js','assets/barcode-generator.js','assets/label-interpreter.js','assets/analysis-accuracy.js','assets/analysis-pdf-native.js','assets/analysis-geometry.js','assets/analysis-field-consistency.js','assets/analysis-barcode-crosscheck.js','assets/analysis-copy.js','assets/btw-format.js','assets/btw-object-map.js','assets/btw-layout-map.js','assets/btw-native.js','assets/btw-rich-native.js','assets/btw-caption-adapter.js','assets/btw-rich-bridge.js','assets/bt-bridge.js','assets/workbench-priority.js','assets/bt-native-primary.js','assets/analysis-confidence-guard.js','assets/btw-production-gate.js','assets/analysis-final-display.js'];
+  const modules=['assets/view-state-guard.js','assets/barcode-reader-core.js','assets/barcode-reader-ui.js','assets/barcode-generator.js','assets/label-interpreter.js','assets/analysis-accuracy.js','assets/analysis-pdf-native.js','assets/analysis-geometry.js','assets/analysis-field-consistency.js','assets/analysis-copy.js','assets/btw-format.js','assets/btw-object-map.js','assets/btw-layout-map.js','assets/btw-native.js','assets/btw-rich-native.js','assets/btw-caption-adapter.js','assets/btw-rich-bridge.js','assets/bt-bridge.js','assets/workbench-priority.js','assets/bt-native-primary.js','assets/analysis-confidence-guard.js','assets/btw-production-gate.js','assets/analysis-final-display.js'];
   function loadNext(){
     const src=modules.shift();if(!src)return;
     if(src.includes('view-state-guard')&&window.LabelWorkbenchViewGuard){loadNext();return}
@@ -14,7 +14,6 @@
     if(src.includes('analysis-pdf-native')&&window.LabelWorkbenchPdfNative){loadNext();return}
     if(src.includes('analysis-geometry')&&window.LabelWorkbenchAnalysisGeometry){loadNext();return}
     if(src.includes('analysis-field-consistency')&&window.LabelWorkbenchFieldConsistency){loadNext();return}
-    if(src.includes('analysis-barcode-crosscheck')&&window.LabelWorkbenchBarcodeCrosscheck){loadNext();return}
     if(src.includes('analysis-copy')&&window.LabelWorkbenchAnalysisCopy){loadNext();return}
     if(src.includes('btw-format')&&window.LabelWorkbenchBtwFormat){loadNext();return}
     if(src.includes('btw-object-map')&&window.LabelWorkbenchBtwObjectMap){loadNext();return}
