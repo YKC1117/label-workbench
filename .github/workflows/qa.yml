@@ -52,7 +52,7 @@ jobs:
           grep -q 'btw-production-gate.js' assets/barcode-reader.js
           grep -q "BUILD='20260914-v139-race-guard'" assets/analysis-race-guard.js
           grep -q "BUILD='20260914-v139-race-safe-display'" assets/analysis-final-display.js
-          grep -q "BUILD='20260914-v141-dom-ready-confidence-patch'" assets/analysis-confidence-guard.js
+          grep -q "BUILD='20260914-v142-await-dom-ready-confidence-patch'" assets/analysis-confidence-guard.js
           ! grep -q 'setTimeout(()=>patchDom(result),120)' assets/analysis-confidence-guard.js
       - name: Core logic smoke tests
         run: node tests/logic-smoke.cjs
