@@ -1,7 +1,7 @@
 /* Label Workbench rich BTW production bridge v0.1.1 */
 (function(){
   'use strict';
-  const BUILD='20260917-btw-rich-bridge-110-second-donor';
+  const BUILD='20260917-btw-rich-bridge-111-second-donor-optional';
   const JSZIP_SRC='https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js';
   let zipPromise=null;
   const safeFile=v=>String(v||'Label').replace(/[\\/:*?"<>|]+/g,'_').replace(/\s+/g,'_').replace(/^_+|_+$/g,'').slice(0,70)||'Label';
@@ -23,11 +23,12 @@
   async function richDownload(result,files,onProgress){const R=window.LabelWorkbenchBtwRichNative;if(!R?.generateOne)throw new Error('rich BTW generator 尚未載入');return generatorDownload(R,result,files,onProgress,'rich')}
   async function secondDownload(result,files,onProgress){const S=window.LabelWorkbenchBtwSecondNative;if(!S?.generateOne)throw new Error('5C128+1DM BTW generator 尚未載入');return generatorDownload(S,result,files,onProgress,'second')}
   function install(){
-    const N=window.LabelWorkbenchBtwNative,R=window.LabelWorkbenchBtwRichNative,S=window.LabelWorkbenchBtwSecondNative;if(!N?.downloadFromAnalysis||!R?.canGenerate||!S?.canGenerate||N.__richDonorWrapped)return false;
+    const N=window.LabelWorkbenchBtwNative,R=window.LabelWorkbenchBtwRichNative,S=window.LabelWorkbenchBtwSecondNative;
+    if(!N?.downloadFromAnalysis||!R?.canGenerate||N.__richDonorWrapped)return false;
     const fallback=N.downloadFromAnalysis.bind(N);
     N.downloadFromAnalysis=async function(result,files,onProgress){
       const labels=(result?.labels||[]).slice(0,20);
-      if(labels.length&&labels.every(x=>S.canGenerate(x))){
+      if(S?.canGenerate&&labels.length&&labels.every(x=>S.canGenerate(x))){
         try{return await secondDownload(result,files,onProgress)}catch(err){console.warn('[Label Workbench] 5C128+1DM donor failed; trying rich/CEA fallback',err)}
       }
       if(labels.length&&labels.every(x=>R.canGenerate(x))){
