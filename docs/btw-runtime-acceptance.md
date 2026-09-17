@@ -15,14 +15,35 @@ This acceptance path is intentionally separate from normal Linux CI because GitH
 
 It also contains six independent Text objects (`TEXT_EDIT_001` through `TEXT_EDIT_006`) at deterministic positions on a 100 x 65 mm template. The verifier also rejects any extra visible donor Text object.
 
-Each successful QA run publishes an artifact named `bartender-2022-runtime-acceptance`. It contains `LabelWorkbench_Runtime_Acceptance.btw` and this README, so the BTW can be downloaded and opened directly in BarTender without first installing Node.js.
+Each successful QA run publishes an artifact named `bartender-2022-runtime-acceptance`.
 
-## What must be run on a Windows PC with BarTender installed
+The artifact is a portable acceptance kit containing:
 
-From the repository root:
+- `LabelWorkbench_Runtime_Acceptance.btw` — ready to open directly in BarTender 2022.
+- `RUN_BARTENDER_2022_ACCEPTANCE.cmd` — double-click launcher for automated runtime acceptance.
+- `tools/` — fixture generator, post-save verifier, and BarTender runtime PowerShell scripts.
+- `assets/` — only the BTW parser/generator modules required by the acceptance suite.
+- `SHA256SUMS.txt` — hashes for every packaged file.
+- `README.md` — this guide.
+
+If you only want to open the test BTW in BarTender manually, Node.js is not required. Node.js 22 or newer is required only for the automated open/save/reopen verification.
+
+## Easiest automated Windows acceptance
+
+1. Extract the downloaded artifact ZIP.
+2. Save and close any currently open BarTender work.
+3. Double-click `RUN_BARTENDER_2022_ACCEPTANCE.cmd`.
+4. The launcher checks that Node.js is available, then runs the complete acceptance suite.
+5. A successful run writes `runtime-acceptance-report.json` beside the launcher.
+
+The launcher does **not** intentionally print a physical label.
+
+## Equivalent PowerShell command
+
+From the extracted kit or repository root:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\tools\verify-btw-runtime-suite.ps1
+powershell -ExecutionPolicy Bypass -File .\tools\verify-btw-runtime-suite.ps1 -ReportPath .\runtime-acceptance-report.json
 ```
 
 The suite performs all of these steps automatically:
@@ -42,11 +63,20 @@ This is stronger than checking that `bartend.exe` returned exit code 0: the post
 Use:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\tools\verify-btw-runtime-suite.ps1 -PrintToFile
+powershell -ExecutionPolicy Bypass -File .\tools\verify-btw-runtime-suite.ps1 -PrintToFile -ReportPath .\runtime-acceptance-report.json
 ```
 
 This adds a BarTender `/P /C=1 /PRNFILE=... /X` pass and requires a non-empty printer output file. It still depends on a usable printer driver being installed on that Windows machine.
 
 ## Remaining manual UI acceptance
 
-Automated open/save/reopen and optional print-to-file validation cannot prove that a human can select every template object with the BarTender designer UI. Before calling the feature completely finished, perform one final UI check in BarTender 2022: select and change one Text object, each of the five Code 128 objects, and the Data Matrix object; save; reopen; then confirm the edits remain independent.
+Automated open/save/reopen and optional print-to-file validation cannot prove that a human can select every template object with the BarTender designer UI. Before calling the feature completely finished, perform one final UI check in BarTender 2022:
+
+1. Open `LabelWorkbench_Runtime_Acceptance.btw`.
+2. Select one `TEXT_EDIT_00x` Text object and change its text.
+3. Select each of the five Code 128 objects and change each value independently.
+4. Select the Data Matrix object and change its value independently.
+5. Save, close, and reopen the BTW.
+6. Confirm every edit remains independent and no unused donor object appears on the normal 100 x 65 mm label canvas.
+
+Only after this manual designer check and the automated runtime report both pass should this acceptance layer be treated as complete.
