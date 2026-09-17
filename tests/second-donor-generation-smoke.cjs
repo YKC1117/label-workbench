@@ -1,7 +1,7 @@
 const fs=require('fs');
 const vm=require('vm');
 
-const c={console,Uint8Array,ArrayBuffer,DataView,TextDecoder,TextEncoder,Blob,Response,DecompressionStream,CompressionStream,atob,btoa,window:null,globalThis:null};c.window=c;c.globalThis=c;vm.createContext(c);
+const c={console,Uint8Array,ArrayBuffer,DataView,TextDecoder,TextEncoder,Blob,Response,DecompressionStream,CompressionStream,atob,btoa,window:null,globalThis:null,document:{readyState:'loading',addEventListener(){},getElementById(){return null}}};c.window=c;c.globalThis=c;vm.createContext(c);
 for(const f of['assets/btw-format.js','assets/btw-object-map.js','assets/btw-layout-map.js','assets/btw-second-donor.js','assets/btw-second-native.js'])vm.runInContext(fs.readFileSync(f,'utf8'),c,{filename:f});
 
 const label={
@@ -37,7 +37,7 @@ const label={
   if(new Set(actual).size!==6)throw new Error('barcode values are not independent');
   for(const f of label.fields){const o=visible.find(x=>x.kind==='text'&&x.value===f.value);if(!o)throw new Error(`missing field ${f.value}`);const pos=L.boxToLayout(f.sourceBox,{width:120,height:72}).mil;if(o.xMil!==pos.x||o.yMil!==pos.y)throw new Error(`field position mismatch ${f.value}`)}
   for(const b of label.barcodes){const o=visible.find(x=>x.kind==='barcode'&&x.resolvedPreview===b.text);if(!o)throw new Error(`missing barcode ${b.text}`);const pos=L.boxToLayout(b.sourceBox,{width:120,height:72}).mil;if(o.xMil!==pos.x||o.yMil!==pos.y)throw new Error(`barcode position mismatch ${b.text}`)}
-  const dv=new DataView((await F.inflateContainer(parsed)).buffer);let pairs=0;for(let i=0;i<=dv.byteLength-8;i++)if(dv.getInt32(i,true)===L.mmToMil(120)&&dv.getInt32(i+4,true)===L.mmToMil(72))pairs++;
+  const sizedContainer=await F.inflateContainer(parsed),dv=new DataView(sizedContainer.buffer,sizedContainer.byteOffset,sizedContainer.byteLength);let pairs=0;for(let i=0;i<=dv.byteLength-8;i++)if(dv.getInt32(i,true)===L.mmToMil(120)&&dv.getInt32(i+4,true)===L.mmToMil(72))pairs++;
   if(pairs<2)throw new Error(`internal size pair rewrite missing: ${pairs}`);
   console.log('PASS: generated BTW round-trips 12 Text + 5 independent Code128 + 1 DataMatrix at source positions and 120x72mm');
 })().catch(e=>{console.error(e);process.exit(1)});
