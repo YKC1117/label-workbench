@@ -5,6 +5,7 @@
 (function(){
   'use strict';
 
+  if(window.LabelWorkbenchBtBridge)return;
   const BUILD='20260911-btb200-editable-btw-primary';
   const BT_QUICK_SRC='assets/bt-quick.js?v=20260911-bt140-table-only';
   const JSZIP_SRC='https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js';
@@ -105,6 +106,8 @@
   function stage(result,files){
     if(!result?.labels?.length)return result;
     latestResult=result;latestFiles=[...(files||[])];latestFileNames=fileNames(latestFiles);
+    try { window.LabelWorkbenchBtJob?.stage(result,latestFiles); }
+    catch(err) { window.LabelWorkbenchBtJob?.clear(); toast('BT 工作未保存：'+err.message); }
     injectAction();
     window.dispatchEvent(new CustomEvent('labelworkbench:bt-stage',{detail:{media:isMediaResult(),labels:latestResult.labels.length}}));
     setTimeout(decorateBtPage,0);
@@ -137,6 +140,8 @@
     api.__btQuickBridgeWrapped=true;return true
   }
   function init(){
+    const saved=window.LabelWorkbenchBtJob?.current;
+    if(saved){latestResult=saved.result;latestFiles=saved.files;latestFileNames=fileNames(saved.files);}
     wireInterpreter();wireParsers();
     let tries=0;const timer=setInterval(()=>{tries++;const a=wireInterpreter(),b=wireParsers();if((a&&b)||tries>80)clearInterval(timer)},100);
     document.querySelectorAll('[data-view="bartender"]').forEach(btn=>btn.addEventListener('click',()=>setTimeout(decorateBtPage,0)));

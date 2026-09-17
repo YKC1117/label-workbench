@@ -12,8 +12,8 @@
   const isPdf=f=>/\.pdf$/i.test(f?.name||'')||f?.type==='application/pdf';
   const headerCopy={
     barcode:['條碼工具','常用條碼優先，直接產生、讀取與驗證一維碼、二維碼。'],
-    analysis:['快速分析','把客戶 PDF／圖片整理成可製作內容，完成後可直接建立可編輯 BTW。'],
-    bartender:['BT 快速製作','PDF／圖片 → 可編輯 BarTender 2022 .BTW；下載後直接用 BarTender 開啟修改。'],
+    analysis:['快速分析','把客戶 PDF／圖片整理成可製作內容，完成後核對並保存 BT 工作。'],
+    bartender:['BT 快速製作','核對分析內容、保存工作；BTW 產檔等待 Windows 實機驗證。'],
     dashboard:['工作台','查看需要注意的製作工作與暫存紀錄。'],
     cases:['案件紀錄','選用的工作紀錄區；需要跨裝置接續或特別追蹤時再使用。']
   };
@@ -71,13 +71,13 @@
   function cleanupBtRecords(){const queue=el('bartenderQueue');if(queue){queue.innerHTML='';const panel=queue.closest('.panel');if(panel){panel.classList.add('hidden','bt-records-panel');panel.setAttribute('aria-hidden','true');panel.style.display='none'}}document.querySelectorAll('#bartender .panel').forEach(panel=>{const text=(panel.textContent||'').replace(/\s+/g,'');if(text.includes('可接續的BT製作紀錄')){panel.classList.add('hidden','bt-records-panel');panel.setAttribute('aria-hidden','true');panel.style.display='none'}})}
   function updateCopy(){
     setVersion();
-    const analysis=el('analysis'),drop=analysis?.querySelector('.drop > p');if(drop)drop.textContent='PDF、圖片、Excel、Word、CSV 直接丟進來；PDF／圖片分析完成後可下載可編輯 .BTW。';
-    const note=analysis?.querySelector('.warn-note');if(note)note.innerHTML='<b>快速分析：</b>PDF／圖片會自動讀取可製作內容；完成後使用「下載可編輯 BTW (.btw)」進 BarTender 繼續修改。';
+    const analysis=el('analysis'),drop=analysis?.querySelector('.drop > p');if(drop)drop.textContent='PDF、圖片、Excel、Word、CSV 直接丟進來；PDF／圖片分析完成後可核對並保存 BT 工作。';
+    const note=analysis?.querySelector('.warn-note');if(note)note.innerHTML='<b>快速分析：</b>PDF／圖片會自動讀取可製作內容；完成後到 BT 快速製作核對內容；BTW 下載尚待實機驗證。';
     const bt=el('bartender'),btTitle=bt?.querySelector('.bt-title');if(btTitle)btTitle.textContent='BT 快速製作';
-    const btIntro=btTitle?.nextElementSibling;if(btIntro)btIntro.textContent='此頁不放舊案件資料。先到「快速分析」處理客戶 PDF／圖片，再直接下載 BarTender 2022 可編輯 .BTW。';
+    const btIntro=btTitle?.nextElementSibling;if(btIntro)btIntro.textContent='分析工作會保存在本瀏覽器。請核對內容；BTW 下載須等待 Windows BarTender 2022 實機驗證通過。';
     cleanupBtRecords();
-    const flow=bt?.querySelector('.workflow');if(flow)flow.innerHTML='<span>客戶 PDF / 圖片</span><b>→</b><span>快速分析</span><b>→</b><span>建立可編輯 .BTW</span><b>→</b><span>BarTender 開啟編輯</span><b>→</b><span>測印</span>';
-    const btNote=flow?.parentElement?.querySelector('.note');if(btNote)btNote.innerHTML='<b>輸出：</b>正式工作輸出 <code>.btw</code>，不是 PNG/JPG 圖片。未辨識到的資料不會亂補假值。';
+    const flow=bt?.querySelector('.workflow');if(flow)flow.innerHTML='<span>客戶 PDF / 圖片</span><b>→</b><span>快速分析</span><b>→</b><span>核對並保存工作</span><b>→</b><span>BarTender 開啟編輯</span><b>→</b><span>測印</span>';
+    const btNote=flow?.parentElement?.querySelector('.note');if(btNote)btNote.innerHTML='<b>輸出：</b>BTW 下載尚待 Windows 實機驗證；可匯出 JSON 工作檔供範本測試。未辨識到的資料不會亂補假值。';
     syncHeaderCopy()
   }
   function init(){injectUiRefresh();reorderNav();bindHeaderCopy();bindQuickAnalysis();preserveActiveView();updateCopy();setTimeout(()=>{preserveActiveView();updateCopy()},250);setTimeout(()=>{preserveActiveView();updateCopy()},1000);console.info('[Label Workbench] priority controller',BUILD)}

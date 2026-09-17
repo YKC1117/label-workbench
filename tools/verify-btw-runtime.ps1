@@ -1,109 +1,97 @@
+﻿# Human-observed Designer regression, not a parser/header/timestamp smoke test.
+[CmdletBinding()]
 param(
-  [Parameter(Mandatory=$true, Position=0)]
-  [string]$BtwPath,
-  [int]$TimeoutSeconds = 45
+  [Parameter(Mandatory=$true,Position=0)][string]$BtwPath,
+  [Parameter(Mandatory=$true)][ValidateSet('A','B','C')][string]$Fixture,
+  [Parameter(Mandatory=$true)][string]$BarTenderExe,
+  [Parameter(Mandatory=$true)][string]$Operator,
+  [Parameter(Mandatory=$true)][ValidateSet('Automation','Enterprise')][string]$Edition,
+  [string]$EvidenceRoot = (Join-Path $PSScriptRoot '../runtime-evidence'),
+  [int]$TimeoutSeconds = 600
 )
-
 $ErrorActionPreference = 'Stop'
-
-function Fail([string]$Message) {
-  Write-Host "FAIL: $Message"
+Set-StrictMode -Version Latest
+function Hash($p) { (Get-FileHash -LiteralPath $p -Algorithm SHA256).Hash.ToLowerInvariant() }
+function Require-Yes($message) {
+  if ((Read-Host "$message [type YES only after observing it]") -cne 'YES') { throw "Not verified: $message" }
+}
+function Open-Designer($path) {
+  if (Get-Process bartend -ErrorAction SilentlyContinue) { throw 'Save and close existing BarTender windows before continuing.' }
+  $p = Start-Process -FilePath $script:exe -ArgumentList @("/F=`"$path`"") -PassThru
+  return $p
+}
+function Wait-Closed($process) {
+  if (!$process.WaitForExit($TimeoutSeconds * 1000)) { throw 'Designer is still running. Evidence is incomplete; no process was killed.' }
+  if ($process.ExitCode -ne 0) { throw "Designer exit code $($process.ExitCode)" }
+}
+try {
+  if ($env:OS -ne 'Windows_NT') { throw 'Windows BarTender runtime is required.' }
+  if ([string]::IsNullOrWhiteSpace($Operator)) { throw 'Operator identity is required.' }
+  $repo = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
+  $exe = (Resolve-Path -LiteralPath $BarTenderExe).Path
+  $source = (Resolve-Path -LiteralPath $BtwPath).Path
+  if ([IO.Path]::GetFileName($exe) -ine 'bartend.exe' -or [IO.Path]::GetExtension($source) -ine '.btw') { throw 'Use bartend.exe and a native BTW candidate.' }
+  $fingerprint = & node (Join-Path $repo 'tools/btw-release-gate.cjs') --fingerprint
+  if ($LASTEXITCODE -ne 0 -or $fingerprint -notmatch '^[a-f0-9]{64}$') { throw 'Node.js is required to bind evidence to the current source tree.' }
+  $fixturePath = Join-Path $repo "tests/fixtures/btw/$Fixture.btjob.json"
+  $expected = Get-Content -LiteralPath $fixturePath -Raw -Encoding UTF8 | ConvertFrom-Json
+  $label = $expected.labels[0]
+  $dir = [IO.Path]::GetFullPath((Join-Path $EvidenceRoot $Fixture))
+  if(Test-Path -LiteralPath $dir) { throw "Evidence directory exists: $dir. Archive the previous run first; never overwrite evidence." }
+  New-Item -ItemType Directory -Path $dir -Force | Out-Null
+  $original = Join-Path $dir 'original.btw'; $working = Join-Path $dir 'working.btw'; $saved = Join-Path $dir 'edited-save-as.btw'
+  Copy-Item -LiteralPath $source -Destination $original
+  Copy-Item -LiteralPath $source -Destination $working
+  $checks = [ordered]@{}
+  $p = Open-Designer $working
+  Require-Yes 'Help > About shows BarTender 2022, the specified licensed edition, not trial. Record an About screenshot.'
+  $checks.runtime2022 = $true; $checks.license = $true
+  Require-Yes 'Document opens with no damaged-format, repair, missing-resource or compatibility dialog.'
+  $checks.open = $true; $checks.noCorruption = $true
+  Write-Host ($label | ConvertTo-Json -Depth 10)
+  Require-Yes 'Compare with this fixture: exact page width/height/orientation, exact object count, names and native types. No pictures, hidden donor objects, extra templates or unrelated content. Check text and barcode values and top-left anchor positions.'
+  $checks.exactObjects = $true; $checks.dimensions = $true; $checks.noSeedResidue = $true
+  foreach ($item in $label.objects) {
+    Write-Host "Select $($item.id) alone; change its value to EDIT-$($item.id) and move X and Y by +1 mm."
+    Require-Yes "Only $($item.id) changes; all other objects remain independent. Barcode symbology is $($item.type)."
+  }
+  $checks.select = $true; $checks.editText = $true; $checks.editBarcode = $true; $checks.move = $true
+  Require-Yes 'Use Save (Ctrl+S), then verify all changes remain in Designer.'
+  if ((Hash $working) -eq (Hash $original)) { throw 'Save did not change the working file.' }
+  $checks.save = $true
+  Write-Host "Use Save As: $saved"
+  Require-Yes 'Save As succeeded. Close all Designer windows normally.'
+  Wait-Closed $p
+  if (!(Test-Path -LiteralPath $saved) -or (Hash $saved) -eq (Hash $original)) { throw 'Missing or unchanged Save As output.' }
+  $checks.saveAs = $true
+  $p = Open-Designer $saved
+  Require-Yes 'Reopened without warnings. Select every object again: each value is EDIT-<object ID>, each X/Y increased by 1 mm, native types and page settings remain correct.'
+  $checks.reopen = $true; $checks.editsPersist = $true
+  $printer = Read-Host 'Enter actual printer model, driver version, DPI and label stock'
+  if ([string]::IsNullOrWhiteSpace($printer)) { throw 'Physical print information required.' }
+  Require-Yes 'Manually print one label. All text is legible, all objects fit, physical dimensions are correct; scan EVERY barcode and compare exact EDIT-<ID> values and symbologies. For A, inspect printed text. Photograph the result.'
+  $checks.print = $true
+  Require-Yes 'Close all Designer windows normally.'
+  Wait-Closed $p
+  $attachments = @()
+  foreach ($name in @('about','objects','reopened','printed-label')) {
+    $path = (Resolve-Path -LiteralPath (Read-Host "Path to $name screenshot/photo (PNG/JPG)")).Path
+    $ext = [IO.Path]::GetExtension($path).ToLowerInvariant()
+    if ($ext -notin @('.png','.jpg','.jpeg')) { throw 'PNG/JPG evidence required.' }
+    $dest = "$name$ext"; Copy-Item -LiteralPath $path -Destination (Join-Path $dir $dest)
+    $attachments += @{file=$dest; sha256=(Hash (Join-Path $dir $dest))}
+  }
+  $report = [ordered]@{
+    schema=1; fixture=$Fixture; status='passed'; verification='human-observed-designer'; operator=$Operator;
+    edition=$Edition; runtime='BarTender 2022'; executableVersion=(Get-Item -LiteralPath $exe).VersionInfo.FileVersion;
+    sourceFingerprint=$fingerprint; fixtureSha256=(Hash $fixturePath); completedAt=[DateTime]::UtcNow.ToString('o'); printer=$printer;
+    checks=$checks; attachments=$attachments;
+    artifacts=@(@{file='original.btw';sha256=(Hash $original)},@{file='working.btw';sha256=(Hash $working)},@{file='edited-save-as.btw';sha256=(Hash $saved)})
+  }
+  $report | ConvertTo-Json -Depth 12 | Set-Content -LiteralPath (Join-Path $dir 'report.json') -Encoding UTF8
+  Write-Host "RECORDED: $Fixture human-observed Designer regression. All A/B/C reports and independent review are still required."
+  exit 0
+} catch {
+  Write-Error $_
   exit 1
 }
-
-function Find-BarTenderExe {
-  $registryPaths = @(
-    'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\bartend.exe',
-    'HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\App Paths\bartend.exe'
-  )
-  foreach ($path in $registryPaths) {
-    try {
-      $value = (Get-ItemProperty -Path $path -ErrorAction Stop).'(default)'
-      if ($value -and (Test-Path -LiteralPath $value)) { return $value }
-    } catch {}
-  }
-
-  $roots = @()
-  if ($env:ProgramFiles) { $roots += (Join-Path $env:ProgramFiles 'Seagull') }
-  if (${env:ProgramFiles(x86)}) { $roots += (Join-Path ${env:ProgramFiles(x86)} 'Seagull') }
-  foreach ($root in $roots | Select-Object -Unique) {
-    if (-not (Test-Path -LiteralPath $root)) { continue }
-    $hit = Get-ChildItem -LiteralPath $root -Filter 'bartend.exe' -File -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
-    if ($hit) { return $hit.FullName }
-  }
-  return $null
-}
-
-try {
-  $resolved = (Resolve-Path -LiteralPath $BtwPath -ErrorAction Stop).Path
-} catch {
-  Fail "找不到 BTW 檔案：$BtwPath"
-}
-
-if ([IO.Path]::GetExtension($resolved).ToLowerInvariant() -ne '.btw') {
-  Fail '指定檔案不是 .btw'
-}
-
-# Avoid touching an engineer's already-open BarTender session because /CLOSE closes open documents.
-if (Get-Process -Name 'bartend' -ErrorAction SilentlyContinue) {
-  Fail 'BarTender 目前正在執行。請先儲存工作並關閉 BarTender，再執行實機驗證。'
-}
-
-$exe = Find-BarTenderExe
-if (-not $exe) { Fail '找不到 bartend.exe，無法做真正的 BarTender runtime 驗證。' }
-
-$bytes = [IO.File]::ReadAllBytes($resolved)
-if ($bytes.Length -lt 1024) { Fail 'BTW 檔案大小異常。' }
-$headLen = [Math]::Min(2048, $bytes.Length)
-$head = [Text.Encoding]::GetEncoding(28591).GetString($bytes, 0, $headLen).Replace([char]0, '')
-if ($head -notmatch 'Bar Tender Format File') { Fail '檔頭不是 BarTender Format File。' }
-if ($head -notmatch 'Document:\s*CompatibleVersion=2022') { Fail 'BTW 不是目前鎖定的 BarTender 2022 相容格式。' }
-
-$tempDir = Join-Path $env:TEMP ("LabelWorkbench-BTVerify-" + [guid]::NewGuid().ToString('N'))
-New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
-$tempBtw = Join-Path $tempDir ([IO.Path]::GetFileName($resolved))
-Copy-Item -LiteralPath $resolved -Destination $tempBtw -Force
-
-$before = Get-Item -LiteralPath $tempBtw
-$beforeTime = $before.LastWriteTimeUtc
-$beforeLength = $before.Length
-Start-Sleep -Milliseconds 1200
-
-Write-Host "BarTender: $exe"
-Write-Host "Testing:   $resolved"
-Write-Host 'Runtime test: /F load -> /S save -> /CLOSE -> /X'
-
-$arguments = @(
-  "/F=`"$tempBtw`"",
-  '/S',
-  '/CLOSE',
-  '/X'
-)
-
-$proc = Start-Process -FilePath $exe -ArgumentList $arguments -PassThru
-if (-not $proc.WaitForExit($TimeoutSeconds * 1000)) {
-  try { Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue } catch {}
-  Fail "BarTender 在 $TimeoutSeconds 秒內沒有完成開啟/儲存/關閉；可能跳出格式錯誤或相容性提示。"
-}
-
-if ($proc.ExitCode -ne 0) {
-  Fail "BarTender 結束碼不是 0（ExitCode=$($proc.ExitCode)）。"
-}
-
-if (-not (Test-Path -LiteralPath $tempBtw)) { Fail 'BarTender 執行後驗證副本消失。' }
-$after = Get-Item -LiteralPath $tempBtw
-$afterBytes = [IO.File]::ReadAllBytes($tempBtw)
-$afterHeadLen = [Math]::Min(2048, $afterBytes.Length)
-$afterHead = [Text.Encoding]::GetEncoding(28591).GetString($afterBytes, 0, $afterHeadLen).Replace([char]0, '')
-if ($afterHead -notmatch 'Bar Tender Format File') { Fail 'BarTender 儲存後檔頭異常。' }
-
-# /S is documented as a forced save. A later LastWriteTime proves BarTender loaded the document far enough to save it.
-if ($after.LastWriteTimeUtc -le $beforeTime) {
-  Fail 'BarTender 程序正常結束，但 /S 沒有更新 BTW 副本；不能判定為實機讀取成功。'
-}
-
-Write-Host "PASS: BarTender 已實際載入並重新儲存此 BTW。"
-Write-Host "Original bytes: $beforeLength"
-Write-Host "Saved bytes:    $($after.Length)"
-Write-Host "Runtime copy:   $tempBtw"
-exit 0

@@ -32,28 +32,10 @@ jobs:
           node --check tests/btw-production-gate-smoke.cjs
           node --check tests/analysis-copy-smoke.cjs
           node --check tests/analysis-barcode-crosscheck-smoke.cjs
-      - name: Current wiring sanity check
-        run: |
-          grep -q 'assets/barcode-reader.js?v=20260914-v380' index.html
-          grep -q '標籤製作工作台 · v1.9.41' index.html
-          grep -q '更新：2026/09/14 11:14' index.html
-          grep -q 'assets/analysis-race-guard.js?v=20260914-v139' index.html
-          grep -q "RELEASE='v1.9.39'" assets/view-state-guard.js
-          grep -q "UPDATED='2026/09/14 10:20'" assets/view-state-guard.js
-          grep -q "BUILD='20260914-view-guard-139-race-safe'" assets/view-state-guard.js
-          grep -q "BUILD='20260914-v371-barcode-crosscheck'" assets/barcode-reader.js
-          grep -q "BUILD='20260914-barcode-crosscheck-107'" assets/analysis-barcode-crosscheck.js
-          grep -q "analysis-barcode-crosscheck.js'" assets/barcode-reader.js
-          grep -q "BUILD='20260912-btw-object-map-038-barcode-slot-mode'" assets/btw-object-map.js
-          grep -q "BUILD='20260912-btw-caption-adapter-100'" assets/btw-caption-adapter.js
-          grep -q "SEED_ID='CEA-2022-R5'" assets/btw-native.js
-          grep -q "SEED_FUNCTION='btw-seed'" assets/btw-native.js
-          grep -q 'btw-rich-native.js' assets/barcode-reader.js
-          grep -q 'btw-production-gate.js' assets/barcode-reader.js
-          grep -q "BUILD='20260914-v139-race-guard'" assets/analysis-race-guard.js
-          grep -q "BUILD='20260914-v139-race-safe-display'" assets/analysis-final-display.js
-          grep -q "BUILD='20260914-v142-await-dom-ready-confidence-patch'" assets/analysis-confidence-guard.js
-          ! grep -q 'setTimeout(()=>patchDom(result),120)' assets/analysis-confidence-guard.js
+      - name: Production wiring and persistent BT jobs
+        run: node tests/bt-job-smoke.cjs
+      - name: Runtime release-gate negative regression
+        run: node tests/btw-release-gate-smoke.cjs
       - name: Core logic smoke tests
         run: node tests/logic-smoke.cjs
       - name: Cloud merge smoke tests
@@ -78,27 +60,26 @@ jobs:
         run: node tests/v15-smoke.cjs
       - name: BT optional table-pack and safe launch smoke tests
         run: node tests/bt-launch-smoke.cjs
-      - name: BTW seed structure diagnostic
-        run: node tests/btw-seed-diagnostic.cjs
-      - name: Official rich donor independent Text-object round trip
-        run: node tests/rich-donor-edit-smoke.cjs
-      - name: Official rich donor independent barcode round trip
-        run: node tests/rich-donor-barcode-smoke.cjs
-      - name: Official rich donor visible object-pool diagnostic
-        run: node tests/rich-donor-pool-smoke.cjs
-      - name: Official rich donor full sanitization gate
-        run: node tests/rich-donor-sanitize-smoke.cjs
       - name: Native BTW object decoder/editor smoke tests
         run: node tests/btw-object-map-smoke.cjs
       - name: Real BTW barcode read-slot regression tests
         run: node tests/btw-barcode-read-slot-smoke.cjs
       - name: Independent BTW field-caption adapter smoke tests
         run: node tests/btw-caption-adapter-smoke.cjs
-      - name: CEA seed native object map diagnostic
-        run: node tests/cea-object-map-diagnostic.cjs
-      - name: Native editable BTW generation smoke tests
+      - name: Retired CEA exporter fail-closed regression
         run: node tests/btw-native-smoke.cjs
-      - name: Production rich native BTW generation smoke tests
+      - name: Retired rich exporter fail-closed regression
         run: node tests/btw-rich-native-smoke.cjs
-      - name: BTW pending-field production safety gate
+      - name: Diagnostic confidence classification
         run: node tests/btw-production-gate-smoke.cjs
+
+  btw-runtime-release-gate:
+    name: BTW release — Windows Designer evidence required
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Require current A/B/C real-runtime evidence
+        run: node tools/btw-release-gate.cjs

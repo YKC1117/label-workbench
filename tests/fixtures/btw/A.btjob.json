@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "id": "runtime-A",
+  "producer": "label-workbench-template-job",
+  "labels": [
+    {
+      "name": "A",
+      "widthMm": 80,
+      "heightMm": 50,
+      "orientation": "landscape",
+      "objects": [
+        {
+          "id": "TEXT_1",
+          "type": "Text",
+          "value": "Label Workbench 測試",
+          "xMm": 5,
+          "yMm": 5,
+          "widthMm": 65,
+          "heightMm": 6
+        },
+        {
+          "id": "TEXT_2",
+          "type": "Text",
+          "value": "PART-001",
+          "xMm": 5,
+          "yMm": 14,
+          "widthMm": 35,
+          "heightMm": 6
+        }
+      ]
+    }
+  ]
+}

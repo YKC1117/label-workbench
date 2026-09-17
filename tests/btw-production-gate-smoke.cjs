@@ -36,8 +36,8 @@ const original={labels:[{sourceName:'第一個.pdf',fields,barcodes:[
 
 (async()=>{
   const G=c.LabelWorkbenchBtwProductionGate,N=c.LabelWorkbenchBtwNative;
-  assert(G?.BUILD==='20260911-btw-production-gate-100','unexpected production gate build');
-  assert(G.installed===true&&N.__productionGateWrapped===true,'production gate did not wrap native download');
+  assert(typeof G?.prepareResult==='function','unexpected production gate build');
+  assert(G.installed===false&&!N.__productionGateWrapped,'retired gate must not silently filter production fields');
 
   const prepared=G.prepareResult(original);
   assert(prepared.report.acceptedTotal===10,`expected 10 accepted, got ${prepared.report.acceptedTotal}`);
@@ -52,17 +52,9 @@ const original={labels:[{sourceName:'第一個.pdf',fields,barcodes:[
   assert(original.labels[0].fields[11].value==='6612D7800ZZ','original LOT value was mutated');
   assert(original.labels[0].fields[0].__finalEmpty===undefined,'original confidence metadata was mutated');
 
-  const progress=[];
-  const out=await N.downloadFromAnalysis(original,[{name:'第一個.pdf',type:'application/pdf'}],m=>progress.push(m));
-  assert(out.ok===true,'wrapped production download failed');
-  assert(captured?.result?.labels?.[0]?.fields?.length===10,'base native generator did not receive filtered fields');
-  assert(!captured.result.labels[0].fields.some(f=>f.name==='LOT NO'),'pending LOT reached base native generator');
-  assert(progress.some(x=>/略過 2 個待核對欄位/.test(x)),'pending-field progress notice missing');
-  assert(G.lastReport?.acceptedTotal===10&&G.lastReport?.pendingTotal===2,'lastReport mismatch');
-
   let blocked=false;
   try{G.prepareResult({labels:[{sourceName:'blank.pdf',fields:[{name:'UNKNOWN',value:'',candidates:['MAYBE']}],barcodes:[]}]})}catch(err){blocked=/沒有可安全寫入 BTW/.test(String(err?.message||err))}
   assert(blocked,'blank/pending-only label must be blocked');
 
-  console.log('PASS: 第一個.pdf regression keeps 10 usable fields, excludes 2 pending fields, preserves barcodes, and blocks unsafe blank output');
+  console.log('PASS: diagnostic classifier (not a release gate) keeps 10 usable fields, excludes 2 pending fields, preserves barcodes, and blocks unsafe blank output');
 })().catch(err=>{console.error(err);process.exit(1)});

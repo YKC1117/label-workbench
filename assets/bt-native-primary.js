@@ -1,122 +1,101 @@
-/* Label Workbench editable BTW handoff v2.1
- * PDF/image Quick Analysis -> BarTender 2022 editable .BTW as the primary production output.
- * The output is a real BTW document opened by BarTender, not a flattened image.
- */
-(function(){
+/* BT workflow. No browser binary patcher is a production download provider. */
+(function () {
   'use strict';
-
-  const BUILD='20260911-btnp210-editable-btw-copy';
-  const FORMAT_SRC='assets/btw-format.js?v=20260911-btw011';
-  const NATIVE_SRC='assets/btw-native.js?v=20260911-btwn321-safe-base64';
-  const COPY_SRC='assets/analysis-copy.js?v=20260911-analysis-copy-100';
-  let formatPromise=null,nativePromise=null,copyPromise=null;
-
-  const el=id=>document.getElementById(id);
-  const toast=msg=>{if(typeof window.toast==='function')window.toast(msg)};
-
-  function loadScript(src,test,tag){
-    if(test())return Promise.resolve(test());
-    return new Promise((resolve,reject)=>{
-      const old=document.querySelector(`script[data-bt-native-loader="${tag}"]`);if(old)old.remove();
-      const s=document.createElement('script');s.src=src+'&t='+Date.now();s.async=false;s.dataset.btNativeLoader=tag;
-      s.onload=()=>test()?resolve(test()):reject(new Error(`${tag} 元件載入不完整`));
-      s.onerror=()=>reject(new Error(`${tag} 元件載入失敗`));document.head.appendChild(s)
-    })
+  if (window.LabelWorkbenchBtNativePrimary) return;
+  const BUILD = 'bt-runtime-gate-1';
+  const el = id => document.getElementById(id);
+  const jobs = () => window.LabelWorkbenchBtJob;
+  const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const BLOCK = 'BTW_RUNTIME_NOT_VERIFIED：尚未取得已驗證的 Windows BarTender 2022 產檔服務與範本。此版本不能直接下載可編輯 .BTW；可先確認內容並匯出 Windows 測試工作檔。';
+  let rendered = '', message = '';
+  function status(text) { message = text; const target = el('btJobStatus'); if(target) target.textContent = text; window.toast?.(text); }
+  function downloadEditable() {
+    const job = jobs()?.current;
+    const reason = !job ? 'BT_NO_JOB：請先完成 PDF／圖片快速分析' : job.status !== 'confirmed' ? 'BT_REVIEW_REQUIRED：請到 BT 快速製作核對內容、尺寸、方向及物件位置' : BLOCK;
+    status(reason); return Promise.resolve(false);
   }
-  function ensureCopy(){
-    if(window.LabelWorkbenchAnalysisCopy?.decorate)return Promise.resolve(window.LabelWorkbenchAnalysisCopy);
-    if(copyPromise)return copyPromise;
-    copyPromise=loadScript(COPY_SRC,()=>window.LabelWorkbenchAnalysisCopy,'analysis copy').finally(()=>{copyPromise=null});return copyPromise
+  function saveJson(value, name) {
+    const url = URL.createObjectURL(new Blob([JSON.stringify(value,null,2)], {type:'application/json'}));
+    const a = document.createElement('a'); a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 60000);
   }
-  function ensureFormat(){
-    if(window.LabelWorkbenchBtwFormat?.inflateContainer)return Promise.resolve(window.LabelWorkbenchBtwFormat);
-    if(formatPromise)return formatPromise;
-    formatPromise=loadScript(FORMAT_SRC,()=>window.LabelWorkbenchBtwFormat,'BTW format').finally(()=>{formatPromise=null});return formatPromise
+  function exportJob() {
+    try { saveJson(jobs().productionJob(), 'BarTender.btjob.json'); status('已送出 Windows 測試工作檔下載（JSON，不是 BTW）。需搭配 Designer 範本與 Windows 驗證工具。'); }
+    catch(e) { status(e.message); }
   }
-  async function ensureNative(){
-    if(window.LabelWorkbenchBtwNative?.downloadFromAnalysis)return window.LabelWorkbenchBtwNative;
-    if(nativePromise)return nativePromise;
-    nativePromise=(async()=>{await ensureFormat();return loadScript(NATIVE_SRC,()=>window.LabelWorkbenchBtwNative,'BTW native')})().finally(()=>{nativePromise=null});return nativePromise
-  }
-
-  function bridge(){return window.LabelWorkbenchBtBridge}
-  function hasMediaResult(){
-    const b=bridge();
-    return !!(b?.latestResult?.labels?.length&&b?.latestFiles?.some?.(f=>f?.type?.startsWith?.('image/')||f?.type==='application/pdf'||/\.(jpe?g|png|webp|gif|bmp|pdf)$/i.test(f?.name||''))&&!b.latestResult?.tableSource)
-  }
-
-  async function downloadEditable(){
-    const b=bridge();
-    if(!b?.latestResult?.labels?.length||!hasMediaResult()){toast('請先用 PDF／圖片完成快速分析');return false}
-    const buttons=[el('analysisBtNative'),el('btNativeDownload')].filter(Boolean);
-    buttons.forEach(x=>{x.disabled=true;x.dataset.oldText=x.textContent;x.textContent='正在建立可編輯 .BTW…'});
-    try{
-      const api=await ensureNative();
-      const out=await api.downloadFromAnalysis(b.latestResult,b.latestFiles,msg=>buttons.forEach(x=>x.textContent=msg||'正在建立可編輯 .BTW…'));
-      if(out?.ok)toast(out.count>1?`已建立 ${out.count} 個 BarTender .BTW`:'可編輯 .BTW 已下載');
-      return !!out?.ok
-    }catch(err){
-      console.error('[Label Workbench] editable BTW generation failed',err);
-      toast('可編輯 .BTW 建立停止：'+(err?.message||err));return false
-    }finally{
-      buttons.forEach(x=>{x.disabled=false;x.textContent=x.dataset.oldText||'下載可編輯 .BTW';delete x.dataset.oldText})
+  function openReview() { window.showView?.('bartender'); refresh(); }
+  function decorateAnalysis() {
+    const out = el('analysisResult');
+    if (!out || !jobs()?.current || !window.LabelWorkbenchBtBridge?.isMediaResult()) return;
+    if (!el('analysisBtReview')) {
+      const b = document.createElement('button'); b.id = 'analysisBtReview'; b.className = 'btn primary'; b.type = 'button';
+      b.textContent = '確認辨識內容／BT 工作'; b.addEventListener('click', openReview); out.appendChild(b);
+    }
+    if (!el('analysisBtNative')) {
+      const b = document.createElement('button'); b.id = 'analysisBtNative'; b.className = 'btn ghost'; b.type = 'button';
+      b.textContent = '下載 BarTender .BTW'; b.addEventListener('click', downloadEditable); out.appendChild(b);
+      const p = document.createElement('p'); p.textContent = 'BTW 實機驗證尚未通過，下載目前受阻；分析工作會保存在此瀏覽器。'; out.appendChild(p);
     }
   }
-
-  function makeButton(id,text,handler){const b=document.createElement('button');b.id=id;b.type='button';b.className='btn primary';b.textContent=text;b.addEventListener('click',handler);return b}
-  function removeImageUi(root=document){
-    root.querySelectorAll?.('#analysisBtDirect,#btDirectImport,[data-bt-direct-hint]').forEach?.(n=>n.remove());
+  function boxInputs(row, group, i, li, g) {
+    const b = row.sourceBox || {};
+    return ['x','y','w','h'].map((key,k) => {
+      const scale = k % 2 === 0 ? Number(g.widthMm) : Number(g.heightMm);
+      const value = Number.isFinite(b[key]) && scale > 0 ? +(b[key]*scale).toFixed(3) : '';
+      return `<td><input aria-label="${esc(row.name || row.format || group)} ${key} mm" type="number" min="0" step="0.001" data-label="${li}" data-group="${group}" data-index="${i}" data-box="${key}" value="${value}"></td>`;
+    }).join('');
   }
-  function decorateAnalysis(){
-    ensureCopy().then(api=>api?.decorate?.()).catch(()=>{});
-    if(!hasMediaResult())return;
-    const out=el('analysisResult');if(!out)return;
-    let actions=out.querySelector('.analysis-actions');
-    if(!actions){actions=document.createElement('div');actions.className='analysis-actions bt-bridge-actions';out.insertBefore(actions,out.firstChild)}
-    removeImageUi(out);
-    el('analysisSendBt')?.remove();
-    let native=el('analysisBtNative');
-    if(!native){native=makeButton('analysisBtNative','→ 下載可編輯 .BTW',downloadEditable);actions.insertBefore(native,actions.firstChild)}
-    native.className='btn primary';native.textContent='→ 下載可編輯 .BTW';
-    let hint=out.querySelector('[data-bt-native-hint]');
-    if(!hint){hint=document.createElement('div');hint.dataset.btNativeHint='true';hint.className='footer-note';actions.insertAdjacentElement('afterend',hint)}
-    hint.innerHTML='<b>給 BarTender 使用：</b>下載的是 <code>.btw</code> BarTender 文件。請在 BarTender 用「檔案 → 開啟」開啟，文字／條碼物件可再編輯；不是匯入 PNG/JPG。'
+  function renderJob() {
+    const section = el('bartender'); if (!section) return;
+    let panel = el('btJobPanel');
+    if (!panel) { panel = document.createElement('div'); panel.id = 'btJobPanel'; panel.className = 'panel'; section.appendChild(panel); }
+    const job = jobs()?.current, signature = JSON.stringify(job);
+    if (signature === rendered && panel.childNodes.length) return;
+    rendered = signature;
+    panel.innerHTML = `<h3>目前 BT 工作</h3><p id="btJobStatus" role="status" aria-live="polite"></p>`;
+    el('btJobStatus').textContent = message || jobs()?.storageError || (job ? `${job.status === 'confirmed' ? '內容已確認，等待 Windows 實機驗證' : '待核對'} · ${job.files.map(f=>f.name).join('、')}` : '尚無工作，請先完成快速分析。');
+    const importLabel=document.createElement('label'); importLabel.className='btn ghost'; importLabel.textContent='匯入工作備份';
+    const input=document.createElement('input'); input.type='file'; input.accept='.json,application/json'; input.className='hidden';
+    input.onchange=async()=>{try {const file=input.files[0];if(!file)return;if(file.size>2*1024*1024)throw new Error('備份超過 2 MB');jobs().importJob(await file.text());message='備份已恢復，請重新核對。';renderJob();}catch(e){status('備份匯入失敗：'+e.message);}};
+    importLabel.appendChild(input); panel.appendChild(importLabel);
+    if (!job) return;
+    const form = document.createElement('form'); form.id = 'btJobReview'; form.onsubmit = e => e.preventDefault();
+    form.innerHTML = job.result.labels.map((label,li) => {
+      const g = label.sourceGeometry || {};
+      const rows = ['fields','barcodes'].flatMap(group => (label[group] || []).map((row,i) => `<tr><td>${esc(group === 'fields' ? row.name || '文字' : row.format || '未知條碼')}</td><td><textarea aria-label="${esc(row.name || row.format || '物件')} 內容" data-label="${li}" data-group="${group}" data-index="${i}" data-value>${esc(group === 'fields' ? row.value : row.text ?? row.value ?? row.data)}</textarea></td>${boxInputs(row,group,i,li,g)}</tr>`)).join('');
+      return `<fieldset><legend>標籤 ${li+1} · ${esc(label.sourceName)}</legend><div class="grid-3"><label>寬 mm<input type="number" min="5" max="1000" step="0.001" data-label="${li}" data-size="widthMm" value="${esc(g.widthMm || '')}"></label><label>高 mm<input type="number" min="5" max="1000" step="0.001" data-label="${li}" data-size="heightMm" value="${esc(g.heightMm || '')}"></label><label>列印方向<select data-label="${li}" data-size="orientation"><option value="">請確認</option><option value="portrait" ${g.orientation==='portrait'?'selected':''}>直向</option><option value="landscape" ${g.orientation==='landscape'?'selected':''}>橫向</option></select></label></div><div class="table-scroll"><table><thead><tr><th>物件</th><th>內容</th><th>X mm</th><th>Y mm</th><th>寬 mm</th><th>高 mm</th></tr></thead><tbody>${rows}</tbody></table></div></fieldset>`;
+    }).join('');
+    panel.appendChild(form);
+    form.addEventListener('input', () => {
+      try {
+        const next = jobs().current.result;
+        form.querySelectorAll('[data-size]').forEach(n => { const g = next.labels[+n.dataset.label].sourceGeometry ||= {}; g[n.dataset.size] = n.dataset.size === 'orientation' ? n.value : Number(n.value); });
+        form.querySelectorAll('[data-group]').forEach(n => {
+          const label = next.labels[+n.dataset.label], row = label[n.dataset.group][+n.dataset.index];
+          if (n.hasAttribute('data-value')) { if(n.dataset.group === 'fields') row.value=n.value; else row.text=n.value; }
+          else { const key=n.dataset.box, scale=Number(label.sourceGeometry?.[['x','w'].includes(key)?'widthMm':'heightMm']); (row.sourceBox ||= {})[key] = n.value !== '' && scale > 0 ? Number(n.value)/scale : null; }
+        });
+        jobs().update(next); rendered = JSON.stringify(jobs().current);
+        el('btJobStatus').textContent = jobs().storageError || '修改已保存，請重新確認全部內容。';
+      } catch(e) { status(e.message); }
+    });
+    const note = document.createElement('p'); note.textContent = '位置以左上角為基準。請逐項核對原稿；不推測未知尺寸、不略過未確認欄位。QR Code／圖形目前 unsupported。工作保存 30 天，僅限本瀏覽器；不保存原始 PDF／圖片。'; panel.appendChild(note);
+    const actions = document.createElement('div'); actions.className = 'case-actions'; panel.appendChild(actions);
+    const button = (text, fn, id) => { const b=document.createElement('button'); b.type='button'; b.className='btn ghost'; b.textContent=text; if(id)b.id=id; b.onclick=fn; actions.appendChild(b); };
+    button('我已核對全部內容', () => { try { jobs().confirm(); message='內容已確認；'+BLOCK; renderJob(); } catch(e) { status(e.message); } });
+    button('下載 BarTender .BTW', downloadEditable, 'btNativeDownload');
+    button('匯出 Windows 測試工作檔', exportJob);
+    button('匯出工作備份', () => saveJson(jobs().current, 'BarTender-work-backup.json'));
+    button('清除此工作', () => { jobs().clear(); message=''; renderJob(); });
   }
-
-  function decorateBt(){
-    const section=el('bartender');if(!section)return;
-    removeImageUi(section);
-    const title=section.querySelector('.bt-title');if(title)title.textContent='BT 快速製作';
-    const intro=title?.nextElementSibling;if(intro)intro.textContent='客戶 PDF／圖片完成快速分析後，產生 BarTender 2022 可編輯 .BTW。下載後直接在 BarTender 用「檔案 → 開啟」開啟並修改文字、條碼等物件。';
-    let actions=section.querySelector('.case-actions');
-    if(!actions&&section.querySelector('.panel')){actions=document.createElement('div');actions.className='case-actions';section.querySelector('.panel').appendChild(actions)}
-    if(actions){
-      let native=el('btNativeDownload');
-      if(hasMediaResult()){
-        if(!native){native=makeButton('btNativeDownload','下載可編輯 .BTW',downloadEditable);actions.appendChild(native)}
-        native.className='btn primary';native.textContent='下載可編輯 .BTW'
-      }else if(native)native.remove()
-    }
-    const flow=section.querySelector('.workflow');
-    if(flow)flow.innerHTML='<span>客戶 PDF / 圖片</span><b>→</b><span>快速分析</span><b>→</b><span>建立可編輯 .BTW</span><b>→</b><span>BarTender 檔案→開啟</span><b>→</b><span>編輯／測印</span>';
-    const note=section.querySelector('.workflow')?.parentElement?.querySelector('.note');
-    if(note)note.innerHTML='<b>工作方式：</b>網站輸出的是 BarTender <code>.btw</code> 文件，不輸出圖片當正式製作檔。未辨識到的內容不會亂補假資料，開啟後請依客戶原稿核對位置與條碼。'
-  }
-  function syncHeader(){
-    if(document.querySelector('.view.active')?.id!=='bartender')return;
-    const t=el('pageTitle'),s=el('pageSub');if(t)t.textContent='BT 快速製作';if(s)s.textContent='PDF／圖片 → BarTender 2022 可編輯 .BTW；下載後用「檔案 → 開啟」直接編輯。'
-  }
-  function refresh(){decorateAnalysis();decorateBt();syncHeader()}
-  function init(){
-    ensureCopy().then(api=>api?.decorate?.()).catch(()=>{});
+  function refresh() { renderJob(); decorateAnalysis(); }
+  function init() {
     refresh();
-    const target=el('analysisResult');if(target&&typeof MutationObserver==='function')new MutationObserver(()=>setTimeout(refresh,0)).observe(target,{childList:true,subtree:true});
-    window.addEventListener('labelworkbench:bt-stage',()=>setTimeout(refresh,0));
-    document.querySelectorAll('[data-view="bartender"]').forEach(btn=>btn.addEventListener('click',()=>setTimeout(refresh,10)));
-    let tries=0;const timer=setInterval(()=>{tries++;refresh();if(tries>30)clearInterval(timer)},150);
-    console.info('[Label Workbench] editable BTW primary handoff',BUILD)
+    window.addEventListener('labelworkbench:bt-stage', () => { message=''; refresh(); });
+    document.querySelectorAll('[data-view="bartender"]').forEach(b => b.addEventListener('click',refresh));
+    // Only decorate when missing. Writing text on every mutation used to self-trigger indefinitely.
+    const target=el('analysisResult'); if(target && typeof MutationObserver==='function') new MutationObserver(decorateAnalysis).observe(target,{childList:true,subtree:true});
   }
+  window.LabelWorkbenchBtNativePrimary={BUILD, downloadEditable, exportJob, refresh, decorateAnalysis, decorateBt:renderJob};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
-
-  window.LabelWorkbenchBtNativePrimary={BUILD,ensureCopy,ensureFormat,ensureNative,downloadEditable,decorateAnalysis,decorateBt,refresh};
 })();
