@@ -13,7 +13,9 @@ This acceptance path is intentionally separate from normal Linux CI because GitH
 - Code 128: `C128_FIVE_555`
 - Data Matrix: `DM_ONE_666`
 
-It also contains six independent Text objects (`TEXT_EDIT_001` through `TEXT_EDIT_006`) at deterministic positions on a 100 x 65 mm template.
+It also contains six independent Text objects (`TEXT_EDIT_001` through `TEXT_EDIT_006`) at deterministic positions on a 100 x 65 mm template. The verifier also rejects any extra visible donor Text object.
+
+Each successful QA run publishes an artifact named `bartender-2022-runtime-acceptance`. It contains `LabelWorkbench_Runtime_Acceptance.btw` and this README, so the BTW can be downloaded and opened directly in BarTender without first installing Node.js.
 
 ## What must be run on a Windows PC with BarTender installed
 
@@ -28,9 +30,10 @@ The suite performs all of these steps automatically:
 1. Generate the deterministic 5 Code128 + 1 Data Matrix + Text `.btw` fixture.
 2. Reparse it before BarTender starts.
 3. Launch the installed `bartend.exe` and force BarTender to open, save, close, and exit.
-4. Reparse the file that BarTender actually saved and verify the six independent barcode values, Text values, positions, template size, object count, and 2022 header.
-5. Open the BarTender-saved file a second time, force another save, then reparse it again.
-6. Write a JSON acceptance report containing the detected BarTender executable/product version, output paths, SHA-256 hashes, and PASS/FAIL state.
+4. Verify the actual executable is BarTender 2022 by requiring ProductVersion `11.3.x`.
+5. Reparse the file that BarTender actually saved and verify the six independent barcode values, exactly six visible Text objects, positions, template size, object count, and 2022 header.
+6. Open the BarTender-saved file a second time, force another save, then reparse it again.
+7. Write a JSON acceptance report containing the detected BarTender executable/product version, output paths, SHA-256 hashes, and PASS/FAIL state.
 
 This is stronger than checking that `bartend.exe` returned exit code 0: the post-save bytes are parsed after each real BarTender save.
 
