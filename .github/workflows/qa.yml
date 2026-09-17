@@ -36,14 +36,14 @@ jobs:
           node --check tests/second-donor-generation-smoke.cjs
       - name: Current wiring sanity check
         run: |
-          grep -q 'assets/barcode-reader.js?v=20260914-v380' index.html
-          grep -q '標籤製作工作台 · v1.9.43' index.html
-          grep -q '更新：2026/09/14 14:00' index.html
+          grep -q 'assets/barcode-reader.js?v=20260917-v381' index.html
+          grep -q '標籤製作工作台 · v1.9.44' index.html
+          grep -q '更新：2026/09/17 13:02' index.html
           grep -q 'assets/analysis-race-guard.js?v=20260914-v139' index.html
           grep -q "RELEASE='v1.9.39'" assets/view-state-guard.js
           grep -q "UPDATED='2026/09/14 10:20'" assets/view-state-guard.js
           grep -q "BUILD='20260914-view-guard-139-race-safe'" assets/view-state-guard.js
-          grep -q "BUILD='20260917-v381-btw-5c128-1dm-dev'" assets/barcode-reader.js
+          grep -q "BUILD='20260917-v381-btw-5c128-1dm'" assets/barcode-reader.js
           grep -q "BUILD='20260914-barcode-crosscheck-107'" assets/analysis-barcode-crosscheck.js
           grep -q "analysis-barcode-crosscheck.js'" assets/barcode-reader.js
           grep -q "BUILD='20260912-btw-object-map-038-barcode-slot-mode'" assets/btw-object-map.js
