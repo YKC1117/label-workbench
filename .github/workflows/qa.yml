@@ -49,6 +49,11 @@ jobs:
               exit 1
             }
           }
+      - name: Windows acceptance launcher wiring check
+        run: |
+          grep -q 'verify-btw-runtime-suite.ps1' RUN_BARTENDER_2022_ACCEPTANCE.cmd
+          grep -q 'runtime-acceptance-report.json' RUN_BARTENDER_2022_ACCEPTANCE.cmd
+          grep -q 'where node' RUN_BARTENDER_2022_ACCEPTANCE.cmd
       - name: Current wiring sanity check
         run: |
           grep -q 'assets/barcode-reader.js?v=20260917-v381' index.html
@@ -116,12 +121,34 @@ jobs:
         run: node tests/second-donor-generation-smoke.cjs
       - name: Deterministic BarTender runtime acceptance fixture
         run: node tests/runtime-fixture-smoke.cjs
-      - name: Build downloadable BarTender runtime acceptance BTW
+      - name: Build portable BarTender runtime acceptance pack
         run: |
-          mkdir -p artifacts/runtime-acceptance
+          mkdir -p artifacts/runtime-acceptance/assets artifacts/runtime-acceptance/tools
           node tools/create-btw-runtime-fixture.cjs artifacts/runtime-acceptance/LabelWorkbench_Runtime_Acceptance.btw
           node tools/verify-btw-runtime-fixture.cjs artifacts/runtime-acceptance/LabelWorkbench_Runtime_Acceptance.btw
           cp docs/btw-runtime-acceptance.md artifacts/runtime-acceptance/README.md
+          cp RUN_BARTENDER_2022_ACCEPTANCE.cmd artifacts/runtime-acceptance/
+          cp tools/create-btw-runtime-fixture.cjs artifacts/runtime-acceptance/tools/
+          cp tools/verify-btw-runtime-fixture.cjs artifacts/runtime-acceptance/tools/
+          cp tools/verify-btw-runtime.ps1 artifacts/runtime-acceptance/tools/
+          cp tools/verify-btw-runtime-suite.ps1 artifacts/runtime-acceptance/tools/
+          cp assets/btw-format.js artifacts/runtime-acceptance/assets/
+          cp assets/btw-object-map.js artifacts/runtime-acceptance/assets/
+          cp assets/btw-layout-map.js artifacts/runtime-acceptance/assets/
+          cp assets/btw-second-donor.js artifacts/runtime-acceptance/assets/
+          cp assets/btw-second-native.js artifacts/runtime-acceptance/assets/
+          (
+            cd artifacts/runtime-acceptance
+            find . -type f ! -name SHA256SUMS.txt -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS.txt
+          )
+      - name: Verify portable acceptance pack layout
+        run: |
+          test -s artifacts/runtime-acceptance/LabelWorkbench_Runtime_Acceptance.btw
+          test -s artifacts/runtime-acceptance/RUN_BARTENDER_2022_ACCEPTANCE.cmd
+          test -s artifacts/runtime-acceptance/tools/verify-btw-runtime-suite.ps1
+          test -s artifacts/runtime-acceptance/tools/verify-btw-runtime-fixture.cjs
+          test -s artifacts/runtime-acceptance/assets/btw-second-donor.js
+          test -s artifacts/runtime-acceptance/SHA256SUMS.txt
       - name: Upload BarTender runtime acceptance artifact
         uses: actions/upload-artifact@v4
         with:
