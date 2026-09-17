@@ -10,8 +10,8 @@ async function verifyFixture(filePath){
   const parsed=F.parseStructure(bytes);
   if(!/^2022\b/.test(parsed.header?.applicationVersion||''))throw new Error(`application version changed: ${parsed.header?.applicationVersion}`);
   if(!/^2022\b/.test(parsed.header?.compatibleVersion||''))throw new Error(`compatible version changed: ${parsed.header?.compatibleVersion}`);
-  const expected=fixtureLabel();
-  const sizeText=`${F.formatMm(expected.sourceGeometry.widthMm)} x ${F.formatMm(expected.sourceGeometry.heightMm)} mm`;
+  const expected=fixtureLabel(),target={width:expected.sourceGeometry.widthMm,height:expected.sourceGeometry.heightMm};
+  const sizeText=`${F.formatMm(target.width)} x ${F.formatMm(target.height)} mm`;
   if(!String(parsed.header?.text||'').includes(`<TemplateSize>${sizeText}</TemplateSize>`))throw new Error(`TemplateSize mismatch: ${sizeText}`);
   const map=M.mapContainer(await F.inflateContainer(parsed)),objects=map.objects;
   if(objects.length!==40)throw new Error(`root object count changed: ${objects.length}/40`);
@@ -28,13 +28,13 @@ async function verifyFixture(filePath){
   for(const field of expected.fields){
     const o=visible.find(x=>x.kind==='text'&&String(x.value??'')===field.value);
     if(!o)throw new Error(`missing editable Text object: ${field.value}`);
-    const pos=L.boxToLayout(field.sourceBox,expected.sourceGeometry).mil;
+    const pos=L.boxToLayout(field.sourceBox,target).mil;
     if(!near(o.xMil,pos.x)||!near(o.yMil,pos.y))throw new Error(`Text position changed: ${field.value} ${o.xMil},${o.yMil} != ${pos.x},${pos.y}`);
   }
   for(const b of expected.barcodes){
     const o=visible.find(x=>x.kind==='barcode'&&String(x.resolvedPreview||x.components?.join('')||'')===b.text);
     if(!o)throw new Error(`missing barcode object: ${b.text}`);
-    const pos=L.boxToLayout(b.sourceBox,expected.sourceGeometry).mil;
+    const pos=L.boxToLayout(b.sourceBox,target).mil;
     if(!near(o.xMil,pos.x)||!near(o.yMil,pos.y))throw new Error(`barcode position changed: ${b.text} ${o.xMil},${o.yMil} != ${pos.x},${pos.y}`);
   }
 
