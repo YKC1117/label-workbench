@@ -34,6 +34,21 @@ jobs:
           node --check tests/analysis-barcode-crosscheck-smoke.cjs
           node --check tests/second-donor-pool-smoke.cjs
           node --check tests/second-donor-generation-smoke.cjs
+          node --check tools/create-btw-runtime-fixture.cjs
+          node --check tools/verify-btw-runtime-fixture.cjs
+          node --check tests/runtime-fixture-smoke.cjs
+      - name: PowerShell runtime verifier syntax check
+        shell: pwsh
+        run: |
+          foreach ($f in @('tools/verify-btw-runtime.ps1','tools/verify-btw-runtime-suite.ps1')) {
+            $tokens = $null
+            $parseErrors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path $f).Path,[ref]$tokens,[ref]$parseErrors) | Out-Null
+            if ($parseErrors.Count -gt 0) {
+              $parseErrors | ForEach-Object { Write-Error $_.Message }
+              exit 1
+            }
+          }
       - name: Current wiring sanity check
         run: |
           grep -q 'assets/barcode-reader.js?v=20260917-v381' index.html
@@ -99,6 +114,8 @@ jobs:
         run: node tests/second-donor-pool-smoke.cjs
       - name: Sanitized 5C128+1DM native generation round trip
         run: node tests/second-donor-generation-smoke.cjs
+      - name: Deterministic BarTender runtime acceptance fixture
+        run: node tests/runtime-fixture-smoke.cjs
       - name: Native BTW object decoder/editor smoke tests
         run: node tests/btw-object-map-smoke.cjs
       - name: Real BTW barcode read-slot regression tests
