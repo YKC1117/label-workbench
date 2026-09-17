@@ -32,16 +32,18 @@ jobs:
           node --check tests/btw-production-gate-smoke.cjs
           node --check tests/analysis-copy-smoke.cjs
           node --check tests/analysis-barcode-crosscheck-smoke.cjs
+          node --check tests/second-donor-pool-smoke.cjs
+          node --check tests/second-donor-generation-smoke.cjs
       - name: Current wiring sanity check
         run: |
           grep -q 'assets/barcode-reader.js?v=20260914-v380' index.html
-          grep -q '標籤製作工作台 · v1.9.41' index.html
-          grep -q '更新：2026/09/14 11:14' index.html
+          grep -q '標籤製作工作台 · v1.9.43' index.html
+          grep -q '更新：2026/09/14 14:00' index.html
           grep -q 'assets/analysis-race-guard.js?v=20260914-v139' index.html
           grep -q "RELEASE='v1.9.39'" assets/view-state-guard.js
           grep -q "UPDATED='2026/09/14 10:20'" assets/view-state-guard.js
           grep -q "BUILD='20260914-view-guard-139-race-safe'" assets/view-state-guard.js
-          grep -q "BUILD='20260914-v371-barcode-crosscheck'" assets/barcode-reader.js
+          grep -q "BUILD='20260917-v381-btw-5c128-1dm-dev'" assets/barcode-reader.js
           grep -q "BUILD='20260914-barcode-crosscheck-107'" assets/analysis-barcode-crosscheck.js
           grep -q "analysis-barcode-crosscheck.js'" assets/barcode-reader.js
           grep -q "BUILD='20260912-btw-object-map-038-barcode-slot-mode'" assets/btw-object-map.js
@@ -49,6 +51,11 @@ jobs:
           grep -q "SEED_ID='CEA-2022-R5'" assets/btw-native.js
           grep -q "SEED_FUNCTION='btw-seed'" assets/btw-native.js
           grep -q 'btw-rich-native.js' assets/barcode-reader.js
+          grep -q 'btw-second-donor.js' assets/barcode-reader.js
+          grep -q 'btw-second-native.js' assets/barcode-reader.js
+          grep -q "SEED_ID='LW-SECOND-SANITIZED-2022-R2'" assets/btw-second-native.js
+          grep -q "MAX_C128=5" assets/btw-second-native.js
+          grep -q "MAX_DM=1" assets/btw-second-native.js
           grep -q 'btw-production-gate.js' assets/barcode-reader.js
           grep -q "BUILD='20260914-v139-race-guard'" assets/analysis-race-guard.js
           grep -q "BUILD='20260914-v139-race-safe-display'" assets/analysis-final-display.js
@@ -88,6 +95,10 @@ jobs:
         run: node tests/rich-donor-pool-smoke.cjs
       - name: Official rich donor full sanitization gate
         run: node tests/rich-donor-sanitize-smoke.cjs
+      - name: Sanitized 5C128+1DM donor object-pool gate
+        run: node tests/second-donor-pool-smoke.cjs
+      - name: Sanitized 5C128+1DM native generation round trip
+        run: node tests/second-donor-generation-smoke.cjs
       - name: Native BTW object decoder/editor smoke tests
         run: node tests/btw-object-map-smoke.cjs
       - name: Real BTW barcode read-slot regression tests
