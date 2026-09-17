@@ -1,7 +1,7 @@
 const fs=require('fs');
 const vm=require('vm');
 
-const c={console,Uint8Array,ArrayBuffer,DataView,TextDecoder,TextEncoder,Blob,Response,DecompressionStream,CompressionStream,atob,btoa,window:null,globalThis:null};c.window=c;c.globalThis=c;vm.createContext(c);
+const c={console,Uint8Array,ArrayBuffer,DataView,TextDecoder,TextEncoder,Blob,Response,DecompressionStream,CompressionStream,atob,btoa,window:null,globalThis:null,document:{readyState:'loading',addEventListener(){},getElementById(){return null}}};c.window=c;c.globalThis=c;vm.createContext(c);
 for(const f of['assets/btw-format.js','assets/btw-object-map.js','assets/btw-second-donor.js'])vm.runInContext(fs.readFileSync(f,'utf8'),c,{filename:f});
 
 (async()=>{
