@@ -28,7 +28,8 @@ async function verifyManualEdit(filePath){
   if(!/^2022\b/.test(parsed.header?.compatibleVersion||''))throw new Error(`compatible version changed: ${parsed.header?.compatibleVersion}`);
 
   const expected=manualExpectedLabel();
-  const sizeText=`${F.formatMm(expected.sourceGeometry.widthMm)} x ${F.formatMm(expected.sourceGeometry.heightMm)} mm`;
+  const target={width:expected.sourceGeometry.widthMm,height:expected.sourceGeometry.heightMm};
+  const sizeText=`${F.formatMm(target.width)} x ${F.formatMm(target.height)} mm`;
   if(!String(parsed.header?.text||'').includes(`<TemplateSize>${sizeText}</TemplateSize>`))throw new Error(`TemplateSize mismatch: ${sizeText}`);
 
   const map=M.mapContainer(await F.inflateContainer(parsed)),objects=map.objects;
@@ -44,8 +45,8 @@ async function verifyManualEdit(filePath){
   for(const field of expected.fields){
     const o=visibleText.find(x=>String(x.value??'')===field.value);
     if(!o)throw new Error(`missing expected manual Text value: ${field.value}`);
-    const pos=L.boxToLayout(field.sourceBox,expected.sourceGeometry).mil;
-    if(!near(o.xMil,pos.x)||!near(o.yMil,pos.y))throw new Error(`Text position changed: ${field.value}`);
+    const pos=L.boxToLayout(field.sourceBox,target).mil;
+    if(!near(o.xMil,pos.x)||!near(o.yMil,pos.y))throw new Error(`Text position changed: ${field.value} ${o.xMil},${o.yMil} != ${pos.x},${pos.y}`);
   }
 
   const actualBarcode=[...c128,...dm].map(o=>String(o.resolvedPreview||o.components?.join('')||''));
@@ -55,8 +56,8 @@ async function verifyManualEdit(filePath){
   for(const b of expected.barcodes){
     const o=visible.find(x=>x.kind==='barcode'&&String(x.resolvedPreview||x.components?.join('')||'')===b.text);
     if(!o)throw new Error(`missing expected manual barcode object: ${b.text}`);
-    const pos=L.boxToLayout(b.sourceBox,expected.sourceGeometry).mil;
-    if(!near(o.xMil,pos.x)||!near(o.yMil,pos.y))throw new Error(`barcode position changed: ${b.text}`);
+    const pos=L.boxToLayout(b.sourceBox,target).mil;
+    if(!near(o.xMil,pos.x)||!near(o.yMil,pos.y))throw new Error(`barcode position changed: ${b.text} ${o.xMil},${o.yMil} != ${pos.x},${pos.y}`);
   }
 
   const stale=[
