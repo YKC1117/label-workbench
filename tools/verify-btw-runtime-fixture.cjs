@@ -16,8 +16,10 @@ async function verifyFixture(filePath){
   const map=M.mapContainer(await F.inflateContainer(parsed)),objects=map.objects;
   if(objects.length!==40)throw new Error(`root object count changed: ${objects.length}/40`);
   const visible=objects.filter(o=>Number.isFinite(o.xMil)&&Number.isFinite(o.yMil)&&o.xMil<50000&&o.yMil<50000);
+  const visibleText=visible.filter(o=>o.kind==='text');
   const c128=visible.filter(o=>o.kind==='barcode'&&o.barcodeType==='Code 128');
   const dm=visible.filter(o=>o.kind==='barcode'&&o.barcodeType==='Data Matrix');
+  if(visibleText.length!==expected.fields.length)throw new Error(`visible Text count ${visibleText.length}/${expected.fields.length}; unused donor Text leaked into label area`);
   if(c128.length!==5)throw new Error(`visible Code128 count ${c128.length}/5`);
   if(dm.length!==1)throw new Error(`visible DataMatrix count ${dm.length}/1`);
   const actualBarcode=[...c128,...dm].map(o=>String(o.resolvedPreview||o.components?.join('')||''));
@@ -26,7 +28,7 @@ async function verifyFixture(filePath){
   if(new Set(actualBarcode).size!==6)throw new Error(`barcode values are not independent: ${JSON.stringify(actualBarcode)}`);
 
   for(const field of expected.fields){
-    const o=visible.find(x=>x.kind==='text'&&String(x.value??'')===field.value);
+    const o=visibleText.find(x=>String(x.value??'')===field.value);
     if(!o)throw new Error(`missing editable Text object: ${field.value}`);
     const pos=L.boxToLayout(field.sourceBox,target).mil;
     if(!near(o.xMil,pos.x)||!near(o.yMil,pos.y))throw new Error(`Text position changed: ${field.value} ${o.xMil},${o.yMil} != ${pos.x},${pos.y}`);
@@ -42,7 +44,7 @@ async function verifyFixture(filePath){
   for(const token of['FTUSER5','FTWIN10-PC','第二個.pdf','W668GG6TB-06','K5494D9CJ','932437','C.K.B   QA  ACC']){
     if(raw.includes(token))throw new Error(`sanitized donor token reappeared: ${token}`);
   }
-  return{file:path.resolve(filePath),bytes:bytes.length,applicationVersion:parsed.header.applicationVersion,compatibleVersion:parsed.header.compatibleVersion,objectCount:objects.length,visibleText:expected.fields.length,visibleCode128:c128.length,visibleDataMatrix:dm.length,barcodes:wantedBarcode};
+  return{file:path.resolve(filePath),bytes:bytes.length,applicationVersion:parsed.header.applicationVersion,compatibleVersion:parsed.header.compatibleVersion,objectCount:objects.length,visibleText:visibleText.length,visibleCode128:c128.length,visibleDataMatrix:dm.length,barcodes:wantedBarcode};
 }
 
 if(require.main===module){
