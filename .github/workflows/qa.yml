@@ -116,6 +116,19 @@ jobs:
         run: node tests/second-donor-generation-smoke.cjs
       - name: Deterministic BarTender runtime acceptance fixture
         run: node tests/runtime-fixture-smoke.cjs
+      - name: Build downloadable BarTender runtime acceptance BTW
+        run: |
+          mkdir -p artifacts/runtime-acceptance
+          node tools/create-btw-runtime-fixture.cjs artifacts/runtime-acceptance/LabelWorkbench_Runtime_Acceptance.btw
+          node tools/verify-btw-runtime-fixture.cjs artifacts/runtime-acceptance/LabelWorkbench_Runtime_Acceptance.btw
+          cp docs/btw-runtime-acceptance.md artifacts/runtime-acceptance/README.md
+      - name: Upload BarTender runtime acceptance artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: bartender-2022-runtime-acceptance
+          path: artifacts/runtime-acceptance/
+          if-no-files-found: error
+          retention-days: 14
       - name: Native BTW object decoder/editor smoke tests
         run: node tests/btw-object-map-smoke.cjs
       - name: Real BTW barcode read-slot regression tests
