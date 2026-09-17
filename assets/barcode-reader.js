@@ -1,8 +1,8 @@
 /* Label Workbench barcode reader v4.1 loader. */
 (function(){
   'use strict';
-  const BUILD='20260914-v371-barcode-crosscheck';
-  const modules=['assets/view-state-guard.js','assets/barcode-reader-core.js','assets/barcode-reader-ui.js','assets/barcode-generator.js','assets/label-interpreter.js','assets/analysis-accuracy.js','assets/analysis-pdf-native.js','assets/analysis-geometry.js','assets/analysis-field-consistency.js','assets/analysis-copy.js','assets/btw-format.js','assets/btw-object-map.js','assets/btw-layout-map.js','assets/btw-native.js','assets/btw-rich-native.js','assets/btw-caption-adapter.js','assets/btw-rich-bridge.js','assets/bt-bridge.js','assets/workbench-priority.js','assets/bt-native-primary.js','assets/analysis-confidence-guard.js','assets/btw-production-gate.js','assets/analysis-final-display.js','assets/analysis-barcode-crosscheck.js'];
+  const BUILD='20260917-v381-btw-5c128-1dm-dev';
+  const modules=['assets/view-state-guard.js','assets/barcode-reader-core.js','assets/barcode-reader-ui.js','assets/barcode-generator.js','assets/label-interpreter.js','assets/analysis-accuracy.js','assets/analysis-pdf-native.js','assets/analysis-geometry.js','assets/analysis-field-consistency.js','assets/analysis-copy.js','assets/btw-format.js','assets/btw-object-map.js','assets/btw-layout-map.js','assets/btw-native.js','assets/btw-rich-native.js','assets/btw-second-donor.js','assets/btw-second-native.js','assets/btw-caption-adapter.js','assets/btw-rich-bridge.js','assets/bt-bridge.js','assets/workbench-priority.js','assets/bt-native-primary.js','assets/analysis-confidence-guard.js','assets/btw-production-gate.js','assets/analysis-final-display.js','assets/analysis-barcode-crosscheck.js'];
   function loadNext(){
     const src=modules.shift();if(!src)return;
     if(src.includes('view-state-guard')&&window.LabelWorkbenchViewGuard){loadNext();return}
@@ -18,6 +18,8 @@
     if(src.includes('btw-format')&&window.LabelWorkbenchBtwFormat){loadNext();return}
     if(src.includes('btw-object-map')&&window.LabelWorkbenchBtwObjectMap){loadNext();return}
     if(src.includes('btw-layout-map')&&window.LabelWorkbenchBtwLayout){loadNext();return}
+    if(src.includes('btw-second-donor')&&window.LabelWorkbenchBtwSecondDonor){loadNext();return}
+    if(src.includes('btw-second-native')&&window.LabelWorkbenchBtwSecondNative){loadNext();return}
     if(src.includes('btw-caption-adapter')&&window.LabelWorkbenchBtwCaptionAdapter){loadNext();return}
     if(src.includes('btw-native')&&window.LabelWorkbenchBtwNative){loadNext();return}
     if(src.includes('bt-bridge')&&window.LabelWorkbenchBtBridge){loadNext();return}
