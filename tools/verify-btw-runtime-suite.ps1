@@ -84,6 +84,7 @@ $report = [ordered]@{
   printBytes = $null
   barTenderExe = $null
   barTenderProductVersion = $null
+  barTender2022Verified = $false
   hashes = [ordered]@{}
 }
 
@@ -102,9 +103,16 @@ try {
   $pass1 = Invoke-RuntimeSave $Fixture
   $report.firstBarTenderSave = $true
   $report.barTenderExe = $pass1.BarTender
-  if ($pass1.BarTender -and (Test-Path -LiteralPath $pass1.BarTender)) {
-    $report.barTenderProductVersion = (Get-Item -LiteralPath $pass1.BarTender).VersionInfo.ProductVersion
+  if (-not $pass1.BarTender -or -not (Test-Path -LiteralPath $pass1.BarTender)) {
+    throw '找不到實際執行的 bartend.exe，不能確認 BarTender 2022 版本。'
   }
+  $report.barTenderProductVersion = (Get-Item -LiteralPath $pass1.BarTender).VersionInfo.ProductVersion
+  if (-not $report.barTenderProductVersion -or $report.barTenderProductVersion -notmatch '^11\.3(?:\.|$)') {
+    throw "偵測到的 BarTender ProductVersion=$($report.barTenderProductVersion)，不是本驗收鎖定的 BarTender 2022（11.3 系列）。"
+  }
+  $report.barTender2022Verified = $true
+  Write-Host "BarTender 2022 version verified: $($report.barTenderProductVersion)"
+
   $report.hashes.afterFirstSave = (Get-FileHash -Algorithm SHA256 -LiteralPath $pass1.RuntimeCopy).Hash
   Invoke-NodeChecked @($FixtureVerifier,$pass1.RuntimeCopy)
   $report.firstPostSaveParse = $true
@@ -131,7 +139,7 @@ try {
   $report.runtimeCopyAfterFirstSave = $pass1.RuntimeCopy
   $report.runtimeCopyAfterSecondSave = $pass2.RuntimeCopy
   $report | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath $ReportPath -Encoding UTF8
-  Write-Host "PASS: BarTender 已連續兩次開啟/儲存 BTW，且重存後 5 Code128 + 1 Data Matrix + Text/位置/尺寸/header 均重新解析通過。"
+  Write-Host "PASS: BarTender 2022 已連續兩次開啟/儲存 BTW，且重存後 5 Code128 + 1 Data Matrix + Text/位置/尺寸/header 均重新解析通過。"
   if ($PrintToFile) { Write-Host "PASS: BarTender 列印管線已輸出檔案（$printBytes bytes）。" }
   Write-Host "Report: $ReportPath"
   exit 0
