@@ -1,5 +1,5 @@
 /* Label Workbench rich editable BTW generator v0.1.4
- * Reuses verified official BarTender donor templates as an editable object pool.
+ * RETIRED EXPORTER. Official donors were never proof that patched outputs work.
  * Every unused donor root is moved off-canvas before Quick Analysis fields/barcodes are restored.
  * When Quick Analysis has reliable physical source dimensions, both object coordinates and
  * BarTender TemplateSize are rewritten to the source label size.
@@ -172,42 +172,8 @@
   function reusableText(objects){return objects.filter(o=>o.kind==='text'&&/^Text\s*\d+$/i.test(o.name||'')&&o.valueEntry)}
   function findBarcode(objects,type,used){return objects.find(o=>o.kind==='barcode'&&o.barcodeType===type&&!used.has(o.index))||null}
 
-  async function generateOne(label,index=0){
-    const plan=selectPlan(label);if(!plan)throw new Error('此標籤超出 rich donor 可安全建立範圍');
-    const M=window.LabelWorkbenchBtwObjectMap;
-    if(!M?.mapContainer||!M?.editContainer||typeof DecompressionStream!=='function'||typeof CompressionStream!=='function')throw new Error('BTW rich donor 元件尚未載入');
-    const seed=await fetchSeed(plan.seedKey),parsed=await splitOfficialBtw(seed),container=parsed.container,before=M.mapContainer(container),donorTarget=templateSizeMm(parsed),target=sourceTargetSize(label,donorTarget),texts=reusableText(before.objects);
-    if(texts.length<plan.fields.length)throw new Error(`rich donor 可編輯文字不足：${texts.length}/${plan.fields.length}`);
-
-    const edits=new Map();for(const o of before.objects)edits.set(o.index,{index:o.index,xMil:OFF,yMil:OFF});
-    const expectedText=[];
-    plan.fields.forEach((field,i)=>{
-      const obj=texts[i],layout=sourceLayout(field?.sourceBox,target),pos=layout?.mil?{xMil:layout.mil.x,yMil:layout.mil.y}:fallbackTextPos(i,plan.fields.length,target),value=String(field?.value??'').trim();
-      edits.set(obj.index,{index:obj.index,value,...pos});expectedText.push({index:obj.index,value,...pos})
-    });
-
-    const used=new Set(),expectedBarcode=[],barcodeRows=[...plan.dm.map(b=>({type:'Data Matrix',row:b})),...plan.c128.map(b=>({type:'Code 128',row:b}))];
-    barcodeRows.forEach((spec,i)=>{
-      const obj=findBarcode(before.objects,spec.type,used);if(!obj)throw new Error(`${plan.seedKey} 缺少可用 ${spec.type} 物件`);used.add(obj.index);
-      const value=barcodeText(spec.row),components=obj.componentEntries.map((_,j)=>j===0?value:''),layout=sourceLayout(spec.row?.sourceBox,target),pos=layout?.mil?{xMil:layout.mil.x,yMil:layout.mil.y}:fallbackBarcodePos(i,barcodeRows.length,target);
-      edits.set(obj.index,{index:obj.index,barcodeComponents:components,...pos});expectedBarcode.push({index:obj.index,type:spec.type,value,...pos})
-    });
-
-    const edited=M.editContainer(container,[...edits.values()]),editedMap=M.mapContainer(edited),sizeMutation=replaceTemplateSizePairs(edited,donorTarget,target),sizedMap=M.mapContainer(sizeMutation.container);
-    if(sizeMutation.changed&&!sameMappedObjects(editedMap,sizedMap))throw new Error('改寫 BTW 內部標籤尺寸時碰到物件資料，已停止產檔');
-    const prefix=sizeMutation.changed?replaceRichTemplateSizePrefix(parsed.prefix,target.width,target.height):parsed.prefix,rebuilt=await rebuildOfficialBtw(prefix,sizeMutation.container),check=await splitOfficialBtw(rebuilt),after=M.mapContainer(check.container),finalSize=templateSizeMm(check);
-    if(!near(finalSize.width,target.width)||!near(finalSize.height,target.height))throw new Error(`BTW TemplateSize 驗證失敗：${finalSize.width}×${finalSize.height}mm`);
-    if(sizeMutation.changed){
-      const newPairs=findTemplateSizePairs(check.container,target),oldPairs=findTemplateSizePairs(check.container,donorTarget);
-      if(newPairs.length<sizeMutation.offsets.length)throw new Error(`BTW 內部新尺寸 pair 驗證失敗：${newPairs.length}/${sizeMutation.offsets.length}`);
-      if(oldPairs.length)throw new Error(`BTW 內部仍殘留 ${oldPairs.length} 組舊 donor 尺寸 pair`)
-    }
-    if(after.objects.length!==before.objects.length)throw new Error(`rich donor root 數改變：${before.objects.length}→${after.objects.length}`);
-    for(const e of expectedText){const o=after.objects.find(x=>x.index===e.index);if(!o||o.value!==e.value||o.xMil!==e.xMil||o.yMil!==e.yMil)throw new Error(`rich Text 驗證失敗：${e.index}`)}
-    for(const e of expectedBarcode){const o=after.objects.find(x=>x.index===e.index);if(!o||o.components.join('')!==e.value||o.xMil!==e.xMil||o.yMil!==e.yMil)throw new Error(`rich ${e.type} 驗證失敗：${e.index}`)}
-    const active=new Set([...expectedText.map(x=>x.index),...expectedBarcode.map(x=>x.index)]),leaks=after.objects.filter(o=>!active.has(o.index)&&(o.xMil!==OFF||o.yMil!==OFF));
-    if(leaks.length)throw new Error(`rich donor 清場驗證失敗：${leaks.length} 個物件仍在畫布`);
-    return{name:outputName(label,index),bytes:rebuilt,kind:plan.kind,summary:plan.fields.map(f=>String(f.value??'')).join('\r'),barcodeValue:expectedBarcode[0]?.value||'',barcodes:{dataMatrix:plan.dm.map(barcodeText),code128:plan.c128.map(barcodeText)},layout:{target,donorTarget,fields:expectedText,barcodes:expectedBarcode,sizeMutation:{changed:sizeMutation.changed,count:sizeMutation.offsets.length,from:sizeMutation.from,to:sizeMutation.to}},header:check.header,seed:plan.seedId,seedKey:plan.seedKey,rich:true,editableTextCount:expectedText.length}
+  async function generateOne(){
+    throw new Error('BTW_BINARY_EXPORT_DISABLED: 未經 BarTender runtime 驗證的 binary patch 產檔已停用');
   }
 
   window.LabelWorkbenchBtwRichNative={BUILD,OFF,MAX_TEXT,seeds,selectPlan,canGenerate,fetchSeed,splitOfficialBtw,rebuildOfficialBtw,formatMm,replaceRichTemplateSizePrefix,templateSizeMm,sourceTargetSize,mmToMil,findTemplateSizePairs,replaceTemplateSizePairs,sameMappedObjects,reusableText,generateOne};

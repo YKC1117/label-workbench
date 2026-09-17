@@ -1,0 +1,4 @@
+# Runtime fixtures must have identical hashes in Windows and Linux checkouts.
+tests/fixtures/btw/*.json text eol=lf
+*.btw binary
+runtime-evidence/** binary

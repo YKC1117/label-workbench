@@ -86,28 +86,9 @@
     return{result:{...(result||{}),labels},report}
   }
 
-  function install(){
-    const native=window.LabelWorkbenchBtwNative;
-    if(!native?.downloadFromAnalysis||native.__productionGateWrapped)return false;
-    const base=native.downloadFromAnalysis.bind(native);
-    native.downloadFromAnalysis=async function(result,files,onProgress){
-      const prepared=prepareResult(result);lastReport=prepared.report;
-      if(prepared.report.pendingTotal>0)onProgress?.(`已略過 ${prepared.report.pendingTotal} 個待核對欄位，正在建立 BTW…`);
-      return base(prepared.result,files,onProgress)
-    };
-    native.__productionGateWrapped=true;
-    return true
-  }
-
-  let installed=install();
-  if(!installed){
-    let tries=0;
-    const timer=setInterval(()=>{
-      tries++;
-      installed=install()||installed;
-      if(installed||tries>80)clearInterval(timer)
-    },50)
-  }
+  // Diagnostic confidence classification only. Never filters a production job.
+  const install=()=>false;
+  const installed=false;
 
   window.LabelWorkbenchBtwProductionGate={
     BUILD,cloneField,cloneLabel,fallbackState,stateFor,refineLabel,classifyLabel,prepareResult,install,

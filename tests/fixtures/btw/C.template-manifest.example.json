@@ -1,0 +1,45 @@
+{
+  "schema": 1,
+  "templateSha256": "REPLACE_WITH_DESIGNER_TEMPLATE_SHA256",
+  "widthMm": 80,
+  "heightMm": 50,
+  "orientation": "landscape",
+  "objects": [
+    {
+      "id": "TEXT_1",
+      "type": "Text",
+      "xMm": 5,
+      "yMm": 5,
+      "widthMm": 65,
+      "heightMm": 6,
+      "anchor": "top-left"
+    },
+    {
+      "id": "TEXT_2",
+      "type": "Text",
+      "xMm": 5,
+      "yMm": 14,
+      "widthMm": 35,
+      "heightMm": 6,
+      "anchor": "top-left"
+    },
+    {
+      "id": "BARCODE_1",
+      "type": "Data Matrix",
+      "xMm": 5,
+      "yMm": 25,
+      "widthMm": 18,
+      "heightMm": 18,
+      "anchor": "top-left"
+    },
+    {
+      "id": "BARCODE_2",
+      "type": "Code 128",
+      "xMm": 30,
+      "yMm": 25,
+      "widthMm": 40,
+      "heightMm": 12,
+      "anchor": "top-left"
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "templateSha256": "REPLACE_WITH_DESIGNER_TEMPLATE_SHA256",
+  "widthMm": 80,
+  "heightMm": 50,
+  "orientation": "landscape",
+  "objects": [
+    {
+      "id": "TEXT_1",
+      "type": "Text",
+      "xMm": 5,
+      "yMm": 5,
+      "widthMm": 65,
+      "heightMm": 6,
+      "anchor": "top-left"
+    },
+    {
+      "id": "TEXT_2",
+      "type": "Text",
+      "xMm": 5,
+      "yMm": 14,
+      "widthMm": 35,
+      "heightMm": 6,
+      "anchor": "top-left"
+    }
+  ]
+}

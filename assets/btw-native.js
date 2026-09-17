@@ -1,5 +1,5 @@
 /* Label Workbench native editable BTW generator v0.2.3
- * Quick Analysis -> native BarTender .btw with editable Text / Code 128 / Data Matrix objects.
+ * RETIRED EXPORTER. Kept only for historical diagnostics; not a production writer.
  * Structural seed: Seagull Scientific's official CEALabelCode-128.btw (BarTender 2022 R5),
  * fetched through the fixed btw-seed CORS proxy. Customer label values are patched locally in the browser.
  */
@@ -140,27 +140,10 @@
     return seedPromise;
   }
 
-  async function generateOne(label,index=0){
-    const F=window.LabelWorkbenchBtwFormat;if(!F?.parseStructure||!F?.inflateContainer||!F?.rebuild)throw new Error('BTW 原生格式元件尚未載入');
-    const seed=await fetchSeed(),parsed=F.parseStructure(seed);
-    if(parsed.header?.applicationVersion!=='2022 R5'||parsed.header?.compatibleVersion!=='2022')throw new Error('BTW 種子版本不是 BarTender 2022 R5');
-    const container=await F.inflateContainer(parsed),patched=patchCea(F,container,label),rebuilt=await F.rebuild(parsed,patched.container),check=F.parseStructure(rebuilt),round=await F.inflateContainer(check),strings=F.scanUtf16Strings(round,{minLength:1,maxLength:6000}),types=scanTags(round).map(x=>x.type);
-    for(const type of['TextData','BcDatamatrixData','BcC128Data'])if(!types.includes(type))throw new Error(`BTW 原生物件驗證失敗：${type}`);
-    if(!strings.some(e=>e.text===patched.summary))throw new Error('BTW 原生文字驗證失敗');
-    if(patched.plan.dm&&!strings.some(e=>e.text===patched.plan.dm))throw new Error('BTW Data Matrix 資料驗證失敗');
-    for(const value of patched.plan.c128)if(value&&!strings.some(e=>e.text===value))throw new Error('BTW Code 128 資料驗證失敗');
-    if(check.header?.applicationVersion!=='2022 R5'||check.header?.compatibleVersion!=='2022')throw new Error('BTW 重建後版本驗證失敗');
-    return{name:outputName(label,index),bytes:rebuilt,kind:patched.plan.kind,summary:patched.summary,barcodeValue:patched.plan.dm||patched.plan.c128[0]||'',barcodes:{dataMatrix:patched.plan.dm,code128:patched.plan.c128},layout:patched.layout,header:check.header,seed:SEED_ID};
+  async function generateOne(){
+    throw new Error('BTW_BINARY_EXPORT_DISABLED: 未經 BarTender runtime 驗證的 binary patch 產檔已停用');
   }
-
-  function loadZip(){if(window.JSZip)return Promise.resolve(window.JSZip);if(zipPromise)return zipPromise;zipPromise=new Promise((resolve,reject)=>{const s=document.createElement('script');s.src=JSZIP_SRC;s.async=true;s.crossOrigin='anonymous';s.onload=()=>window.JSZip?resolve(window.JSZip):reject(new Error('ZIP 元件載入不完整'));s.onerror=()=>reject(new Error('ZIP 元件載入失敗'));document.head.appendChild(s)});return zipPromise}
-  function downloadBlob(blob,name){const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1800)}
-  async function downloadFromAnalysis(result,files,onProgress){
-    const labels=(result?.labels||[]).slice(0,20);if(!labels.length)throw new Error('目前沒有可建立 BTW 的分析結果');
-    const outputs=[];for(let i=0;i<labels.length;i++){onProgress?.(`正在建立 BarTender 2022 可編輯 BTW ${i+1}/${labels.length}`);outputs.push(await generateOne(labels[i],i))}
-    if(outputs.length===1){downloadBlob(new Blob([outputs[0].bytes],{type:'application/octet-stream'}),outputs[0].name);return{ok:true,type:'btw',count:1,outputs}}
-    const JSZip=await loadZip(),zip=new JSZip();for(const out of outputs)zip.file(out.name,out.bytes);zip.file('README.txt','These BTW files preserve native editable Text, Data Matrix and Code 128 objects from Seagull Scientific\'s official BarTender 2022 R5 CEA template structure. Quick Analysis values are patched locally in the browser. Open each file in BarTender and verify layout/content before printing.');const blob=await zip.generateAsync({type:'blob',compression:'DEFLATE'}),base=safeFile(String(labels[0]?.sourceName||files?.[0]?.name||'Label').replace(/\.[^.]+$/,''));downloadBlob(blob,`BT_Editable_${base}.zip`);return{ok:true,type:'zip',count:outputs.length,outputs}
-  }
+  const downloadFromAnalysis=generateOne;
 
   window.LabelWorkbenchBtwNative={BUILD,SEED_ID,SEED_FUNCTION,CEA_DEFAULTS,barcodeKind,supportedBarcode,supportedBarcodes,unsupportedBarcodes,fieldSummary,scanTags,tagRange,sourcePlan,applyRootLayout,patchCea,seedEndpoint,fetchSeed,generateOne,downloadFromAnalysis};
 })();

@@ -151,8 +151,8 @@
     ['assets/label-interpreter.js','20260911-bt-pipeline'],
     ['assets/analysis-safety.js','20260911-analysis-safety-100'],
     ['assets/bt-quick.js','20260911-bt-pipeline'],
+    ['assets/bt-job.js','runtime-gate-1'],
     ['assets/bt-bridge.js','20260911-bt-pipeline'],
-    ['assets/bt-direct-import.js','20260911-bt-pipeline'],
     ['assets/bt-native-primary.js','20260911-bt-pipeline']
   ];
   function already(path){
