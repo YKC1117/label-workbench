@@ -13,7 +13,7 @@ This acceptance path is intentionally separate from normal Linux CI because GitH
 - Code 128: `C128_FIVE_555`
 - Data Matrix: `DM_ONE_666`
 
-It also contains six independent Text objects (`TEXT_EDIT_001` through `TEXT_EDIT_006`) at deterministic positions on a 100 x 65 mm template. The verifier also rejects any extra visible donor Text object.
+It also contains six independent Text objects (`TEXT_EDIT_001` through `TEXT_EDIT_006`) at deterministic positions on a 100 x 65 mm template. The verifier rejects extra visible donor Text objects.
 
 Each successful QA run publishes an artifact named `bartender-2022-runtime-acceptance`.
 
@@ -21,12 +21,13 @@ The artifact is a portable acceptance kit containing:
 
 - `LabelWorkbench_Runtime_Acceptance.btw` — ready to open directly in BarTender 2022.
 - `RUN_BARTENDER_2022_ACCEPTANCE.cmd` — double-click launcher for automated runtime acceptance.
-- `tools/` — fixture generator, post-save verifier, and BarTender runtime PowerShell scripts.
+- `RUN_BARTENDER_2022_MANUAL_EDIT_VERIFY.cmd` — double-click verifier for the final Designer UI edit test.
+- `tools/` — fixture generator, post-save verifier, manual-edit verifier, and BarTender runtime PowerShell scripts.
 - `assets/` — only the BTW parser/generator modules required by the acceptance suite.
 - `SHA256SUMS.txt` — hashes for every packaged file.
 - `README.md` — this guide.
 
-If you only want to open the test BTW in BarTender manually, Node.js is not required. Node.js 22 or newer is required only for the automated open/save/reopen verification.
+If you only want to open the test BTW in BarTender manually, Node.js is not required. Node.js 22 or newer is required for the automated structural/runtime verifiers.
 
 ## Easiest automated Windows acceptance
 
@@ -68,15 +69,40 @@ powershell -ExecutionPolicy Bypass -File .\tools\verify-btw-runtime-suite.ps1 -P
 
 This adds a BarTender `/P /C=1 /PRNFILE=... /X` pass and requires a non-empty printer output file. It still depends on a usable printer driver being installed on that Windows machine.
 
-## Remaining manual UI acceptance
+## Final BarTender Designer UI acceptance
 
-Automated open/save/reopen and optional print-to-file validation cannot prove that a human can select every template object with the BarTender designer UI. Before calling the feature completely finished, perform one final UI check in BarTender 2022:
+The last step proves that a human can select and edit each native object independently inside BarTender Designer, then save and reopen the document.
 
-1. Open `LabelWorkbench_Runtime_Acceptance.btw`.
-2. Select one `TEXT_EDIT_00x` Text object and change its text.
-3. Select each of the five Code 128 objects and change each value independently.
-4. Select the Data Matrix object and change its value independently.
-5. Save, close, and reopen the BTW.
-6. Confirm every edit remains independent and no unused donor object appears on the normal 100 x 65 mm label canvas.
+Open `LabelWorkbench_Runtime_Acceptance.btw` in BarTender 2022 and make **exactly these seven edits**:
 
-Only after this manual designer check and the automated runtime report both pass should this acceptance layer be treated as complete.
+| Object | Original value | Change to |
+| --- | --- | --- |
+| Text | `TEXT_EDIT_001` | `TEXT_MANUAL_OK_001` |
+| Code 128 #1 | `C128_ONE_111` | `C128_OK_ONE_111` |
+| Code 128 #2 | `C128_TWO_222` | `C128_OK_TWO_222` |
+| Code 128 #3 | `C128_THREE_333` | `C128_OK_THREE_333` |
+| Code 128 #4 | `C128_FOUR_444` | `C128_OK_FOUR_444` |
+| Code 128 #5 | `C128_FIVE_555` | `C128_OK_FIVE_555` |
+| Data Matrix | `DM_ONE_666` | `DM_OK_ONE_666` |
+
+Do **not** change `TEXT_EDIT_002` through `TEXT_EDIT_006` or move any objects.
+
+Then:
+
+1. Save As `LabelWorkbench_Runtime_Acceptance_EDITED.btw` in the same folder as the kit.
+2. Close the document and reopen `LabelWorkbench_Runtime_Acceptance_EDITED.btw` in BarTender 2022.
+3. Confirm visually that the seven edits are still separate and no unused donor object appears on the normal 100 x 65 mm label canvas.
+4. Close BarTender.
+5. Double-click `RUN_BARTENDER_2022_MANUAL_EDIT_VERIFY.cmd`.
+
+The manual-edit verifier reparses the BarTender-saved BTW and requires:
+
+- exactly 6 visible Text objects;
+- exactly 5 independent Code 128 objects;
+- exactly 1 independent Data Matrix object;
+- the seven requested edited values;
+- unchanged object positions and 100 x 65 mm TemplateSize;
+- the original seven visible values to be gone;
+- BarTender 2022-compatible document headers to remain intact.
+
+Only after both the automated runtime acceptance and this manual Designer edit verification pass should this acceptance layer be treated as complete and merge-ready.
