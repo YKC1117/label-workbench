@@ -52,7 +52,7 @@ jobs:
           test -n "$expected"
           ready=0
           for i in $(seq 1 20); do
-            page="$(curl -fsSL --cache-control no-cache "https://ykc1117.github.io/label-workbench/?qa=${{ github.event.workflow_run.head_sha }}" || true)"
+            page="$(curl -fsSL -H "Cache-Control: no-cache" "https://ykc1117.github.io/label-workbench/?qa=${{ github.event.workflow_run.head_sha }}" || true)"
             if printf '%s' "$page" | grep -Fq "$expected"; then
               ready=1
               echo "Production is serving: $expected"
