@@ -6,7 +6,7 @@
  */
 (function(){
   'use strict';
-  const BUILD='20260912-btw-object-map-038-barcode-slot-mode';
+  const BUILD='20260918-btw-object-map-041-native-family-tags';
   const ROOT='Root.MasterSelectedObject.';
   const FONT_MARKER=new Uint8Array([0x03,0x02,0x01,0x22]);
   const PLACEHOLDER='(???) ???-????';
@@ -59,8 +59,22 @@
     return'object';
   }
   function barcodeTypeFor(owner,root,strings){
-    if(owner==='BcDatamatrixData')return'Data Matrix';if(owner==='BcC128Data')return'Code 128';if(owner==='BcUCCEAN128Data')return'GS1-128';if(owner==='BcPdf417Data')return'PDF417';if(owner==='BcITF14Data')return'ITF-14';
-    const texts=strings.map(e=>String(e.text||''));if(/\.Barcode$/i.test(root)&&texts.includes('TextTransforms'))return'Code 128';if(texts.includes('Screen Data')&&texts.some(x=>/Data ?Matrix/i.test(x)))return'Data Matrix';return'';
+    if(owner==='BcDatamatrixData')return'Data Matrix';
+    if(owner==='BcC128Data')return'Code 128';
+    if(owner==='BcUCCEAN128Data')return'GS1-128';
+    if(owner==='BcPdf417Data')return'PDF417';
+    if(owner==='BcITF14Data')return'ITF-14';
+    if(owner==='BcQrcodeData')return'QR Code';
+    if(owner==='BcC39RegularData')return'Code 39';
+    if(owner==='BcUPCAData')return'UPC-A';
+    if(owner==='BcUPCEData')return'UPC-E';
+    if(owner==='BcEAN13Data')return'EAN-13';
+    if(owner==='BcEAN8Data')return'EAN-8';
+    const texts=strings.map(e=>String(e.text||''));
+    if(/\.Barcode$/i.test(root)&&texts.includes('TextTransforms'))return'Code 128';
+    if(texts.includes('Screen Data')&&texts.some(x=>/Data ?Matrix/i.test(x)))return'Data Matrix';
+    if(texts.some(x=>/^QR\s*Code$/i.test(x)||/^QRCode$/i.test(x)))return'QR Code';
+    return'';
   }
   function simpleTextControlCandidate(strings,nameEntry){const after=strings.filter(e=>e.offset>(nameEntry?.offset??-1));const blocked=/^(?:\d+(?:\.\d+)?|Text \d+|Box Options|DataSource|Screen Data|GeneralDsPage|ValidationPage|PromptOptionsPage|Functions and Subs|OnProcessData|OnPostSerialize)$/i;const candidates=after.filter(e=>{const v=String(e.text||'').trim();return v&&v.length<=240&&!blocked.test(v)&&!/^Root\./.test(v)&&!/^<ErrorHandling>/.test(v)&&!/^\[[^\]]+\]\*$/.test(v)&&!/^0123456789/.test(v)&&!/^\(___\)/.test(v)&&!/^\(999\)/.test(v)&&!/^Sample Prompt$/i.test(v)});return candidates.at(-1)||null}
   function primaryValueEntry(strings,kind,root,nameEntry){if(kind!=='text')return null;let hit=null;const dense=strings.filter(e=>String(e.text??'')!=='');for(let i=0;i<dense.length-1;i++){if(dense[i].text!==PLACEHOLDER)continue;const n=dense[i+1];if(!n?.text||/^(?:Box Options|DataSource|Text \d+|文字範例)$/i.test(n.text))continue;hit=n}if(!hit&&/\.Text Control$/i.test(String(root||'')))hit=simpleTextControlCandidate(strings,nameEntry);return hit}
@@ -86,6 +100,7 @@
   function mapContainer(container){
     const F=window.LabelWorkbenchBtwFormat;if(!F?.scanUtf16Strings)throw new Error('BTW 格式解析器尚未載入');
     const data=u8(container),entries=F.scanUtf16Strings(data,{minLength:0,maxLength:10000,includeEmpty:true}),roots=entries.filter(e=>String(e.text||'').startsWith(ROOT)),tags=scanTags(data),objects=[];
+    const rootStarts=roots.map(r=>Math.max(0,r.offset-20));
     for(let i=0;i<roots.length;i++){
       const root=roots[i],recordStart=Math.max(0,root.offset-20),recordEnd=i+1<roots.length?Math.max(recordStart,roots[i+1].offset-20):Math.max(recordStart,nextTagOffset(tags,root.offset,data.length));
       const strings=entries.filter(e=>e.offset>=root.offset&&e.offset<recordEnd),nameEntry=strings.find((e,j)=>j>0&&e.text&&!String(e.text).startsWith(ROOT))||null,name=String(nameEntry?.text||'');
@@ -93,7 +108,49 @@
       const rootPath=String(root.text||''),owner=ownerFor(tags,recordStart),kind=kindFor(rootPath,name),valueEntry=primaryValueEntry(strings,kind,rootPath,nameEntry),font=fontInfo(data,recordStart,recordEnd),componentEntries=kind==='barcode'?barcodeComponentEntries(strings):[],components=componentEntries.map(x=>x.value),barcodeType=kind==='barcode'?barcodeTypeFor(owner,rootPath,strings):'';
       objects.push({id:`obj-${i+1}`,index:i,kind,name,owner,rootPath,recordStart,recordEnd,rootOffset:root.offset,xMil:x,yMil:y,xMm:milToMm(x),yMm:milToMm(y),value:valueEntry?.text||'',valueEntry:compactEntry(valueEntry),fontName:font?.name||'',fontSize:font?.size??null,fontSizeOffset:font?.sizeOffset??null,components,componentEntries,barcodeType,stringsCount:strings.length});
     }
-    const byName=new Map(objects.filter(o=>o.name).map(o=>[o.name,o]));for(const o of objects){if(o.kind!=='barcode')continue;o.resolvedComponents=o.components.map(part=>{const ref=byName.get(part);return ref?{type:'object',ref:part,value:ref.value||''}:{type:'literal',value:part}});o.resolvedPreview=o.resolvedComponents.map(x=>x.value).join('')}
+    // Some BarTender barcode records are introduced by a native Bc...Data tag
+    // without a new Root.MasterSelectedObject string. Create a synthetic object
+    // directly from the tag so those native symbologies are not silently lost.
+    for(const tag of tags){
+      if(!/^Bc[A-Za-z0-9]+Data$/.test(tag.type))continue;
+      const recordStart=tag.offset+6+tag.type.length;
+      if(objects.some(o=>o.kind==='barcode'&&o.owner===tag.type&&Math.abs(o.recordStart-recordStart)<=64))continue;
+      const nextRoot=rootStarts.find(v=>v>recordStart)??data.length;
+      const nextTag=tags.find(t=>t.offset>tag.offset)?.offset??data.length;
+      const recordEnd=Math.max(recordStart,Math.min(nextRoot,nextTag,data.length));
+      const strings=entries.filter(e=>e.offset>=recordStart&&e.offset<recordEnd);
+      const nameEntry=strings.find(e=>/^(?:條碼|Barcode)\s*\d*/i.test(String(e.text||'')))||strings.find(e=>String(e.text||'').trim())||null;
+      const name=String(nameEntry?.text||`Barcode ${objects.length+1}`);
+      let x=null,y=null;
+      if(recordStart+8<=data.length){const a=readI32(data,recordStart),b=readI32(data,recordStart+4);if(Math.abs(a)<1000000&&Math.abs(b)<1000000){x=a;y=b}}
+      const rootEntry=strings.find(e=>String(e.text||'').startsWith(ROOT))||null,rootPath=String(rootEntry?.text||'');
+      const font=fontInfo(data,recordStart,recordEnd),componentEntries=barcodeComponentEntries(strings),components=componentEntries.map(x=>x.value);
+      objects.push({
+        id:`obj-${objects.length+1}`,index:objects.length,kind:'barcode',name,owner:tag.type,rootPath,
+        recordStart,recordEnd,rootOffset:rootEntry?.offset??null,
+        xMil:x,yMil:y,xMm:milToMm(x),yMm:milToMm(y),
+        value:'',valueEntry:null,fontName:font?.name||'',fontSize:font?.size??null,fontSizeOffset:font?.sizeOffset??null,
+        components,componentEntries,barcodeType:barcodeTypeFor(tag.type,rootPath,strings),stringsCount:strings.length,syntheticFromTag:true
+      });
+    }
+
+    const byName=new Map(objects.filter(o=>o.name).map(o=>[o.name,o]));
+    for(const o of objects){
+      if(o.kind!=='barcode')continue;
+      const strings=entries.filter(e=>e.offset>=o.recordStart&&e.offset<o.recordEnd);
+      const linkedRefs=[];
+      for(const e of strings){
+        const v=String(e.text||'').trim(),ref=byName.get(v);
+        if(!v||!ref||ref===o||ref.kind!=='text'||linkedRefs.some(x=>x.ref===v))continue;
+        linkedRefs.push({type:'object',ref:v,index:ref.index,value:ref.value||''});
+      }
+      o.linkedDataSourceRefs=linkedRefs;
+      o.resolvedComponents=o.components.length
+        ? o.components.map(part=>{const ref=byName.get(part);return ref?{type:'object',ref:part,index:ref.index,value:ref.value||''}:{type:'literal',value:part}})
+        : linkedRefs;
+      o.resolvedPreview=o.resolvedComponents.map(x=>x.value).join('');
+    }
+    objects.forEach((o,i)=>{o.index=i;o.id=`obj-${i+1}`});
     return{BUILD,byteLength:data.length,strings:entries.length,objects};
   }
   function resolveObject(map,edit){if(Number.isInteger(edit?.index))return map.objects.find(o=>o.index===edit.index)||null;if(edit?.id)return map.objects.find(o=>o.id===edit.id)||null;if(edit?.name)return map.objects.find(o=>o.name===edit.name)||null;if(edit?.valueMatch)return map.objects.find(o=>o.value===edit.valueMatch)||null;return null}
