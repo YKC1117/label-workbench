@@ -6,7 +6,7 @@
 (function(){
   'use strict';
 
-  const BUILD='20260918-v181-render-api';
+  const BUILD='20260918-v182-generic-object-model';
   const PDF_SRC='https://cdn.jsdelivr.net/npm/pdfjs-dist@6.3.289/build/pdf.min.mjs';
   const PDF_WORKER='https://cdn.jsdelivr.net/npm/pdfjs-dist@6.3.289/build/pdf.worker.min.mjs';
   const TESS_SRC='https://cdn.jsdelivr.net/npm/tesseract.js@7.0.0/dist/tesseract.min.js';
@@ -108,8 +108,12 @@
 
   function scoreText(text){const t=String(text||'').toUpperCase(),words=['PART NO','PART NUMBER','LOT NO','QTY','QUANTITY','DATE','ASSY','SHAPE','MLOT','BIN','MC','VC','P1','P2','GP','SERIAL','S/N','MODEL'];let s=Math.min(70,t.replace(/\s/g,'').length/4);words.forEach(w=>{if(t.includes(w))s+=24});s+=(t.match(/\([0-9A-Z]{1,5}\)/g)||[]).length*7;s+=Math.min(36,(t.match(/[:：]/g)||[]).length*4);return s}
 
+  function flatWord(word,lineConfidence=0){
+    const box=word?.bbox||word?.boundingBox||{},x0=Number(box.x0??box.left??0),y0=Number(box.y0??box.top??0),x1=Number(box.x1??((box.left||0)+(box.width||0))),y1=Number(box.y1??((box.top||0)+(box.height||0))),text=String(word?.text||'').trim();
+    return text?{text,confidence:Number(word?.confidence??lineConfidence??0),x0,y0,x1,y1,w:Math.max(1,x1-x0),h:Math.max(1,y1-y0)}:null
+  }
   function flattenLines(blocks){
-    const out=[];for(const b of blocks||[])for(const p of b.paragraphs||[])for(const l of p.lines||[]){const box=l.bbox||l.boundingBox||{};const x0=Number(box.x0??box.left??0),y0=Number(box.y0??box.top??0),x1=Number(box.x1??((box.left||0)+(box.width||0))),y1=Number(box.y1??((box.top||0)+(box.height||0)));const text=String(l.text||'').trim();if(text)out.push({text,confidence:Number(l.confidence||0),x0,y0,x1,y1,w:Math.max(1,x1-x0),h:Math.max(1,y1-y0)})}
+    const out=[];for(const b of blocks||[])for(const p of b.paragraphs||[])for(const l of p.lines||[]){const box=l.bbox||l.boundingBox||{};const x0=Number(box.x0??box.left??0),y0=Number(box.y0??box.top??0),x1=Number(box.x1??((box.left||0)+(box.width||0))),y1=Number(box.y1??((box.top||0)+(box.height||0)));const text=String(l.text||'').trim(),confidence=Number(l.confidence||0),words=(l.words||[]).map(w=>flatWord(w,confidence)).filter(Boolean);if(text)out.push({text,confidence,x0,y0,x1,y1,w:Math.max(1,x1-x0),h:Math.max(1,y1-y0),words})}
     return out.sort((a,b)=>Math.abs(a.y0-b.y0)<Math.max(a.h,b.h)*.45?a.x0-b.x0:a.y0-b.y0);
   }
 
@@ -186,6 +190,78 @@
     const seen=new Set();return out.filter(f=>{const k=`${norm(f.code)||norm(f.name)}|${norm(f.value)}`;if(seen.has(k))return false;seen.add(k);return true});
   }
 
+  const textNorm=v=>String(v??'').toUpperCase().replace(/[^A-Z0-9\u3400-\u9FFF]/g,'');
+  const clamp01=v=>Math.max(0,Math.min(1,Number(v)||0));
+  function unionBox(items){
+    const x0=Math.min(...items.map(x=>x.x0)),y0=Math.min(...items.map(x=>x.y0)),x1=Math.max(...items.map(x=>x.x1)),y1=Math.max(...items.map(x=>x.y1));
+    return{x0,y0,x1,y1,w:Math.max(1,x1-x0),h:Math.max(1,y1-y0)}
+  }
+  function lineSegments(line){
+    const words=(line?.words||[]).filter(w=>w?.text);
+    if(words.length<2)return[{text:cleanLine(line?.text),confidence:Number(line?.confidence||0),x0:line.x0,y0:line.y0,x1:line.x1,y1:line.y1,w:line.w,h:line.h}].filter(x=>x.text);
+    const hs=words.map(w=>w.h).sort((a,b)=>a-b),medianH=hs[Math.floor(hs.length/2)]||line.h||12,groups=[];let group=[];
+    for(const word of words){
+      const prev=group[group.length-1],gap=prev?word.x0-prev.x1:0;
+      if(prev&&gap>Math.max(8,medianH*.9)){groups.push(group);group=[]}
+      group.push(word)
+    }
+    if(group.length)groups.push(group);
+    return groups.map(g=>{const b=unionBox(g);return{text:cleanLine(g.map(x=>x.text).join(' ')),confidence:Math.min(...g.map(x=>Number(x.confidence||0))),...b}}).filter(x=>x.text)
+  }
+  function genericTextObjects(passes,width,height){
+    const candidates=[];
+    for(const pass of (passes||[]).slice(0,3))for(const line of pass?.lines||[])for(const seg of lineSegments(line)){
+      const text=cleanLine(seg.text),key=textNorm(text);if(!key||text.length>180)continue;
+      candidates.push({text,key,confidence:Number(seg.confidence||0),sourceBox:{x:clamp01(seg.x0/width),y:clamp01(seg.y0/height),w:clamp01(seg.w/width),h:clamp01(seg.h/height)}})
+    }
+    const groups=[];
+    for(const c of candidates){
+      const cx=c.sourceBox.x+c.sourceBox.w/2,cy=c.sourceBox.y+c.sourceBox.h/2;
+      let g=groups.find(x=>x.key===c.key&&Math.abs(x.cx-cx)<.035&&Math.abs(x.cy-cy)<.035);
+      if(!g){g={key:c.key,cx,cy,rows:[]};groups.push(g)}
+      g.rows.push(c)
+    }
+    return groups.map(g=>{
+      const rows=g.rows.sort((a,b)=>b.confidence-a.confidence),best=rows[0],confidence=best.confidence,repeat=rows.length;
+      return{text:best.text,sourceBox:{...best.sourceBox,confidence},confidence,repeat,generic:true}
+    }).filter(x=>x.repeat>=2||x.confidence>=68).sort((a,b)=>Math.abs(a.sourceBox.y-b.sourceBox.y)<.012?a.sourceBox.x-b.sourceBox.x:a.sourceBox.y-b.sourceBox.y)
+  }
+  function likelyCaption(v){
+    const s=cleanLine(v),n=textNorm(s);if(!n||s.length>42)return false;
+    const digit=(n.match(/[0-9]/g)||[]).length,letters=(n.match(/[A-Z\u3400-\u9FFF]/g)||[]).length;
+    return letters>=1&&digit<=Math.max(3,letters)
+  }
+  function genericFieldsFromTextObjects(objects){
+    const out=[],used=new Set();
+    for(let i=0;i<objects.length;i++){
+      const o=objects[i],m=String(o.text||'').match(/^(.{1,42}?)[：:=]\s*(.{1,120})$/);
+      if(m&&likelyCaption(m[1])&&textNorm(m[2])){out.push({code:'',name:cleanLine(m[1]),value:cleanValue(m[2]),spatial:true,generic:true,repeat:o.repeat||1,conflict:false,alternatives:[],sourceBox:{...o.sourceBox}});used.add(i)}
+    }
+    for(let i=0;i<objects.length;i++){
+      if(used.has(i)||!likelyCaption(objects[i]?.text))continue;
+      const a=objects[i],ab=a.sourceBox||{};let best=-1,bestScore=Infinity;
+      for(let j=0;j<objects.length;j++){
+        if(i===j||used.has(j))continue;const b=objects[j],bb=b.sourceBox||{},value=cleanValue(b.text);if(!textNorm(value)||value.length>120)continue;
+        const ay0=ab.y,ay1=ab.y+ab.h,by0=bb.y,by1=bb.y+bb.h,overlap=Math.max(0,Math.min(ay1,by1)-Math.max(ay0,by0))/Math.max(.0001,Math.min(ab.h,bb.h));
+        const right=overlap>.35&&bb.x>=ab.x+ab.w*.75&&bb.x-(ab.x+ab.w)<.28;
+        const below=bb.y>=ab.y+ab.h*.45&&bb.y-(ab.y+ab.h)<.10&&Math.abs((bb.x+bb.w/2)-(ab.x+ab.w/2))<Math.max(.06,ab.w*.7);
+        if(!right&&!below)continue;
+        const score=(right?0:.35)+Math.max(0,bb.x-(ab.x+ab.w))+Math.abs(bb.y-ab.y)*1.8;
+        if(score<bestScore){bestScore=score;best=j}
+      }
+      if(best>=0){
+        const b=objects[best];out.push({code:'',name:cleanLine(a.text),value:cleanValue(b.text),spatial:true,generic:true,repeat:Math.min(a.repeat||1,b.repeat||1),conflict:false,alternatives:[],sourceBox:{...b.sourceBox}});
+        used.add(i);used.add(best)
+      }
+    }
+    const seen=new Set();return out.filter(f=>{const k=`${textNorm(f.name)}|${textNorm(f.value)}`;if(!textNorm(f.value)||seen.has(k))return false;seen.add(k);return true})
+  }
+  function mergeGenericFields(known,generic){
+    const out=[...(known||[])],seenValue=new Set(out.map(f=>textNorm(f.value))),seenPair=new Set(out.map(f=>`${textNorm(f.name)}|${textNorm(f.value)}`));
+    for(const f of generic||[]){const pair=`${textNorm(f.name)}|${textNorm(f.value)}`;if(seenPair.has(pair)||seenValue.has(textNorm(f.value)))continue;out.push(f);seenPair.add(pair);seenValue.add(textNorm(f.value))}
+    return out
+  }
+
   function fieldKey(f){return norm(f.code)||norm(f.name)}
   function passFields(pass){const fromText=parseFields(pass.text),fromLines=parseFields((pass.lines||[]).map(x=>x.text).join('\n')),fromSpatial=spatialFields(pass.lines||[]);return[...fromText,...fromLines,...fromSpatial]}
 
@@ -213,16 +289,17 @@
     passes.push(await recognize(worker,gray,'6',true));
     passes.push(await recognize(worker,gray,'11',true));
     passes.push(await recognize(worker,bw,'6',true));
-    let fields=aggregateFields(passes);
+    const textObjects=genericTextObjects(passes,region.width,region.height);
+    let fields=mergeGenericFields(aggregateFields(passes),genericFieldsFromTextObjects(textObjects));
     if(fields.length<7||fields.some(f=>f.conflict)){
-      const tiles=makeTiles(region);for(let i=0;i<tiles.length;i++){onProgress?.(`正在補讀細小區域… ${i+1}/${tiles.length}`);passes.push(await recognize(worker,tiles[i],'11',true))}fields=aggregateFields(passes);
+      const tiles=makeTiles(region);for(let i=0;i<tiles.length;i++){onProgress?.(`正在補讀細小區域… ${i+1}/${tiles.length}`);passes.push(await recognize(worker,tiles[i],'11',true))}fields=mergeGenericFields(aggregateFields(passes),genericFieldsFromTextObjects(textObjects));
     }
-    return{fields,passes};
+    return{fields,passes,textObjects};
   }
 
   async function processCanvas(canvas,sourceName,pageNo,worker,labels,onProgress){
     const best=await chooseOrientation(worker,canvas,onProgress),bands=detectLabelBands(best.canvas);onProgress?.(`找到 ${bands.length} 個標籤區域，正在逐張整理…`);
-    for(let i=0;i<bands.length;i++){const b=bands[i],region=crop(best.canvas,b.x,b.y,b.w,b.h),read=await readRegionFields(worker,region,onProgress),barcodes=await scanRegionDeep(region,labels.length+1,onProgress),allText=read.passes.map(p=>p.text).join('\n'),marks=detectMarks(allText);labels.push({sourceName,page:pageNo,index:i+1,rotation:best.deg,fields:read.fields,barcodes,marks})}
+    for(let i=0;i<bands.length;i++){const b=bands[i],region=crop(best.canvas,b.x,b.y,b.w,b.h),read=await readRegionFields(worker,region,onProgress),barcodes=await scanRegionDeep(region,labels.length+1,onProgress),allText=read.passes.map(p=>p.text).join('\n'),marks=detectMarks(allText);labels.push({sourceName,page:pageNo,index:i+1,rotation:best.deg,fields:read.fields,textObjects:read.textObjects||[],barcodes,marks})}
   }
 
   async function interpretPdf(file,onProgress,sharedWorker){const pdfjs=await loadPdf(),pdf=await pdfjs.getDocument({data:new Uint8Array(await file.arrayBuffer())}).promise,pageLimit=Math.min(pdf.numPages,3),labels=[],own=!sharedWorker,worker=sharedWorker||await createWorker(onProgress);try{for(let p=1;p<=pageLimit;p++){onProgress?.(`正在讀取 ${file.name} 第 ${p}/${pageLimit} 頁…`);const page=await pdf.getPage(p),canvas=await renderPage(page);await processCanvas(canvas,file.name,p,worker,labels,onProgress)}}finally{if(own)try{await worker.terminate()}catch{}}return{pdfPages:pdf.numPages,labels}}
@@ -257,5 +334,5 @@
     return result
   }
 
-  window.LabelWorkbenchInterpreter={BUILD,scoreText,parseFields,spatialFields,aggregateFields,detectLabelBands,rotateCanvas,interpretPdf,interpretImage,interpretFiles,productionText,questionsText,renderInterpretation,renderResult,analyze};
+  window.LabelWorkbenchInterpreter={BUILD,scoreText,parseFields,spatialFields,aggregateFields,genericTextObjects,genericFieldsFromTextObjects,mergeGenericFields,lineSegments,detectLabelBands,rotateCanvas,interpretPdf,interpretImage,interpretFiles,productionText,questionsText,renderInterpretation,renderResult,analyze};
 })();

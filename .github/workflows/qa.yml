@@ -35,6 +35,8 @@ jobs:
           node --check tests/analysis-copy-smoke.cjs
           node --check tests/analysis-entry-smoke.cjs
           node --check tests/analysis-core-v2-smoke.cjs
+          node --check tests/generic-label-model-smoke.cjs
+          node --check tests/generic-textobjects-btw-smoke.cjs
           node --check tests/analysis-to-btw-e2e-smoke.cjs
           node --check tests/analysis-barcode-crosscheck-smoke.cjs
           node --check tests/second-donor-pool-smoke.cjs
@@ -66,15 +68,18 @@ jobs:
       - name: Current wiring sanity check
         run: |
           grep -q 'assets/analysis-entry.js?v=20260918-v146' index.html
-          grep -q 'assets/barcode-reader.js?v=20260918-v384' index.html
-          grep -q '標籤製作工作台 · v1.9.48' index.html
-          grep -q '更新：2026/09/18 10:16' index.html
+          grep -q 'assets/barcode-reader.js?v=20260918-v385' index.html
+          grep -q '標籤製作工作台 · v1.9.49' index.html
+          grep -q '更新：2026/09/18 10:28' index.html
           grep -q 'assets/analysis-race-guard.js?v=20260914-v139' index.html
           grep -q "BUILD='20260918-analysis-entry-146-core-v2'" assets/analysis-entry.js
           grep -q "dataset.priorityBound='true'" assets/analysis-entry.js
           grep -q "BUILD='20260918-view-guard-145-index-owned-version'" assets/view-state-guard.js
           ! grep -q "marker.innerHTML='標籤製作工作台" assets/view-state-guard.js
-          grep -q "BUILD='20260918-v384-btw-production-core'" assets/barcode-reader.js
+          grep -q "BUILD='20260918-v385-generic-label-model'" assets/barcode-reader.js
+          grep -q "BUILD='20260918-v182-generic-object-model'" assets/label-interpreter.js
+          grep -q "BUILD='20260918-btw-production-gate-110-textobjects'" assets/btw-production-gate.js
+          grep -q "BUILD='20260918-btw-second-native-110-textobjects'" assets/btw-second-native.js
           grep -q 'analysis-core-v2.js' assets/barcode-reader.js
           grep -q "BUILD='20260918-analysis-core-v2-200'" assets/analysis-core-v2.js
           grep -q 'LabelWorkbenchModuleLoader={BUILD,ready:true}' assets/barcode-reader.js
@@ -121,6 +126,10 @@ jobs:
         run: node tests/analysis-entry-smoke.cjs
       - name: Deterministic Quick Analysis core v2 regression tests
         run: node tests/analysis-core-v2-smoke.cjs
+      - name: Arbitrary-customer generic label object model
+        run: node tests/generic-label-model-smoke.cjs
+      - name: Arbitrary-customer textObjects to editable BTW round trip
+        run: node tests/generic-textobjects-btw-smoke.cjs
       - name: Analysis to BarTender BTW end-to-end integrity gate
         run: node tests/analysis-to-btw-e2e-smoke.cjs
       - name: Barcode cross-check regression tests

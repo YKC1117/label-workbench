@@ -6,7 +6,7 @@
  */
 (function(){
   'use strict';
-  const BUILD='20260911-btw-rich-140-rich-header-size';
+  const BUILD='20260918-btw-rich-150-textobjects';
   const SEED_FUNCTION='btw-seed';
   const OFF=50000;
   const MAX_TEXT=29;
@@ -21,6 +21,7 @@
   const safeFile=v=>String(v||'Label').replace(/[\\/:*?"<>|]+/g,'_').replace(/\s+/g,'_').replace(/^_+|_+$/g,'').slice(0,70)||'Label';
   const normalizeFormat=v=>String(v||'').toLowerCase().replace(/[^a-z0-9]/g,'');
   const barcodeText=b=>String(b?.text??b?.value??'').trim();
+  const textValue=v=>String(v?.text??v?.value??'').trim();
   const isDm=b=>/datamatrix/.test(normalizeFormat(b?.format));
   const isC128=b=>/code128|c128/.test(normalizeFormat(b?.format));
   const outputName=(label,index=0)=>`BT_Editable_${safeFile(String(label?.sourceName||'Label').replace(/\.[^.]+$/,''))}_L${String(index+1).padStart(2,'0')}.btw`;
@@ -31,7 +32,11 @@
     if(!base||!String(cfg.key||'').startsWith('sb_publishable_'))throw new Error('BTW rich donor 連線設定未載入');
     return{url:`${base}/functions/v1/${SEED_FUNCTION}?seed=${encodeURIComponent(seedKey)}`,key:String(cfg.key)}
   }
-  function nonEmptyFields(label){return(label?.fields||[]).filter(f=>String(f?.value??'').trim())}
+  function nonEmptyFields(label){
+    const objects=(label?.textObjects||[]).filter(o=>textValue(o));
+    if(objects.length)return objects;
+    return(label?.fields||[]).filter(f=>textValue(f))
+  }
   function unsupportedBarcodes(label){return(label?.barcodes||[]).filter(b=>barcodeText(b)&&!isDm(b)&&!isC128(b))}
   function selectPlan(label){
     const fields=nonEmptyFields(label),rows=(label?.barcodes||[]).filter(b=>barcodeText(b)),dm=rows.filter(isDm),c128=rows.filter(isC128);
@@ -182,7 +187,7 @@
     const edits=new Map();for(const o of before.objects)edits.set(o.index,{index:o.index,xMil:OFF,yMil:OFF});
     const expectedText=[];
     plan.fields.forEach((field,i)=>{
-      const obj=texts[i],layout=sourceLayout(field?.sourceBox,target),pos=layout?.mil?{xMil:layout.mil.x,yMil:layout.mil.y}:fallbackTextPos(i,plan.fields.length,target),value=String(field?.value??'').trim();
+      const obj=texts[i],layout=sourceLayout(field?.sourceBox,target),pos=layout?.mil?{xMil:layout.mil.x,yMil:layout.mil.y}:fallbackTextPos(i,plan.fields.length,target),value=textValue(field);
       edits.set(obj.index,{index:obj.index,value,...pos});expectedText.push({index:obj.index,value,...pos})
     });
 
@@ -207,7 +212,7 @@
     for(const e of expectedBarcode){const o=after.objects.find(x=>x.index===e.index);if(!o||o.components.join('')!==e.value||o.xMil!==e.xMil||o.yMil!==e.yMil)throw new Error(`rich ${e.type} 驗證失敗：${e.index}`)}
     const active=new Set([...expectedText.map(x=>x.index),...expectedBarcode.map(x=>x.index)]),leaks=after.objects.filter(o=>!active.has(o.index)&&(o.xMil!==OFF||o.yMil!==OFF));
     if(leaks.length)throw new Error(`rich donor 清場驗證失敗：${leaks.length} 個物件仍在畫布`);
-    return{name:outputName(label,index),bytes:rebuilt,kind:plan.kind,summary:plan.fields.map(f=>String(f.value??'')).join('\r'),barcodeValue:expectedBarcode[0]?.value||'',barcodes:{dataMatrix:plan.dm.map(barcodeText),code128:plan.c128.map(barcodeText)},layout:{target,donorTarget,fields:expectedText,barcodes:expectedBarcode,sizeMutation:{changed:sizeMutation.changed,count:sizeMutation.offsets.length,from:sizeMutation.from,to:sizeMutation.to}},header:check.header,seed:plan.seedId,seedKey:plan.seedKey,rich:true,editableTextCount:expectedText.length}
+    return{name:outputName(label,index),bytes:rebuilt,kind:plan.kind,summary:plan.fields.map(textValue).join('\r'),barcodeValue:expectedBarcode[0]?.value||'',barcodes:{dataMatrix:plan.dm.map(barcodeText),code128:plan.c128.map(barcodeText)},layout:{target,donorTarget,fields:expectedText,barcodes:expectedBarcode,sizeMutation:{changed:sizeMutation.changed,count:sizeMutation.offsets.length,from:sizeMutation.from,to:sizeMutation.to}},header:check.header,seed:plan.seedId,seedKey:plan.seedKey,rich:true,editableTextCount:expectedText.length}
   }
 
   window.LabelWorkbenchBtwRichNative={BUILD,OFF,MAX_TEXT,seeds,selectPlan,canGenerate,fetchSeed,splitOfficialBtw,rebuildOfficialBtw,formatMm,replaceRichTemplateSizePrefix,templateSizeMm,sourceTargetSize,mmToMil,findTemplateSizePairs,replaceTemplateSizePairs,sameMappedObjects,reusableText,generateOne};

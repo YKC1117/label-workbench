@@ -6,7 +6,7 @@
 (function(){
   'use strict';
 
-  const BUILD='20260911-btwn230-root-layout';
+  const BUILD='20260918-btwn231-textobjects';
   const SEED_ID='CEA-2022-R5';
   const SEED_FUNCTION='btw-seed';
   const JSZIP_SRC='https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js';
@@ -33,7 +33,10 @@
   function unsupportedBarcodes(label){return(label?.barcodes||[]).filter(b=>barcodeText(b)&&!isDm(b)&&!isC128(b))}
   function fieldLabel(f){return`${f?.code?`(${f.code}) `:''}${String(f?.name||'FIELD').trim()}`}
   function fieldSummary(label){
-    const lines=(label?.fields||[]).filter(f=>String(f?.value??'').trim()).slice(0,28).map(f=>`${fieldLabel(f)}: ${String(f.value).trim()}`);
+    const objects=(label?.textObjects||[]).filter(o=>String(o?.text??'').trim());
+    const lines=objects.length
+      ? objects.slice(0,28).map(o=>String(o.text).trim())
+      : (label?.fields||[]).filter(f=>String(f?.value??'').trim()).slice(0,28).map(f=>`${fieldLabel(f)}: ${String(f.value).trim()}`);
     if(!lines.length)lines.push('Label Workbench');
     return lines.join('\r').slice(0,4200);
   }
