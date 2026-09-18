@@ -6,7 +6,7 @@
  */
 (function(){
   'use strict';
-  const BUILD='20260918-btw-object-map-043-textcontrol-numeric';
+  const BUILD='20260918-btw-object-map-044-itf-i25';
   const ROOT='Root.MasterSelectedObject.';
   const FONT_MARKER=new Uint8Array([0x03,0x02,0x01,0x22]);
   const PLACEHOLDER='(???) ???-????';
