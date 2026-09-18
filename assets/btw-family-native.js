@@ -179,14 +179,7 @@
     }
     for(const e of expectedText){
       const o=remap.objects.find(x=>x.kind==='text'&&x.value===e.value&&x.xMil===e.xMil&&x.yMil===e.yMil);
-      if(!o){
-        const sameValue=remap.objects.filter(x=>x.kind==='text'&&x.value===e.value).map(x=>({name:x.name,index:x.index,xMil:x.xMil,yMil:x.yMil}));
-        const samePosObjects=remap.objects.filter(x=>x.kind==='text'&&x.xMil===e.xMil&&x.yMil===e.yMil);
-        const samePos=samePosObjects.map(x=>({name:x.name,index:x.index,value:x.value,recordStart:x.recordStart,recordEnd:x.recordEnd}));
-        const entries=F.scanUtf16Strings(round,{minLength:0,maxLength:10000,includeEmpty:true});
-        const recordStrings=samePosObjects.flatMap(o=>entries.filter(x=>x.offset>=o.rootOffset&&x.offset<o.recordEnd).map(x=>x.text)).slice(0,80);
-        throw new Error(`${P.profile.barcodeType} 文字 round-trip 驗證失敗：${e.value}｜expected=${e.xMil},${e.yMil}｜sameValue=${JSON.stringify(sameValue)}｜samePos=${JSON.stringify(samePos)}｜recordStrings=${JSON.stringify(recordStrings)}`)
-      }
+      if(!o)throw new Error(`${P.profile.barcodeType} 文字 round-trip 驗證失敗：${e.value}`)
     }
     if(target.source){
       const tag=`<TemplateSize>${String(Math.round(target.width*100)/100).replace(/\.0+$/,'')} x ${String(Math.round(target.height*100)/100).replace(/\.0+$/,'')} mm</TemplateSize>`;
