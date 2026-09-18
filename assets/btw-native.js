@@ -130,15 +130,22 @@
     if(!base||!String(cfg.key||'').startsWith('sb_publishable_'))throw new Error('BTW 官方種子連線設定未載入');
     return{url:`${base}/functions/v1/${SEED_FUNCTION}`,key:String(cfg.key)};
   }
+  const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
   async function fetchSeed(){
     if(seedPromise)return seedPromise;
     seedPromise=(async()=>{
-      const ep=seedEndpoint(),r=await fetch(ep.url,{cache:'force-cache',headers:{apikey:ep.key}});
-      if(!r.ok)throw new Error(`無法取得官方 BarTender 2022 種子 (${r.status})`);
-      if(r.headers.get('x-label-workbench-seed')!==SEED_ID)throw new Error('BTW 官方種子版本驗證失敗');
-      const bytes=await r.arrayBuffer(),head=new TextDecoder('latin1').decode(new Uint8Array(bytes).slice(0,900)).replace(/\0/g,'');
-      if(!/Bar Tender Format File/.test(head)||!/Application:\s*Version=2022 R5/.test(head)||!/Document:\s*CompatibleVersion=2022/.test(head))throw new Error('BTW 官方種子不是已驗證的 2022 R5 格式');
-      return bytes;
+      const ep=seedEndpoint();let last=null;
+      for(let attempt=1;attempt<=3;attempt++){
+        try{
+          const r=await fetch(ep.url,{cache:attempt===1?'force-cache':'no-store',headers:{apikey:ep.key}});
+          if(!r.ok)throw new Error(`無法取得官方 BarTender 2022 種子 (${r.status})`);
+          if(r.headers.get('x-label-workbench-seed')!==SEED_ID)throw new Error('BTW 官方種子版本驗證失敗');
+          const bytes=await r.arrayBuffer(),head=new TextDecoder('latin1').decode(new Uint8Array(bytes).slice(0,900)).replace(/\0/g,'');
+          if(!/Bar Tender Format File/.test(head)||!/Application:\s*Version=2022 R5/.test(head)||!/Document:\s*CompatibleVersion=2022/.test(head))throw new Error('BTW 官方種子不是已驗證的 2022 R5 格式');
+          return bytes;
+        }catch(err){last=err;if(attempt<3)await sleep(250*attempt)}
+      }
+      throw last||new Error('無法取得官方 BarTender 2022 種子');
     })().catch(err=>{seedPromise=null;throw err});
     return seedPromise;
   }
