@@ -47,3 +47,39 @@ function around(text,needle,span=500){
     }
   }
 })().catch(e=>{console.error(e);process.exit(1)});
+
+
+async function discoverByLibraryPages(){
+  const indexUrl='https://www.bartendersoftware.com/resources/library/template-library';
+  const html=await (await fetch(indexUrl,{redirect:'follow',headers:{'user-agent':'Mozilla/5.0 LabelWorkbenchLibraryCatalogProbe/1.0'}})).text();
+  const hrefs=[...new Set([...html.matchAll(/href=["']([^"']*\/resources\/library\/[^"'?#]+)[^"']*["']/gi)]
+    .map(m=>new URL(m[1],indexUrl).href)
+    .filter(u=>!/\/template-library\/?$/i.test(u)))];
+  console.log('CATALOG_LINK_COUNT',hrefs.length);
+
+  const targets=[];
+  let cursor=0;
+  async function worker(){
+    while(cursor<hrefs.length){
+      const i=cursor++,url=hrefs[i];
+      try{
+        const r=await fetch(url,{redirect:'follow',headers:{'user-agent':'Mozilla/5.0 LabelWorkbenchLibraryCatalogProbe/1.0'}});
+        const page=await r.text();
+        const plain=page.replace(/<script[\s\S]*?<\/script>/gi,' ').replace(/<style[\s\S]*?<\/style>/gi,' ').replace(/<[^>]+>/g,' ').replace(/&nbsp;|&#160;/gi,' ').replace(/&amp;/gi,'&').replace(/\s+/g,' ');
+        const hitEan=/\bEAN[\s\-_]?8\b/i.test(plain),hitUpce=/\bUPC[\s\-_]?E\b/i.test(plain);
+        if(!hitEan&&!hitUpce)continue;
+        const ids=[...new Set([
+          ...[...page.matchAll(/download-resource\?resourceId=(\d{4,8})/gi)].map(m=>m[1]),
+          ...[...page.matchAll(/(?:resourceId|resource_id|resource-id)[^0-9]{0,30}(\d{4,8})/gi)].map(m=>m[1])
+        ])];
+        const title=(/<title[^>]*>([\s\S]*?)<\/title>/i.exec(page)||[])[1]?.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim()||'';
+        const row={url,title,ean8:hitEan,upce:hitUpce,ids};
+        console.log('CATALOG_TARGET',JSON.stringify(row));
+        targets.push(row);
+      }catch(e){console.log('CATALOG_PAGE_FAIL',url,String(e?.message||e))}
+    }
+  }
+  await Promise.all(Array.from({length:10},worker));
+  console.log('CATALOG_TARGETS',JSON.stringify(targets,null,2));
+}
+discoverByLibraryPages().catch(e=>{console.error('CATALOG_DISCOVERY_FAIL',e);process.exitCode=1});
