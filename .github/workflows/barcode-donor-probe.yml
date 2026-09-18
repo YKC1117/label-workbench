@@ -1,0 +1,21 @@
+name: Barcode Donor Probe
+
+on:
+  push:
+    branches:
+      - feat/native-barcode-families-v1950
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Probe official barcode donor sources
+        run: node tools/probe-official-barcode-donors.cjs
