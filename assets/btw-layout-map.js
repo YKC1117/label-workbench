@@ -5,7 +5,7 @@
  */
 (function(){
   'use strict';
-  const BUILD='20260911-btw-layout-map-100';
+  const BUILD='20260918-btw-layout-map-110-font-size';
   const CEA_MM={width:76.2,height:50.8};
   const clamp=(v,a,b)=>Math.max(a,Math.min(b,Number(v)||0));
   const mmToMil=v=>Math.round(Number(v)/0.0254);
@@ -21,6 +21,13 @@
     const mm={x:round2(b.x*width),y:round2(b.y*height),w:round2(b.w*width),h:round2(b.h*height)};
     return{normalized:b,mm,mil:{x:mmToMil(mm.x),y:mmToMil(mm.y),w:mmToMil(mm.w),h:mmToMil(mm.h)}}
   }
+  function boxFontSizePt(box,target=CEA_MM,{factor=.95,min=4,max=144}={}){
+    const b=cleanBox(box);if(!b)return null;
+    const height=Number(target?.height)||CEA_MM.height,heightMm=b.h*height;
+    if(!(heightMm>0))return null;
+    const pt=heightMm*72/25.4*Number(factor||1);
+    return Math.round(clamp(pt,min,max)*10)/10
+  }
   function fieldKey(f){return String(f?.code||f?.name||'').trim()}
   function barcodeValue(b){return String(b?.text??b?.value??'')}
   function barcodeType(b){const f=String(b?.format||'').toLowerCase().replace(/[^a-z0-9]/g,'');if(f.includes('datamatrix'))return'Data Matrix';if(f.includes('code128')||f==='c128')return'Code 128';return String(b?.format||'')}
@@ -29,5 +36,5 @@
     const locatedFields=fields.filter(x=>x.layout).length,locatedBarcodes=barcodes.filter(x=>x.layout).length,total=fields.length+barcodes.length,located=locatedFields+locatedBarcodes;
     return{BUILD,target:{width:Number(target.width),height:Number(target.height)},sourcePhysical:physical,fields,barcodes,coverage:{located,total,ratio:total?Math.round(located/total*1000)/1000:0,locatedFields,locatedBarcodes}}
   }
-  window.LabelWorkbenchBtwLayout={BUILD,CEA_MM,mmToMil,sourceSize,boxToLayout,buildLayoutPlan,barcodeType};
+  window.LabelWorkbenchBtwLayout={BUILD,CEA_MM,mmToMil,sourceSize,boxToLayout,boxFontSizePt,buildLayoutPlan,barcodeType};
 })();
