@@ -19,3 +19,5 @@ jobs:
           node-version: '24'
       - name: Probe UPC-A and EAN-13 native datasources
         run: node tools/probe-upca-ean.cjs
+      - name: Verify native QR Code39 UPC-A family generator
+        run: node tests/btw-family-native-smoke.cjs
