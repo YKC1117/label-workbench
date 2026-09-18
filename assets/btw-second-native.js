@@ -16,6 +16,7 @@
   const safeFile=v=>String(v||'Label').replace(/[\\/:*?"<>|]+/g,'_').replace(/\s+/g,'_').replace(/^_+|_+$/g,'').slice(0,70)||'Label';
   const normalizeFormat=v=>String(v||'').toLowerCase().replace(/[^a-z0-9]/g,'');
   const barcodeText=b=>String(b?.text??b?.value??b?.data??'').trim();
+  const textValue=v=>String(v?.text??v?.value??'').trim();
   const isDm=b=>/datamatrix/.test(normalizeFormat(b?.format));
   const isC128=b=>/code128|c128/.test(normalizeFormat(b?.format));
   const mmToMil=v=>Math.round(Number(v)/0.0254);
@@ -23,7 +24,11 @@
   const outputName=(label,index=0)=>`BT_Editable_${safeFile(String(label?.sourceName||'Label').replace(/\.[^.]+$/,''))}_L${String(index+1).padStart(2,'0')}.btw`;
 
   function rows(label){return(label?.barcodes||[]).filter(b=>barcodeText(b))}
-  function fields(label){return(label?.fields||[]).filter(f=>String(f?.value??'').trim())}
+  function fields(label){
+    const objects=(label?.textObjects||[]).filter(o=>textValue(o));
+    if(objects.length)return objects;
+    return(label?.fields||[]).filter(f=>textValue(f))
+  }
   function unsupported(label){return rows(label).filter(b=>!isDm(b)&&!isC128(b))}
   function plan(label){
     const fs=fields(label),all=rows(label),dm=all.filter(isDm),c128=all.filter(isC128);
@@ -97,7 +102,7 @@
     const edits=new Map();for(const o of before.objects)edits.set(o.index,{index:o.index,xMil:OFF,yMil:OFF});
     const expectedText=[];
     P.fields.forEach((field,i)=>{
-      const obj=donorPool.texts[i],layout=sourceLayout(field?.sourceBox,target),pos=layout?.mil?{xMil:layout.mil.x,yMil:layout.mil.y}:fallbackTextPos(i,P.fields.length,target),value=String(field?.value??'').trim();
+      const obj=donorPool.texts[i],layout=sourceLayout(field?.sourceBox,target),pos=layout?.mil?{xMil:layout.mil.x,yMil:layout.mil.y}:fallbackTextPos(i,P.fields.length,target),value=textValue(field);
       edits.set(obj.index,{index:obj.index,value,...pos});expectedText.push({index:obj.index,value,...pos})
     });
 
