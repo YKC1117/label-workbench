@@ -65,15 +65,15 @@ jobs:
       - name: Current wiring sanity check
         run: |
           grep -q 'assets/analysis-entry.js?v=20260918-v146' index.html
-          grep -q 'assets/barcode-reader.js?v=20260918-v383' index.html
-          grep -q '標籤製作工作台 · v1.9.46' index.html
-          grep -q '更新：2026/09/18 09:30' index.html
+          grep -q 'assets/barcode-reader.js?v=20260918-v384' index.html
+          grep -q '標籤製作工作台 · v1.9.47' index.html
+          grep -q '更新：2026/09/18 10:08' index.html
           grep -q 'assets/analysis-race-guard.js?v=20260914-v139' index.html
           grep -q "BUILD='20260918-analysis-entry-146-core-v2'" assets/analysis-entry.js
           grep -q "dataset.priorityBound='true'" assets/analysis-entry.js
           grep -q "BUILD='20260918-view-guard-145-index-owned-version'" assets/view-state-guard.js
           ! grep -q "marker.innerHTML='標籤製作工作台" assets/view-state-guard.js
-          grep -q "BUILD='20260918-v383-analysis-core-v2-btw-5c128-1dm'" assets/barcode-reader.js
+          grep -q "BUILD='20260918-v384-btw-production-core'" assets/barcode-reader.js
           grep -q 'analysis-core-v2.js' assets/barcode-reader.js
           grep -q "BUILD='20260918-analysis-core-v2-200'" assets/analysis-core-v2.js
           grep -q 'LabelWorkbenchModuleLoader={BUILD,ready:true}' assets/barcode-reader.js
