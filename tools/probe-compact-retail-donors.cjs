@@ -20,6 +20,36 @@ function idsFrom(text){
 function urlsFrom(text){
   return uniq([...text.matchAll(/https?:\/\/[^"'<>\s]+/gi)].map(m=>m[0].replace(/&amp;/g,'&')))
 }
+async function deepSearchTemplatePages(){
+  const sitemap=BASE+'/sitemaps-1-section-templates-1-sitemap.xml';
+  const r=await get(sitemap);
+  const urls=uniq([...r.text.matchAll(/<loc>([^<]+)<\/loc>/gi)].map(m=>m[1].replace(/&amp;/g,'&')))
+    .filter(u=>/\/resources\/library\//i.test(u));
+  console.log('DEEP_TEMPLATE_COUNT',urls.length);
+  const hits=[];
+  let cursor=0;
+  const workers=Array.from({length:8},async()=>{
+    while(true){
+      const i=cursor++;if(i>=urls.length)break;
+      const url=urls[i];
+      try{
+        const p=await get(url),upper=p.text.toUpperCase();
+        const terms=TERMS.filter(t=>upper.includes(t.toUpperCase()));
+        if(!terms.length)continue;
+        const ids=idsFrom(p.text);
+        const title=(/<title>([^<]+)/i.exec(p.text)||[])[1]||'';
+        const plain=p.text.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ');
+        const snippets=terms.map(term=>{const k=plain.toUpperCase().indexOf(term.toUpperCase());return k>=0?plain.slice(Math.max(0,k-220),k+520):''});
+        hits.push({url,status:p.status,title,terms,ids,snippets});
+        console.log('DEEP_TEMPLATE_HIT',{url,title,terms,ids,snippets});
+      }catch(e){console.log('DEEP_TEMPLATE_FAIL',url,String(e?.message||e))}
+    }
+  });
+  await Promise.all(workers);
+  console.log('DEEP_TEMPLATE_HITS_TOTAL',hits.length);
+  return hits
+}
+
 async function inspectTemplateSitemap(){
   const sitemap=BASE+'/sitemaps-1-section-templates-1-sitemap.xml';
   const r=await get(sitemap);
@@ -104,7 +134,9 @@ async function inspectResources(ids){
   }
 }
 (async()=>{
+  const deep=await deepSearchTemplatePages();
   const t=await inspectTemplateSitemap();
   const d=await inspectDiscovery();
-  await inspectResources(uniq([...t.ids,...d.ids]));
+  const deepIds=deep.flatMap(x=>x.ids||[]);
+  await inspectResources(uniq([...deepIds,...t.ids,...d.ids]));
 })().catch(e=>{console.error(e);process.exit(1)});
