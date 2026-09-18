@@ -90,7 +90,7 @@ jobs:
           grep -q 'LabelWorkbenchModuleLoader={BUILD,ready:true}' assets/barcode-reader.js
           grep -q "BUILD='20260918-barcode-crosscheck-108-clear-stale-ocr'" assets/analysis-barcode-crosscheck.js
           grep -q "analysis-barcode-crosscheck.js'" assets/barcode-reader.js
-          grep -q "BUILD='20260918-btw-object-map-044-itf-i25'" assets/btw-object-map.js
+          grep -q "BUILD='20260918-btw-object-map-045-gs1-2d'" assets/btw-object-map.js
           grep -q "BUILD='20260912-btw-caption-adapter-100'" assets/btw-caption-adapter.js
           grep -q "SEED_ID='CEA-2022-R5'" assets/btw-native.js
           grep -q "SEED_FUNCTION='btw-seed'" assets/btw-native.js
@@ -103,7 +103,7 @@ jobs:
           grep -q "MAX_DM=1" assets/btw-second-native.js
           grep -q 'btw-production-gate.js' assets/barcode-reader.js
           grep -q 'btw-family-native.js' assets/barcode-reader.js
-          grep -q "BUILD='20260918-btw-family-native-140-itf14'" assets/btw-family-native.js
+          grep -q "BUILD='20260918-btw-family-native-150-gs1-2d'" assets/btw-family-native.js
           grep -q 'btw-production-core.js' assets/barcode-reader.js
           grep -q "BUILD='20260918-btw-production-core-140-itf14'" assets/btw-production-core.js
           grep -q "BUILD='20260918-btnp230-website-only-ux'" assets/bt-native-primary.js
