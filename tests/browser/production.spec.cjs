@@ -49,7 +49,7 @@ for(const extension of ['pdf','png','jpg']){
   const bytes=fs.readFileSync(target);
   expect(bytes.length).toBeGreaterThan(1000);
   expect(bytes.subarray(0,900).toString('latin1').replace(/\0/g,'')).toMatch(/Bar Tender Format File/);
-  const c={console,Uint8Array,ArrayBuffer,DataView,TextDecoder,TextEncoder,Buffer,atob:s=>Buffer.from(s,'base64').toString('binary')};c.window=c;c.globalThis=c;vm.createContext(c);
+  const c={console,Uint8Array,ArrayBuffer,DataView,TextDecoder,TextEncoder,Buffer,atob:s=>Buffer.from(s,'base64').toString('binary'),document:{readyState:'loading',addEventListener(){},getElementById(){return null}}};c.window=c;c.globalThis=c;vm.createContext(c);
   for(const f of ['btw-format','btw-object-map'])vm.runInContext(fs.readFileSync(`assets/${f}.js`,'utf8'),c);
   const parsed=c.LabelWorkbenchBtwFormat.parseStructure(bytes);
   const container=zlib.inflateSync(parsed.compressedContainer);
