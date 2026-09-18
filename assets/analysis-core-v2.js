@@ -45,6 +45,7 @@
 
     progress('3/6 讀取 PDF 原文與欄位一致性…');
     if(window.LabelWorkbenchPdfNative?.refine)result=await window.LabelWorkbenchPdfNative.refine(arr,result)||result;
+    if(my!==generation)return result;
     window.LabelWorkbenchFieldConsistency?.refineResult?.(result);
 
     progress('4/6 條碼交叉比對…');
@@ -76,6 +77,7 @@
 
   window.LabelWorkbenchAnalysisCoreV2={
     BUILD,run,mediaFile,
+    invalidate(){generation++;latestResult=null;latestFiles=[]},
     get latestResult(){return latestResult},
     get latestFiles(){return latestFiles.slice()},
     get generation(){return generation}

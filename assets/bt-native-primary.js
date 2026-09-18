@@ -55,20 +55,36 @@
     return !!(b?.latestResult?.labels?.length&&b?.latestFiles?.some?.(f=>f?.type?.startsWith?.('image/')||f?.type==='application/pdf'||/\.(jpe?g|png|webp|gif|bmp|pdf)$/i.test(f?.name||''))&&!b.latestResult?.tableSource)
   }
 
+  let downloading=false;
+  function downloadStatus(message,error=false){
+    const host=el('analysisResult');if(!host)return;
+    let status=el('btwDownloadStatus');
+    if(!status){status=document.createElement('div');status.id='btwDownloadStatus';status.setAttribute('role','status');host.appendChild(status)}
+    status.className=error?'note warn-note':'footer-note';status.textContent=message;
+  }
   async function downloadEditable(){
+    if(downloading)return false;
     const b=bridge();
     if(!b?.latestResult?.labels?.length||!hasMediaResult()){toast('請先用 PDF／圖片完成快速分析');return false}
+    downloading=true;
+    const result=b.latestResult,files=b.latestFiles;
+    downloadStatus('正在建立 .BTW…');
     const buttons=[el('analysisBtNative'),el('btNativeDownload')].filter(Boolean);
     buttons.forEach(x=>{x.disabled=true;x.dataset.oldText=x.textContent;x.textContent='正在建立可編輯 .BTW…'});
     try{
       const api=await ensureProduction();
-      const out=await api.downloadFromAnalysis(b.latestResult,b.latestFiles,msg=>buttons.forEach(x=>x.textContent=msg||'正在建立可編輯 .BTW…'));
+      const generated=await api.generate(result,files,msg=>buttons.forEach(x=>x.textContent=msg||'正在建立可編輯 .BTW…'));
+      if(b.latestResult!==result)throw new Error('原稿已變更，請完成新原稿分析後再下載');
+      const out=await api.downloadGenerated(generated);
+      downloadStatus('已送出 .BTW 下載，請查看瀏覽器下載清單。');
       if(out?.ok)toast(out.count>1?`已建立 ${out.count} 個 BarTender .BTW`:'可編輯 .BTW 已下載');
       return !!out?.ok
     }catch(err){
       console.error('[Label Workbench] editable BTW generation failed',err);
+      downloadStatus('可編輯 .BTW 建立停止：'+(err?.message||err),true);
       toast('可編輯 .BTW 建立停止：'+(err?.message||err));return false
     }finally{
+      downloading=false;
       buttons.forEach(x=>{x.disabled=false;x.textContent=x.dataset.oldText||'下載可編輯 .BTW';delete x.dataset.oldText})
     }
   }

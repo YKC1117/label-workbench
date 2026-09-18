@@ -58,3 +58,29 @@ for(const extension of ['pdf','png','jpg']){
   await expect(button).toBeEnabled();
  });
 }
+
+test('production seed response and visible failure recovery',async({page})=>{
+ await page.goto('/');
+ await page.getByRole('button',{name:'⚡ 快速分析',exact:true}).click();
+ await page.locator('#analysisFiles').setInputFiles(path.resolve('tests/fixtures/generic-qr.pdf'));
+ const button=page.locator('#analysisBtNative');
+ await expect(button).toBeVisible({timeout:150000});
+ // Failure injection is confined to this negative test, never the success E2Es.
+ await page.route('**/functions/v1/btw-seed**',r=>r.fulfill({status:502,body:'upstream unavailable'}));
+ let downloads=0;page.on('download',()=>downloads++);
+ await button.click();
+ await expect(page.locator('#btwDownloadStatus')).toContainText('502',{timeout:30000});
+ expect(downloads).toBe(0);
+ await expect(button).toBeEnabled();
+ await page.unroute('**/functions/v1/btw-seed**');
+ const seedPromise=page.waitForResponse(r=>r.url().includes('/functions/v1/btw-seed')&&r.status()===200,{timeout:45000});
+ const downloadPromise=page.waitForEvent('download',{timeout:45000});
+ await button.click();
+ const seed=await seedPromise;
+ expect(seed.headers()['content-type']).toContain('application/octet-stream');
+ expect(seed.headers()['x-label-workbench-seed']).toBeTruthy();
+ expect((await seed.body()).subarray(0,900).toString('latin1').replace(/\0/g,'')).toMatch(/Bar Tender Format File/);
+ const download=await downloadPromise;
+ expect(download.suggestedFilename()).toMatch(/\.btw$/i);
+ expect(await download.failure()).toBeNull();
+});

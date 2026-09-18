@@ -55,6 +55,8 @@
       return;
     }
 
+    window.LabelWorkbenchAnalysisCoreV2?.invalidate?.();
+    window.LabelWorkbenchBtBridge?.clear?.();
     showQueued(arr);
 
     let stack=await waitFor(stackReady,15000);
@@ -74,10 +76,12 @@
       console.warn('[Label Workbench] loader readiness timed out; using deterministic analysis core');
       return window.LabelWorkbenchAnalysisCoreV2.run(arr);
     }
-    if(window.LabelWorkbenchPriority?.runQuickAnalysis){
+    if(!allMedia&&window.LabelWorkbenchPriority?.runQuickAnalysis){
       console.warn('[Label Workbench] loader readiness timed out; using priority document route');
       return window.LabelWorkbenchPriority.runQuickAnalysis(arr);
     }
+
+    if(allMedia)throw new Error('PDF／圖片分析核心未載入，請重新整理後重試；未改走舊版分析流程');
 
     const parsers=await waitFor(()=>window.LabelWorkbenchParsers?.analyze?window.LabelWorkbenchParsers:null,3000);
     if(my!==generation)return;
@@ -104,7 +108,9 @@
       showQueued(files);
       try{target.value=''}catch{}
 
-      Promise.resolve(dispatch(files)).catch(err=>{
+      const pending=dispatch(files),selection=generation;
+      Promise.resolve(pending).catch(err=>{
+        if(selection!==generation)return;
         console.error('[Label Workbench] early analysis entry failed',err);
         showFailure(err);
       });

@@ -23,6 +23,7 @@ class MockEl{
     this.download='';
     this.href='';
   }
+  setAttribute(name,value){this[name]=value}
   addEventListener(type,fn){this.listeners[type]=fn}
   async click(){
     if(this.tagName==='A'){
