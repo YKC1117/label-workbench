@@ -7,7 +7,7 @@
 (function(){
   'use strict';
 
-  const BUILD='20260918-btw-family-native-130-gs1128-pdf417';
+  const BUILD='20260918-btw-family-native-140-itf14';
   const OFF=50000;
   const MAX_SIZE_PAIRS=16;
   const PROFILES={
@@ -40,6 +40,11 @@
       key:'pdf417',seedKey:'pdf417-rich',seedId:'PDF417-RICH-2022-R5',
       app:'2022 R5',compatible:'2019',barcodeType:'PDF417',owner:'BcPdf417Data',
       donor:{width:210.0072,height:148.0058},maxText:12,mode:'components'
+    },
+    itf14:{
+      key:'itf14',seedKey:'itf14-rich',seedId:'ITF14-RICH-2022-R8',
+      app:'2022 R8',compatible:'2019',barcodeType:'ITF-14',owner:'BcITF14Data',
+      donor:{width:100,height:150},maxText:13,mode:'retail-mirror'
     }
   };
   const seedPromises=new Map();
@@ -60,6 +65,7 @@
     if(/ean13/.test(f))return'ean13';
     if(/gs1128|uccean128/.test(f))return'gs1128';
     if(/pdf417/.test(f))return'pdf417';
+    if(/itf14/.test(f))return'itf14';
     return'';
   }
   function textItems(label){
@@ -94,6 +100,7 @@
     if(kind==='ean13'&&!ean13Safe(value))return null;
     if(kind==='gs1128'&&!gs1128Safe(value))return null;
     if(kind==='pdf417'&&!pdf417Safe(value))return null;
+    if(kind==='itf14'&&!gs1CheckDigitSafe(value,14))return null;
     const texts=textItems(label);if(texts.length>profile.maxText)return null;
     return{kind,profile,row:all[0],value,texts}
   }

@@ -46,7 +46,7 @@ async function verify(label,kind,owner,type,payload,size){
 }
 
 (async()=>{
-  assert(G?.BUILD==='20260918-btw-family-native-130-gs1128-pdf417','unexpected family build');
+  assert(G?.BUILD==='20260918-btw-family-native-140-itf14','unexpected family build');
 
   const qr=barcode({
     sourceName:'customer-qr.png',
@@ -129,5 +129,20 @@ async function verify(label,kind,owner,type,payload,size){
   const tooLongPdf=barcode({sourceName:'long-pdf417.png',textObjects:[],fields:[]},'PDF417','X'.repeat(1801),{x:.1,y:.1,w:.5,h:.3});
   assert(!G.canGenerate(tooLongPdf),'PDF417 safety cap must reject oversized payloads');
 
-  console.log('PASS: official BarTender 2022 QR, Code39, UPC-A, EAN-13, GS1-128 and PDF417 donors round-trip native payloads, text objects, source positions and physical label size');
+  const itf=barcode({
+    sourceName:'customer-itf14.png',
+    sourceGeometry:{widthMm:100,heightMm:150},
+    fields:[],
+    textObjects:textObjects(['GTIN','10012345000017','CASE','24 PCS','MADE IN TAIWAN'])
+  },'ITF-14','10012345000017',{x:.08,y:.65,w:.70,h:.14});
+  const it=await verify(itf,'itf14','BcITF14Data','ITF-14','10012345000017',{width:100,height:150});
+  assert(it.out.seed==='ITF14-RICH-2022-R8','ITF-14 seed mismatch');
+
+  const badItf=barcode({sourceName:'bad-itf14.png',textObjects:[],fields:[]},'ITF-14','10012345000018',{x:.1,y:.1,w:.5,h:.1});
+  assert(!G.canGenerate(badItf),'ITF-14 with invalid check digit must be rejected');
+
+  const i25=barcode({sourceName:'i25.png',textObjects:[],fields:[]},'Interleaved 2 of 5','1234567890',{x:.1,y:.1,w:.5,h:.1});
+  assert(!G.canGenerate(i25),'Interleaved 2 of 5 must stay out of production until a BarTender 2022 donor is verified');
+
+  console.log('PASS: official BarTender 2022 QR, Code39, UPC-A, EAN-13, GS1-128, PDF417 and ITF-14 donors round-trip native payloads, text objects, source positions and physical label size');
 })().catch(err=>{console.error(err);process.exit(1)});
