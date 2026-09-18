@@ -7,7 +7,7 @@
 (function(){
   'use strict';
 
-  const BUILD='20260918-btw-family-native-100-qr-c39';
+  const BUILD='20260918-btw-family-native-120-qr-c39-upca-ean13';
   const OFF=50000;
   const MAX_SIZE_PAIRS=16;
   const PROFILES={
@@ -20,6 +20,16 @@
       key:'c39',seedKey:'c39-rich',seedId:'C39-RICH-2022-R5',
       app:'2022 R5',compatible:'2019',barcodeType:'Code 39',owner:'BcC39RegularData',
       donor:{width:60.96,height:38.1},maxText:9,mode:'linked-text'
+    },
+    upca:{
+      key:'upca',seedKey:'upca-rich',seedId:'UPCA-RICH-2022-R5',
+      app:'2022 R5',compatible:'2022 R1',barcodeType:'UPC-A',owner:'BcUPCAData',
+      donor:{width:100,height:55},maxText:11,mode:'retail-mirror'
+    },
+    ean13:{
+      key:'ean13',seedKey:'ean13-rich',seedId:'EAN13-RICH-2022-R8',
+      app:'2022 R8',compatible:'2019',barcodeType:'EAN-13',owner:'BcEAN13Data',
+      donor:{width:92.99,height:57.99},maxText:10,mode:'retail-mirror'
     }
   };
   const seedPromises=new Map();
@@ -36,6 +46,8 @@
     const f=normalizeFormat(row?.format);
     if(/qrcode|qr/.test(f))return'qr';
     if(/code39|c39/.test(f))return'c39';
+    if(/upca/.test(f))return'upca';
+    if(/ean13/.test(f))return'ean13';
     return'';
   }
   function textItems(label){
@@ -45,11 +57,23 @@
   }
   function rows(label){return(label?.barcodes||[]).filter(b=>barcodeText(b))}
   function code39Safe(value){return /^[0-9A-Z\-\. \$\/\+%]+$/.test(String(value||''))}
+  function gs1CheckDigitSafe(value,length){
+    const s=String(value||'').trim();
+    if(s.length!==Number(length)||!/^[0-9]+$/.test(s))return false;
+    const d=[...s].map(Number),body=d.slice(0,-1);
+    let sum=0,weight=3;
+    for(let i=body.length-1;i>=0;i--){sum+=body[i]*weight;weight=weight===3?1:3}
+    return((10-(sum%10))%10)===d[d.length-1]
+  }
+  function upcaSafe(value){return gs1CheckDigitSafe(value,12)}
+  function ean13Safe(value){return gs1CheckDigitSafe(value,13)}
   function plan(label){
     const all=rows(label);if(all.length!==1)return null;
     const kind=kindFor(all[0]),profile=PROFILES[kind];if(!profile)return null;
     const value=barcodeText(all[0]);if(!value)return null;
     if(kind==='c39'&&!code39Safe(value))return null;
+    if(kind==='upca'&&!upcaSafe(value))return null;
+    if(kind==='ean13'&&!ean13Safe(value))return null;
     const texts=textItems(label);if(texts.length>profile.maxText)return null;
     return{kind,profile,row:all[0],value,texts}
   }
@@ -127,10 +151,32 @@
     })().catch(err=>{seedPromises.delete(profile.key);throw err});
     seedPromises.set(profile.key,promise);return promise
   }
+  function retailMirrorEntry(container,barcode){
+    const F=window.LabelWorkbenchBtwFormat;if(!F?.scanUtf16Strings)return null;
+    const entries=F.scanUtf16Strings(container,{minLength:0,maxLength:10000,includeEmpty:true})
+      .filter(e=>e.offset>=barcode.recordStart&&e.offset<barcode.recordEnd);
+    for(let i=0;i<entries.length-1;i++){
+      if(entries[i].text!=='(???) ???-????')continue;
+      for(let j=i+1;j<Math.min(entries.length,i+5);j++)if(entries[j].text==='Sample Text')return entries[j]
+    }
+    return null
+  }
+  function applyRetailPayload(plan,container,barcode){
+    if(plan.profile.mode!=='retail-mirror')return container;
+    const F=window.LabelWorkbenchBtwFormat,M=window.LabelWorkbenchBtwObjectMap,entry=retailMirrorEntry(container,barcode);
+    if(!entry)throw new Error(plan.profile.barcodeType+' donor 找不到已驗證的 numeric datasource mirror');
+    const edited=F.replaceStringAt(container,entry,plan.value),map=M.mapContainer(edited),after=map.objects.find(o=>o.kind==='barcode'&&o.owner===plan.profile.owner&&o.barcodeType===plan.profile.barcodeType);
+    if(!after||after.resolvedPreview!==plan.value)throw new Error(plan.profile.barcodeType+' datasource mirror 寫入 round-trip 驗證失敗');
+    return edited
+  }
   function barcodeEdit(plan,barcode,objects,pos){
     if(plan.profile.mode==='components'){
       if(!barcode.componentEntries?.length)throw new Error('QR donor 沒有可安全寫入的 component datasource');
       return{barcode:{index:barcode.index,barcodeComponents:barcode.componentEntries.map((_,i)=>i===0?plan.value:''),...pos},reserved:null}
+    }
+    if(plan.profile.mode==='retail-mirror'){
+      if(barcode.resolvedPreview!==plan.value)throw new Error(plan.profile.barcodeType+' payload 尚未完成 mirror 寫入');
+      return{barcode:{index:barcode.index,...pos},reserved:null}
     }
     const target=linkedWritable(barcode,objects);
     if(!target)throw new Error('Code 39 donor 找不到可安全寫入的 linked Text datasource');
@@ -148,6 +194,8 @@
     if(!barcode)throw new Error(`${P.profile.barcodeType} donor 缺少原生條碼物件`);
 
     const target=targetSize(label,P.profile),sized=rewriteInternalSize(container,P.profile,target);container=sized.container;
+    before=M.mapContainer(container);barcode=before.objects.find(o=>o.kind==='barcode'&&o.owner===P.profile.owner&&o.barcodeType===P.profile.barcodeType);
+    container=applyRetailPayload(P,container,barcode);
     before=M.mapContainer(container);barcode=before.objects.find(o=>o.kind==='barcode'&&o.owner===P.profile.owner&&o.barcodeType===P.profile.barcodeType);
     const barLayout=sourceLayout(P.row?.sourceBox,target),barPos=barLayout?.mil?{xMil:barLayout.mil.x,yMil:barLayout.mil.y}:fallbackBarcodePos(target);
     const bEdit=barcodeEdit(P,barcode,before.objects,barPos),reservedIndex=bEdit.reserved?.index??null;
@@ -171,8 +219,8 @@
     if(!afterBarcode)throw new Error(`${P.profile.barcodeType} 重建後原生條碼物件消失`);
     if(afterBarcode.xMil!==barPos.xMil||afterBarcode.yMil!==barPos.yMil)throw new Error(`${P.profile.barcodeType} 重建後座標不符`);
 
-    if(P.profile.mode==='components'){
-      if(afterBarcode.resolvedPreview!==P.value)throw new Error('QR 重建後 payload round-trip 不符');
+    if(P.profile.mode==='components'||P.profile.mode==='retail-mirror'){
+      if(afterBarcode.resolvedPreview!==P.value)throw new Error(P.profile.barcodeType+' 重建後 payload round-trip 不符');
     }else{
       const afterSource=(afterBarcode.linkedDataSourceRefs||[]).map(r=>remap.objects.find(o=>o.index===r.index)).find(o=>o?.value===P.value);
       if(!afterSource||afterBarcode.resolvedPreview!==P.value)throw new Error('Code 39 重建後 linked datasource round-trip 不符');
@@ -195,6 +243,6 @@
   }
 
   window.LabelWorkbenchBtwFamilyNative={
-    BUILD,PROFILES,kindFor,textItems,plan,canGenerate,targetSize,printableTexts,adjacentSizePairs,rewriteInternalSize,seedEndpoint,fetchSeed,generateOne
+    BUILD,PROFILES,kindFor,textItems,code39Safe,gs1CheckDigitSafe,upcaSafe,ean13Safe,plan,canGenerate,targetSize,printableTexts,adjacentSizePairs,rewriteInternalSize,retailMirrorEntry,applyRetailPayload,seedEndpoint,fetchSeed,generateOne
   };
 })();

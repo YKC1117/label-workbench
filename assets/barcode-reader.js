@@ -1,7 +1,7 @@
 /* Label Workbench barcode reader v4.1 loader. */
 (function(){
   'use strict';
-  const BUILD='20260918-v387-native-barcode-families';
+  const BUILD='20260918-v388-native-retail-barcodes';
   const modules=['assets/view-state-guard.js','assets/barcode-reader-core.js','assets/barcode-reader-ui.js','assets/barcode-generator.js','assets/label-interpreter.js','assets/analysis-accuracy.js','assets/analysis-pdf-native.js','assets/analysis-geometry.js','assets/analysis-field-consistency.js','assets/analysis-copy.js','assets/btw-format.js','assets/btw-object-map.js','assets/btw-layout-map.js','assets/btw-family-native.js','assets/btw-native.js','assets/btw-rich-native.js','assets/btw-second-donor.js','assets/btw-second-native.js','assets/btw-caption-adapter.js','assets/btw-rich-bridge.js','assets/bt-bridge.js','assets/workbench-priority.js','assets/analysis-confidence-guard.js','assets/btw-production-gate.js','assets/btw-production-core.js','assets/bt-native-primary.js','assets/analysis-final-display.js','assets/analysis-barcode-crosscheck.js','assets/analysis-core-v2.js'];
   window.LabelWorkbenchModuleLoader={BUILD,ready:false};
   function markReady(){
