@@ -119,11 +119,23 @@ async function parseOfficialBtw(t){
     console.log('RAW_TAG_WINDOW',tag.type,tag.offset,near.slice(0,140));
   }
   const barcodeObjects=map.objects.filter(o=>o.kind==='barcode');
+  const templateSize=(/<TemplateSize>([^<]+)/i.exec(parsed.header.text||'')||[])[1]||'';
   console.log('header',{
     applicationVersion:parsed.header.applicationVersion,
     compatibleVersion:parsed.header.compatibleVersion,
-    templateSize:(/<TemplateSize>([^<]+)/i.exec(parsed.header.text||'')||[])[1]||''
+    templateSize
   });
+  {
+    const m=/([0-9.]+)\s*(?:"|in(?:ch(?:es)?)?|mm|cm)?\s*x\s*([0-9.]+)\s*(?:"|in(?:ch(?:es)?)?|mm|cm)?/i.exec(templateSize);
+    if(m){
+      let w=+m[1],h=+m[2],lower=templateSize.toLowerCase();
+      if(/\bcm\b/.test(lower)){w*=10;h*=10}
+      else if(templateSize.includes('"')||/\bin(?:ch(?:es)?)?\b/.test(lower)||(!/\bmm\b/.test(lower)&&!/\bcm\b/.test(lower))){w*=25.4;h*=25.4}
+      const wi=Math.round(w/0.0254),hi=Math.round(h/0.0254),dv=new DataView(container.buffer,container.byteOffset,container.byteLength),pairs=[];
+      for(let off=0;off<=container.byteLength-8;off++)if(dv.getInt32(off,true)===wi&&dv.getInt32(off+4,true)===hi)pairs.push(off);
+      console.log('SIZE_PAIR_PROBE',{source:t.key,widthMm:w,heightMm:h,widthMil:wi,heightMil:hi,adjacentPairCount:pairs.length,offsets:pairs.slice(0,30)});
+    }
+  }
   console.log('tags',M.mapContainer(container).objects.filter(o=>o.kind==='barcode').map(o=>({index:o.index,name:o.name,owner:o.owner,barcodeType:o.barcodeType,components:o.components,resolvedPreview:o.resolvedPreview,xMil:o.xMil,yMil:o.yMil})));
   console.log('barcode owners',[...new Set(barcodeObjects.map(o=>o.owner))]);
   console.log('barcode types',[...new Set(barcodeObjects.map(o=>o.barcodeType))]);
