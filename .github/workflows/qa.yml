@@ -31,6 +31,7 @@ jobs:
           node --check tests/btw-rich-native-smoke.cjs
           node --check tests/btw-production-gate-smoke.cjs
           node --check tests/btw-production-core-smoke.cjs
+          node --check tests/browser-btw-flow-smoke.cjs
           node --check tests/analysis-copy-smoke.cjs
           node --check tests/analysis-entry-smoke.cjs
           node --check tests/analysis-core-v2-smoke.cjs
@@ -198,6 +199,8 @@ jobs:
         run: node tests/btw-native-smoke.cjs
       - name: Production rich native BTW generation smoke tests
         run: node tests/btw-rich-native-smoke.cjs
+      - name: Browser one-click editable BTW flow
+        run: node tests/browser-btw-flow-smoke.cjs
       - name: Deterministic BTW production routing gate
         run: node tests/btw-production-core-smoke.cjs
       - name: BTW pending-field production safety gate
