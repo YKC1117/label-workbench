@@ -1,4 +1,4 @@
-/* Label Workbench label interpreter v1.8
+/* Label Workbench label interpreter v1.9
  * Customer file -> production-ready facts.
  * OCR/layout recognition stays internal; UI shows fields, decoded barcodes, confidence and next actions.
  * Evidence priority: decoded barcode > repeated/layout-consistent recognition > single recognition.
@@ -6,7 +6,7 @@
 (function(){
   'use strict';
 
-  const BUILD='20260918-v181-render-api';
+  const BUILD='20260918-v182-text-column-row-rescue';
   const PDF_SRC='https://cdn.jsdelivr.net/npm/pdfjs-dist@6.3.289/build/pdf.min.mjs';
   const PDF_WORKER='https://cdn.jsdelivr.net/npm/pdfjs-dist@6.3.289/build/pdf.worker.min.mjs';
   const TESS_SRC='https://cdn.jsdelivr.net/npm/tesseract.js@7.0.0/dist/tesseract.min.js';
@@ -142,21 +142,57 @@
     const rx=new RegExp(`(?:[\\(\\[]\\s*(${codeAlt})\\s*[\\)\\]]?|\\b(${codeAlt})\\s*[\\)\\]])`,'ig');
     const ms=[...line.matchAll(rx)];if(!ms.length)return[];const out=[];
     for(let i=0;i<ms.length;i++){
-      const m=ms[i],code=(m[1]||m[2]||'').toUpperCase(),end=i+1<ms.length?ms[i+1].index:line.length,chunk=cleanLine(line.slice((m.index||0)+m[0].length,end)),def=FIELD_DEFS.find(d=>d.code===code),name=def?.name||code;let rest=chunk;
-      for(const a of (def?.aliases||[]).sort((a,b)=>b.length-a.length))rest=rest.replace(new RegExp('^\\s*'+aliasPattern(a)+'\\s*[:：=]?\\s*','i'),'');
-      rest=rest.replace(/^\s*[^:：]{0,28}[:：]\s*/,'');const value=cleanValue(rest);if(value&&/[A-Z0-9+\-]/i.test(value))out.push({code,name,value});
+      const m=ms[i],code=(m[1]||m[2]||'').toUpperCase(),end=i+1<ms.length?ms[i+1].index:line.length,chunk=cleanLine(line.slice((m.index||0)+m[0].length,end)),def=FIELD_DEFS.find(d=>d.code===code),name=def?.name||code;let rest=chunk,aliasRemoved=false;
+      for(const a of (def?.aliases||[]).sort((a,b)=>b.length-a.length)){
+        const next=rest.replace(new RegExp('^\\s*'+aliasPattern(a)+'\\s*[:：=]?\\s*','i'),'');
+        if(next!==rest){rest=next;aliasRemoved=true;break}
+      }
+      // Only use the generic "caption:" stripper when no canonical caption was
+      // already removed. Running both can erase the real value if the next AI
+      // marker was lost by OCR and its caption is still present.
+      if(!aliasRemoved)rest=rest.replace(/^\s*[^:：]{0,28}[:：]\s*/,'');
+      const value=cleanValue(rest);if(value&&/[A-Z0-9+\-]/i.test(value))out.push({code,name,value});
     }
     return out;
+  }
+
+  function cleanKnownValue(v){
+    let s=cleanValue(v);
+    // OCR often keeps the next data identifier immediately before its caption,
+    // e.g. "E (31P) GP". Do not let that marker contaminate the previous value.
+    s=s.replace(/\s*(?:[\(\[]\s*)?[A-Z0-9]{1,5}\s*[\)\]]\s*$/i,'').trim();
+    return s;
   }
 
   function parseKnownNames(line){
     const hits=[];for(const def of FIELD_DEFS){for(const alias of def.aliases){const short=alias.replace(/[^A-Z0-9]/gi,'').length<=3,suffix=short?'\\s*[:：=]':'\\s*[:：=]?';const rx=new RegExp(aliasPattern(alias)+suffix,'ig');let m;while((m=rx.exec(line)))hits.push({start:m.index,end:rx.lastIndex,def})}}
     hits.sort((a,b)=>a.start-b.start||b.end-a.end);const anchors=[];for(const h of hits){if(anchors.some(x=>h.start>=x.start&&h.end<=x.end))continue;anchors.push(h)}const out=[];
-    for(let i=0;i<anchors.length;i++){const a=anchors[i],next=anchors[i+1],value=cleanValue(line.slice(a.end,next?next.start:line.length));if(value&&/[A-Z0-9+\-]/i.test(value))out.push({code:'',name:a.def.name,value})}return out;
+    for(let i=0;i<anchors.length;i++){const a=anchors[i],next=anchors[i+1],value=cleanKnownValue(line.slice(a.end,next?next.start:line.length));if(value&&/[A-Z0-9+\-]/i.test(value))out.push({code:a.def.code||'',name:a.def.name,value})}return out;
   }
 
   function parseFields(text){
-    const out=[];for(const raw of String(text||'').split(/\r?\n/)){const line=cleanLine(raw);if(!line)continue;const coded=parseCodeChunks(line);if(coded.length){out.push(...coded);continue}const known=parseKnownNames(line);if(known.length){out.push(...known);continue}const m=line.match(/^([A-Z][A-Z0-9 ._/#\-]{1,38}?)\s*[:：=]\s*(.{1,120})$/i);if(m){const name=cleanLine(m[1]),value=cleanValue(m[2]);if(value&&/[A-Z0-9]/i.test(value))out.push({code:'',name,value})}}
+    const out=[];
+    for(const raw of String(text||'').split(/\r?\n/)){
+      const line=cleanLine(raw);if(!line)continue;
+      const coded=parseCodeChunks(line),known=parseKnownNames(line);
+      if(coded.length||known.length){
+        const merged=[...coded];
+        for(const f of known){
+          const key=norm(f.code)||norm(f.name),idx=merged.findIndex(x=>(norm(x.code)||norm(x.name))===key);
+          if(idx<0){merged.push(f);continue}
+          // If OCR lost the next AI marker, parseCodeChunks can swallow the next
+          // caption into the current value. A caption-bounded parse is safer then.
+          const current=String(merged[idx]?.value||'').toUpperCase();
+          const hasForeignAlias=FIELD_DEFS.some(def=>{
+            const otherKey=norm(def.code)||norm(def.name);if(otherKey===key)return false;
+            return def.aliases.some(alias=>current.includes(String(alias).toUpperCase()));
+          });
+          if(hasForeignAlias&&norm(f.value))merged[idx]=f;
+        }
+        out.push(...merged);continue;
+      }
+      const m=line.match(/^([A-Z][A-Z0-9 ._/#\-]{1,38}?)\s*[:：=]\s*(.{1,120})$/i);if(m){const name=cleanLine(m[1]),value=cleanValue(m[2]);if(value&&/[A-Z0-9]/i.test(value))out.push({code:'',name,value})}
+    }
     const seen=new Set();return out.filter(f=>{const k=`${norm(f.code)}|${norm(f.name)}|${norm(f.value)}`;if(!norm(f.value)||seen.has(k))return false;seen.add(k);return true});
   }
 
@@ -207,6 +243,53 @@
 
   function makeTiles(canvas){const c=enhanceCanvas(canvas,'gray'),out=[],overlap=.10;for(let ry=0;ry<2;ry++)for(let rx=0;rx<2;rx++){const x0=Math.max(0,(rx*.5-overlap)*c.width),y0=Math.max(0,(ry*.5-overlap)*c.height),x1=Math.min(c.width,((rx+1)*.5+overlap)*c.width),y1=Math.min(c.height,((ry+1)*.5+overlap)*c.height);out.push(crop(c,x0,y0,x1-x0,y1-y0))}return out}
 
+  function structuredFieldHints(passes){
+    const text=(passes||[]).map(p=>String(p?.text||'').toUpperCase()).join('\n');
+    const hints=['PART NO','LOT NO','SHAPE','QTY','DATE NO','ASSY','MLOT','BIN','MC','VC','P1','P2'];
+    return hints.reduce((n,x)=>n+(text.includes(x)?1:0),0);
+  }
+
+  function needsTextRescue(fields,passes){
+    const rows=Array.isArray(fields)?fields:[];
+    if(rows.some(f=>f?.conflict))return true;
+    if(rows.length<7)return true;
+    return structuredFieldHints(passes)>=4&&rows.length<10;
+  }
+
+  function makeTextRescueArea(region){
+    const c=trimCanvas(region),w=Math.max(1,Math.round(c.width*.72));
+    return crop(c,0,0,w,c.height);
+  }
+
+  function makeTextRescueStrips(region,count=7){
+    const left=makeTextRescueArea(region),out=[],step=left.height/Math.max(1,count),overlap=.18;
+    for(let i=0;i<count;i++){
+      const y0=Math.max(0,Math.floor((i-overlap)*step)),y1=Math.min(left.height,Math.ceil((i+1+overlap)*step));
+      if(y1-y0<8)continue;
+      out.push(crop(left,0,y0,left.width,y1-y0));
+    }
+    return out;
+  }
+
+  async function rescueTextRows(worker,region,passes,onProgress){
+    onProgress?.('正在避開條碼區補讀細小文字…');
+    const left=enhanceCanvas(makeTextRescueArea(region),'gray');
+    passes.push(await recognize(worker,left,'11',true));
+    let fields=aggregateFields(passes);
+    if(!needsTextRescue(fields,passes))return fields;
+
+    const strips=makeTextRescueStrips(region,7);
+    for(let i=0;i<strips.length;i++){
+      onProgress?.(`正在逐列補讀文字… ${i+1}/${strips.length}`);
+      passes.push(await recognize(worker,enhanceCanvas(strips[i],'gray'),'6',true));
+      fields=aggregateFields(passes);
+      // Structured labels usually become stable after the upper/middle text rows
+      // are rescued. Stop early instead of paying for every strip.
+      if(i>=2&&!needsTextRescue(fields,passes))break;
+    }
+    return fields;
+  }
+
   async function readRegionFields(worker,region,onProgress){
     const passes=[],gray=enhanceCanvas(region,'gray'),bw=enhanceCanvas(region,'bw');
     onProgress?.('正在整理欄位與位置…');
@@ -214,6 +297,11 @@
     passes.push(await recognize(worker,gray,'11',true));
     passes.push(await recognize(worker,bw,'6',true));
     let fields=aggregateFields(passes);
+
+    if(needsTextRescue(fields,passes))fields=await rescueTextRows(worker,region,passes,onProgress);
+
+    // Keep the old 2x2 tile scan only as the final fallback. This preserves
+    // broad compatibility while the text-column rescue handles barcode-heavy labels.
     if(fields.length<7||fields.some(f=>f.conflict)){
       const tiles=makeTiles(region);for(let i=0;i<tiles.length;i++){onProgress?.(`正在補讀細小區域… ${i+1}/${tiles.length}`);passes.push(await recognize(worker,tiles[i],'11',true))}fields=aggregateFields(passes);
     }
@@ -257,5 +345,5 @@
     return result
   }
 
-  window.LabelWorkbenchInterpreter={BUILD,scoreText,parseFields,spatialFields,aggregateFields,detectLabelBands,rotateCanvas,interpretPdf,interpretImage,interpretFiles,productionText,questionsText,renderInterpretation,renderResult,analyze};
+  window.LabelWorkbenchInterpreter={BUILD,scoreText,parseFields,spatialFields,aggregateFields,structuredFieldHints,needsTextRescue,makeTextRescueStrips,detectLabelBands,rotateCanvas,interpretPdf,interpretImage,interpretFiles,productionText,questionsText,renderInterpretation,renderResult,analyze};
 })();
