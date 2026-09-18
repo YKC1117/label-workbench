@@ -83,3 +83,27 @@ async function discoverByLibraryPages(){
   console.log('CATALOG_TARGETS',JSON.stringify(targets,null,2));
 }
 discoverByLibraryPages().catch(e=>{console.error('CATALOG_DISCOVERY_FAIL',e);process.exitCode=1});
+
+
+async function inspectPagination(){
+  const base='https://www.bartendersoftware.com/resources/library/template-library';
+  const html=await (await fetch(base,{headers:{'user-agent':'Mozilla/5.0 LabelWorkbenchPaginationProbe/1.0'}})).text();
+  const links=[...html.matchAll(/<a[^>]+href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi)].map(m=>({
+    href:new URL(m[1],base).href,
+    text:m[2].replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim()
+  }));
+  const pagers=links.filter(x=>/[?&](?:page|p|offset|start)=\d+/i.test(x.href)||/next|previous|older|newer|more|\d+/i.test(x.text)&&/template-library/i.test(x.href));
+  console.log('PAGINATION_LINKS',JSON.stringify(pagers.slice(0,100),null,2));
+
+  for(const needle of ['pagination','paginate','pageInfo','currentPage','totalPages','load-more','loadMore','data-page','data-url','data-endpoint','hx-get']){
+    const hits=around(html,needle,800);
+    if(hits.length)console.log('PAGINATION_AROUND',needle,JSON.stringify(hits.slice(0,12),null,2));
+  }
+
+  const forms=[...html.matchAll(/<form[^>]*action=["']([^"']*)["'][^>]*>([\s\S]*?)<\/form>/gi)].map(m=>({
+    action:new URL(m[1]||base,base).href,
+    snippet:m[2].replace(/\s+/g,' ').slice(0,1800)
+  }));
+  console.log('FORMS',JSON.stringify(forms.slice(0,30),null,2));
+}
+inspectPagination().catch(e=>{console.error('PAGINATION_PROBE_FAIL',e);process.exitCode=1});
