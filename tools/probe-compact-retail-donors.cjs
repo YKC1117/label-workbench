@@ -20,6 +20,28 @@ function idsFrom(text){
 function urlsFrom(text){
   return uniq([...text.matchAll(/https?:\/\/[^"'<>\s]+/gi)].map(m=>m[0].replace(/&amp;/g,'&')))
 }
+async function inspectTemplateSitemap(){
+  const sitemap=BASE+'/sitemaps-1-section-templates-1-sitemap.xml';
+  const r=await get(sitemap);
+  console.log('\nTEMPLATE_SITEMAP',r.status,r.url,'chars',r.text.length);
+  const urls=uniq([...r.text.matchAll(/<loc>([^<]+)<\/loc>/gi)].map(m=>m[1].replace(/&amp;/g,'&')));
+  const filtered=urls.filter(u=>/(?:upc|ean)/i.test(u));
+  console.log('TEMPLATE_URL_HITS',filtered);
+  const ids=[];
+  const pages=[];
+  for(const url of filtered){
+    try{
+      const p=await get(url);
+      const hitIds=idsFrom(p.text);
+      const txt=p.text.replace(/\s+/g,' ');
+      const term=TERMS.find(t=>txt.toUpperCase().includes(t.toUpperCase()));
+      console.log('TEMPLATE_PAGE',{url,status:p.status,term:term||'',ids:hitIds.slice(0,30),chars:p.text.length});
+      ids.push(...hitIds);pages.push(url);
+    }catch(e){console.log('TEMPLATE_PAGE_FAIL',url,String(e?.message||e))}
+  }
+  return{ids:uniq(ids),pages}
+}
+
 async function inspectDiscovery(){
   const urls=[
     BASE+'/robots.txt',
@@ -82,6 +104,7 @@ async function inspectResources(ids){
   }
 }
 (async()=>{
+  const t=await inspectTemplateSitemap();
   const d=await inspectDiscovery();
-  await inspectResources(d.ids);
+  await inspectResources(uniq([...t.ids,...d.ids]));
 })().catch(e=>{console.error(e);process.exit(1)});
