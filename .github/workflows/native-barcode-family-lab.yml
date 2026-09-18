@@ -24,3 +24,5 @@ jobs:
           node --check tests/btw-family-native-smoke.cjs
       - name: Native QR and Code39 donor round trip
         run: node tests/btw-family-native-smoke.cjs
+      - name: Native family production routing
+        run: node tests/btw-production-core-smoke.cjs
