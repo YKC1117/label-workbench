@@ -44,7 +44,7 @@
     itf14:{
       key:'itf14',seedKey:'itf14-rich',seedId:'ITF14-RICH-2022-R8',
       app:'2022 R8',compatible:'2019',barcodeType:'ITF-14',owner:'BcITF14Data',
-      donor:{width:100.076,height:150.114},maxText:13,mode:'retail-mirror'
+      donor:{width:100,height:150},maxText:13,mode:'retail-mirror'
     }
   };
   const seedPromises=new Map();
