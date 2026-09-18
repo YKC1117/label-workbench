@@ -36,6 +36,7 @@ jobs:
           node --check tests/analysis-entry-smoke.cjs
           node --check tests/analysis-core-v2-smoke.cjs
           node --check tests/generic-label-model-smoke.cjs
+          node --check tests/generic-textobjects-btw-smoke.cjs
           node --check tests/analysis-to-btw-e2e-smoke.cjs
           node --check tests/analysis-barcode-crosscheck-smoke.cjs
           node --check tests/second-donor-pool-smoke.cjs
@@ -124,6 +125,8 @@ jobs:
         run: node tests/analysis-core-v2-smoke.cjs
       - name: Arbitrary-customer generic label object model
         run: node tests/generic-label-model-smoke.cjs
+      - name: Arbitrary-customer textObjects to editable BTW round trip
+        run: node tests/generic-textobjects-btw-smoke.cjs
       - name: Analysis to BarTender BTW end-to-end integrity gate
         run: node tests/analysis-to-btw-e2e-smoke.cjs
       - name: Barcode cross-check regression tests
