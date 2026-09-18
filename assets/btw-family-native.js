@@ -67,12 +67,25 @@
   const near=(a,b,t=.03)=>Math.abs(Number(a)-Number(b))<=t;
   const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 
+  function compactGs1Safe(raw){
+    const s=String(raw||'').replace(/^\](?:Q3|d2|C1)/i,'');
+    if(/^01\d{14}$/.test(s))return gs1CheckDigitSafe(s.slice(2),14);
+    const m=/^01(\d{14})(11|13|15|16|17)(\d{6})(.*)$/.exec(s);
+    if(m&&gs1CheckDigitSafe(m[1],14)){
+      const tail=m[4];
+      if(!tail)return true;
+      if(/^(?:20\d{2}|(?:11|13|15|16|17)\d{6})+$/.test(tail))return true;
+    }
+    const sscc=/^00(\d{18})$/.exec(s);if(sscc&&gs1CheckDigitSafe(sscc[1],18))return true;
+    return false
+  }
   function explicitGs1(row){
     const raw=String(row?.text??row?.value??row?.data??'');
     if(row?.gs1===true||row?.isGs1===true)return true;
     if(/^\](?:Q3|d2|C1)/i.test(raw))return true;
     if(/[\x1d]/.test(raw)||/(?:\[GS\]|<GS>|\{GS\}|␝)/i.test(raw))return true;
-    return /^\s*\((?:00|01|02|10|11|13|15|17|20|21|22|30|37|240|241|242|250|251|253|254|400|401|402|410|411|412|413|414|415|416|417|420|421|422|423|424|425|426|427|7001|7002|7003|7004|7005|7006|7007|7008|7009|7010|7020|7021|7022|710|711|712|713|714|715|7230|7231|7232|7233|7234|7235|7236|7237|7238|7239|7240|8001|8002|8003|8004|8005|8006|8007|8008|8009|8010|8011|8012|8013|8017|8018|8019|8020|8026|8110|8111|8112|8200)\)/.test(raw)
+    if(/^\s*\((?:00|01|02|10|11|13|15|17|20|21|22|30|37|240|241|242|250|251|253|254|400|401|402|410|411|412|413|414|415|416|417|420|421|422|423|424|425|426|427|7001|7002|7003|7004|7005|7006|7007|7008|7009|7010|7020|7021|7022|710|711|712|713|714|715|7230|7231|7232|7233|7234|7235|7236|7237|7238|7239|7240|8001|8002|8003|8004|8005|8006|8007|8008|8009|8010|8011|8012|8013|8017|8018|8019|8020|8026|8110|8111|8112|8200)\)/.test(raw))return true;
+    return compactGs1Safe(raw)
   }
   function cleanGs1Value(value){
     return String(value??'')
@@ -296,6 +309,6 @@
   }
 
   window.LabelWorkbenchBtwFamilyNative={
-    BUILD,PROFILES,explicitGs1,cleanGs1Value,kindFor,textItems,code39Safe,gs1CheckDigitSafe,upcaSafe,ean13Safe,gs1128Safe,pdf417Safe,plan,canGenerate,targetSize,printableTexts,adjacentSizePairs,rewriteInternalSize,retailMirrorEntry,applyRetailPayload,seedEndpoint,fetchSeed,generateOne
+    BUILD,PROFILES,compactGs1Safe,explicitGs1,cleanGs1Value,kindFor,textItems,code39Safe,gs1CheckDigitSafe,upcaSafe,ean13Safe,gs1128Safe,pdf417Safe,plan,canGenerate,targetSize,printableTexts,adjacentSizePairs,rewriteInternalSize,retailMirrorEntry,applyRetailPayload,seedEndpoint,fetchSeed,generateOne
   };
 })();
