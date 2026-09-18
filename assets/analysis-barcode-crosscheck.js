@@ -50,7 +50,7 @@
     const values=barcodeValues(code,barcodes);if(!values.length)return field;
     const current=String(field?.value||'').trim();const candidates=[current,...(Array.isArray(field?.alternatives)?field.alternatives:[])].map(clean).filter(Boolean);
     const exact=values.find(v=>candidates.some(c=>norm(c)===norm(v)));
-    if(exact){field.value=exact;field.alternatives=(field.alternatives||[]).filter(v=>norm(v)!==norm(exact));field.barcodeVerified=true;field.__barcodeEvidence=exact;field.__barcodeEvidenceSource='decoded';field.__barcodeConflict=false;return field}
+    if(exact){field.value=exact;field.alternatives=[];field.conflict=false;field.barcodeVerified=true;field.__barcodeEvidence=exact;field.__barcodeEvidenceSource='decoded';field.__barcodeConflict=false;field.__barcodeCorrectedFromOcr=!!current&&norm(current)!==norm(exact);return field}
     if(values.length===1){const only=values[0];field.value=only;field.alternatives=[];field.barcodeVerified=true;field.__barcodeEvidence=only;field.__barcodeEvidenceSource='decoded';field.__barcodeCorrectedFromOcr=!!current&&norm(current)!==norm(only);field.__barcodeConflict=false;return field}
     field.__barcodeConflict=true;field.__barcodeEvidence=values.join(' / ');field.__barcodeEvidenceSource='decoded-conflict';field.barcodeVerified=false;
     const merged=[...values,...(field.alternatives||[])];field.alternatives=uniq(merged).slice(0,3);return field;
