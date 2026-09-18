@@ -1,17 +1,15 @@
-/* Label Workbench view-state guard v1.3 — explicit-navigation only; prevents async rollback/jumps. */
+/* Label Workbench view-state guard v1.4 — explicit-navigation only; version text is owned by index.html. */
 (function(){
   'use strict';
-  const BUILD='20260914-view-guard-139-race-safe';
-  const RELEASE='v1.9.39';
-  const UPDATED='2026/09/14 10:20';
+  const BUILD='20260918-view-guard-145-index-owned-version';
   let desiredView=document.querySelector('.view.active')?.id||'barcode';
   let applying=false;
   let queued=false;
   let wrapped=false;
 
   function stampRelease(){
-    const marker=document.querySelector('.brand small');
-    if(marker)marker.innerHTML='標籤製作工作台 · '+RELEASE+'<br>更新：'+UPDATED;
+    // Deliberately read-only: index.html is the single owner of the visible release marker.
+    return document.querySelector('.brand small')?.textContent||'';
   }
   function validView(id){
     return !!id&&!!document.getElementById(id)&&document.getElementById(id).classList.contains('view');
@@ -71,7 +69,7 @@
     stampRelease();
     wrapShowView();
     schedule();
-    window.LabelWorkbenchViewGuard={BUILD,RELEASE,UPDATED,request(id){setDesired(id);schedule()},install};
+    window.LabelWorkbenchViewGuard={BUILD,request(id){setDesired(id);schedule()},install};
     return true;
   }
   install();

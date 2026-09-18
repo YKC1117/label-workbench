@@ -1,10 +1,16 @@
 /* Label Workbench barcode reader v4.1 loader. */
 (function(){
   'use strict';
-  const BUILD='20260917-v381-btw-5c128-1dm';
+  const BUILD='20260918-v382-analysis-ready-btw-5c128-1dm';
   const modules=['assets/view-state-guard.js','assets/barcode-reader-core.js','assets/barcode-reader-ui.js','assets/barcode-generator.js','assets/label-interpreter.js','assets/analysis-accuracy.js','assets/analysis-pdf-native.js','assets/analysis-geometry.js','assets/analysis-field-consistency.js','assets/analysis-copy.js','assets/btw-format.js','assets/btw-object-map.js','assets/btw-layout-map.js','assets/btw-native.js','assets/btw-rich-native.js','assets/btw-second-donor.js','assets/btw-second-native.js','assets/btw-caption-adapter.js','assets/btw-rich-bridge.js','assets/bt-bridge.js','assets/workbench-priority.js','assets/bt-native-primary.js','assets/analysis-confidence-guard.js','assets/btw-production-gate.js','assets/analysis-final-display.js','assets/analysis-barcode-crosscheck.js'];
+  window.LabelWorkbenchModuleLoader={BUILD,ready:false};
+  function markReady(){
+    window.LabelWorkbenchModuleLoader={BUILD,ready:true};
+    try{if(typeof CustomEvent!=='undefined')window.dispatchEvent(new CustomEvent('label-workbench:modules-ready',{detail:{build:BUILD}}))}catch{}
+    console.info('[Label Workbench] module stack ready',BUILD);
+  }
   function loadNext(){
-    const src=modules.shift();if(!src)return;
+    const src=modules.shift();if(!src){markReady();return;}
     if(src.includes('view-state-guard')&&window.LabelWorkbenchViewGuard){loadNext();return}
     if(src.includes('core')&&window.LabelWorkbenchBarcodeCore){loadNext();return}
     if(src.includes('ui')&&window.LabelWorkbenchBarcodeUI){loadNext();return}
