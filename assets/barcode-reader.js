@@ -1,8 +1,8 @@
 /* Label Workbench barcode reader v4.1 loader. */
 (function(){
   'use strict';
-  const BUILD='20260918-v390-itf14';
-  const modules=['assets/view-state-guard.js','assets/barcode-reader-core.js','assets/barcode-reader-ui.js','assets/barcode-generator.js','assets/label-interpreter.js','assets/analysis-accuracy.js','assets/analysis-pdf-native.js','assets/analysis-geometry.js','assets/analysis-field-consistency.js','assets/analysis-copy.js','assets/btw-format.js','assets/btw-object-map.js','assets/btw-layout-map.js','assets/btw-family-native.js','assets/btw-native.js','assets/btw-rich-native.js','assets/btw-second-donor.js','assets/btw-second-native.js','assets/btw-caption-adapter.js','assets/btw-rich-bridge.js','assets/bt-bridge.js','assets/workbench-priority.js','assets/analysis-confidence-guard.js','assets/btw-production-gate.js','assets/btw-production-core.js','assets/bt-native-primary.js','assets/analysis-final-display.js','assets/analysis-barcode-crosscheck.js','assets/analysis-core-v2.js'];
+  const BUILD='20260918-v391-multi-barcode';
+  const modules=['assets/view-state-guard.js','assets/barcode-reader-core.js','assets/barcode-reader-ui.js','assets/barcode-generator.js','assets/label-interpreter.js','assets/analysis-accuracy.js','assets/analysis-pdf-native.js','assets/analysis-geometry.js','assets/analysis-field-consistency.js','assets/analysis-copy.js','assets/btw-format.js','assets/btw-object-map.js','assets/btw-layout-map.js','assets/btw-family-native.js','assets/btw-multi-native.js','assets/btw-native.js','assets/btw-rich-native.js','assets/btw-second-donor.js','assets/btw-second-native.js','assets/btw-caption-adapter.js','assets/btw-rich-bridge.js','assets/bt-bridge.js','assets/workbench-priority.js','assets/analysis-confidence-guard.js','assets/btw-production-gate.js','assets/btw-production-core.js','assets/bt-native-primary.js','assets/analysis-final-display.js','assets/analysis-barcode-crosscheck.js','assets/analysis-core-v2.js'];
   window.LabelWorkbenchModuleLoader={BUILD,ready:false};
   function markReady(){
     window.LabelWorkbenchModuleLoader={BUILD,ready:true};
@@ -25,6 +25,7 @@
     if(src.includes('btw-object-map')&&window.LabelWorkbenchBtwObjectMap){loadNext();return}
     if(src.includes('btw-layout-map')&&window.LabelWorkbenchBtwLayout){loadNext();return}
     if(src.includes('btw-family-native')&&window.LabelWorkbenchBtwFamilyNative){loadNext();return}
+    if(src.includes('btw-multi-native')&&window.LabelWorkbenchBtwMultiNative){loadNext();return}
     if(src.includes('btw-second-donor')&&window.LabelWorkbenchBtwSecondDonor){loadNext();return}
     if(src.includes('btw-second-native')&&window.LabelWorkbenchBtwSecondNative){loadNext();return}
     if(src.includes('btw-caption-adapter')&&window.LabelWorkbenchBtwCaptionAdapter){loadNext();return}
