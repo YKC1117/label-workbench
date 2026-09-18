@@ -38,11 +38,10 @@
   }
 
   function stackReady(){
-    const priority=window.LabelWorkbenchPriority;
-    if(!priority?.runQuickAnalysis)return null;
     const loader=window.LabelWorkbenchModuleLoader;
-    if(loader?.ready===true)return priority;
-    if(window.LabelWorkbenchBarcodeCrosscheck&&window.LabelWorkbenchFinalDisplay&&window.LabelWorkbenchConfidenceGuard)return priority;
+    const core=window.LabelWorkbenchAnalysisCoreV2;
+    const priority=window.LabelWorkbenchPriority;
+    if(loader?.ready===true&&core?.run&&priority?.runQuickAnalysis)return {core,priority};
     return null;
   }
 
@@ -57,30 +56,28 @@
 
     showQueued(arr);
 
-    let priority=await waitFor(stackReady,15000);
+    let stack=await waitFor(stackReady,15000);
     if(my!==generation)return;
 
-    // Degrade safely if one non-critical late module failed to load: the priority controller
-    // still owns the supported analysis routing and visible error handling.
-    if(!priority){
-      priority=window.LabelWorkbenchPriority;
-      if(priority?.runQuickAnalysis){
-        console.warn('[Label Workbench] analysis stack readiness timed out; using available priority controller');
-      }
-    }
-
-    if(priority?.runQuickAnalysis){
-      return priority.runQuickAnalysis(arr);
-    }
-
-    // Last-resort fallback keeps the file selection alive even if the priority controller
-    // itself failed to load.
     const allMedia=arr.every(f=>/\.pdf$/i.test(f?.name||'')||f?.type==='application/pdf'||f?.type?.startsWith?.('image/')||/\.(jpe?g|png|webp|gif|bmp)$/i.test(f?.name||''));
-    if(allMedia){
-      const interpreter=await waitFor(()=>window.LabelWorkbenchInterpreter?.analyze?window.LabelWorkbenchInterpreter:null,3000);
-      if(my!==generation)return;
-      if(interpreter?.analyze)return interpreter.analyze(arr);
+
+    if(stack?.core?.run&&allMedia){
+      return stack.core.run(arr);
     }
+    if(stack?.priority?.runQuickAnalysis){
+      return stack.priority.runQuickAnalysis(arr);
+    }
+
+    // Safe fallback: keep media on the deterministic core if it exists; non-media stays on document parsers.
+    if(allMedia&&window.LabelWorkbenchAnalysisCoreV2?.run){
+      console.warn('[Label Workbench] loader readiness timed out; using deterministic analysis core');
+      return window.LabelWorkbenchAnalysisCoreV2.run(arr);
+    }
+    if(window.LabelWorkbenchPriority?.runQuickAnalysis){
+      console.warn('[Label Workbench] loader readiness timed out; using priority document route');
+      return window.LabelWorkbenchPriority.runQuickAnalysis(arr);
+    }
+
     const parsers=await waitFor(()=>window.LabelWorkbenchParsers?.analyze?window.LabelWorkbenchParsers:null,3000);
     if(my!==generation)return;
     if(parsers?.analyze)return parsers.analyze(arr);
