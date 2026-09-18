@@ -4,7 +4,7 @@
  */
 (function(){
   'use strict';
-  const BUILD='20260917-btw-second-native-100';
+  const BUILD='20260918-btw-second-native-110-textobjects';
   const SEED_ID='LW-SECOND-SANITIZED-2022-R2';
   const OFF=50000;
   const MAX_TEXT=33;
