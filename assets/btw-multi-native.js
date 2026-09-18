@@ -166,7 +166,10 @@
     const rp=F.parseStructure(rebuilt),rc=await F.inflateContainer(rp),rm=M.mapContainer(rc);
     for(const e of expectedBars){
       const o=rm.objects.find(x=>x.kind==='barcode'&&x.barcodeType===e.type&&x.resolvedPreview===e.value&&x.xMil===e.xMil&&x.yMil===e.yMil);
-      if(!o)throw new Error(`multi ${e.type} round-trip 驗證失敗：${e.value}`)
+      if(!o){
+        const got=rm.objects.filter(x=>x.kind==='barcode').map(x=>({index:x.index,owner:x.owner,type:x.barcodeType,preview:x.resolvedPreview,components:x.components,x:x.xMil,y:x.yMil}));
+        throw new Error(`multi ${e.type} round-trip 驗證失敗：${e.value}; got=${JSON.stringify(got)}`)
+      }
     }
     for(const e of expectedText){
       const o=rm.objects.find(x=>x.kind==='text'&&x.value===e.value&&x.xMil===e.xMil&&x.yMil===e.yMil);
