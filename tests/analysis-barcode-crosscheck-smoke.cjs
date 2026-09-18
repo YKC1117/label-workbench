@@ -17,12 +17,14 @@ assert.deepStrictEqual([...A.extractCodeValues('1T',compact)],['K5494D9CJ']);
 const separated={text:'1P:W25NO1GWZEIR\x1dQ:4000\x1d31T:6612D7800'};
 assert.deepStrictEqual([...A.extractCodeValues('1P',separated)],['W25NO1GWZEIR']);
 assert.deepStrictEqual([...A.extractCodeValues('Q',separated)],['4000']);
-const label={fields:[
+const label={textObjects:[{text:'Made in Taiwan',sourceBox:{x:.1,y:.2,w:.3,h:.1}},{text:'FREE TEXT 77',sourceBox:{x:.2,y:.4,w:.3,h:.1}}],fields:[
  {code:'1P',name:'PART NO',value:'W25NO1GWZEIR',alternatives:['W25NO1GWZE1R']},
  {code:'31T',name:'MLOT NO',value:'6612D7800',alternatives:[]},
  {code:'Q',name:'QTY',value:'4000',alternatives:[]}
 ],barcodes:[barcode]};
+const textObjectsBefore=JSON.stringify(label.textObjects);
 A.refineLabel(label);
+assert.strictEqual(JSON.stringify(label.textObjects),textObjectsBefore,'barcode cross-check must not mutate or contaminate generic textObjects');
 assert.strictEqual(label.fields[0].barcodeVerified,true);
 assert.strictEqual(label.fields[0].conflict,false);
 assert.deepStrictEqual([...label.fields[0].alternatives],[]);
