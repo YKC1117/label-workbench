@@ -46,7 +46,7 @@ async function verify(label,kind,owner,type,payload,size){
 }
 
 (async()=>{
-  assert(G?.BUILD==='20260918-btw-family-native-140-itf14','unexpected family build');
+  assert(G?.BUILD==='20260918-btw-family-native-150-gs1-2d','unexpected family build');
 
   const qr=barcode({
     sourceName:'customer-qr.png',
@@ -56,6 +56,35 @@ async function verify(label,kind,owner,type,payload,size){
   },'QR Code','https://example.com/item/ZX-901?lot=20260918',{x:.62,y:.18,w:.22,h:.30});
   const q=await verify(qr,'qr','BcQrcodeData','QR Code','https://example.com/item/ZX-901?lot=20260918',{width:90,height:50});
   assert(q.out.seed==='QR-RICH-2022-R6','QR seed mismatch');
+
+  const gs1Payload='010950110153000317261231';
+  assert(G.compactGs1Safe(gs1Payload),'compact AI 01 + AI 17 payload should be recognized as GS1');
+
+  const gs1qr=barcode({
+    sourceName:'customer-gs1qr.png',
+    sourceGeometry:{widthMm:100,heightMm:60},
+    fields:[],
+    textObjects:textObjects(['GTIN','09501101530003','EXP','2026-12-31'])
+  },'QR Code',gs1Payload,{x:.64,y:.16,w:.22,h:.34});
+  assert(G.kindFor(gs1qr.barcodes[0])==='gs1qr','GS1 QR semantic detection failed');
+  const gq=await verify(gs1qr,'gs1qr','BcGS1QrcodeData','GS1 QR Code',gs1Payload,{width:100,height:60});
+  assert(gq.out.seed==='GS1QR-RICH-2022-R6','GS1 QR seed mismatch');
+
+  const gs1dm=barcode({
+    sourceName:'customer-gs1dm.png',
+    sourceGeometry:{widthMm:105,heightMm:65},
+    fields:[],
+    textObjects:textObjects(['GTIN','09501101530003','EXP','2026-12-31'])
+  },'Data Matrix',gs1Payload,{x:.68,y:.18,w:.18,h:.28});
+  assert(G.kindFor(gs1dm.barcodes[0])==='gs1dm','GS1 DataMatrix semantic detection failed');
+  const gd=await verify(gs1dm,'gs1dm','BcGS1DatamatrixData','GS1 DataMatrix',gs1Payload,{width:105,height:65});
+  assert(gd.out.seed==='GS1DM-RICH-2022-R6','GS1 DataMatrix seed mismatch');
+
+  const plainDm=barcode({sourceName:'plain-dm.png',textObjects:[],fields:[]},'Data Matrix','DM-PLAIN-123',{x:.1,y:.1,w:.2,h:.2});
+  assert(G.kindFor(plainDm.barcodes[0])==='','plain Data Matrix must remain on the existing non-family donor path');
+
+  const explicitGs1Qr=barcode({sourceName:'gs1-explicit.png',textObjects:[],fields:[]},'QR Code','(01)09501101530003(17)261231',{x:.1,y:.1,w:.2,h:.2});
+  assert(G.kindFor(explicitGs1Qr.barcodes[0])==='gs1qr','parenthesized GS1 AI form should select GS1 QR');
 
   const c39=barcode({
     sourceName:'customer-code39.png',
@@ -144,5 +173,5 @@ async function verify(label,kind,owner,type,payload,size){
   const i25=barcode({sourceName:'i25.png',textObjects:[],fields:[]},'Interleaved 2 of 5','1234567890',{x:.1,y:.1,w:.5,h:.1});
   assert(!G.canGenerate(i25),'Interleaved 2 of 5 must stay out of production until a BarTender 2022 donor is verified');
 
-  console.log('PASS: official BarTender 2022 QR, Code39, UPC-A, EAN-13, GS1-128, PDF417 and ITF-14 donors round-trip native payloads, text objects, source positions and physical label size');
+  console.log('PASS: official BarTender 2022 QR, GS1 QR, GS1 DataMatrix, Code39, UPC-A, EAN-13, GS1-128, PDF417 and ITF-14 donors round-trip native payloads, text objects, source positions and physical label size');
 })().catch(err=>{console.error(err);process.exit(1)});
