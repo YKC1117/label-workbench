@@ -75,7 +75,8 @@ jobs:
           ! grep -q "marker.innerHTML='標籤製作工作台" assets/view-state-guard.js
           grep -q "BUILD='20260918-v384-real-label-text-rescue'" assets/barcode-reader.js
           grep -q 'analysis-core-v2.js' assets/barcode-reader.js
-          grep -q "BUILD='20260918-analysis-core-v2-200'" assets/analysis-core-v2.js\n          grep -q \"BUILD='20260918-v182-text-column-row-rescue'\" assets/label-interpreter.js
+          grep -q "BUILD='20260918-analysis-core-v2-200'" assets/analysis-core-v2.js
+          grep -q "BUILD='20260918-v182-text-column-row-rescue'" assets/label-interpreter.js
           grep -q 'LabelWorkbenchModuleLoader={BUILD,ready:true}' assets/barcode-reader.js
           grep -q "BUILD='20260918-barcode-crosscheck-108-clear-stale-ocr'" assets/analysis-barcode-crosscheck.js
           grep -q "analysis-barcode-crosscheck.js'" assets/barcode-reader.js
