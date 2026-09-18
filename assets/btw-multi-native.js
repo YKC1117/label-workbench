@@ -150,7 +150,7 @@
     for(const o of pool)edits.set(o.index,{index:o.index,value:'',xMil:OFF,yMil:OFF});
 
     bars.forEach((b,i)=>{
-      const pos=layout(b.row?.sourceBox,target)?.mil||fallbackBar(i,bars.length,target);
+      const mapped=layout(b.row?.sourceBox,target),pos=mapped?.mil?{xMil:mapped.mil.x,yMil:mapped.mil.y}:fallbackBar(i,bars.length,target);
       const e={index:b.obj.index,xMil:pos.xMil,yMil:pos.yMil};
       if(P.kind==='pdfc128')e.barcodeComponents=b.obj.componentEntries.map((_,j)=>j===0?value(b.row):'');
       edits.set(b.obj.index,e);
@@ -158,7 +158,7 @@
     });
     const expectedText=[];
     P.texts.forEach((t,i)=>{
-      const o=pool[i],pos=layout(t?.sourceBox,target)?.mil||fallbackText(i,P.texts.length,target),v=textValue(t);
+      const o=pool[i],mapped=layout(t?.sourceBox,target),pos=mapped?.mil?{xMil:mapped.mil.x,yMil:mapped.mil.y}:fallbackText(i,P.texts.length,target),v=textValue(t);
       edits.set(o.index,{index:o.index,value:v,xMil:pos.xMil,yMil:pos.yMil});expectedText.push({value:v,xMil:pos.xMil,yMil:pos.yMil})
     });
 
