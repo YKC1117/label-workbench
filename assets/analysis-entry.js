@@ -5,7 +5,7 @@
 (function(){
   'use strict';
 
-  const BUILD='20260918-analysis-entry-145';
+  const BUILD='20260918-analysis-entry-146-core-v2';
   const el=id=>document.getElementById(id);
   const esc=(v='')=>String(v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
   let generation=0;
