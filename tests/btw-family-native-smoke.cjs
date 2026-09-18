@@ -46,7 +46,7 @@ async function verify(label,kind,owner,type,payload,size){
 }
 
 (async()=>{
-  assert(G?.BUILD==='20260918-btw-family-native-100-qr-c39','unexpected family build');
+  assert(G?.BUILD==='20260918-btw-family-native-110-qr-c39-upca','unexpected family build');
 
   const qr=barcode({
     sourceName:'customer-qr.png',
@@ -75,8 +75,20 @@ async function verify(label,kind,owner,type,payload,size){
   ]};
   assert(!G.canGenerate(mixed),'family generator must not pretend one donor can safely create two independent family barcodes');
 
-  const upc=barcode({sourceName:'upc.png',textObjects:[],fields:[]},'UPC-A','036602301972',{x:.1,y:.1,w:.5,h:.1});
-  assert(!G.canGenerate(upc),'UPC-A must stay out of production until its datasource write path is verified');
+  const upc=barcode({
+    sourceName:'customer-upca.png',
+    sourceGeometry:{widthMm:100,heightMm:55},
+    fields:[],
+    textObjects:textObjects(['SKU','A-100','品名','測試商品','產地','TAIWAN'])
+  },'UPC-A','036000291452',{x:.08,y:.58,w:.62,h:.16});
+  const ua=await verify(upc,'upca','BcUPCAData','UPC-A','036000291452',{width:100,height:55});
+  assert(ua.out.seed==='UPCA-RICH-2022-R5','UPC-A seed mismatch');
 
-  console.log('PASS: official BarTender 2022 QR and Code39 donors round-trip arbitrary payloads, text objects, source positions and physical label size');
+  const badUpc=barcode({sourceName:'bad-upca.png',textObjects:[],fields:[]},'UPC-A','036000291453',{x:.1,y:.1,w:.5,h:.1});
+  assert(!G.canGenerate(badUpc),'UPC-A with invalid check digit must be rejected');
+
+  const shortUpc=barcode({sourceName:'short-upca.png',textObjects:[],fields:[]},'UPC-A','03600029145',{x:.1,y:.1,w:.5,h:.1});
+  assert(!G.canGenerate(shortUpc),'UPC-A must require the complete 12 digit decoded payload');
+
+  console.log('PASS: official BarTender 2022 QR, Code39 and UPC-A donors round-trip native payloads, text objects, source positions and physical label size');
 })().catch(err=>{console.error(err);process.exit(1)});
