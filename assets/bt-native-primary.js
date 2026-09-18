@@ -87,10 +87,10 @@
     el('analysisSendBt')?.remove();
     let native=el('analysisBtNative');
     if(!native){native=makeButton('analysisBtNative','→ 下載可編輯 .BTW',downloadEditable);actions.insertBefore(native,actions.firstChild)}
-    native.className='btn primary';native.textContent='→ 下載可編輯 .BTW';
+    native.className='btn primary';if(!native.disabled&&native.textContent!=='→ 下載可編輯 .BTW')native.textContent='→ 下載可編輯 .BTW';
     let hint=out.querySelector('[data-bt-native-hint]');
     if(!hint){hint=document.createElement('div');hint.dataset.btNativeHint='true';hint.className='footer-note';actions.insertAdjacentElement('afterend',hint)}
-    hint.innerHTML='<b>分析完成：</b>網站會直接建立 BarTender <code>.btw</code> 成品。按上方按鈕下載即可，不需要另外安裝網站工具；下載後只要用 BarTender 2022 開啟。'
+    if(!hint.innerHTML)hint.innerHTML='<b>分析完成：</b>網站會直接建立 BarTender <code>.btw</code> 成品。按上方按鈕下載即可，不需要另外安裝網站工具；下載後只要用 BarTender 2022 開啟。'
   }
 
   function decorateBt(){
@@ -104,7 +104,7 @@
       let native=el('btNativeDownload');
       if(hasMediaResult()){
         if(!native){native=makeButton('btNativeDownload','下載可編輯 .BTW',downloadEditable);actions.appendChild(native)}
-        native.className='btn primary';native.textContent='下載可編輯 .BTW'
+        native.className='btn primary';if(!native.disabled&&native.textContent!=='下載可編輯 .BTW')native.textContent='下載可編輯 .BTW'
       }else if(native)native.remove()
     }
     const flow=section.querySelector('.workflow');

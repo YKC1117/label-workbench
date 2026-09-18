@@ -12,8 +12,8 @@
   function loadNext(){
     const src=modules.shift();if(!src){markReady();return;}
     if(src.includes('view-state-guard')&&window.LabelWorkbenchViewGuard){loadNext();return}
-    if(src.includes('core')&&window.LabelWorkbenchBarcodeCore){loadNext();return}
-    if(src.includes('ui')&&window.LabelWorkbenchBarcodeUI){loadNext();return}
+    if(src==='assets/barcode-reader-core.js'&&window.LabelWorkbenchBarcodeCore){loadNext();return}
+    if(src==='assets/barcode-reader-ui.js'&&window.LabelWorkbenchBarcodeUI){loadNext();return}
     if(src.includes('barcode-generator')&&window.LabelWorkbenchBarcodeGenerator){loadNext();return}
     if(src.includes('label-interpreter')&&window.LabelWorkbenchInterpreter){loadNext();return}
     if(src.includes('analysis-accuracy')&&window.LabelWorkbenchAnalysisAccuracy){loadNext();return}

@@ -1,0 +1,1 @@
+{"name":"label-workbench-qa","private":true,"scripts":{"test:browser":"playwright test"},"devDependencies":{"@playwright/test":"1.55.1"}}

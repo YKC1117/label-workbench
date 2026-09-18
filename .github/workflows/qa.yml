@@ -144,7 +144,7 @@ jobs:
         run: node tests/generic-label-model-smoke.cjs
       - name: Arbitrary-customer textObjects to editable BTW round trip
         run: node tests/generic-textobjects-btw-smoke.cjs
-      - name: Analysis to BarTender BTW end-to-end integrity gate
+      - name: Internal analysis-to-BTW structural integrity (not runtime acceptance)
         run: node tests/analysis-to-btw-e2e-smoke.cjs
       - name: Barcode cross-check regression tests
         run: node tests/analysis-barcode-crosscheck-smoke.cjs
@@ -227,9 +227,30 @@ jobs:
         run: node tests/btw-native-smoke.cjs
       - name: Production rich native BTW generation smoke tests
         run: node tests/btw-rich-native-smoke.cjs
-      - name: Browser one-click editable BTW flow
+      - name: Mock DOM one-click wiring (not browser acceptance)
         run: node tests/browser-btw-flow-smoke.cjs
       - name: Deterministic BTW production routing gate
         run: node tests/btw-production-core-smoke.cjs
       - name: BTW pending-field production safety gate
         run: node tests/btw-production-gate-smoke.cjs
+
+  browser-e2e:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Real Chromium PDF PNG JPG analysis and direct download
+        run: npm run test:browser
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browser-e2e-evidence
+          path: |
+            artifacts/browser/
+            test-results/
+          retention-days: 14
