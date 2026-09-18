@@ -1,0 +1,21 @@
+name: UPC EAN Native Lab
+
+on:
+  push:
+    branches:
+      - feat/native-upc-ean-v1952
+
+permissions:
+  contents: read
+
+jobs:
+  lab:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Probe UPC-A and EAN-13 native datasources
+        run: node tools/probe-upca-ean.cjs
