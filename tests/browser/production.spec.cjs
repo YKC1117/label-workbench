@@ -5,13 +5,17 @@ const vm=require('node:vm');
 const zlib=require('node:zlib');
 const crypto=require('node:crypto');
 
+test.afterEach(async({page},info)=>{if(info.status!==info.expectedStatus){console.log('FAILED PAGE',await page.locator('#analysisResult').innerText().catch(()=>''));}});
+
 // No substituted OCR, decoder, analysis result, seed, generator, Blob or download.
 // A: structural checks below. B: real Chromium download. C: NOT BarTender acceptance.
 for(const extension of ['pdf','png','jpg']){
  test(`File -> analysis -> actual .btw download (${extension})`,async({page},testInfo)=>{
   const warnings=[],errors=[];
   page.on('console',m=>{if(m.type()==='warning')warnings.push(m.text());});
-  page.on('pageerror',e=>errors.push(e.message));
+  page.on('pageerror',e=>{errors.push(e.message);console.log('PAGE ERROR',e.message)});
+  page.on('console',m=>{if(m.type()==='error')console.log('CONSOLE ERROR',m.text())});
+  page.on('requestfailed',r=>console.log('REQUEST FAILED',r.url(),r.failure()?.errorText));
   await page.goto('/');
   await page.getByRole('button',{name:'⚡ 快速分析',exact:true}).click();
   await page.locator('#analysisFiles').setInputFiles(path.resolve(`tests/fixtures/generic-label.${extension}`));
@@ -66,7 +70,7 @@ test('production seed response and visible failure recovery',async({page})=>{
  const button=page.locator('#analysisBtNative');
  await expect(button).toBeVisible({timeout:150000});
  // Failure injection is confined to this negative test, never the success E2Es.
- await page.route('**/functions/v1/btw-seed**',r=>r.fulfill({status:502,body:'upstream unavailable'}));
+ await page.route('**/functions/v1/btw-seed**',r=>r.fulfill({status:502,headers:{'access-control-allow-origin':'*'},body:'upstream unavailable'}));
  let downloads=0;page.on('download',()=>downloads++);
  await button.click();
  await expect(page.locator('#btwDownloadStatus')).toContainText('502',{timeout:30000});
