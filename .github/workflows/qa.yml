@@ -70,17 +70,17 @@ jobs:
           grep -q 'LabelWorkbench_Runtime_Acceptance_EDITED.btw' RUN_BARTENDER_2022_MANUAL_EDIT_VERIFY.cmd
       - name: Current wiring sanity check
         run: |
-          grep -q 'assets/analysis-entry.js?v=20260918-v146' index.html
-          grep -q 'assets/barcode-reader.js?v=20260918-v385' index.html
-          grep -q '標籤製作工作台 · v1.9.49' index.html
-          grep -q '更新：2026/09/18 10:28' index.html
+          grep -q 'assets/analysis-entry.js?v=20260918-v147' index.html
+          grep -q 'assets/barcode-reader.js?v=20260918-v386' index.html
+          grep -q '標籤製作工作台 · v1.9.50' index.html
+          grep -q '更新：2026/09/18 10:59' index.html
           grep -q 'assets/analysis-race-guard.js?v=20260914-v139' index.html
-          grep -q "BUILD='20260918-analysis-entry-146-core-v2'" assets/analysis-entry.js
+          grep -q "BUILD='20260918-analysis-entry-147-core-ready'" assets/analysis-entry.js
           grep -q "dataset.priorityBound='true'" assets/analysis-entry.js
           grep -q "BUILD='20260918-view-guard-145-index-owned-version'" assets/view-state-guard.js
           ! grep -q "marker.innerHTML='標籤製作工作台" assets/view-state-guard.js
-          grep -q "BUILD='20260918-v385-generic-label-model'" assets/barcode-reader.js
-          grep -q "BUILD='20260918-v182-generic-object-model'" assets/label-interpreter.js
+          grep -q "BUILD='20260918-v386-runtime-resilience'" assets/barcode-reader.js
+          grep -q "BUILD='20260918-v183-quality-fallback'" assets/label-interpreter.js
           grep -q "BUILD='20260918-btw-production-gate-110-textobjects'" assets/btw-production-gate.js
           grep -q "BUILD='20260918-btw-second-native-110-textobjects'" assets/btw-second-native.js
           grep -q 'analysis-core-v2.js' assets/barcode-reader.js
@@ -91,7 +91,7 @@ jobs:
           grep -q "BUILD='20260912-btw-object-map-038-barcode-slot-mode'" assets/btw-object-map.js
           grep -q "BUILD='20260912-btw-caption-adapter-100'" assets/btw-caption-adapter.js
           grep -q "SEED_ID='CEA-2022-R5'" assets/btw-native.js
-          grep -q "SEED_FUNCTION='btw-seed'" assets/btw-native.js
+          grep -q "SEED_FUNCTION='btw-seed'" assets/btw-native.js\n          grep -q "BUILD='20260918-btwn232-seed-retry'" assets/btw-native.js
           grep -q 'btw-rich-native.js' assets/barcode-reader.js
           grep -q 'btw-second-donor.js' assets/barcode-reader.js
           grep -q 'btw-second-native.js' assets/barcode-reader.js
