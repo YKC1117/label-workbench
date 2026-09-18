@@ -6,7 +6,7 @@
  */
 (function(){
   'use strict';
-  const BUILD='20260918-btw-object-map-044-itf-i25';
+  const BUILD='20260918-btw-object-map-045-gs1-2d';
   const ROOT='Root.MasterSelectedObject.';
   const FONT_MARKER=new Uint8Array([0x03,0x02,0x01,0x22]);
   const PLACEHOLDER='(???) ???-????';
@@ -59,7 +59,9 @@
     return'object';
   }
   function barcodeTypeFor(owner,root,strings){
+    if(owner==='BcGS1DatamatrixData')return'GS1 DataMatrix';
     if(owner==='BcDatamatrixData')return'Data Matrix';
+    if(owner==='BcGS1QrcodeData')return'GS1 QR Code';
     if(owner==='BcC128Data')return'Code 128';
     if(owner==='BcUCCEAN128Data')return'GS1-128';
     if(owner==='BcPdf417Data')return'PDF417';
