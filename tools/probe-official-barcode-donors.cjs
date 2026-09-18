@@ -192,6 +192,23 @@ async function parseOfficialBtw(t){
     }
   }
 
+  if(t.key==='c39-retail-library-resource-80043'){
+    const barcode=barcodeObjects.find(o=>o.owner==='BcC39RegularData');
+    const linked=new Set((barcode?.linkedDataSourceRefs||[]).map(r=>r.index));
+    const candidates=map.objects.filter(o=>o.kind==='text'&&o.valueEntry&&/^Text\\s+\\d+$/i.test(String(o.name||''))&&!linked.has(o.index));
+    const results=[];
+    for(let i=0;i<candidates.length;i++){
+      const target=candidates[i],token=`TXT_SLOT_${String(i+1).padStart(2,'0')}`,x=300+i*37,y=400+i*29;
+      try{
+        const edited=M.editContainer(container,[{index:target.index,value:token,xMil:x,yMil:y}]);
+        const rebuilt=await F.rebuild(parsed,edited),rp=F.parseStructure(rebuilt),rc=await F.inflateContainer(rp),rm=M.mapContainer(rc);
+        const hit=rm.objects.find(o=>o.kind==='text'&&o.value===token&&o.xMil===x&&o.yMil===y);
+        results.push({index:target.index,name:target.name,before:target.value,ok:!!hit,after:hit?.value||'',afterName:hit?.name||'',afterIndex:hit?.index??null});
+      }catch(error){results.push({index:target.index,name:target.name,before:target.value,ok:false,error:String(error?.message||error)})}
+    }
+    console.log('C39_TEXT_SLOT_ROUNDTRIP',JSON.stringify(results,null,2));
+  }
+
   for(const b of barcodeObjects){
     if(b.owner!=='BcQrcodeData'||!Array.isArray(b.componentEntries)||!b.componentEntries.length)continue;
     const payload='QR_NATIVE_COMPONENT_123';
