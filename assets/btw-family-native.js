@@ -39,7 +39,7 @@
     pdf417:{
       key:'pdf417',seedKey:'pdf417-rich',seedId:'PDF417-RICH-2022-R5',
       app:'2022 R5',compatible:'2019',barcodeType:'PDF417',owner:'BcPdf417Data',
-      donor:{width:210.06,height:148.08},maxText:12,mode:'components'
+      donor:{width:210.0072,height:148.0058},maxText:12,mode:'components'
     }
   };
   const seedPromises=new Map();
