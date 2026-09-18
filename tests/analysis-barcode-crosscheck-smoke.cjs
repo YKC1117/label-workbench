@@ -24,6 +24,8 @@ const label={fields:[
 ],barcodes:[barcode]};
 A.refineLabel(label);
 assert.strictEqual(label.fields[0].barcodeVerified,true);
+assert.strictEqual(label.fields[0].conflict,false);
+assert.deepStrictEqual([...label.fields[0].alternatives],[]);
 assert.strictEqual(label.fields[1].barcodeVerified,true);
 assert.strictEqual(label.fields[2].barcodeVerified,true);
 const corrected={fields:[{code:'1P',name:'PART NO',value:'WRONG',alternatives:[]}],barcodes:[{text:'(1P)RIGHTPART'}]};

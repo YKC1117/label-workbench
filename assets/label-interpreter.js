@@ -6,7 +6,7 @@
 (function(){
   'use strict';
 
-  const BUILD='20260910-v180';
+  const BUILD='20260918-v181-render-api';
   const PDF_SRC='https://cdn.jsdelivr.net/npm/pdfjs-dist@6.3.289/build/pdf.min.mjs';
   const PDF_WORKER='https://cdn.jsdelivr.net/npm/pdfjs-dist@6.3.289/build/pdf.worker.min.mjs';
   const TESS_SRC='https://cdn.jsdelivr.net/npm/tesseract.js@7.0.0/dist/tesseract.min.js';
@@ -249,5 +249,13 @@
   function wireResultButtons(){const a=el('analysisCopyProduction'),b=el('analysisCopyQuestions');if(a)a.onclick=()=>copyText(productionText(lastResult),'已複製製作資料');if(b)b.onclick=()=>copyText(questionsText(lastResult),'已複製客戶確認內容')}
   async function analyze(files){const arr=[...files],out=el('analysisResult');if(!out)return;const eligible=arr.filter(f=>ext(f)==='pdf'||isImage(f));if(!eligible.length||eligible.length!==arr.length){const base=window.LabelWorkbenchParsers;if(base?.analyze)return base.analyze(arr);throw new Error('文件解析器尚未載入')}const progress=msg=>{out.innerHTML=`<div class="scan-working"><div class="scan-spinner"></div><b>正在完整讀取客戶原稿</b><span>${esc(msg)}</span><small>會自動判斷方向、版面、欄位位置與條碼內容。</small></div>`};progress('準備分析…');lastResult=await interpretFiles(eligible,progress);out.innerHTML=renderInterpretation(eligible,lastResult);wireResultButtons();return lastResult}
 
-  window.LabelWorkbenchInterpreter={BUILD,scoreText,parseFields,spatialFields,aggregateFields,detectLabelBands,rotateCanvas,interpretPdf,interpretImage,interpretFiles,productionText,questionsText,analyze};
+  function renderResult(files,result){
+    const arr=[...(files||[])],out=el('analysisResult');if(!out)return result;
+    lastResult=result;
+    out.innerHTML=renderInterpretation(arr,result);
+    wireResultButtons();
+    return result
+  }
+
+  window.LabelWorkbenchInterpreter={BUILD,scoreText,parseFields,spatialFields,aggregateFields,detectLabelBands,rotateCanvas,interpretPdf,interpretImage,interpretFiles,productionText,questionsText,renderInterpretation,renderResult,analyze};
 })();

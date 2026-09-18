@@ -5,7 +5,8 @@ const vm=require('vm');
 const code=fs.readFileSync(path.join(__dirname,'..','assets','analysis-entry.js'),'utf8');
 
 let changeHandler=null;
-let called=0;
+let coreCalled=0;
+let priorityCalled=0;
 let received=null;
 
 const input={
@@ -21,17 +22,7 @@ const document={
   addEventListener(){}
 };
 const window={};
-const context={
-  console,
-  document,
-  window,
-  setTimeout,
-  clearTimeout,
-  setInterval,
-  clearInterval,
-  Date,
-  Promise
-};
+const context={console,document,window,setTimeout,clearTimeout,setInterval,clearInterval,Date,Promise};
 window.window=window;
 vm.createContext(context);
 vm.runInContext(code,context,{filename:'analysis-entry.js'});
@@ -51,17 +42,18 @@ if(!/first\.pdf/.test(result.innerHTML)||!/已收到檔案/.test(result.innerHTM
 if(input.value!=='')throw new Error('file input was not reset after File references were captured');
 
 setTimeout(()=>{
-  window.LabelWorkbenchModuleLoader={ready:true};
-  window.LabelWorkbenchBarcodeCrosscheck={};
-  window.LabelWorkbenchFinalDisplay={};
-  window.LabelWorkbenchConfidenceGuard={};
-  window.LabelWorkbenchPriority={
-    async runQuickAnalysis(files){called++;received=[...files];return {ok:true}}
+  window.LabelWorkbenchAnalysisCoreV2={
+    async run(files){coreCalled++;received=[...files];return {labels:[]}}
   };
+  window.LabelWorkbenchPriority={
+    async runQuickAnalysis(){priorityCalled++;return {labels:[]}}
+  };
+  window.LabelWorkbenchModuleLoader={ready:true};
 },20);
 
 setTimeout(()=>{
-  if(called!==1)throw new Error('queued selection did not reach Quick Analysis exactly once');
-  if(received?.length!==1||received[0]!==file)throw new Error('captured File object was lost before analysis modules became ready');
-  console.log('PASS: Quick Analysis captures the file immediately and survives late module loading');
+  if(coreCalled!==1)throw new Error('PDF selection did not reach deterministic Analysis Core v2 exactly once');
+  if(priorityCalled!==0)throw new Error('PDF selection leaked back into legacy priority analysis route');
+  if(received?.length!==1||received[0]!==file)throw new Error('captured File object was lost before Analysis Core v2 became ready');
+  console.log('PASS: Quick Analysis captures PDF immediately and routes it exactly once through Analysis Core v2');
 },180);
