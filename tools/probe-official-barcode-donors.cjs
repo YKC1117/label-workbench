@@ -91,7 +91,40 @@ async function parseOfficialBtw(t){
     const rows=allStrings.filter(e=>e.offset>=o.recordStart&&e.offset<o.recordEnd).map(e=>({offset:e.offset,text:e.text})).filter(e=>String(e.text??'').length||true);
     console.log('BARCODE_RECORD',o.name,o.owner,rows.slice(0,120));
   }
-  console.log('ALL_OBJECTS',map.objects.map(o=>({index:o.index,kind:o.kind,name:o.name,owner:o.owner,value:o.value,components:o.components,xMil:o.xMil,yMil:o.yMil})));
+  console.log('ALL_OBJECTS',map.objects.map(o=>({index:o.index,kind:o.kind,name:o.name,owner:o.owner,value:o.value,valueEntry:o.valueEntry,components:o.components,xMil:o.xMil,yMil:o.yMil})));
+  const linkInfo=analyzeLinks(map,container,F);
+  for(const link of linkInfo){
+    const ref=link.refs[0];
+    if(!ref)continue;
+    const target=map.objects.find(o=>o.index===ref.index);
+    const token=(link.barcode.owner==='BcQrcodeData'?'QR_NATIVE_123':link.barcode.owner==='BcC39RegularData'?'CODE39_NATIVE_123':'036602301972');
+    try{
+      const edited=M.editContainer(container,[{index:target.index,value:token,xMil:50000,yMil:50000}]);
+      const rebuilt=await F.rebuild(parsed,edited);
+      const reparsed=F.parseStructure(rebuilt),recontainer=await F.inflateContainer(reparsed),remap=M.mapContainer(recontainer);
+      const rb=remap.objects.find(o=>o.owner===link.barcode.owner);
+      const rt=remap.objects.find(o=>o.index===target.index);
+      console.log('DATASOURCE_EDIT_EXPERIMENT',{
+        owner:link.barcode.owner,
+        ref:target.name,
+        token,
+        refBefore:target.value,
+        hasValueEntry:!!target.valueEntry,
+        refAfter:rt?.value,
+        refPosAfter:[rt?.xMil,rt?.yMil],
+        barcodeStillNative:!!rb,
+        barcodeOwnerAfter:rb?.owner,
+        barcodeTypeAfter:rb?.barcodeType,
+        rebuiltBytes:rebuilt.byteLength
+      });
+    }catch(error){
+      console.log('DATASOURCE_EDIT_EXPERIMENT_FAIL',{
+        owner:link.barcode.owner,ref:target?.name,token,
+        hasValueEntry:!!target?.valueEntry,
+        error:String(error?.message||error)
+      });
+    }
+  }
   fs.writeFileSync('/tmp/'+t.key+'.btw',Buffer.from(bytes));
 }
 
