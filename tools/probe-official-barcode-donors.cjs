@@ -30,6 +30,25 @@ function utf16Strings(data,min=3){
   return [...new Set(out)]
 }
 
+
+async function probeSeedFunction(){
+  const cfg=fs.readFileSync('assets/cloud-config.js','utf8');
+  const url=(/url:\s*'([^']+)'/.exec(cfg)||[])[1];
+  const key=(/key:\s*'([^']+)'/.exec(cfg)||[])[1];
+  if(!url||!key)throw new Error('cloud config missing');
+  for(const seed of ['cea','qr-c39','upca']){
+    const endpoint=`${url}/functions/v1/btw-seed?seed=${encodeURIComponent(seed)}`;
+    const started=Date.now();
+    const res=await fetch(endpoint,{headers:{apikey:key,'user-agent':'LabelWorkbenchEdgeProbe/1.0'}});
+    const bytes=new Uint8Array(await res.arrayBuffer());
+    const head=Buffer.from(bytes.slice(0,220)).toString('utf8').replace(/[^\x20-\x7e\r\n\t]/g,'.');
+    console.log('\n=== edge btw-seed',seed,'===');
+    console.log('status',res.status,'ms',Date.now()-started,'type',res.headers.get('content-type'),'seedHeader',res.headers.get('x-label-workbench-seed'),'resource',res.headers.get('x-label-workbench-resource'),'bytes',bytes.length);
+    if(res.ok)console.log('head',JSON.stringify(head));
+    else console.log('errorBody',JSON.stringify(Buffer.from(bytes).toString('utf8').slice(0,1200)));
+  }
+}
+
 async function inspectBinary(t){
   const res=await fetch(t.url,{redirect:'follow',headers:{'user-agent':'Mozilla/5.0 LabelWorkbenchDonorProbe/1.0'}});
   const bytes=new Uint8Array(await res.arrayBuffer());
@@ -205,6 +224,7 @@ async function inspectHtml(t){
 }
 
 (async()=>{
+  await probeSeedFunction();
   for(const t of targets){
     try{
       if(t.kind==='binary')await inspectBinary(t);
