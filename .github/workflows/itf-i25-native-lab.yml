@@ -1,0 +1,21 @@
+name: ITF I25 Native Lab
+
+on:
+  push:
+    branches:
+      - feat/native-itf-i25-v1954
+
+permissions:
+  contents: read
+
+jobs:
+  lab:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Probe official ITF-14 and Interleaved 2-of-5 donors
+        run: node tools/probe-itf-i25.cjs
