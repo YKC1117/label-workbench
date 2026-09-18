@@ -7,7 +7,7 @@
 (function(){
   'use strict';
 
-  const BUILD='20260918-btw-family-native-140-itf14';
+  const BUILD='20260918-btw-family-native-150-gs1-2d';
   const OFF=50000;
   const MAX_SIZE_PAIRS=16;
   const PROFILES={
@@ -15,6 +15,16 @@
       key:'qr',seedKey:'qr-rich',seedId:'QR-RICH-2022-R6',
       app:'2022 R6',compatible:'2019',barcodeType:'QR Code',owner:'BcQrcodeData',
       donor:{width:106.68,height:55.88},maxText:8,mode:'components'
+    },
+    gs1qr:{
+      key:'gs1qr',seedKey:'gs1qr-rich',seedId:'GS1QR-RICH-2022-R6',
+      app:'2022 R6',compatible:'2022',barcodeType:'GS1 QR Code',owner:'BcGS1QrcodeData',
+      donor:{width:152.4,height:103.9},maxText:14,mode:'components'
+    },
+    gs1dm:{
+      key:'gs1dm',seedKey:'gs1dm-rich',seedId:'GS1DM-RICH-2022-R6',
+      app:'2022 R6',compatible:'2022',barcodeType:'GS1 DataMatrix',owner:'BcGS1DatamatrixData',
+      donor:{width:219.964,height:109.982},maxText:12,mode:'components'
     },
     c39:{
       key:'c39',seedKey:'c39-rich',seedId:'C39-RICH-2022-R5',
@@ -57,9 +67,23 @@
   const near=(a,b,t=.03)=>Math.abs(Number(a)-Number(b))<=t;
   const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 
+  function explicitGs1(row){
+    const raw=String(row?.text??row?.value??row?.data??'');
+    if(row?.gs1===true||row?.isGs1===true)return true;
+    if(/^\](?:Q3|d2|C1)/i.test(raw))return true;
+    if(/[\x1d]/.test(raw)||/(?:\[GS\]|<GS>|\{GS\}|␝)/i.test(raw))return true;
+    return /^\s*\((?:00|01|02|10|11|13|15|17|20|21|22|30|37|240|241|242|250|251|253|254|400|401|402|410|411|412|413|414|415|416|417|420|421|422|423|424|425|426|427|7001|7002|7003|7004|7005|7006|7007|7008|7009|7010|7020|7021|7022|710|711|712|713|714|715|7230|7231|7232|7233|7234|7235|7236|7237|7238|7239|7240|8001|8002|8003|8004|8005|8006|8007|8008|8009|8010|8011|8012|8013|8017|8018|8019|8020|8026|8110|8111|8112|8200)\)/.test(raw)
+  }
+  function cleanGs1Value(value){
+    return String(value??'')
+      .replace(/^\](?:Q3|d2|C1)/i,'')
+      .replace(/(?:\[GS\]|<GS>|\{GS\}|␝)/gi,'\x1d')
+      .trim()
+  }
   function kindFor(row){
     const f=normalizeFormat(row?.format);
-    if(/qrcode|qr/.test(f))return'qr';
+    if(/qrcode|qr/.test(f))return explicitGs1(row)?'gs1qr':'qr';
+    if(/datamatrix/.test(f))return explicitGs1(row)?'gs1dm':'';
     if(/code39|c39/.test(f))return'c39';
     if(/upca/.test(f))return'upca';
     if(/ean13/.test(f))return'ean13';
@@ -94,13 +118,15 @@
   function plan(label){
     const all=rows(label);if(all.length!==1)return null;
     const kind=kindFor(all[0]),profile=PROFILES[kind];if(!profile)return null;
-    const value=barcodeText(all[0]);if(!value)return null;
+    let value=barcodeText(all[0]);if(!value)return null;
+    if(kind==='gs1qr'||kind==='gs1dm')value=cleanGs1Value(value);
     if(kind==='c39'&&!code39Safe(value))return null;
     if(kind==='upca'&&!upcaSafe(value))return null;
     if(kind==='ean13'&&!ean13Safe(value))return null;
     if(kind==='gs1128'&&!gs1128Safe(value))return null;
     if(kind==='pdf417'&&!pdf417Safe(value))return null;
     if(kind==='itf14'&&!gs1CheckDigitSafe(value,14))return null;
+    if((kind==='gs1qr'||kind==='gs1dm')&&(!value||value.length>512||/[\r\n]/.test(value)))return null;
     const texts=textItems(label);if(texts.length>profile.maxText)return null;
     return{kind,profile,row:all[0],value,texts}
   }
@@ -270,6 +296,6 @@
   }
 
   window.LabelWorkbenchBtwFamilyNative={
-    BUILD,PROFILES,kindFor,textItems,code39Safe,gs1CheckDigitSafe,upcaSafe,ean13Safe,gs1128Safe,pdf417Safe,plan,canGenerate,targetSize,printableTexts,adjacentSizePairs,rewriteInternalSize,retailMirrorEntry,applyRetailPayload,seedEndpoint,fetchSeed,generateOne
+    BUILD,PROFILES,explicitGs1,cleanGs1Value,kindFor,textItems,code39Safe,gs1CheckDigitSafe,upcaSafe,ean13Safe,gs1128Safe,pdf417Safe,plan,canGenerate,targetSize,printableTexts,adjacentSizePairs,rewriteInternalSize,retailMirrorEntry,applyRetailPayload,seedEndpoint,fetchSeed,generateOne
   };
 })();
