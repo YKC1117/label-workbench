@@ -168,11 +168,19 @@ async function discoverAndParse(t){
   const html=await res.text();
   const ids=[...new Set([...html.matchAll(/download-resource\?resourceId=(\d{4,8})/gi)].map(m=>m[1]))];
   if(!ids.length){
-    for(const m of html.matchAll(/(?:resourceId|resource_id|resource-id)[^0-9]{0,40}(\d{4,8})/gi))ids.push(m[1])
+    for(const m of html.matchAll(/(?:resourceId|resource_id|resource-id|resource|download|asset|entry)[^0-9]{0,30}(\d{4,8})/gi)){
+      if(!ids.includes(m[1]))ids.push(m[1])
+    }
   }
-  console.log('\n=== DISCOVER',t.key,'===',t.url,'ids',ids.slice(0,10));
-  for(const id of ids.slice(0,3)){
-    await parseOfficialBtw({key:`${t.key}-resource-${id}`,url:`https://www.bartendersoftware.com/download-resource?resourceId=${id}`});
+  console.log('\n=== DISCOVER',t.key,'===',t.url,'ids',ids.slice(0,20));
+  let found=0;
+  for(const id of ids.slice(0,20)){
+    try{
+      await parseOfficialBtw({key:`${t.key}-resource-${id}`,url:`https://www.bartendersoftware.com/download-resource?resourceId=${id}`});
+      found++;if(found>=3)break;
+    }catch(err){
+      console.log('DISCOVER_SKIP',t.key,id,String(err?.message||err));
+    }
   }
 }
 
