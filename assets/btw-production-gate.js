@@ -5,7 +5,7 @@
 (function(){
   'use strict';
 
-  const BUILD='20260911-btw-production-gate-100';
+  const BUILD='20260918-btw-production-gate-110-textobjects';
   let lastReport=null;
 
   const text=v=>String(v??'').trim();
