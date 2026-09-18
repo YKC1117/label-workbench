@@ -19,3 +19,5 @@ jobs:
           node-version: '24'
       - name: Verify GS1-128 and PDF417 native datasource writes
         run: node tools/probe-gs1128-pdf417.cjs
+      - name: Verify native family generator round trip
+        run: node tests/btw-family-native-smoke.cjs
