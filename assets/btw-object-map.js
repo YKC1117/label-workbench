@@ -6,7 +6,7 @@
  */
 (function(){
   'use strict';
-  const BUILD='20260918-btw-object-map-042-global-edit-order';
+  const BUILD='20260918-btw-object-map-043-textcontrol-numeric';
   const ROOT='Root.MasterSelectedObject.';
   const FONT_MARKER=new Uint8Array([0x03,0x02,0x01,0x22]);
   const PLACEHOLDER='(???) ???-????';
@@ -76,7 +76,24 @@
     if(texts.some(x=>/^QR\s*Code$/i.test(x)||/^QRCode$/i.test(x)))return'QR Code';
     return'';
   }
-  function simpleTextControlCandidate(strings,nameEntry){const after=strings.filter(e=>e.offset>(nameEntry?.offset??-1));const blocked=/^(?:\d+(?:\.\d+)?|Text \d+|Box Options|DataSource|Screen Data|GeneralDsPage|ValidationPage|PromptOptionsPage|Functions and Subs|OnProcessData|OnPostSerialize)$/i;const candidates=after.filter(e=>{const v=String(e.text||'').trim();return v&&v.length<=240&&!blocked.test(v)&&!/^Root\./.test(v)&&!/^<ErrorHandling>/.test(v)&&!/^\[[^\]]+\]\*$/.test(v)&&!/^0123456789/.test(v)&&!/^\(___\)/.test(v)&&!/^\(999\)/.test(v)&&!/^Sample Prompt$/i.test(v)});return candidates.at(-1)||null}
+  function simpleTextControlCandidate(strings,nameEntry){
+    const after=strings.filter(e=>e.offset>(nameEntry?.offset??-1));
+    /* BarTender Text Control records commonly serialize a control-mode token
+       "None" immediately before the actual user value. Prefer that structural
+       slot first so legitimate short numeric values (for example QTY "20")
+       are not mistaken for numeric control metadata. */
+    let none=-1;for(let i=0;i<after.length;i++)if(String(after[i]?.text||'').trim()==='None')none=i;
+    if(none>=0){
+      for(let i=none+1;i<after.length;i++){
+        const e=after[i],v=String(e?.text||'').trim();if(!v)continue;
+        if(v.length<=240&&!/^Root\./.test(v)&&!/^<|^\?xml/i.test(v))return e;
+        break
+      }
+    }
+    const blocked=/^(?:\d+(?:\.\d+)?|Text \d+|Box Options|DataSource|Screen Data|GeneralDsPage|ValidationPage|PromptOptionsPage|Functions and Subs|OnProcessData|OnPostSerialize)$/i;
+    const candidates=after.filter(e=>{const v=String(e.text||'').trim();return v&&v.length<=240&&!blocked.test(v)&&v!=='None'&&!/^Root\./.test(v)&&!/^<ErrorHandling>/.test(v)&&!/^\[[^\]]+\]\*$/.test(v)&&!/^0123456789/.test(v)&&!/^\(___\)/.test(v)&&!/^\(999\)/.test(v)&&!/^Sample Prompt$/i.test(v)});
+    return candidates.at(-1)||null
+  }
   function primaryValueEntry(strings,kind,root,nameEntry){if(kind!=='text')return null;let hit=null;const dense=strings.filter(e=>String(e.text??'')!=='');for(let i=0;i<dense.length-1;i++){if(dense[i].text!==PLACEHOLDER)continue;const n=dense[i+1];if(!n?.text||/^(?:Box Options|DataSource|Text \d+|文字範例)$/i.test(n.text))continue;hit=n}if(!hit&&/\.Text Control$/i.test(String(root||'')))hit=simpleTextControlCandidate(strings,nameEntry);return hit}
   function blockedBarcodeGroupValue(v){return /^(?:文字範例|Sample Text|Sample Prompt|Enter Data|Box Options|DataSource|Screen Data|GeneralDsPage|ValidationPage|PromptOptionsPage|Functions and Subs|OnProcessData|OnPostSerialize)$/i.test(v)||/^<ErrorHandling>/i.test(v)||/^Root\./.test(v)}
   function barcodeComponentEntries(strings){
