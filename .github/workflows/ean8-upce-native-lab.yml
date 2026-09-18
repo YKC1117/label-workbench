@@ -1,0 +1,21 @@
+name: EAN8 UPCE Native Lab
+
+on:
+  push:
+    branches:
+      - feat/native-ean8-upce-v1955
+
+permissions:
+  contents: read
+
+jobs:
+  lab:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Discover official EAN-8 and UPC-E donors
+        run: node tools/probe-ean8-upce.cjs
