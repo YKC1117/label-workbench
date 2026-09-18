@@ -64,6 +64,7 @@
     if(owner==='BcUCCEAN128Data')return'GS1-128';
     if(owner==='BcPdf417Data')return'PDF417';
     if(owner==='BcITF14Data')return'ITF-14';
+    if(owner==='BcI25Data')return'Interleaved 2 of 5';
     if(owner==='BcQrcodeData')return'QR Code';
     if(owner==='BcC39RegularData')return'Code 39';
     if(owner==='BcUPCAData')return'UPC-A';
