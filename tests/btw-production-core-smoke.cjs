@@ -16,7 +16,7 @@ const c={
   window:null,globalThis:null,
   LabelWorkbenchInterpreter:{analyze:async()=>({labels:[]})},
   LabelWorkbenchBtwFamilyNative:{
-    canGenerate(label){return (label?.barcodes||[]).some(b=>/^(?:QR Code|Code 39|UPC-A|EAN-13)$/i.test(String(b?.format||'')))},
+    canGenerate(label){return (label?.barcodes||[]).some(b=>/^(?:QR Code|Code 39|UPC-A|EAN-13|GS1-128|PDF417)$/i.test(String(b?.format||'')))},
     generateOne:async(label,index)=>{calls.push(['family',label,index]);return{name:'family.btw',bytes:new Uint8Array([10,11,12])}}
   },
   LabelWorkbenchBtwNative:{
@@ -40,7 +40,7 @@ for(const f of['assets/analysis-confidence-guard.js','assets/btw-production-gate
 
 (async()=>{
   const P=c.LabelWorkbenchBtwProductionCore;
-  assert(P?.BUILD==='20260918-btw-production-core-120-retail-families','unexpected production core build');
+  assert(P?.BUILD==='20260918-btw-production-core-130-gs1-pdf417','unexpected production core build');
 
   const result={labels:[{sourceName:'第一個.pdf',fields:[
     {code:'1P',name:'PART NO',value:'W25NO1GWZEIR',barcodeVerified:true,alternatives:[],conflict:false},
@@ -60,6 +60,16 @@ for(const f of['assets/analysis-confidence-guard.js','assets/btw-production-gate
   const eanResult={labels:[{sourceName:'ean.png',fields:[],textObjects:[{text:'EAN TEST'}],barcodes:[{format:'EAN-13',text:'4006381333931'}]}]};
   const eanGenerated=await P.generate(eanResult,[{name:'ean.png',type:'image/png'}],()=>{});
   assert(eanGenerated.routes[0]==='family'&&calls[0][0]==='family','EAN-13 must route to native family generator before other BTW generators');
+
+  calls.length=0;
+  const gs1Result={labels:[{sourceName:'gs1.png',fields:[],textObjects:[{text:'GS1 TEST'}],barcodes:[{format:'GS1-128',text:'010950110153000310ABC123'}]}]};
+  const gs1Generated=await P.generate(gs1Result,[{name:'gs1.png',type:'image/png'}],()=>{});
+  assert(gs1Generated.routes[0]==='family'&&calls[0][0]==='family','GS1-128 must route to native family generator before other BTW generators');
+
+  calls.length=0;
+  const pdfResult={labels:[{sourceName:'pdf417.png',fields:[],textObjects:[{text:'PDF417 TEST'}],barcodes:[{format:'PDF417',text:'PDF417_NATIVE_PAYLOAD_20260918'}]}]};
+  const pdfGenerated=await P.generate(pdfResult,[{name:'pdf417.png',type:'image/png'}],()=>{});
+  assert(pdfGenerated.routes[0]==='family'&&calls[0][0]==='family','PDF417 must route to native family generator before other BTW generators');
 
   calls.length=0;
   const progress=[];
