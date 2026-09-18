@@ -1,15 +1,16 @@
-/* Label Workbench editable BTW handoff v2.1
+/* Label Workbench editable BTW handoff v2.2
  * PDF/image Quick Analysis -> BarTender 2022 editable .BTW as the primary production output.
  * The output is a real BTW document opened by BarTender, not a flattened image.
  */
 (function(){
   'use strict';
 
-  const BUILD='20260911-btnp210-editable-btw-copy';
+  const BUILD='20260918-btnp220-production-core';
   const FORMAT_SRC='assets/btw-format.js?v=20260911-btw011';
   const NATIVE_SRC='assets/btw-native.js?v=20260911-btwn321-safe-base64';
+  const PRODUCTION_SRC='assets/btw-production-core.js?v=20260918-btwpc100';
   const COPY_SRC='assets/analysis-copy.js?v=20260911-analysis-copy-100';
-  let formatPromise=null,nativePromise=null,copyPromise=null;
+  let formatPromise=null,nativePromise=null,productionPromise=null,copyPromise=null;
 
   const el=id=>document.getElementById(id);
   const toast=msg=>{if(typeof window.toast==='function')window.toast(msg)};
@@ -34,9 +35,18 @@
     formatPromise=loadScript(FORMAT_SRC,()=>window.LabelWorkbenchBtwFormat,'BTW format').finally(()=>{formatPromise=null});return formatPromise
   }
   async function ensureNative(){
-    if(window.LabelWorkbenchBtwNative?.downloadFromAnalysis)return window.LabelWorkbenchBtwNative;
+    if(window.LabelWorkbenchBtwNative?.generateOne)return window.LabelWorkbenchBtwNative;
     if(nativePromise)return nativePromise;
     nativePromise=(async()=>{await ensureFormat();return loadScript(NATIVE_SRC,()=>window.LabelWorkbenchBtwNative,'BTW native')})().finally(()=>{nativePromise=null});return nativePromise
+  }
+  async function ensureProduction(){
+    if(window.LabelWorkbenchBtwProductionCore?.downloadFromAnalysis)return window.LabelWorkbenchBtwProductionCore;
+    if(productionPromise)return productionPromise;
+    productionPromise=(async()=>{
+      await ensureNative();
+      return loadScript(PRODUCTION_SRC,()=>window.LabelWorkbenchBtwProductionCore,'BTW production core');
+    })().finally(()=>{productionPromise=null});
+    return productionPromise
   }
 
   function bridge(){return window.LabelWorkbenchBtBridge}
@@ -51,7 +61,7 @@
     const buttons=[el('analysisBtNative'),el('btNativeDownload')].filter(Boolean);
     buttons.forEach(x=>{x.disabled=true;x.dataset.oldText=x.textContent;x.textContent='正在建立可編輯 .BTW…'});
     try{
-      const api=await ensureNative();
+      const api=await ensureProduction();
       const out=await api.downloadFromAnalysis(b.latestResult,b.latestFiles,msg=>buttons.forEach(x=>x.textContent=msg||'正在建立可編輯 .BTW…'));
       if(out?.ok)toast(out.count>1?`已建立 ${out.count} 個 BarTender .BTW`:'可編輯 .BTW 已下載');
       return !!out?.ok
@@ -118,5 +128,5 @@
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 
-  window.LabelWorkbenchBtNativePrimary={BUILD,ensureCopy,ensureFormat,ensureNative,downloadEditable,decorateAnalysis,decorateBt,refresh};
+  window.LabelWorkbenchBtNativePrimary={BUILD,ensureCopy,ensureFormat,ensureNative,ensureProduction,downloadEditable,decorateAnalysis,decorateBt,refresh};
 })();
