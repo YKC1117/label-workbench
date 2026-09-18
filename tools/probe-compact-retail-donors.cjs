@@ -113,6 +113,12 @@ function ctx(){
   for(const f of['assets/btw-format.js','assets/btw-object-map.js'])vm.runInContext(fs.readFileSync(f,'utf8'),c,{filename:f});
   return c
 }
+async function inspectNeighborResources(){
+  const ids=[];for(let id=79768;id<=79776;id++)ids.push(String(id));
+  console.log('NEIGHBOR_SCAN_IDS',ids);
+  await inspectResources(ids);
+}
+
 async function inspectResources(ids){
   const C=ctx(),F=C.LabelWorkbenchBtwFormat,M=C.LabelWorkbenchBtwObjectMap;
   for(const id of ids.slice(0,120)){
@@ -137,6 +143,7 @@ async function inspectResources(ids){
   }
 }
 (async()=>{
+  await inspectNeighborResources();
   const deep=await deepSearchTemplatePages();
   const t=await inspectTemplateSitemap();
   const d=await inspectDiscovery();
