@@ -37,6 +37,38 @@ function mirrorCandidates(F,container,obj){
   }
   return out;
 }
+
+async function probeItf14Edit(){
+  const C=makeCtx(),F=C.LabelWorkbenchBtwFormat,M=C.LabelWorkbenchBtwObjectMap;
+  const res=await fetch('https://www.bartendersoftware.com/download-resource?resourceId=79807',{redirect:'follow',headers:{'user-agent':'Mozilla/5.0 LabelWorkbenchITFProbe/1.1'}});
+  const bytes=new Uint8Array(await res.arrayBuffer()),parsed=F.parseStructure(bytes),container=await F.inflateContainer(parsed),map=M.mapContainer(container);
+  const b=map.objects.find(o=>o.owner==='BcITF14Data');
+  if(!b)throw new Error('ITF14 donor missing');
+  const rows=recordStrings(F,container,b),mirrors=[];
+  for(let i=0;i<rows.length-1;i++){
+    if(rows[i].text!=='(???) ???-????')continue;
+    for(let j=i+1;j<Math.min(rows.length,i+5);j++)if(rows[j].text==='Sample Text'){mirrors.push(rows[j]);break}
+  }
+  console.log('ITF14_EDIT_CANDIDATES',{app:parsed.header.applicationVersion,compatible:parsed.header.compatibleVersion,mirrors:mirrors.map(x=>x.offset)});
+  const payload='10012345000017';
+  for(const m of mirrors){
+    const edited=F.replaceStringAt(container,m,payload),rebuilt=await F.rebuild(parsed,edited),rp=F.parseStructure(rebuilt),rc=await F.inflateContainer(rp),rm=M.mapContainer(rc),rb=rm.objects.find(o=>o.owner==='BcITF14Data');
+    const dv=new DataView(rc.buffer,rc.byteOffset,rc.byteLength),pairs=[];
+    for(const mm of [[100,150],[100.076,150.114],[101.6,150.114],[100,152.4]]){
+      const w=Math.round(mm[0]/0.0254),h=Math.round(mm[1]/0.0254),offs=[];
+      for(let i=0;i<=rc.byteLength-8;i++)if(dv.getInt32(i,true)===w&&dv.getInt32(i+4,true)===h)offs.push(i);
+      if(offs.length)pairs.push({mm,offsets:offs.slice(0,20),count:offs.length});
+    }
+    const writable=rm.objects.filter(o=>o.kind==='text'&&o.valueEntry&&/^Text\s+\d+$/i.test(String(o.name||''))&&o.owner!=='EditControlData'&&o.owner!=='PictureData');
+    console.log('ITF14_EDIT_RESULT',{
+      offset:m.offset,payload,ownerAfter:rb?.owner,typeAfter:rb?.barcodeType,
+      resolvedAfter:rb?.resolvedPreview,componentsAfter:rb?.components,
+      template:(/<TemplateSize>([^<]+)/i.exec(rp.header.text||'')||[])[1]||'',
+      internalPairs:pairs,writableText:writable.length,writableNames:writable.map(o=>o.name)
+    });
+  }
+}
+
 async function inspectResource(page,id){
   const C=makeCtx(),F=C.LabelWorkbenchBtwFormat,M=C.LabelWorkbenchBtwObjectMap;
   const url='https://www.bartendersoftware.com/download-resource?resourceId='+id;
@@ -61,6 +93,7 @@ async function inspectResource(page,id){
   }catch{}
 }
 (async()=>{
+  await probeItf14Edit();
   for(const page of PAGES){
     const html=await (await fetch(page.url,{redirect:'follow',headers:{'user-agent':'Mozilla/5.0 LabelWorkbenchITFProbe/1.0'}})).text();
     const ids=candidateIds(html);
