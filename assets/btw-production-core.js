@@ -5,7 +5,7 @@
 (function(){
   'use strict';
 
-  const BUILD='20260918-btw-production-core-100';
+  const BUILD='20260918-btw-production-core-110-family-first';
   const JSZIP_SRC='https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js';
   let zipPromise=null;
 
@@ -46,10 +46,12 @@
   }
 
   function selectGenerator(label){
+    const F=window.LabelWorkbenchBtwFamilyNative;
     const S=window.LabelWorkbenchBtwSecondNative;
     const R=window.LabelWorkbenchBtwRichNative;
     const N=window.LabelWorkbenchBtwNative;
 
+    if(F?.canGenerate?.(label)&&F?.generateOne)return{mode:'family',api:F};
     if(S?.canGenerate?.(label)&&S?.generateOne)return{mode:'second',api:S};
     if(R?.canGenerate?.(label)&&R?.generateOne)return{mode:'rich',api:R};
     if(N?.generateOne)return{mode:'native',api:N};
@@ -70,7 +72,7 @@
     for(let i=0;i<labels.length;i++){
       const route=selectGenerator(labels[i]);
       routes.push(route.mode);
-      const modeText=route.mode==='second'?'5C128+1DM':route.mode==='rich'?'多物件':'CEA fallback';
+      const modeText=route.mode==='family'?'QR / Code39 原生條碼':route.mode==='second'?'5C128+1DM':route.mode==='rich'?'多物件':'CEA fallback';
       onProgress?.(`正在建立 ${modeText} 可編輯 BTW ${i+1}/${labels.length}`);
       const out=await route.api.generateOne(labels[i],i);
       outputs.push({...out,productionMode:route.mode});

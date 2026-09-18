@@ -28,6 +28,7 @@ jobs:
           node --check tests/analysis-geometry-smoke.cjs
           node --check tests/btw-layout-map-smoke.cjs
           node --check tests/btw-native-smoke.cjs
+          node --check tests/btw-family-native-smoke.cjs
           node --check tests/btw-rich-native-smoke.cjs
           node --check tests/btw-production-gate-smoke.cjs
           node --check tests/btw-production-core-smoke.cjs
@@ -71,15 +72,15 @@ jobs:
       - name: Current wiring sanity check
         run: |
           grep -q 'assets/analysis-entry.js?v=20260918-v147' index.html
-          grep -q 'assets/barcode-reader.js?v=20260918-v386' index.html
-          grep -q '標籤製作工作台 · v1.9.50' index.html
-          grep -q '更新：2026/09/18 10:59' index.html
+          grep -q 'assets/barcode-reader.js?v=20260918-v387' index.html
+          grep -q '標籤製作工作台 · v1.9.51' index.html
+          grep -q '更新：2026/09/18 11:29' index.html
           grep -q 'assets/analysis-race-guard.js?v=20260914-v139' index.html
           grep -q "BUILD='20260918-analysis-entry-147-core-ready'" assets/analysis-entry.js
           grep -q "dataset.priorityBound='true'" assets/analysis-entry.js
           grep -q "BUILD='20260918-view-guard-145-index-owned-version'" assets/view-state-guard.js
           ! grep -q "marker.innerHTML='標籤製作工作台" assets/view-state-guard.js
-          grep -q "BUILD='20260918-v386-runtime-resilience'" assets/barcode-reader.js
+          grep -q "BUILD='20260918-v387-native-barcode-families'" assets/barcode-reader.js
           grep -q "BUILD='20260918-v183-quality-fallback'" assets/label-interpreter.js
           grep -q "BUILD='20260918-btw-production-gate-110-textobjects'" assets/btw-production-gate.js
           grep -q "BUILD='20260918-btw-second-native-110-textobjects'" assets/btw-second-native.js
@@ -88,7 +89,7 @@ jobs:
           grep -q 'LabelWorkbenchModuleLoader={BUILD,ready:true}' assets/barcode-reader.js
           grep -q "BUILD='20260918-barcode-crosscheck-108-clear-stale-ocr'" assets/analysis-barcode-crosscheck.js
           grep -q "analysis-barcode-crosscheck.js'" assets/barcode-reader.js
-          grep -q "BUILD='20260912-btw-object-map-038-barcode-slot-mode'" assets/btw-object-map.js
+          grep -q "BUILD='20260918-btw-object-map-043-textcontrol-numeric'" assets/btw-object-map.js
           grep -q "BUILD='20260912-btw-caption-adapter-100'" assets/btw-caption-adapter.js
           grep -q "SEED_ID='CEA-2022-R5'" assets/btw-native.js
           grep -q "SEED_FUNCTION='btw-seed'" assets/btw-native.js\n          grep -q "BUILD='20260918-btwn232-seed-retry'" assets/btw-native.js
@@ -99,8 +100,10 @@ jobs:
           grep -q "MAX_C128=5" assets/btw-second-native.js
           grep -q "MAX_DM=1" assets/btw-second-native.js
           grep -q 'btw-production-gate.js' assets/barcode-reader.js
+          grep -q 'btw-family-native.js' assets/barcode-reader.js
+          grep -q "BUILD='20260918-btw-family-native-100-qr-c39'" assets/btw-family-native.js
           grep -q 'btw-production-core.js' assets/barcode-reader.js
-          grep -q "BUILD='20260918-btw-production-core-100'" assets/btw-production-core.js
+          grep -q "BUILD='20260918-btw-production-core-110-family-first'" assets/btw-production-core.js
           grep -q "BUILD='20260918-btnp230-website-only-ux'" assets/bt-native-primary.js
           grep -q "ensureProduction" assets/bt-native-primary.js
           grep -q "await ensureProduction()" assets/bt-native-primary.js
@@ -210,6 +213,8 @@ jobs:
           retention-days: 14
       - name: Native BTW object decoder/editor smoke tests
         run: node tests/btw-object-map-smoke.cjs
+      - name: Native QR and Code39 donor round trip
+        run: node tests/btw-family-native-smoke.cjs
       - name: Real BTW barcode read-slot regression tests
         run: node tests/btw-barcode-read-slot-smoke.cjs
       - name: Independent BTW field-caption adapter smoke tests

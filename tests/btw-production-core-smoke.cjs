@@ -15,6 +15,10 @@ const c={
   },
   window:null,globalThis:null,
   LabelWorkbenchInterpreter:{analyze:async()=>({labels:[]})},
+  LabelWorkbenchBtwFamilyNative:{
+    canGenerate(label){return (label?.barcodes||[]).some(b=>/^(?:QR Code|Code 39)$/i.test(String(b?.format||'')))},
+    generateOne:async(label,index)=>{calls.push(['family',label,index]);return{name:'family.btw',bytes:new Uint8Array([10,11,12])}}
+  },
   LabelWorkbenchBtwNative:{
     generateOne:async(label,index)=>{calls.push(['native',label,index]);return{name:'native.btw',bytes:new Uint8Array([1,2,3])}},
     downloadFromAnalysis:async()=>{throw new Error('legacy native downloadFromAnalysis must not be used by production core')}
@@ -36,13 +40,18 @@ for(const f of['assets/analysis-confidence-guard.js','assets/btw-production-gate
 
 (async()=>{
   const P=c.LabelWorkbenchBtwProductionCore;
-  assert(P?.BUILD==='20260918-btw-production-core-100','unexpected production core build');
+  assert(P?.BUILD==='20260918-btw-production-core-110-family-first','unexpected production core build');
 
   const result={labels:[{sourceName:'第一個.pdf',fields:[
     {code:'1P',name:'PART NO',value:'W25NO1GWZEIR',barcodeVerified:true,alternatives:[],conflict:false},
     {code:'1T',name:'LOT NO',value:'6612D7800ZZ',alternatives:['6612D78002Z'],conflict:true}
   ],barcodes:[{format:'Code 128',text:'W25NO1GWZEIR'}]}]};
 
+  const qrResult={labels:[{sourceName:'qr.png',fields:[],textObjects:[{text:'QR TEST',sourceBox:{x:.1,y:.1,w:.2,h:.05}}],barcodes:[{format:'QR Code',text:'https://example.test/qr'}]}]};
+  const qrGenerated=await P.generate(qrResult,[{name:'qr.png',type:'image/png'}],()=>{});
+  assert(qrGenerated.routes[0]==='family'&&calls[0][0]==='family','QR must route to native family generator before other BTW generators');
+
+  calls.length=0;
   const progress=[];
   const generated=await P.generate(result,[{name:'第一個.pdf',type:'application/pdf'}],m=>progress.push(m));
   assert(generated.routes.length===1&&generated.routes[0]==='second','second donor must be first production choice');
@@ -63,5 +72,5 @@ for(const f of['assets/analysis-confidence-guard.js','assets/btw-production-gate
   const native=await P.generate(result,[],()=>{});
   assert(native.routes[0]==='native'&&calls[0][0]==='native','native generator must be final fallback');
 
-  console.log('PASS: deterministic BTW production core gates once and explicitly routes second -> rich -> native without legacy wrapper download');
+  console.log('PASS: deterministic BTW production core routes family -> second -> rich -> native while preserving the production safety gate');
 })().catch(err=>{console.error(err);process.exit(1)});
