@@ -16,7 +16,7 @@ function assertPos(o,x,y,label){if(o.xMil!==x||o.yMil!==y)throw new Error(`${lab
 async function verify(label,expected){
   const N=c.LabelWorkbenchBtwNative,F=c.LabelWorkbenchBtwFormat,M=c.LabelWorkbenchBtwObjectMap;
   if(!N?.generateOne||!F?.parseStructure||!M?.mapContainer)throw new Error('native BTW APIs missing');
-  if(N.BUILD!=='20260918-btwn231-textobjects')throw new Error(`unexpected native build ${N.BUILD}`);
+  if(N.BUILD!=='20260918-btwn232-seed-retry')throw new Error(`unexpected native build ${N.BUILD}`);
   if(N.SEED_ID!=='CEA-2022-R5')throw new Error('official CEA seed identity missing');
   const ep=N.seedEndpoint();if(!/\/functions\/v1\/btw-seed$/.test(ep.url)||!ep.key.startsWith('sb_publishable_'))throw new Error('seed proxy is not wired to browser cloud config');
   const out=await N.generateOne(label,0);if(!out?.bytes?.length||out.name.slice(-4).toLowerCase()!=='.btw')throw new Error('BTW output missing');

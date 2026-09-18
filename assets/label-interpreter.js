@@ -6,7 +6,7 @@
 (function(){
   'use strict';
 
-  const BUILD='20260918-v182-generic-object-model';
+  const BUILD='20260918-v183-quality-fallback';
   const PDF_SRC='https://cdn.jsdelivr.net/npm/pdfjs-dist@6.3.289/build/pdf.min.mjs';
   const PDF_WORKER='https://cdn.jsdelivr.net/npm/pdfjs-dist@6.3.289/build/pdf.worker.min.mjs';
   const TESS_SRC='https://cdn.jsdelivr.net/npm/tesseract.js@7.0.0/dist/tesseract.min.js';
@@ -283,6 +283,19 @@
 
   function makeTiles(canvas){const c=enhanceCanvas(canvas,'gray'),out=[],overlap=.10;for(let ry=0;ry<2;ry++)for(let rx=0;rx<2;rx++){const x0=Math.max(0,(rx*.5-overlap)*c.width),y0=Math.max(0,(ry*.5-overlap)*c.height),x1=Math.min(c.width,((rx+1)*.5+overlap)*c.width),y1=Math.min(c.height,((ry+1)*.5+overlap)*c.height);out.push(crop(c,x0,y0,x1-x0,y1-y0))}return out}
 
+  function needsTileFallback(passes,textObjects,fields){
+    const rows=(passes||[]).filter(Boolean);
+    const maxChars=rows.reduce((m,p)=>Math.max(m,String(p?.text||'').replace(/\s/g,'').length),0);
+    const avgConf=rows.length?rows.reduce((n,p)=>n+Math.max(0,Number(p?.confidence||0)),0)/rows.length:0;
+    const reliable=(textObjects||[]).filter(o=>Number(o?.confidence||0)>=72||Number(o?.repeat||0)>=2).length;
+    const conflicts=(fields||[]).filter(f=>f?.conflict).length;
+    const almostBlank=maxChars<18&&reliable<2;
+    const noUsableEvidence=(fields||[]).length===0&&reliable===0&&maxChars<40;
+    const unresolvedConflict=conflicts>0&&reliable<Math.max(3,(fields||[]).length);
+    const veryLowConfidence=avgConf>0&&avgConf<28&&reliable<2;
+    return almostBlank||noUsableEvidence||unresolvedConflict||veryLowConfidence;
+  }
+
   async function readRegionFields(worker,region,onProgress){
     const passes=[],gray=enhanceCanvas(region,'gray'),bw=enhanceCanvas(region,'bw');
     onProgress?.('正在整理欄位與位置…');
@@ -291,7 +304,7 @@
     passes.push(await recognize(worker,bw,'6',true));
     const textObjects=genericTextObjects(passes,region.width,region.height);
     let fields=mergeGenericFields(aggregateFields(passes),genericFieldsFromTextObjects(textObjects));
-    if(fields.length<7||fields.some(f=>f.conflict)){
+    if(needsTileFallback(passes,textObjects,fields)){
       const tiles=makeTiles(region);for(let i=0;i<tiles.length;i++){onProgress?.(`正在補讀細小區域… ${i+1}/${tiles.length}`);passes.push(await recognize(worker,tiles[i],'11',true))}fields=mergeGenericFields(aggregateFields(passes),genericFieldsFromTextObjects(textObjects));
     }
     return{fields,passes,textObjects};
@@ -334,5 +347,5 @@
     return result
   }
 
-  window.LabelWorkbenchInterpreter={BUILD,scoreText,parseFields,spatialFields,aggregateFields,genericTextObjects,genericFieldsFromTextObjects,mergeGenericFields,lineSegments,detectLabelBands,rotateCanvas,interpretPdf,interpretImage,interpretFiles,productionText,questionsText,renderInterpretation,renderResult,analyze};
+  window.LabelWorkbenchInterpreter={BUILD,scoreText,parseFields,spatialFields,aggregateFields,genericTextObjects,genericFieldsFromTextObjects,mergeGenericFields,lineSegments,needsTileFallback,detectLabelBands,rotateCanvas,interpretPdf,interpretImage,interpretFiles,productionText,questionsText,renderInterpretation,renderResult,analyze};
 })();

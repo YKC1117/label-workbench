@@ -5,7 +5,7 @@
 (function(){
   'use strict';
 
-  const BUILD='20260918-analysis-entry-146-core-v2';
+  const BUILD='20260918-analysis-entry-147-core-ready';
   const el=id=>document.getElementById(id);
   const esc=(v='')=>String(v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
   let generation=0;
@@ -38,10 +38,11 @@
   }
 
   function stackReady(){
-    const loader=window.LabelWorkbenchModuleLoader;
     const core=window.LabelWorkbenchAnalysisCoreV2;
     const priority=window.LabelWorkbenchPriority;
-    if(loader?.ready===true&&core?.run&&priority?.runQuickAnalysis)return {core,priority};
+    // Analysis Core v2 is loaded after its required media-analysis modules.
+    // Do not block a ready core only because an unrelated late module has not flipped loader.ready yet.
+    if(core?.run&&priority?.runQuickAnalysis)return {core,priority};
     return null;
   }
 
