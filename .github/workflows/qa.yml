@@ -40,6 +40,7 @@ jobs:
           node --check tests/ocr-fallback-quality-smoke.cjs
           node --check tests/btw-seed-retry-smoke.cjs
           node --check tests/analysis-core-v2-smoke.cjs
+          node --check tests/analysis-isolation-smoke.cjs
           node --check tests/generic-label-model-smoke.cjs
           node --check tests/generic-textobjects-btw-smoke.cjs
           node --check tests/analysis-to-btw-e2e-smoke.cjs
@@ -140,6 +141,8 @@ jobs:
         run: node tests/btw-seed-retry-smoke.cjs
       - name: Deterministic Quick Analysis core v2 regression tests
         run: node tests/analysis-core-v2-smoke.cjs
+      - name: Quick Analysis stale OCR isolation
+        run: node tests/analysis-isolation-smoke.cjs
       - name: Arbitrary-customer generic label object model
         run: node tests/generic-label-model-smoke.cjs
       - name: Arbitrary-customer textObjects to editable BTW round trip
