@@ -1,7 +1,7 @@
 const fs=require('fs');
 const vm=require('vm');
 
-const TERMS=['UPC-E','UPCE','EAN-8','EAN8'];
+const TERMS=['UPC-E','UPCE','EAN-8','EAN8','GS1-128','GS1 128','UCC/EAN-128','PDF417','PDF 417','ITF-14','ITF14'];
 const BASE='https://www.bartendersoftware.com';
 
 function uniq(a){return [...new Set(a)]}
@@ -122,8 +122,11 @@ async function inspectResources(ids){
       if(bytes.length<1024)continue;
       let p,ct,map;try{p=F.parseStructure(bytes);ct=await F.inflateContainer(p);map=M.mapContainer(ct)}catch{continue}
       const bars=map.objects.filter(o=>o.kind==='barcode');
-      const hits=bars.filter(o=>o.owner==='BcUPCEData'||o.owner==='BcEAN8Data'||o.barcodeType==='UPC-E'||o.barcodeType==='EAN-8');
-      if(hits.length)console.log('NATIVE_COMPACT_DONOR',{
+      const hits=bars.filter(o=>
+        o.owner==='BcUPCEData'||o.owner==='BcEAN8Data'||o.owner==='BcUCCEAN128Data'||o.owner==='BcPdf417Data'||o.owner==='BcITF14Data'||
+        ['UPC-E','EAN-8','GS1-128','PDF417','ITF-14'].includes(o.barcodeType)
+      );
+      if(hits.length)console.log('NATIVE_FAMILY_DONOR',{
         id,app:p.header.applicationVersion,compatible:p.header.compatibleVersion,
         template:(/<TemplateSize>([^<]+)/i.exec(p.header.text||'')||[])[1]||'',
         bytes:bytes.length,
