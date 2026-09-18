@@ -73,8 +73,8 @@ jobs:
         run: |
           grep -q 'assets/analysis-entry.js?v=20260918-v147' index.html
           grep -q 'assets/barcode-reader.js?v=20260918-v387' index.html
-          grep -q '標籤製作工作台 · v1.9.50' index.html
-          grep -q '更新：2026/09/18 10:59' index.html
+          grep -q '標籤製作工作台 · v1.9.51' index.html
+          grep -q '更新：2026/09/18 11:29' index.html
           grep -q 'assets/analysis-race-guard.js?v=20260914-v139' index.html
           grep -q "BUILD='20260918-analysis-entry-147-core-ready'" assets/analysis-entry.js
           grep -q "dataset.priorityBound='true'" assets/analysis-entry.js
