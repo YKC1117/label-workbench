@@ -178,8 +178,8 @@
       if(!afterSource||afterBarcode.resolvedPreview!==P.value)throw new Error('Code 39 重建後 linked datasource round-trip 不符');
     }
     for(const e of expectedText){
-      const o=remap.objects.find(x=>x.index===e.index);
-      if(!o||o.value!==e.value||o.xMil!==e.xMil||o.yMil!==e.yMil)throw new Error(`${P.profile.barcodeType} 文字 round-trip 驗證失敗：${e.value}`)
+      const o=remap.objects.find(x=>x.kind==='text'&&x.value===e.value&&x.xMil===e.xMil&&x.yMil===e.yMil);
+      if(!o)throw new Error(`${P.profile.barcodeType} 文字 round-trip 驗證失敗：${e.value}`)
     }
     if(target.source){
       const tag=`<TemplateSize>${String(Math.round(target.width*100)/100).replace(/\.0+$/,'')} x ${String(Math.round(target.height*100)/100).replace(/\.0+$/,'')} mm</TemplateSize>`;
