@@ -23,6 +23,7 @@
     return {
       ...(label||{}),
       fields:(label?.fields||[]).map(cloneField),
+      textObjects:(label?.textObjects||[]).map(o=>({...o,sourceBox:o?.sourceBox?{...o.sourceBox}:o?.sourceBox})),
       barcodes:(label?.barcodes||[]).map(b=>({...b,sourceBox:b?.sourceBox?{...b.sourceBox}:b?.sourceBox}))
     }
   }
@@ -71,9 +72,10 @@
     const labels=[],labelReports=[];
     for(const [index,label] of (result?.labels||[]).entries()){
       const item=classifyLabel(label,index),hasBarcode=(item.label.barcodes||[]).some(barcodeHasValue);
-      if(!item.label.fields.length&&!hasBarcode){
+      const hasTextObjects=(item.label.textObjects||[]).some(o=>text(o?.text));
+      if(!item.label.fields.length&&!hasBarcode&&!hasTextObjects){
         const title=item.report.sourceName||`標籤 ${index+1}`;
-        throw new Error(`${title} 沒有可安全寫入 BTW 的已確認欄位或條碼`)
+        throw new Error(`${title} 沒有可安全寫入 BTW 的文字或條碼內容`)
       }
       labels.push(item.label);labelReports.push(item.report)
     }
