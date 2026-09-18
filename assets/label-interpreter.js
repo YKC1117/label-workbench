@@ -6,9 +6,11 @@
 (function(){
   'use strict';
 
-  const BUILD='20260918-v183-quality-fallback';
-  const PDF_SRC='https://cdn.jsdelivr.net/npm/pdfjs-dist@6.3.289/build/pdf.min.mjs';
-  const PDF_WORKER='https://cdn.jsdelivr.net/npm/pdfjs-dist@6.3.289/build/pdf.worker.min.mjs';
+  const BUILD='20260919-v184-pdf-legacy';
+  // PDF.js modern build assumes very new JS runtime APIs (including Map#getOrInsertComputed).
+  // Use the matching legacy display/worker pair so real users on older Chromium/Safari can still render PDFs.
+  const PDF_SRC='https://cdn.jsdelivr.net/npm/pdfjs-dist@6.3.289/legacy/build/pdf.min.mjs';
+  const PDF_WORKER='https://cdn.jsdelivr.net/npm/pdfjs-dist@6.3.289/legacy/build/pdf.worker.min.mjs';
   const TESS_SRC='https://cdn.jsdelivr.net/npm/tesseract.js@7.0.0/dist/tesseract.min.js';
   const TESS_WORKER='https://cdn.jsdelivr.net/npm/tesseract.js@7.0.0/dist/worker.min.js';
   let pdfPromise=null,tessPromise=null,lastResult=null;
@@ -101,9 +103,9 @@
   function trimCanvas(canvas){const b=contentBounds(canvas);return crop(canvas,b.x,b.y,b.w,b.h)}
 
   function enhanceCanvas(src,mode='gray'){
-    const trimmed=trimCanvas(src),target=Math.min(3900,Math.max(trimmed.width,2400)),scale=Math.max(1,Math.min(2.4,target/Math.max(1,trimmed.width)));const c=document.createElement('canvas');c.width=Math.round(trimmed.width*scale);c.height=Math.round(trimmed.height*scale);const x=c.getContext('2d',{willReadFrequently:true});x.imageSmoothingEnabled=true;x.drawImage(trimmed,0,0,c.width,c.height);
+    const bounds=contentBounds(src),trimmed=crop(src,bounds.x,bounds.y,bounds.w,bounds.h),target=Math.min(3900,Math.max(trimmed.width,2400)),scale=Math.max(1,Math.min(2.4,target/Math.max(1,trimmed.width)));const c=document.createElement('canvas');c.width=Math.round(trimmed.width*scale);c.height=Math.round(trimmed.height*scale);const x=c.getContext('2d',{willReadFrequently:true});x.imageSmoothingEnabled=true;x.drawImage(trimmed,0,0,c.width,c.height);
     const im=x.getImageData(0,0,c.width,c.height),d=im.data;let lo=255,hi=0;for(let i=0;i<d.length;i+=16){const g=grayAt(d,i);if(g<lo)lo=g;if(g>hi)hi=g}if(hi-lo<40){lo=0;hi=255}
-    for(let i=0;i<d.length;i+=4){let g=grayAt(d,i);g=Math.max(0,Math.min(255,(g-lo)*255/Math.max(1,hi-lo)));if(mode==='bw')g=g<188?0:255;else g=Math.max(0,Math.min(255,(g-128)*1.34+128));d[i]=d[i+1]=d[i+2]=g;d[i+3]=255}x.putImageData(im,0,0);return c;
+    for(let i=0;i<d.length;i+=4){let g=grayAt(d,i);g=Math.max(0,Math.min(255,(g-lo)*255/Math.max(1,hi-lo)));if(mode==='bw')g=g<188?0:255;else g=Math.max(0,Math.min(255,(g-128)*1.34+128));d[i]=d[i+1]=d[i+2]=g;d[i+3]=255}x.putImageData(im,0,0);c.__sourceBounds=bounds;return c;
   }
 
   function scoreText(text){const t=String(text||'').toUpperCase(),words=['PART NO','PART NUMBER','LOT NO','QTY','QUANTITY','DATE','ASSY','SHAPE','MLOT','BIN','MC','VC','P1','P2','GP','SERIAL','S/N','MODEL'];let s=Math.min(70,t.replace(/\s/g,'').length/4);words.forEach(w=>{if(t.includes(w))s+=24});s+=(t.match(/\([0-9A-Z]{1,5}\)/g)||[]).length*7;s+=Math.min(36,(t.match(/[:：]/g)||[]).length*4);return s}
@@ -212,7 +214,9 @@
     const candidates=[];
     for(const pass of (passes||[]).slice(0,3))for(const line of pass?.lines||[])for(const seg of lineSegments(line)){
       const text=cleanLine(seg.text),key=textNorm(text);if(!key||text.length>180)continue;
-      candidates.push({text,key,confidence:Number(seg.confidence||0),sourceBox:{x:clamp01(seg.x0/width),y:clamp01(seg.y0/height),w:clamp01(seg.w/width),h:clamp01(seg.h/height)}})
+      const bounds=pass.canvas?.__sourceBounds;
+      const sx=bounds?bounds.w/pass.canvas.width:1,sy=bounds?bounds.h/pass.canvas.height:1;
+      candidates.push({text,key,confidence:Number(seg.confidence||0),sourceBox:{x:clamp01(((bounds?.x||0)+seg.x0*sx)/width),y:clamp01(((bounds?.y||0)+seg.y0*sy)/height),w:clamp01(seg.w*sx/width),h:clamp01(seg.h*sy/height)}})
     }
     const groups=[];
     for(const c of candidates){
@@ -311,7 +315,7 @@
   }
 
   async function processCanvas(canvas,sourceName,pageNo,worker,labels,onProgress){
-    const best=await chooseOrientation(worker,canvas,onProgress),bands=detectLabelBands(best.canvas);onProgress?.(`找到 ${bands.length} 個標籤區域，正在逐張整理…`);
+    const best=await chooseOrientation(worker,canvas,onProgress);let bands=detectLabelBands(best.canvas);if(bands.length===1)bands=[{x:0,y:0,w:best.canvas.width,h:best.canvas.height}];onProgress?.(`找到 ${bands.length} 個標籤區域，正在逐張整理…`);
     for(let i=0;i<bands.length;i++){const b=bands[i],region=crop(best.canvas,b.x,b.y,b.w,b.h),read=await readRegionFields(worker,region,onProgress),barcodes=await scanRegionDeep(region,labels.length+1,onProgress),allText=read.passes.map(p=>p.text).join('\n'),marks=detectMarks(allText);labels.push({sourceName,page:pageNo,index:i+1,rotation:best.deg,fields:read.fields,textObjects:read.textObjects||[],barcodes,marks})}
   }
 

@@ -143,5 +143,5 @@
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 
-  window.LabelWorkbenchBtBridge={BUILD,stage,sendToBt,injectAction,decorateBtPage,ensureBtQuick,wireInterpreter,wireParsers,tableResult,parseTableFiles,downloadProductionPack,isMediaResult,get latestResult(){return latestResult},get latestFiles(){return latestFiles}};
+  window.LabelWorkbenchBtBridge={BUILD,stage,clear(){latestResult=null;latestFiles=[];latestFileNames=[];el('analysisBtNative')?.remove();el('btNativeDownload')?.remove()},sendToBt,injectAction,decorateBtPage,ensureBtQuick,wireInterpreter,wireParsers,tableResult,parseTableFiles,downloadProductionPack,isMediaResult,get latestResult(){return latestResult},get latestFiles(){return latestFiles}};
 })();

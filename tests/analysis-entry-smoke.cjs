@@ -8,6 +8,8 @@ let changeHandler=null;
 let coreCalled=0;
 let priorityCalled=0;
 let received=null;
+let invalidated=0;
+let bridgeCleared=0;
 
 const input={
   dataset:{},
@@ -21,7 +23,10 @@ const document={
   getElementById(id){if(id==='analysisFiles')return input;if(id==='analysisResult')return result;return null},
   addEventListener(){}
 };
-const window={};
+const window={
+  LabelWorkbenchAnalysisCoreV2:{invalidate(){invalidated++}},
+  LabelWorkbenchBtBridge:{clear(){bridgeCleared++}}
+};
 const context={console,document,window,setTimeout,clearTimeout,setInterval,clearInterval,Date,Promise};
 window.window=window;
 vm.createContext(context);
@@ -40,6 +45,8 @@ if(!/first\.pdf/.test(result.innerHTML)||!/已收到檔案/.test(result.innerHTM
   throw new Error('selected file was not acknowledged immediately before late modules became ready');
 }
 if(input.value!=='')throw new Error('file input was not reset after File references were captured');
+if(invalidated!==1)throw new Error('new file selection did not invalidate the previous deterministic analysis result');
+if(bridgeCleared!==1)throw new Error('new file selection did not clear the previous BTW staged result/download UI');
 
 setTimeout(()=>{
   window.LabelWorkbenchAnalysisCoreV2={

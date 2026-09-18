@@ -40,6 +40,7 @@ jobs:
           node --check tests/ocr-fallback-quality-smoke.cjs
           node --check tests/btw-seed-retry-smoke.cjs
           node --check tests/analysis-core-v2-smoke.cjs
+          node --check tests/analysis-isolation-smoke.cjs
           node --check tests/generic-label-model-smoke.cjs
           node --check tests/generic-textobjects-btw-smoke.cjs
           node --check tests/analysis-to-btw-e2e-smoke.cjs
@@ -72,17 +73,17 @@ jobs:
           grep -q 'LabelWorkbench_Runtime_Acceptance_EDITED.btw' RUN_BARTENDER_2022_MANUAL_EDIT_VERIFY.cmd
       - name: Current wiring sanity check
         run: |
-          grep -q 'assets/analysis-entry.js?v=20260918-v147' index.html
-          grep -q 'assets/barcode-reader.js?v=20260918-v390' index.html
-          grep -q '標籤製作工作台 · v1.9.54' index.html
-          grep -q '更新：2026/09/18 14:03' index.html
+          grep -q 'assets/analysis-entry.js?v=20260919-v148' index.html
+          grep -q 'assets/barcode-reader.js?v=20260919-v391' index.html
+          grep -q '標籤製作工作台 · v1.9.55' index.html
+          grep -q '更新：2026/09/19 00:36' index.html
           grep -q 'assets/analysis-race-guard.js?v=20260914-v139' index.html
-          grep -q "BUILD='20260918-analysis-entry-147-core-ready'" assets/analysis-entry.js
+          grep -q "BUILD='20260919-analysis-entry-148-isolation'" assets/analysis-entry.js
           grep -q "dataset.priorityBound='true'" assets/analysis-entry.js
           grep -q "BUILD='20260918-view-guard-145-index-owned-version'" assets/view-state-guard.js
           ! grep -q "marker.innerHTML='標籤製作工作台" assets/view-state-guard.js
-          grep -q "BUILD='20260918-v390-itf14'" assets/barcode-reader.js
-          grep -q "BUILD='20260918-v183-quality-fallback'" assets/label-interpreter.js
+          grep -q "BUILD='20260919-v391-production-e2e'" assets/barcode-reader.js
+          grep -q "BUILD='20260919-v184-pdf-legacy'" assets/label-interpreter.js
           grep -q "BUILD='20260918-btw-production-gate-110-textobjects'" assets/btw-production-gate.js
           grep -q "BUILD='20260918-btw-second-native-110-textobjects'" assets/btw-second-native.js
           grep -q 'analysis-core-v2.js' assets/barcode-reader.js
@@ -140,11 +141,13 @@ jobs:
         run: node tests/btw-seed-retry-smoke.cjs
       - name: Deterministic Quick Analysis core v2 regression tests
         run: node tests/analysis-core-v2-smoke.cjs
+      - name: Quick Analysis stale OCR isolation
+        run: node tests/analysis-isolation-smoke.cjs
       - name: Arbitrary-customer generic label object model
         run: node tests/generic-label-model-smoke.cjs
       - name: Arbitrary-customer textObjects to editable BTW round trip
         run: node tests/generic-textobjects-btw-smoke.cjs
-      - name: Analysis to BarTender BTW end-to-end integrity gate
+      - name: Internal analysis-to-BTW structural integrity (not runtime acceptance)
         run: node tests/analysis-to-btw-e2e-smoke.cjs
       - name: Barcode cross-check regression tests
         run: node tests/analysis-barcode-crosscheck-smoke.cjs
@@ -227,9 +230,30 @@ jobs:
         run: node tests/btw-native-smoke.cjs
       - name: Production rich native BTW generation smoke tests
         run: node tests/btw-rich-native-smoke.cjs
-      - name: Browser one-click editable BTW flow
+      - name: Mock DOM one-click wiring (not browser acceptance)
         run: node tests/browser-btw-flow-smoke.cjs
       - name: Deterministic BTW production routing gate
         run: node tests/btw-production-core-smoke.cjs
       - name: BTW pending-field production safety gate
         run: node tests/btw-production-gate-smoke.cjs
+
+  browser-e2e:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Real Chromium PDF PNG JPG analysis and direct download
+        run: npm run test:browser
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browser-e2e-evidence
+          path: |
+            artifacts/browser/
+            test-results/
+          retention-days: 14
