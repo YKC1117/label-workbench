@@ -32,6 +32,7 @@ jobs:
           node --check tests/btw-production-gate-smoke.cjs
           node --check tests/analysis-copy-smoke.cjs
           node --check tests/analysis-entry-smoke.cjs
+          node --check tests/analysis-core-v2-smoke.cjs
           node --check tests/analysis-barcode-crosscheck-smoke.cjs
           node --check tests/second-donor-pool-smoke.cjs
           node --check tests/second-donor-generation-smoke.cjs
@@ -47,6 +48,8 @@ jobs:
           grep -q "BUILD='20260918-view-guard-145-index-owned-version'" assets/view-state-guard.js
           ! grep -q "marker.innerHTML='標籤製作工作台" assets/view-state-guard.js
           grep -q "BUILD='20260918-v382-analysis-ready-btw-5c128-1dm'" assets/barcode-reader.js
+          grep -q 'analysis-core-v2.js' assets/barcode-reader.js
+          grep -q "BUILD='20260918-analysis-core-v2-200'" assets/analysis-core-v2.js
           grep -q 'LabelWorkbenchModuleLoader={BUILD,ready:true}' assets/barcode-reader.js
           grep -q "BUILD='20260914-barcode-crosscheck-107'" assets/analysis-barcode-crosscheck.js
           grep -q "analysis-barcode-crosscheck.js'" assets/barcode-reader.js
@@ -82,6 +85,8 @@ jobs:
         run: node tests/analysis-copy-smoke.cjs
       - name: Quick Analysis early file-selection regression tests
         run: node tests/analysis-entry-smoke.cjs
+      - name: Deterministic Quick Analysis core v2 regression tests
+        run: node tests/analysis-core-v2-smoke.cjs
       - name: Barcode cross-check regression tests
         run: node tests/analysis-barcode-crosscheck-smoke.cjs
       - name: Source geometry matching smoke tests
