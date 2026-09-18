@@ -76,6 +76,14 @@ async function parseOfficialBtw(t){
   for(const file of['assets/btw-format.js','assets/btw-object-map.js'])vm.runInContext(fs.readFileSync(file,'utf8'),ctx,{filename:file});
   const F=ctx.LabelWorkbenchBtwFormat,M=ctx.LabelWorkbenchBtwObjectMap;
   const parsed=F.parseStructure(bytes),container=await F.inflateContainer(parsed),map=M.mapContainer(container);
+  const rawTags=[];
+  for(let i=0;i+8<container.length;i++){
+    if(container[i]!==0xff||container[i+1]!==0xff||container[i+2]!==0x01||container[i+3]!==0x00)continue;
+    const len=container[i+4]|(container[i+5]<<8);if(len<3||len>80||i+6+len>container.length)continue;
+    let type='',ok=true;for(let j=0;j<len;j++){const b=container[i+6+j];if(b<0x20||b>0x7e){ok=false;break}type+=String.fromCharCode(b)}
+    if(ok&&/^Bc[A-Za-z0-9]+Data$/.test(type))rawTags.push({offset:i,type});
+  }
+  console.log('ALL_BC_TAGS',rawTags);
   const barcodeObjects=map.objects.filter(o=>o.kind==='barcode');
   console.log('header',{
     applicationVersion:parsed.header.applicationVersion,
