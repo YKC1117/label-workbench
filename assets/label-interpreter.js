@@ -171,8 +171,16 @@
       if(coded.length||known.length){
         const merged=[...coded];
         for(const f of known){
-          const key=norm(f.code)||norm(f.name);
-          if(!merged.some(x=>(norm(x.code)||norm(x.name))===key))merged.push(f);
+          const key=norm(f.code)||norm(f.name),idx=merged.findIndex(x=>(norm(x.code)||norm(x.name))===key);
+          if(idx<0){merged.push(f);continue}
+          // If OCR lost the next AI marker, parseCodeChunks can swallow the next
+          // caption into the current value. A caption-bounded parse is safer then.
+          const current=String(merged[idx]?.value||'').toUpperCase();
+          const hasForeignAlias=FIELD_DEFS.some(def=>{
+            const otherKey=norm(def.code)||norm(def.name);if(otherKey===key)return false;
+            return def.aliases.some(alias=>current.includes(String(alias).toUpperCase()));
+          });
+          if(hasForeignAlias&&norm(f.value))merged[idx]=f;
         }
         out.push(...merged);continue;
       }
