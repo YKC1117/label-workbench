@@ -58,7 +58,16 @@
   function rows(label){return(label?.barcodes||[]).filter(b=>barcodeText(b))}
   function code39Safe(value){return /^[0-9A-Z\-\. \$\/\+%]+$/.test(String(value||''))}
   function gs1CheckDigitSafe(value,length){
-    const s=String(value||'').trim();if(!new RegExp('^\\d{'+length+'}
+    const s=String(value||'').trim();
+    if(s.length!==Number(length)||!/^[0-9]+$/.test(s))return false;
+    const d=[...s].map(Number),body=d.slice(0,-1);
+    let sum=0,weight=3;
+    for(let i=body.length-1;i>=0;i--){sum+=body[i]*weight;weight=weight===3?1:3}
+    return((10-(sum%10))%10)===d[d.length-1]
+  }
+  function upcaSafe(value){return gs1CheckDigitSafe(value,12)}
+  function ean13Safe(value){return gs1CheckDigitSafe(value,13)}
+  function plan(label){
     const all=rows(label);if(all.length!==1)return null;
     const kind=kindFor(all[0]),profile=PROFILES[kind];if(!profile)return null;
     const value=barcodeText(all[0]);if(!value)return null;
