@@ -62,6 +62,12 @@ async function parseOfficialBtw(t){
   console.log('tags',M.mapContainer(container).objects.filter(o=>o.kind==='barcode').map(o=>({index:o.index,name:o.name,owner:o.owner,barcodeType:o.barcodeType,components:o.components,resolvedPreview:o.resolvedPreview,xMil:o.xMil,yMil:o.yMil})));
   console.log('barcode owners',[...new Set(barcodeObjects.map(o=>o.owner))]);
   console.log('barcode types',[...new Set(barcodeObjects.map(o=>o.barcodeType))]);
+  const allStrings=F.scanUtf16Strings(container,{minLength:0,maxLength:10000,includeEmpty:true});
+  for(const o of barcodeObjects){
+    const rows=allStrings.filter(e=>e.offset>=o.recordStart&&e.offset<o.recordEnd).map(e=>({offset:e.offset,text:e.text})).filter(e=>String(e.text??'').length||true);
+    console.log('BARCODE_RECORD',o.name,o.owner,rows.slice(0,120));
+  }
+  console.log('ALL_OBJECTS',map.objects.map(o=>({index:o.index,kind:o.kind,name:o.name,owner:o.owner,value:o.value,components:o.components,xMil:o.xMil,yMil:o.yMil})));
   fs.writeFileSync('/tmp/'+t.key+'.btw',Buffer.from(bytes));
 }
 
