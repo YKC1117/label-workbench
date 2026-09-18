@@ -38,6 +38,29 @@ async function inspectBinary(t){
   fs.writeFileSync('/tmp/'+t.key+'.btw',Buffer.from(bytes));
 }
 
+function analyzeLinks(map,container,F){
+  const names=new Map(map.objects.filter(o=>o.name).map(o=>[o.name,o]));
+  const all=F.scanUtf16Strings(container,{minLength:0,maxLength:10000,includeEmpty:true});
+  const out=[];
+  for(const b of map.objects.filter(o=>o.kind==='barcode')){
+    const strings=all.filter(e=>e.offset>=b.recordStart&&e.offset<b.recordEnd);
+    const refs=[];
+    for(const e of strings){
+      const v=String(e.text||'').trim();
+      if(names.has(v)&&names.get(v)!==b){
+        const target=names.get(v);
+        refs.push({ref:v,index:target.index,kind:target.kind,value:target.value,owner:target.owner,rootPath:target.rootPath});
+      }
+    }
+    out.push({
+      barcode:{index:b.index,name:b.name,owner:b.owner,rootPath:b.rootPath,xMil:b.xMil,yMil:b.yMil},
+      refs,
+      likelyValues:strings.map(e=>String(e.text||'').trim()).filter(v=>v && !/^(?:Root\.|Screen Data|DataSource|Box Options|Enter Data|Functions and Subs|OnProcessData|OnPostSerialize)$/i.test(v)).slice(0,80)
+    });
+  }
+  return out
+}
+
 async function parseOfficialBtw(t){
   const res=await fetch(t.url,{redirect:'follow',headers:{'user-agent':'Mozilla/5.0 LabelWorkbenchDonorProbe/1.1'}});
   const bytes=new Uint8Array(await res.arrayBuffer());
@@ -62,6 +85,7 @@ async function parseOfficialBtw(t){
   console.log('tags',M.mapContainer(container).objects.filter(o=>o.kind==='barcode').map(o=>({index:o.index,name:o.name,owner:o.owner,barcodeType:o.barcodeType,components:o.components,resolvedPreview:o.resolvedPreview,xMil:o.xMil,yMil:o.yMil})));
   console.log('barcode owners',[...new Set(barcodeObjects.map(o=>o.owner))]);
   console.log('barcode types',[...new Set(barcodeObjects.map(o=>o.barcodeType))]);
+  console.log('LINK_ANALYSIS',JSON.stringify(analyzeLinks(map,container,F),null,2));
   const allStrings=F.scanUtf16Strings(container,{minLength:0,maxLength:10000,includeEmpty:true});
   for(const o of barcodeObjects){
     const rows=allStrings.filter(e=>e.offset>=o.recordStart&&e.offset<o.recordEnd).map(e=>({offset:e.offset,text:e.text})).filter(e=>String(e.text??'').length||true);
