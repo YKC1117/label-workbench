@@ -179,6 +179,36 @@ async function parseOfficialBtw(t){
       });
     }
   }
+
+  for(const b of barcodeObjects){
+    if(b.owner!=='BcQrcodeData'||!Array.isArray(b.componentEntries)||!b.componentEntries.length)continue;
+    const payload='QR_NATIVE_COMPONENT_123';
+    const next=[payload,...Array(Math.max(0,b.componentEntries.length-1)).fill('')];
+    try{
+      const edited=M.editContainer(container,[{index:b.index,barcodeComponents:next}]);
+      const rebuilt=await F.rebuild(parsed,edited);
+      const reparsed=F.parseStructure(rebuilt),recontainer=await F.inflateContainer(reparsed),remap=M.mapContainer(recontainer);
+      const rb=remap.objects.find(o=>o.owner==='BcQrcodeData');
+      console.log('QR_COMPONENT_EDIT_EXPERIMENT',{
+        source:t.key,
+        componentsBefore:b.components,
+        componentCount:b.componentEntries.length,
+        componentsAfter:rb?.components,
+        resolvedPreviewAfter:rb?.resolvedPreview,
+        barcodeStillNative:!!rb,
+        barcodeOwnerAfter:rb?.owner,
+        barcodeTypeAfter:rb?.barcodeType,
+        rebuiltBytes:rebuilt.byteLength
+      });
+    }catch(error){
+      console.log('QR_COMPONENT_EDIT_EXPERIMENT_FAIL',{
+        source:t.key,
+        componentCount:b.componentEntries.length,
+        error:String(error?.message||error)
+      });
+    }
+  }
+
   fs.writeFileSync('/tmp/'+t.key+'.btw',Buffer.from(bytes));
 }
 
