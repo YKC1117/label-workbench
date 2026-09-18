@@ -192,8 +192,8 @@ async function parseOfficialBtw(t){
     }
   }
 
-  if(t.key==='c39-retail-library-resource-80043'){
-    const barcode=barcodeObjects.find(o=>o.owner==='BcC39RegularData');
+  if(t.key==='c39-retail-library-resource-80043'||t.key==='qr-vcard-library-resource-80135'){
+    const barcode=barcodeObjects.find(o=>o.owner===(t.key.includes('80043')?'BcC39RegularData':'BcQrcodeData'));
     const linked=new Set((barcode?.linkedDataSourceRefs||[]).map(r=>r.index));
     const candidates=map.objects.filter(o=>o.kind==='text'&&o.valueEntry&&/^Text\\s+\\d+$/i.test(String(o.name||''))&&!linked.has(o.index));
     const results=[];
@@ -206,7 +206,7 @@ async function parseOfficialBtw(t){
         results.push({index:target.index,name:target.name,before:target.value,ok:!!hit,after:hit?.value||'',afterName:hit?.name||'',afterIndex:hit?.index??null});
       }catch(error){results.push({index:target.index,name:target.name,before:target.value,ok:false,error:String(error?.message||error)})}
     }
-    console.log('C39_TEXT_SLOT_ROUNDTRIP',JSON.stringify(results,null,2));
+    console.log(t.key.includes('80043')?'C39_TEXT_SLOT_ROUNDTRIP':'QR_TEXT_SLOT_ROUNDTRIP',JSON.stringify(results,null,2));
   }
 
   for(const b of barcodeObjects){
