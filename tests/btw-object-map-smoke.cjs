@@ -29,7 +29,13 @@ let container=concat([
   obj({root:'Root.MasterSelectedObject.Border',name:'文字 32',x:3486,y:933,value:'RoHS',fontSize:12}),
   obj({root:'Root.MasterSelectedObject.Barcode',name:'文字 26',x:417,y:2083,value:'P1',fontSize:10}),
   obj({root:'Root.MasterSelectedObject.Text Control',name:'Text 90',x:880,y:620,value:undefined,markers:['9','Company Name']}),
+  typeTag('BcC39RegularData'),
+  concat([i32(2000),i32(1300),new Uint8Array(12),F.encodeBtwString('Barcode 91'),F.encodeBtwString('Screen Data'),F.encodeBtwString('Barcode'),F.encodeBtwString('DataSource'),F.encodeBtwString('Text 90'),F.encodeBtwString('(???) ???-????'),F.encodeBtwString('Sample Text'),new Uint8Array(24)]),
   obj({root:'Root.MasterSelectedObject.Barcode',name:'Barcode 90',x:1200,y:900,value:undefined,markers:['TextTransforms'],components:['EN-128']}),
+  typeTag('BcQrcodeData'),
+  obj({root:'Root.MasterSelectedObject.Barcode',name:'Barcode QR',x:1700,y:1400,value:undefined,markers:['Screen Data','QRCode','Text 90']}),
+  typeTag('BcUPCAData'),
+  obj({root:'Root.MasterSelectedObject.Barcode',name:'Barcode UPC',x:1800,y:1500,value:undefined,markers:['Screen Data','UPC','Text 90']}),
   obj({root:'Root.MasterSelectedObject.DataSourceGeneral.DataSource',name:'文字 99',x:1500,y:1100,value:'3'}),
   new Uint8Array(96),
   typeTag('BackgroundData'),
@@ -38,8 +44,8 @@ let container=concat([
 ]);
 
 let map=M.mapContainer(container);
-if(map.objects.length!==9)throw new Error(`object count ${map.objects.length}`);
-const t=map.objects.find(o=>o.name==='文字 2'),bc=map.objects.find(o=>o.name==='條碼 1'),dm=map.objects.find(o=>o.name==='條碼 2'),borderText=map.objects.find(o=>o.name==='文字 32'),barcodeRootText=map.objects.find(o=>o.name==='文字 26'),englishText=map.objects.find(o=>o.name==='Text 90'),englishBarcode=map.objects.find(o=>o.name==='Barcode 90'),lastText=map.objects.find(o=>o.name==='文字 99');
+if(map.objects.length!==12)throw new Error(`object count ${map.objects.length}`);
+const t=map.objects.find(o=>o.name==='文字 2'),bc=map.objects.find(o=>o.name==='條碼 1'),dm=map.objects.find(o=>o.name==='條碼 2'),borderText=map.objects.find(o=>o.name==='文字 32'),barcodeRootText=map.objects.find(o=>o.name==='文字 26'),englishText=map.objects.find(o=>o.name==='Text 90'),nativeC39=map.objects.find(o=>o.name==='Barcode 91'),englishBarcode=map.objects.find(o=>o.name==='Barcode 90'),nativeQr=map.objects.find(o=>o.name==='Barcode QR'),nativeUpc=map.objects.find(o=>o.name==='Barcode UPC'),lastText=map.objects.find(o=>o.name==='文字 99');
 if(!t||t.value!=='ABC123'||t.xMil!==737||t.yMil!==254)throw new Error('text decode mismatch');
 if(t.fontName!=='Arial'||t.fontSize!==10)throw new Error('font decode mismatch');
 if(!bc||bc.kind!=='barcode'||bc.barcodeType!=='Code 128'||bc.resolvedPreview!=='1PABC123')throw new Error(`Code128 relation mismatch: ${bc?.barcodeType}/${bc?.resolvedPreview}`);
@@ -53,6 +59,7 @@ if(lastText?.value!=='3')throw new Error(`last object swallowed document tail: $
 if(lastText.recordEnd>=container.length)throw new Error('last object record must stop at following non-object type tag');
 if(bc.componentEntries.length!==2||dm.componentEntries.length!==1)throw new Error('barcode component offsets missing');
 console.log('PASS: BTW Chinese/English names, Text Control values, positions, fonts and barcode structures decode');
+console.log('PASS: native QR / Code39 / UPC-A tags decode, including no-Root Code39 and linked Text datasource preview');
 console.log('PASS: nearby type owner does not leak to later objects and final object stops before document tail');
 
 container=M.editContainer(container,[
