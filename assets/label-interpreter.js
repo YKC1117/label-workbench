@@ -142,9 +142,16 @@
     const rx=new RegExp(`(?:[\\(\\[]\\s*(${codeAlt})\\s*[\\)\\]]?|\\b(${codeAlt})\\s*[\\)\\]])`,'ig');
     const ms=[...line.matchAll(rx)];if(!ms.length)return[];const out=[];
     for(let i=0;i<ms.length;i++){
-      const m=ms[i],code=(m[1]||m[2]||'').toUpperCase(),end=i+1<ms.length?ms[i+1].index:line.length,chunk=cleanLine(line.slice((m.index||0)+m[0].length,end)),def=FIELD_DEFS.find(d=>d.code===code),name=def?.name||code;let rest=chunk;
-      for(const a of (def?.aliases||[]).sort((a,b)=>b.length-a.length))rest=rest.replace(new RegExp('^\\s*'+aliasPattern(a)+'\\s*[:：=]?\\s*','i'),'');
-      rest=rest.replace(/^\s*[^:：]{0,28}[:：]\s*/,'');const value=cleanValue(rest);if(value&&/[A-Z0-9+\-]/i.test(value))out.push({code,name,value});
+      const m=ms[i],code=(m[1]||m[2]||'').toUpperCase(),end=i+1<ms.length?ms[i+1].index:line.length,chunk=cleanLine(line.slice((m.index||0)+m[0].length,end)),def=FIELD_DEFS.find(d=>d.code===code),name=def?.name||code;let rest=chunk,aliasRemoved=false;
+      for(const a of (def?.aliases||[]).sort((a,b)=>b.length-a.length)){
+        const next=rest.replace(new RegExp('^\\s*'+aliasPattern(a)+'\\s*[:：=]?\\s*','i'),'');
+        if(next!==rest){rest=next;aliasRemoved=true;break}
+      }
+      // Only use the generic "caption:" stripper when no canonical caption was
+      // already removed. Running both can erase the real value if the next AI
+      // marker was lost by OCR and its caption is still present.
+      if(!aliasRemoved)rest=rest.replace(/^\s*[^:：]{0,28}[:：]\s*/,'');
+      const value=cleanValue(rest);if(value&&/[A-Z0-9+\-]/i.test(value))out.push({code,name,value});
     }
     return out;
   }
