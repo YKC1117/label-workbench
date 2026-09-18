@@ -195,7 +195,7 @@ async function parseOfficialBtw(t){
   if(t.key==='c39-retail-library-resource-80043'||t.key==='qr-vcard-library-resource-80135'){
     const barcode=barcodeObjects.find(o=>o.owner===(t.key.includes('80043')?'BcC39RegularData':'BcQrcodeData'));
     const linked=new Set((barcode?.linkedDataSourceRefs||[]).map(r=>r.index));
-    const candidates=map.objects.filter(o=>o.kind==='text'&&o.valueEntry&&/^Text\\s+\\d+$/i.test(String(o.name||''))&&!linked.has(o.index));
+    const candidates=map.objects.filter(o=>o.kind==='text'&&o.valueEntry&&/^Text\s+\d+$/i.test(String(o.name||''))&&!linked.has(o.index));
     const results=[];
     for(let i=0;i<candidates.length;i++){
       const target=candidates[i],token=`TXT_SLOT_${String(i+1).padStart(2,'0')}`,x=300+i*37,y=400+i*29;
