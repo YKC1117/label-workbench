@@ -19,3 +19,5 @@ jobs:
           node-version: '24'
       - name: Inventory verified donor barcode pools
         run: node tools/probe-multi-barcode-donors.cjs
+      - name: Verify mixed native barcode generator
+        run: node tests/btw-multi-native-smoke.cjs
