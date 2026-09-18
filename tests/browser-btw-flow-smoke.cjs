@@ -70,7 +70,7 @@ const document={
   querySelectorAll(){return[]},
   createElement(tag){return new MockEl(tag)},
   head:{appendChild(){}},
-  body:{appendChild(node){node.parentElement=this;if(node.id)elements.set(node.id,node)}},
+  body:{children:[],appendChild(node){node.parentElement=this;this.children.push(node);if(node.id)elements.set(node.id,node)}},
   addEventListener(){}
 };
 
