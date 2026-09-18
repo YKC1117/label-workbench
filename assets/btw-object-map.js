@@ -6,7 +6,7 @@
  */
 (function(){
   'use strict';
-  const BUILD='20260918-btw-object-map-041-native-family-tags';
+  const BUILD='20260918-btw-object-map-042-global-edit-order';
   const ROOT='Root.MasterSelectedObject.';
   const FONT_MARKER=new Uint8Array([0x03,0x02,0x01,0x22]);
   const PLACEHOLDER='(???) ???-????';
@@ -155,11 +155,47 @@
   }
   function resolveObject(map,edit){if(Number.isInteger(edit?.index))return map.objects.find(o=>o.index===edit.index)||null;if(edit?.id)return map.objects.find(o=>o.id===edit.id)||null;if(edit?.name)return map.objects.find(o=>o.name===edit.name)||null;if(edit?.valueMatch)return map.objects.find(o=>o.value===edit.valueMatch)||null;return null}
   function editContainer(container,edits){
-    const F=window.LabelWorkbenchBtwFormat;if(!F?.replaceStringAt)throw new Error('BTW 字串寫回元件尚未載入');let out=u8(container).slice(),map=mapContainer(out),jobs=(edits||[]).map(edit=>({edit,obj:resolveObject(map,edit)}));
-    for(const j of jobs){if(j.obj)continue;const label=j.edit?.name||j.edit?.id||(j.edit?.index??'未指定');throw new Error(`找不到 BTW 物件：${label}`)}jobs.sort((a,b)=>b.obj.recordStart-a.obj.recordStart);
-    for(const {edit,obj} of jobs){if(edit.xMil!=null||edit.xMm!=null){const v=edit.xMil!=null?Number(edit.xMil):mmToMil(edit.xMm);writeI32(out,obj.recordStart,v)}if(edit.yMil!=null||edit.yMm!=null){const v=edit.yMil!=null?Number(edit.yMil):mmToMil(edit.yMm);writeI32(out,obj.recordStart+4,v)}if(edit.fontSize!=null){if(obj.fontSizeOffset==null)throw new Error(`${obj.name||obj.id} 尚未定位可安全寫入的字級欄位`);writeF32(out,obj.fontSizeOffset,Number(edit.fontSize))}
-      const replacements=[];if(Object.prototype.hasOwnProperty.call(edit,'value')){if(!obj.valueEntry)throw new Error(`${obj.name||obj.id} 尚未定位可安全寫入的文字值`);replacements.push({entry:obj.valueEntry,value:String(edit.value??'')})}if(Object.prototype.hasOwnProperty.call(edit,'barcodeValue')){if(obj.kind!=='barcode')throw new Error(`${obj.name||obj.id} 不是條碼物件`);if(obj.componentEntries.length!==1)throw new Error(`${obj.name||obj.id} 有 ${obj.componentEntries.length} 段資料來源；請使用 barcodeComponents 精準寫回`);replacements.push({entry:obj.componentEntries[0].entry,value:String(edit.barcodeValue??'')})}if(Object.prototype.hasOwnProperty.call(edit,'barcodeComponents')){if(obj.kind!=='barcode')throw new Error(`${obj.name||obj.id} 不是條碼物件`);if(!Array.isArray(edit.barcodeComponents)||edit.barcodeComponents.length!==obj.componentEntries.length)throw new Error(`${obj.name||obj.id} 條碼資料段數不符：需要 ${obj.componentEntries.length} 段`);obj.componentEntries.forEach((c,i)=>replacements.push({entry:c.entry,value:String(edit.barcodeComponents[i]??'')}))}replacements.sort((a,b)=>b.entry.offset-a.entry.offset);for(const r of replacements)out=F.replaceStringAt(out,r.entry,r.value);
-    }return out;
+    const F=window.LabelWorkbenchBtwFormat;if(!F?.replaceStringAt)throw new Error('BTW 字串寫回元件尚未載入');
+    let out=u8(container).slice(),map=mapContainer(out),jobs=(edits||[]).map(edit=>({edit,obj:resolveObject(map,edit)}));
+    for(const j of jobs){if(j.obj)continue;const label=j.edit?.name||j.edit?.id||(j.edit?.index??'未指定');throw new Error(`找不到 BTW 物件：${label}`)}
+
+    /* Fixed-width writes do not change offsets, so complete all of them before
+       touching any variable-length UTF-16 string in the serialized container. */
+    const replacements=[];
+    for(const {edit,obj} of jobs){
+      if(edit.xMil!=null||edit.xMm!=null){const v=edit.xMil!=null?Number(edit.xMil):mmToMil(edit.xMm);writeI32(out,obj.recordStart,v)}
+      if(edit.yMil!=null||edit.yMm!=null){const v=edit.yMil!=null?Number(edit.yMil):mmToMil(edit.yMm);writeI32(out,obj.recordStart+4,v)}
+      if(edit.fontSize!=null){if(obj.fontSizeOffset==null)throw new Error(`${obj.name||obj.id} 尚未定位可安全寫入的字級欄位`);writeF32(out,obj.fontSizeOffset,Number(edit.fontSize))}
+      if(Object.prototype.hasOwnProperty.call(edit,'value')){
+        if(!obj.valueEntry)throw new Error(`${obj.name||obj.id} 尚未定位可安全寫入的文字值`);
+        replacements.push({entry:obj.valueEntry,value:String(edit.value??''),object:obj})
+      }
+      if(Object.prototype.hasOwnProperty.call(edit,'barcodeValue')){
+        if(obj.kind!=='barcode')throw new Error(`${obj.name||obj.id} 不是條碼物件`);
+        if(obj.componentEntries.length!==1)throw new Error(`${obj.name||obj.id} 有 ${obj.componentEntries.length} 段資料來源；請使用 barcodeComponents 精準寫回`);
+        replacements.push({entry:obj.componentEntries[0].entry,value:String(edit.barcodeValue??''),object:obj})
+      }
+      if(Object.prototype.hasOwnProperty.call(edit,'barcodeComponents')){
+        if(obj.kind!=='barcode')throw new Error(`${obj.name||obj.id} 不是條碼物件`);
+        if(!Array.isArray(edit.barcodeComponents)||edit.barcodeComponents.length!==obj.componentEntries.length)throw new Error(`${obj.name||obj.id} 條碼資料段數不符：需要 ${obj.componentEntries.length} 段`);
+        obj.componentEntries.forEach((c,i)=>replacements.push({entry:c.entry,value:String(edit.barcodeComponents[i]??''),object:obj}))
+      }
+    }
+
+    /* Variable-length replacements MUST be global, not grouped by object.
+       Multiple logical objects may live inside the same BarTender root record. */
+    replacements.sort((a,b)=>b.entry.offset-a.entry.offset);
+    for(let i=1;i<replacements.length;i++){
+      if(replacements[i].entry.offset===replacements[i-1].entry.offset&&replacements[i].value!==replacements[i-1].value){
+        throw new Error('BTW 多物件編輯要求對同一 datasource 寫入不同內容')
+      }
+    }
+    let lastOffset=null,lastValue=null;
+    for(const r of replacements){
+      if(r.entry.offset===lastOffset&&r.value===lastValue)continue;
+      out=F.replaceStringAt(out,r.entry,r.value);lastOffset=r.entry.offset;lastValue=r.value;
+    }
+    return out;
   }
   async function decodeBtw(buffer){const F=window.LabelWorkbenchBtwFormat;if(!F?.parseStructure||!F?.inflateContainer)throw new Error('BTW 格式解析器尚未載入');const parsed=F.parseStructure(buffer),container=await F.inflateContainer(parsed),map=mapContainer(container);return{parsed,container,map}}
   async function rebuildBtw(buffer,edits){const F=window.LabelWorkbenchBtwFormat;if(!F?.rebuild)throw new Error('BTW 重建元件尚未載入');const decoded=await decodeBtw(buffer),edited=editContainer(decoded.container,edits),bytes=await F.rebuild(decoded.parsed,edited),verify=await decodeBtw(bytes);return{bytes,objects:verify.map.objects,header:verify.parsed.header}}
