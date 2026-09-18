@@ -1,0 +1,21 @@
+name: Multi Barcode Donor Lab
+
+on:
+  push:
+    branches:
+      - refactor/multi-barcode-native-v1955
+
+permissions:
+  contents: read
+
+jobs:
+  lab:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Inventory verified donor barcode pools
+        run: node tools/probe-multi-barcode-donors.cjs
