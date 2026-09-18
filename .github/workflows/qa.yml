@@ -34,6 +34,9 @@ jobs:
           node --check tests/browser-btw-flow-smoke.cjs
           node --check tests/analysis-copy-smoke.cjs
           node --check tests/analysis-entry-smoke.cjs
+          node --check tests/analysis-entry-readiness-smoke.cjs
+          node --check tests/ocr-fallback-quality-smoke.cjs
+          node --check tests/btw-seed-retry-smoke.cjs
           node --check tests/analysis-core-v2-smoke.cjs
           node --check tests/generic-label-model-smoke.cjs
           node --check tests/generic-textobjects-btw-smoke.cjs
@@ -124,6 +127,12 @@ jobs:
         run: node tests/analysis-copy-smoke.cjs
       - name: Quick Analysis early file-selection regression tests
         run: node tests/analysis-entry-smoke.cjs
+      - name: Quick Analysis loader readiness routing
+        run: node tests/analysis-entry-readiness-smoke.cjs
+      - name: OCR quality-driven fallback gate
+        run: node tests/ocr-fallback-quality-smoke.cjs
+      - name: BTW seed transient retry recovery
+        run: node tests/btw-seed-retry-smoke.cjs
       - name: Deterministic Quick Analysis core v2 regression tests
         run: node tests/analysis-core-v2-smoke.cjs
       - name: Arbitrary-customer generic label object model
