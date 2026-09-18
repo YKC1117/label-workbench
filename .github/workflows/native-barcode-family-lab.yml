@@ -1,0 +1,26 @@
+name: Native Barcode Family Lab
+
+on:
+  push:
+    branches:
+      - feat/native-barcode-families-v1951
+
+permissions:
+  contents: read
+
+jobs:
+  family:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax
+        run: |
+          node --check assets/btw-object-map.js
+          node --check assets/btw-family-native.js
+          node --check tests/btw-family-native-smoke.cjs
+      - name: Native QR and Code39 donor round trip
+        run: node tests/btw-family-native-smoke.cjs
