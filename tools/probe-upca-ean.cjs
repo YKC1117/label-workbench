@@ -60,6 +60,32 @@ async function probeUpc(){
     }
   }
 }
+async function probeEan13Resource(){
+  const C=ctx(),F=C.LabelWorkbenchBtwFormat,M=C.LabelWorkbenchBtwObjectMap;
+  const id='79773',r=await fetch('https://www.bartendersoftware.com/download-resource?resourceId='+id,{redirect:'follow',headers:{'user-agent':'Mozilla/5.0 LabelWorkbenchEANProbe/1.1'}});
+  const bytes=new Uint8Array(await r.arrayBuffer()),parsed=F.parseStructure(bytes),container=await F.inflateContainer(parsed),map=M.mapContainer(container),b=map.objects.find(o=>o.owner==='BcEAN13Data');
+  if(!b)throw new Error('EAN-13 native barcode missing');
+  const mirrors=editableMirror(F,container,b),writable=map.objects.filter(o=>o.kind==='text'&&o.valueEntry&&/^Text\s+\d+$/i.test(String(o.name||''))&&o.owner!=='PictureData'&&o.owner!=='EditControlData');
+  console.log('EAN13_DONOR',{
+    id,app:parsed.header.applicationVersion,compatible:parsed.header.compatibleVersion,
+    template:(/<TemplateSize>([^<]+)/i.exec(parsed.header.text||'')||[])[1]||'',
+    owner:b.owner,type:b.barcodeType,record:[b.recordStart,b.recordEnd],
+    mirrorCount:mirrors.length,mirrors:mirrors.map(x=>({offset:x.offset,text:x.text})),
+    writableText:writable.length,writableNames:writable.map(o=>o.name),bytes:bytes.length
+  });
+  const payload='4006381333931';
+  for(const m of mirrors){
+    try{
+      const edited=F.replaceStringAt(container,m,payload),rebuilt=await F.rebuild(parsed,edited),rp=F.parseStructure(rebuilt),rc=await F.inflateContainer(rp),rm=M.mapContainer(rc),rb=rm.objects.find(o=>o.owner==='BcEAN13Data');
+      console.log('EAN13_MIRROR_EDIT',{
+        offset:m.offset,payload,ownerAfter:rb?.owner,typeAfter:rb?.barcodeType,
+        componentsAfter:rb?.components,resolvedAfter:rb?.resolvedPreview,
+        bytes:rebuilt.byteLength
+      });
+    }catch(e){console.log('EAN13_MIRROR_EDIT_FAIL',{offset:m.offset,error:String(e?.message||e)})}
+  }
+}
+
 async function discoverEan(){
   const C=ctx(),F=C.LabelWorkbenchBtwFormat,M=C.LabelWorkbenchBtwObjectMap;
   for(const page of EAN_PAGES){
@@ -83,4 +109,4 @@ async function discoverEan(){
     }catch(e){console.log('EAN_PAGE_FAIL',page,String(e?.message||e))}
   }
 }
-(async()=>{await probeUpc();await discoverEan()})().catch(e=>{console.error(e);process.exit(1)});
+(async()=>{await probeUpc();await probeEan13Resource();await discoverEan()})().catch(e=>{console.error(e);process.exit(1)});
