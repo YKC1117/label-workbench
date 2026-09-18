@@ -84,6 +84,13 @@ async function parseOfficialBtw(t){
     if(ok&&/^Bc[A-Za-z0-9]+Data$/.test(type))rawTags.push({offset:i,type});
   }
   console.log('ALL_BC_TAGS',rawTags);
+  const tagStrings=F.scanUtf16Strings(container,{minLength:0,maxLength:10000,includeEmpty:true});
+  for(const tag of rawTags){
+    const near=tagStrings.filter(e=>e.offset>=Math.max(0,tag.offset-2200)&&e.offset<=tag.offset+4200)
+      .map(e=>({offset:e.offset,text:e.text}))
+      .filter(e=>String(e.text??'').length);
+    console.log('RAW_TAG_WINDOW',tag.type,tag.offset,near.slice(0,140));
+  }
   const barcodeObjects=map.objects.filter(o=>o.kind==='barcode');
   console.log('header',{
     applicationVersion:parsed.header.applicationVersion,
