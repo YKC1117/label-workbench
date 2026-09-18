@@ -19,5 +19,7 @@ jobs:
           node-version: '24'
       - name: Inspect BarTender template library index
         run: node tools/probe-template-library-index.cjs
+      - name: Scan all 37 template catalog pages
+        run: node tools/probe-ean8-upce-catalog37.cjs
       - name: Discover official EAN-8 and UPC-E donors
         run: node tools/probe-ean8-upce.cjs
