@@ -17,6 +17,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
+      - name: Family generator syntax check
+        run: node --check assets/btw-family-native.js
       - name: Probe UPC-A and EAN-13 native datasources
         run: node tools/probe-upca-ean.cjs
       - name: Verify native QR Code39 UPC-A family generator
