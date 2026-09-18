@@ -6,7 +6,7 @@
  */
 (function(){
   'use strict';
-  const BUILD='20260911-btw-rich-140-rich-header-size';
+  const BUILD='20260918-btw-rich-150-textobjects';
   const SEED_FUNCTION='btw-seed';
   const OFF=50000;
   const MAX_TEXT=29;
