@@ -128,7 +128,7 @@ for(const f of[
 
 (async()=>{
   const ui=c.LabelWorkbenchBtNativePrimary;
-  assert(ui?.BUILD==='20260918-btnp220-production-core','unexpected BTW primary build');
+  assert(ui?.BUILD==='20260918-btnp230-website-only-ux','unexpected BTW primary build');
 
   ui.decorateAnalysis();
 
