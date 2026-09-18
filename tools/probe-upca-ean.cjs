@@ -65,9 +65,14 @@ async function discoverEan(){
   for(const page of EAN_PAGES){
     try{
       const h=await (await fetch(page,{redirect:'follow',headers:{'user-agent':'Mozilla/5.0 LabelWorkbenchEANProbe/1.0'}})).text();
-      const ids=[...new Set([...h.matchAll(/download-resource\?resourceId=(\d{4,8})/gi)].map(m=>m[1]))];
-      console.log('EAN_PAGE',page,'ids',ids);
-      for(const id of ids.slice(0,10)){
+      const ids=[...new Set([
+        ...[...h.matchAll(/download-resource\?resourceId=(\d{4,8})/gi)].map(m=>m[1]),
+        ...[...h.matchAll(/(?:resourceId|resource_id|resource-id|resource|download|asset|entry)[^0-9]{0,40}(\d{4,8})/gi)].map(m=>m[1]),
+        ...[...h.matchAll(/["']?id["']?\s*[:=]\s*["']?(\d{4,8})/gi)].map(m=>m[1]),
+        ...[...h.matchAll(/value=["'](\d{4,8})["']/gi)].map(m=>m[1])
+      ])].filter(id=>Number(id)>1000&&Number(id)<99999999);
+      console.log('EAN_PAGE',page,'ids',ids.slice(0,60));
+      for(const id of ids.slice(0,40)){
         try{
           const rr=await fetch('https://www.bartendersoftware.com/download-resource?resourceId='+id,{redirect:'follow',headers:{'user-agent':'Mozilla/5.0 LabelWorkbenchEANProbe/1.0'}});
           const bytes=new Uint8Array(await rr.arrayBuffer());
