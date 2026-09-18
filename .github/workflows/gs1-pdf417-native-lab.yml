@@ -1,0 +1,21 @@
+name: GS1 PDF417 Native Lab
+
+on:
+  push:
+    branches:
+      - feat/native-retail-compact-v1953
+
+permissions:
+  contents: read
+
+jobs:
+  lab:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Verify GS1-128 and PDF417 native datasource writes
+        run: node tools/probe-gs1128-pdf417.cjs
