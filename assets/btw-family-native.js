@@ -7,7 +7,7 @@
 (function(){
   'use strict';
 
-  const BUILD='20260918-btw-family-native-120-qr-c39-upca-ean13';
+  const BUILD='20260918-btw-family-native-130-gs1128-pdf417';
   const OFF=50000;
   const MAX_SIZE_PAIRS=16;
   const PROFILES={
@@ -30,6 +30,16 @@
       key:'ean13',seedKey:'ean13-rich',seedId:'EAN13-RICH-2022-R8',
       app:'2022 R8',compatible:'2019',barcodeType:'EAN-13',owner:'BcEAN13Data',
       donor:{width:92.99,height:57.99},maxText:10,mode:'retail-mirror'
+    },
+    gs1128:{
+      key:'gs1128',seedKey:'gs1128-rich',seedId:'GS1128-RICH-2022-R7',
+      app:'2022 R7',compatible:'2019',barcodeType:'GS1-128',owner:'BcUCCEAN128Data',
+      donor:{width:152.4,height:101.6},maxText:10,mode:'linked-text'
+    },
+    pdf417:{
+      key:'pdf417',seedKey:'pdf417-rich',seedId:'PDF417-RICH-2022-R5',
+      app:'2022 R5',compatible:'2019',barcodeType:'PDF417',owner:'BcPdf417Data',
+      donor:{width:210.0072,height:148.0058},maxText:12,mode:'components'
     }
   };
   const seedPromises=new Map();
@@ -48,6 +58,8 @@
     if(/code39|c39/.test(f))return'c39';
     if(/upca/.test(f))return'upca';
     if(/ean13/.test(f))return'ean13';
+    if(/gs1128|uccean128/.test(f))return'gs1128';
+    if(/pdf417/.test(f))return'pdf417';
     return'';
   }
   function textItems(label){
@@ -67,6 +79,12 @@
   }
   function upcaSafe(value){return gs1CheckDigitSafe(value,12)}
   function ean13Safe(value){return gs1CheckDigitSafe(value,13)}
+  function gs1128Safe(value){
+    const s=String(value||'');return s.length>0&&s.length<=512&&!/[\r\n]/.test(s)
+  }
+  function pdf417Safe(value){
+    const s=String(value||'');return s.length>0&&s.length<=1800
+  }
   function plan(label){
     const all=rows(label);if(all.length!==1)return null;
     const kind=kindFor(all[0]),profile=PROFILES[kind];if(!profile)return null;
@@ -74,6 +92,8 @@
     if(kind==='c39'&&!code39Safe(value))return null;
     if(kind==='upca'&&!upcaSafe(value))return null;
     if(kind==='ean13'&&!ean13Safe(value))return null;
+    if(kind==='gs1128'&&!gs1128Safe(value))return null;
+    if(kind==='pdf417'&&!pdf417Safe(value))return null;
     const texts=textItems(label);if(texts.length>profile.maxText)return null;
     return{kind,profile,row:all[0],value,texts}
   }
@@ -179,7 +199,7 @@
       return{barcode:{index:barcode.index,...pos},reserved:null}
     }
     const target=linkedWritable(barcode,objects);
-    if(!target)throw new Error('Code 39 donor 找不到可安全寫入的 linked Text datasource');
+    if(!target)throw new Error(plan.profile.barcodeType+' donor 找不到可安全寫入的 linked Text datasource');
     return{barcode:{index:barcode.index,...pos},reserved:{index:target.index,value:plan.value,xMil:OFF,yMil:OFF}}
   }
 
@@ -223,7 +243,7 @@
       if(afterBarcode.resolvedPreview!==P.value)throw new Error(P.profile.barcodeType+' 重建後 payload round-trip 不符');
     }else{
       const afterSource=(afterBarcode.linkedDataSourceRefs||[]).map(r=>remap.objects.find(o=>o.index===r.index)).find(o=>o?.value===P.value);
-      if(!afterSource||afterBarcode.resolvedPreview!==P.value)throw new Error('Code 39 重建後 linked datasource round-trip 不符');
+      if(!afterSource||afterBarcode.resolvedPreview!==P.value)throw new Error(P.profile.barcodeType+' 重建後 linked datasource round-trip 不符');
     }
     for(const e of expectedText){
       const o=remap.objects.find(x=>x.kind==='text'&&x.value===e.value&&x.xMil===e.xMil&&x.yMil===e.yMil);
@@ -243,6 +263,6 @@
   }
 
   window.LabelWorkbenchBtwFamilyNative={
-    BUILD,PROFILES,kindFor,textItems,code39Safe,gs1CheckDigitSafe,upcaSafe,ean13Safe,plan,canGenerate,targetSize,printableTexts,adjacentSizePairs,rewriteInternalSize,retailMirrorEntry,applyRetailPayload,seedEndpoint,fetchSeed,generateOne
+    BUILD,PROFILES,kindFor,textItems,code39Safe,gs1CheckDigitSafe,upcaSafe,ean13Safe,gs1128Safe,pdf417Safe,plan,canGenerate,targetSize,printableTexts,adjacentSizePairs,rewriteInternalSize,retailMirrorEntry,applyRetailPayload,seedEndpoint,fetchSeed,generateOne
   };
 })();

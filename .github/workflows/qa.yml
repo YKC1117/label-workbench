@@ -73,15 +73,15 @@ jobs:
       - name: Current wiring sanity check
         run: |
           grep -q 'assets/analysis-entry.js?v=20260918-v147' index.html
-          grep -q 'assets/barcode-reader.js?v=20260918-v388' index.html
-          grep -q '標籤製作工作台 · v1.9.52' index.html
-          grep -q '更新：2026/09/18 11:52' index.html
+          grep -q 'assets/barcode-reader.js?v=20260918-v389' index.html
+          grep -q '標籤製作工作台 · v1.9.53' index.html
+          grep -q '更新：2026/09/18 13:49' index.html
           grep -q 'assets/analysis-race-guard.js?v=20260914-v139' index.html
           grep -q "BUILD='20260918-analysis-entry-147-core-ready'" assets/analysis-entry.js
           grep -q "dataset.priorityBound='true'" assets/analysis-entry.js
           grep -q "BUILD='20260918-view-guard-145-index-owned-version'" assets/view-state-guard.js
           ! grep -q "marker.innerHTML='標籤製作工作台" assets/view-state-guard.js
-          grep -q "BUILD='20260918-v388-native-retail-barcodes'" assets/barcode-reader.js
+          grep -q "BUILD='20260918-v389-gs1-pdf417'" assets/barcode-reader.js
           grep -q "BUILD='20260918-v183-quality-fallback'" assets/label-interpreter.js
           grep -q "BUILD='20260918-btw-production-gate-110-textobjects'" assets/btw-production-gate.js
           grep -q "BUILD='20260918-btw-second-native-110-textobjects'" assets/btw-second-native.js
@@ -103,9 +103,9 @@ jobs:
           grep -q "MAX_DM=1" assets/btw-second-native.js
           grep -q 'btw-production-gate.js' assets/barcode-reader.js
           grep -q 'btw-family-native.js' assets/barcode-reader.js
-          grep -q "BUILD='20260918-btw-family-native-120-qr-c39-upca-ean13'" assets/btw-family-native.js
+          grep -q "BUILD='20260918-btw-family-native-130-gs1128-pdf417'" assets/btw-family-native.js
           grep -q 'btw-production-core.js' assets/barcode-reader.js
-          grep -q "BUILD='20260918-btw-production-core-120-retail-families'" assets/btw-production-core.js
+          grep -q "BUILD='20260918-btw-production-core-130-gs1-pdf417'" assets/btw-production-core.js
           grep -q "BUILD='20260918-btnp230-website-only-ux'" assets/bt-native-primary.js
           grep -q "ensureProduction" assets/bt-native-primary.js
           grep -q "await ensureProduction()" assets/bt-native-primary.js
@@ -215,7 +215,7 @@ jobs:
           retention-days: 14
       - name: Native BTW object decoder/editor smoke tests
         run: node tests/btw-object-map-smoke.cjs
-      - name: Native QR Code39 UPC-A EAN-13 donor round trip
+      - name: Native QR Code39 UPC-A EAN-13 GS1-128 PDF417 donor round trip
         run: node tests/btw-family-native-smoke.cjs
       - name: Real BTW barcode read-slot regression tests
         run: node tests/btw-barcode-read-slot-smoke.cjs

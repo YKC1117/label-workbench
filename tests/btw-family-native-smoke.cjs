@@ -46,7 +46,7 @@ async function verify(label,kind,owner,type,payload,size){
 }
 
 (async()=>{
-  assert(G?.BUILD==='20260918-btw-family-native-120-qr-c39-upca-ean13','unexpected family build');
+  assert(G?.BUILD==='20260918-btw-family-native-130-gs1128-pdf417','unexpected family build');
 
   const qr=barcode({
     sourceName:'customer-qr.png',
@@ -105,5 +105,29 @@ async function verify(label,kind,owner,type,payload,size){
   const shortEan=barcode({sourceName:'short-ean13.png',textObjects:[],fields:[]},'EAN-13','400638133393',{x:.1,y:.1,w:.5,h:.1});
   assert(!G.canGenerate(shortEan),'EAN-13 must require the complete 13 digit decoded payload');
 
-  console.log('PASS: official BarTender 2022 QR, Code39, UPC-A and EAN-13 donors round-trip native payloads, text objects, source positions and physical label size');
+  const gs1=barcode({
+    sourceName:'customer-gs1128.png',
+    sourceGeometry:{widthMm:120,heightMm:80},
+    fields:[],
+    textObjects:textObjects(['SSCC / GS1','PALLET A','LOT','ABC123'])
+  },'GS1-128','010950110153000310ABC123',{x:.08,y:.66,w:.70,h:.12});
+  const g1=await verify(gs1,'gs1128','BcUCCEAN128Data','GS1-128','010950110153000310ABC123',{width:120,height:80});
+  assert(g1.out.seed==='GS1128-RICH-2022-R7','GS1-128 seed mismatch');
+
+  const badGs1=barcode({sourceName:'bad-gs1.png',textObjects:[],fields:[]},'GS1-128','0109501101530003\n10ABC123',{x:.1,y:.1,w:.5,h:.1});
+  assert(!G.canGenerate(badGs1),'GS1-128 must reject CR/LF payloads rather than silently normalize them');
+
+  const pdf=barcode({
+    sourceName:'customer-pdf417.png',
+    sourceGeometry:{widthMm:110,heightMm:70},
+    fields:[],
+    textObjects:textObjects(['SHIPMENT','MIXED LOAD','DOCK','A-17'])
+  },'PDF417','PDF417_NATIVE_PAYLOAD_20260918',{x:.58,y:.18,w:.30,h:.38});
+  const p4=await verify(pdf,'pdf417','BcPdf417Data','PDF417','PDF417_NATIVE_PAYLOAD_20260918',{width:110,height:70});
+  assert(p4.out.seed==='PDF417-RICH-2022-R5','PDF417 seed mismatch');
+
+  const tooLongPdf=barcode({sourceName:'long-pdf417.png',textObjects:[],fields:[]},'PDF417','X'.repeat(1801),{x:.1,y:.1,w:.5,h:.3});
+  assert(!G.canGenerate(tooLongPdf),'PDF417 safety cap must reject oversized payloads');
+
+  console.log('PASS: official BarTender 2022 QR, Code39, UPC-A, EAN-13, GS1-128 and PDF417 donors round-trip native payloads, text objects, source positions and physical label size');
 })().catch(err=>{console.error(err);process.exit(1)});
