@@ -5,7 +5,7 @@
  */
 (function(){
   'use strict';
-  const BUILD='20260914-barcode-crosscheck-107';
+  const BUILD='20260918-barcode-crosscheck-108-clear-stale-ocr';
   const api=()=>window.LabelWorkbenchInterpreter;
   const CODES=['31P','30P','31T','33P','23L','24L','21L','16D','10D','1P','1T','1Y','2Y','4Y','Q'];
   const CODE_ALT=CODES.slice().sort((a,b)=>b.length-a.length).join('|');
