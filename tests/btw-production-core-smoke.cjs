@@ -16,7 +16,7 @@ const c={
   window:null,globalThis:null,
   LabelWorkbenchInterpreter:{analyze:async()=>({labels:[]})},
   LabelWorkbenchBtwFamilyNative:{
-    canGenerate(label){return (label?.barcodes||[]).some(b=>/^(?:QR Code|Code 39)$/i.test(String(b?.format||'')))},
+    canGenerate(label){return (label?.barcodes||[]).some(b=>/^(?:QR Code|Code 39|UPC-A|EAN-13)$/i.test(String(b?.format||'')))},
     generateOne:async(label,index)=>{calls.push(['family',label,index]);return{name:'family.btw',bytes:new Uint8Array([10,11,12])}}
   },
   LabelWorkbenchBtwNative:{
@@ -40,7 +40,7 @@ for(const f of['assets/analysis-confidence-guard.js','assets/btw-production-gate
 
 (async()=>{
   const P=c.LabelWorkbenchBtwProductionCore;
-  assert(P?.BUILD==='20260918-btw-production-core-110-family-first','unexpected production core build');
+  assert(P?.BUILD==='20260918-btw-production-core-120-retail-families','unexpected production core build');
 
   const result={labels:[{sourceName:'第一個.pdf',fields:[
     {code:'1P',name:'PART NO',value:'W25NO1GWZEIR',barcodeVerified:true,alternatives:[],conflict:false},
@@ -50,6 +50,16 @@ for(const f of['assets/analysis-confidence-guard.js','assets/btw-production-gate
   const qrResult={labels:[{sourceName:'qr.png',fields:[],textObjects:[{text:'QR TEST',sourceBox:{x:.1,y:.1,w:.2,h:.05}}],barcodes:[{format:'QR Code',text:'https://example.test/qr'}]}]};
   const qrGenerated=await P.generate(qrResult,[{name:'qr.png',type:'image/png'}],()=>{});
   assert(qrGenerated.routes[0]==='family'&&calls[0][0]==='family','QR must route to native family generator before other BTW generators');
+
+  calls.length=0;
+  const upcResult={labels:[{sourceName:'upc.png',fields:[],textObjects:[{text:'UPC TEST'}],barcodes:[{format:'UPC-A',text:'036000291452'}]}]};
+  const upcGenerated=await P.generate(upcResult,[{name:'upc.png',type:'image/png'}],()=>{});
+  assert(upcGenerated.routes[0]==='family'&&calls[0][0]==='family','UPC-A must route to native family generator before other BTW generators');
+
+  calls.length=0;
+  const eanResult={labels:[{sourceName:'ean.png',fields:[],textObjects:[{text:'EAN TEST'}],barcodes:[{format:'EAN-13',text:'4006381333931'}]}]};
+  const eanGenerated=await P.generate(eanResult,[{name:'ean.png',type:'image/png'}],()=>{});
+  assert(eanGenerated.routes[0]==='family'&&calls[0][0]==='family','EAN-13 must route to native family generator before other BTW generators');
 
   calls.length=0;
   const progress=[];
