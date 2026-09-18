@@ -8,7 +8,15 @@ const targets=[
   {key:'upca-template',kind:'html',url:'https://www.bartendersoftware.com/resources/library/retail-upc-a-label'},
   {key:'qr-code39-resource-79738',kind:'parsed',url:'https://www.bartendersoftware.com/download-resource?resourceId=79738'},
   {key:'code39-resource-79914',kind:'parsed',url:'https://www.bartendersoftware.com/download-resource?resourceId=79914'},
-  {key:'upca-resource-80046',kind:'parsed',url:'https://www.bartendersoftware.com/download-resource?resourceId=80046'}
+  {key:'upca-resource-80046',kind:'parsed',url:'https://www.bartendersoftware.com/download-resource?resourceId=80046'},
+  {key:'qr-vcard-library',kind:'discover',url:'https://www.bartendersoftware.com/resources/library/vcard'},
+  {key:'qr-2x4-library',kind:'discover',url:'https://www.bartendersoftware.com/resources/library/asset-label-2-x-4-qr-code'},
+  {key:'qr-idbadge-library',kind:'discover',url:'https://www.bartendersoftware.com/resources/library/id-badge-qrcode'},
+  {key:'c39-retail-library',kind:'discover',url:'https://www.bartendersoftware.com/resources/library/retail-label-2-5-x-1-5'},
+  {key:'c39-job-library',kind:'discover',url:'https://www.bartendersoftware.com/resources/library/joblabel'},
+  {key:'upca-sku-library',kind:'discover',url:'https://www.bartendersoftware.com/resources/library/sku-label'},
+  {key:'upca-box-library',kind:'discover',url:'https://www.bartendersoftware.com/resources/library/box-label'},
+  {key:'upca-inside-library',kind:'discover',url:'https://www.bartendersoftware.com/resources/library/inside-label'}
 ];
 
 function asciiHeader(bytes,n=1800){return Buffer.from(bytes.slice(0,n)).toString('latin1').replace(/[^\x20-\x7e\r\n\t]/g,'.')}
@@ -106,6 +114,18 @@ async function parseOfficialBtw(t){
     const rows=allStrings.filter(e=>e.offset>=o.recordStart&&e.offset<o.recordEnd).map(e=>({offset:e.offset,text:e.text})).filter(e=>String(e.text??'').length||true);
     console.log('BARCODE_RECORD',o.name,o.owner,rows.slice(0,120));
   }
+  const writableText=map.objects.filter(o=>o.kind==='text'&&o.valueEntry);
+  console.log('POOL_SUMMARY',{
+    totalObjects:map.objects.length,
+    writableText:writableText.length,
+    writableNames:writableText.map(o=>o.name),
+    barcodeTypes:map.objects.filter(o=>o.kind==='barcode').map(o=>o.barcodeType),
+    barcodeOwners:map.objects.filter(o=>o.kind==='barcode').map(o=>o.owner),
+    linkedWritable:map.objects.filter(o=>o.kind==='barcode').map(o=>({
+      type:o.barcodeType,owner:o.owner,
+      refs:(o.linkedDataSourceRefs||[]).map(r=>({ref:r.ref,value:r.value,writable:!!map.objects.find(x=>x.index===r.index)?.valueEntry}))
+    }))
+  });
   console.log('ALL_OBJECTS',map.objects.map(o=>({index:o.index,kind:o.kind,name:o.name,owner:o.owner,value:o.value,valueEntry:o.valueEntry,components:o.components,xMil:o.xMil,yMil:o.yMil})));
   const linkInfo=analyzeLinks(map,container,F);
   for(const link of linkInfo){
@@ -143,6 +163,19 @@ async function parseOfficialBtw(t){
   fs.writeFileSync('/tmp/'+t.key+'.btw',Buffer.from(bytes));
 }
 
+async function discoverAndParse(t){
+  const res=await fetch(t.url,{redirect:'follow',headers:{'user-agent':'Mozilla/5.0 LabelWorkbenchDonorProbe/1.2'}});
+  const html=await res.text();
+  const ids=[...new Set([...html.matchAll(/download-resource\?resourceId=(\d{4,8})/gi)].map(m=>m[1]))];
+  if(!ids.length){
+    for(const m of html.matchAll(/(?:resourceId|resource_id|resource-id)[^0-9]{0,40}(\d{4,8})/gi))ids.push(m[1])
+  }
+  console.log('\n=== DISCOVER',t.key,'===',t.url,'ids',ids.slice(0,10));
+  for(const id of ids.slice(0,3)){
+    await parseOfficialBtw({key:`${t.key}-resource-${id}`,url:`https://www.bartendersoftware.com/download-resource?resourceId=${id}`});
+  }
+}
+
 async function inspectHtml(t){
   const res=await fetch(t.url,{redirect:'follow',headers:{'user-agent':'Mozilla/5.0 LabelWorkbenchDonorProbe/1.0'}});
   const html=await res.text();
@@ -168,6 +201,7 @@ async function inspectHtml(t){
     try{
       if(t.kind==='binary')await inspectBinary(t);
       else if(t.kind==='parsed')await parseOfficialBtw(t);
+      else if(t.kind==='discover')await discoverAndParse(t);
       else await inspectHtml(t);
     }
     catch(err){console.error('PROBE_FAIL',t.key,err?.stack||err)}
