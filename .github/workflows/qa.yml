@@ -28,6 +28,7 @@ jobs:
           node --check tests/analysis-geometry-smoke.cjs
           node --check tests/btw-layout-map-smoke.cjs
           node --check tests/btw-native-smoke.cjs
+          node --check tests/btw-family-native-smoke.cjs
           node --check tests/btw-rich-native-smoke.cjs
           node --check tests/btw-production-gate-smoke.cjs
           node --check tests/btw-production-core-smoke.cjs
@@ -88,7 +89,7 @@ jobs:
           grep -q 'LabelWorkbenchModuleLoader={BUILD,ready:true}' assets/barcode-reader.js
           grep -q "BUILD='20260918-barcode-crosscheck-108-clear-stale-ocr'" assets/analysis-barcode-crosscheck.js
           grep -q "analysis-barcode-crosscheck.js'" assets/barcode-reader.js
-          grep -q "BUILD='20260912-btw-object-map-038-barcode-slot-mode'" assets/btw-object-map.js
+          grep -q "BUILD='20260918-btw-object-map-041-native-family-tags'" assets/btw-object-map.js
           grep -q "BUILD='20260912-btw-caption-adapter-100'" assets/btw-caption-adapter.js
           grep -q "SEED_ID='CEA-2022-R5'" assets/btw-native.js
           grep -q "SEED_FUNCTION='btw-seed'" assets/btw-native.js\n          grep -q "BUILD='20260918-btwn232-seed-retry'" assets/btw-native.js
@@ -210,6 +211,8 @@ jobs:
           retention-days: 14
       - name: Native BTW object decoder/editor smoke tests
         run: node tests/btw-object-map-smoke.cjs
+      - name: Native QR and Code39 donor round trip
+        run: node tests/btw-family-native-smoke.cjs
       - name: Real BTW barcode read-slot regression tests
         run: node tests/btw-barcode-read-slot-smoke.cjs
       - name: Independent BTW field-caption adapter smoke tests
