@@ -1,0 +1,21 @@
+name: Compact Retail Donor Lab
+
+on:
+  push:
+    branches:
+      - feat/native-retail-compact-v1953
+
+permissions:
+  contents: read
+
+jobs:
+  lab:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Discover official UPC-E and EAN-8 donors
+        run: node tools/probe-compact-retail-donors.cjs
