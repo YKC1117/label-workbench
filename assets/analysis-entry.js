@@ -38,10 +38,11 @@
   }
 
   function stackReady(){
-    const loader=window.LabelWorkbenchModuleLoader;
     const core=window.LabelWorkbenchAnalysisCoreV2;
     const priority=window.LabelWorkbenchPriority;
-    if(loader?.ready===true&&core?.run&&priority?.runQuickAnalysis)return {core,priority};
+    // Analysis Core v2 is loaded after its required media-analysis modules.
+    // Do not block a ready core only because an unrelated late module has not flipped loader.ready yet.
+    if(core?.run&&priority?.runQuickAnalysis)return {core,priority};
     return null;
   }
 
