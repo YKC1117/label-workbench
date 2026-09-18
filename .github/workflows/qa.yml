@@ -30,6 +30,7 @@ jobs:
           node --check tests/btw-native-smoke.cjs
           node --check tests/btw-rich-native-smoke.cjs
           node --check tests/btw-production-gate-smoke.cjs
+          node --check tests/btw-production-core-smoke.cjs
           node --check tests/analysis-copy-smoke.cjs
           node --check tests/analysis-entry-smoke.cjs
           node --check tests/analysis-core-v2-smoke.cjs
@@ -89,6 +90,10 @@ jobs:
           grep -q "MAX_C128=5" assets/btw-second-native.js
           grep -q "MAX_DM=1" assets/btw-second-native.js
           grep -q 'btw-production-gate.js' assets/barcode-reader.js
+          grep -q 'btw-production-core.js' assets/barcode-reader.js
+          grep -q "BUILD='20260918-btw-production-core-100'" assets/btw-production-core.js
+          grep -q "ensureProduction" assets/bt-native-primary.js
+          grep -q "await ensureProduction()" assets/bt-native-primary.js
           grep -q "BUILD='20260914-v139-race-guard'" assets/analysis-race-guard.js
           grep -q "BUILD='20260914-v139-race-safe-display'" assets/analysis-final-display.js
           grep -q "BUILD='20260918-v145-await-dom-no-version-write'" assets/analysis-confidence-guard.js
@@ -193,5 +198,7 @@ jobs:
         run: node tests/btw-native-smoke.cjs
       - name: Production rich native BTW generation smoke tests
         run: node tests/btw-rich-native-smoke.cjs
+      - name: Deterministic BTW production routing gate
+        run: node tests/btw-production-core-smoke.cjs
       - name: BTW pending-field production safety gate
         run: node tests/btw-production-gate-smoke.cjs
