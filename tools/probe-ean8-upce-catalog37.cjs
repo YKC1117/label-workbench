@@ -48,3 +48,32 @@ function uniq(a){return [...new Set(a)]}
   }
   console.log('CATALOG_37_TARGETS',JSON.stringify(hits,null,2));
 })().catch(e=>{console.error(e);process.exit(1)});
+
+
+async function searchCatalogTerms(){
+  const terms=['EAN-8','EAN8','UPC-E','UPCE','UPC E'];
+  for(const term of terms){
+    const url='https://www.bartendersoftware.com/resources/index/templates/all?terms='+encodeURIComponent(term);
+    try{
+      const r=await fetch(url,{redirect:'follow',headers:{'user-agent':'Mozilla/5.0 LabelWorkbenchCatalogSearch/1.0'}});
+      const html=await r.text();
+      const plain=clean(html);
+      const hrefs=uniq([...html.matchAll(/href=["']([^"']+)["']/gi)].map(m=>new URL(m[1],url).href))
+        .filter(u=>/\/resources\/library\//i.test(u)&&!/template-library/i.test(u));
+      const count=(/([0-9]+)\s+results?/i.exec(plain)||[])[1]||'';
+      console.log('CATALOG_SEARCH',JSON.stringify({term,status:r.status,chars:html.length,resultCountText:count,hrefs:hrefs.slice(0,100),containsTerm:plain.toUpperCase().includes(term.toUpperCase())}));
+      for(const href of hrefs.slice(0,40)){
+        try{
+          const page=await (await fetch(href,{redirect:'follow',headers:{'user-agent':'Mozilla/5.0 LabelWorkbenchCatalogSearch/1.0'}})).text();
+          const text=clean(page);
+          const ids=[...new Set([
+            ...[...page.matchAll(/download-resource\?resourceId=(\d{4,8})/gi)].map(m=>m[1]),
+            ...[...page.matchAll(/(?:resourceId|resource_id|resource-id)[^0-9]{0,30}(\d{4,8})/gi)].map(m=>m[1])
+          ])];
+          console.log('CATALOG_SEARCH_DETAIL',JSON.stringify({term,href,title:(/<title[^>]*>([\s\S]*?)<\/title>/i.exec(page)||[])[1]?.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim()||'',ids,text:text.slice(0,900)}));
+        }catch(e){console.log('CATALOG_SEARCH_DETAIL_FAIL',term,href,String(e?.message||e))}
+      }
+    }catch(e){console.log('CATALOG_SEARCH_FAIL',term,String(e?.message||e))}
+  }
+}
+searchCatalogTerms().catch(e=>{console.error('CATALOG_SEARCH_FATAL',e);process.exitCode=1});
