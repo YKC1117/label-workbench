@@ -17,5 +17,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
+      - name: Inspect BarTender template library index
+        run: node tools/probe-template-library-index.cjs
       - name: Discover official EAN-8 and UPC-E donors
         run: node tools/probe-ean8-upce.cjs
