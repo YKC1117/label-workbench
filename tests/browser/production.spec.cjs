@@ -73,6 +73,7 @@ for(const extension of ['pdf','png','jpg']){
   expect(container.length).toBeGreaterThan(1000);
   const decoded=c.LabelWorkbenchBtwObjectMap.mapContainer(container).objects;
   expect(decoded.length).toBeGreaterThan(0);
+  expect(decoded.filter(o=>Number(o.xMil)===50000||Number(o.yMil)===50000)).toEqual([]);
   const textObjects=decoded.filter(o=>o.kind==='text'&&String(o.value||'').trim());
   expect(textObjects.map(t=>t.value).join('\n')).toMatch(/Made in Taiwan/i);
   const sourceValues=new Set(label.textObjects.map(o=>String(o.text||'').trim()).filter(Boolean));
