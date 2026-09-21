@@ -118,6 +118,10 @@
     const L=window.LabelWorkbenchBtwLayout;if(!L?.boxToLayout||!box)return null;
     try{return L.boxToLayout(box,target)}catch{return null}
   }
+  function sourceFontSize(layout,current){
+    const h=Number(layout?.mm?.h);if(!(h>0))return Number.isFinite(Number(current))?Number(current):null;
+    return Math.round(Math.max(5,Math.min(42,h/0.3527777778*0.72))*10)/10
+  }
   function fallbackTextPos(i,count,target){
     const rows=Math.max(1,count),x=.055,y=.06+i*(.78/rows);
     return{xMil:mmToMil(x*target.width),yMil:mmToMil(y*target.height)}
@@ -237,8 +241,9 @@
 
     const expectedText=[];
     P.texts.forEach((item,i)=>{
-      const obj=pool[i],layout=sourceLayout(item?.sourceBox,target),pos=layout?.mil?{xMil:layout.mil.x,yMil:layout.mil.y}:fallbackTextPos(i,P.texts.length,target),value=textValue(item);
-      edits.set(obj.index,{index:obj.index,value,...pos});expectedText.push({index:obj.index,value,...pos})
+      const obj=pool[i],layout=sourceLayout(item?.sourceBox,target),pos=layout?.mil?{xMil:layout.mil.x,yMil:layout.mil.y}:fallbackTextPos(i,P.texts.length,target),value=textValue(item),fontSize=sourceFontSize(layout,obj.fontSize),edit={index:obj.index,value,...pos};
+      if(fontSize!=null&&obj.fontSizeOffset!=null)edit.fontSize=fontSize;
+      edits.set(obj.index,edit);expectedText.push({index:obj.index,value,fontSize:edit.fontSize??obj.fontSize,...pos})
     });
 
     const edited=M.editContainer(container,[...edits.values()]),rebuilt0=await F.rebuild(parsed,edited),rebuilt=target.source?F.replaceTemplateSize(rebuilt0,target.width,target.height):rebuilt0;
@@ -254,7 +259,7 @@
     }
     for(const e of expectedText){
       const o=remap.objects.find(x=>x.kind==='text'&&x.value===e.value&&x.xMil===e.xMil&&x.yMil===e.yMil);
-      if(!o)throw new Error(`${P.profile.barcodeType} 文字 round-trip 驗證失敗：${e.value}`)
+      if(!o)throw new Error(`${P.profile.barcodeType} 文字 round-trip 驗證失敗：${e.value}`);if(e.fontSize!=null&&o.fontSize!=null&&!near(o.fontSize,e.fontSize,.11))throw new Error(`${P.profile.barcodeType} 文字字級 round-trip 驗證失敗：${e.value}`)
     }
     if(target.source){
       const tag=`<TemplateSize>${String(Math.round(target.width*100)/100).replace(/\.0+$/,'')} x ${String(Math.round(target.height*100)/100).replace(/\.0+$/,'')} mm</TemplateSize>`;
