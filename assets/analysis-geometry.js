@@ -113,12 +113,19 @@
       let canvas=ext(file)==='pdf'?await pdfPageCanvas(file,pageNo):await imageCanvas(file);let physical=canvas.__lwPhysicalMm||null;
       const pageLabels=labels.filter(l=>Number(l.page||1)===pageNo).sort((a,b)=>Number(a.index||1)-Number(b.index||1)),rotation=Number(pageLabels[0]?.rotation||0);
       if(rotation&&typeof A.rotateCanvas==='function'){canvas=A.rotateCanvas(canvas,rotation);if(physical&&(rotation===90||rotation===270))physical={width:physical.height,height:physical.width}}
-      let bands=typeof A.detectLabelBands==='function'?A.detectLabelBands(canvas):[{x:0,y:0,w:canvas.width,h:canvas.height}];
+      const detected=typeof A.detectLabelBands==='function'?A.detectLabelBands(canvas):[{x:0,y:0,w:canvas.width,h:canvas.height}];
+      const bands=pageLabels.map((label,i)=>{
+        const n=label?.sourceRegion?.normalized;
+        if(n&&Number.isFinite(Number(n.x))&&Number.isFinite(Number(n.y))&&Number(n.w)>0&&Number(n.h)>0){
+          return{x:Math.max(0,Math.round(Number(n.x)*canvas.width)),y:Math.max(0,Math.round(Number(n.y)*canvas.height)),w:Math.max(1,Math.round(Number(n.w)*canvas.width)),h:Math.max(1,Math.round(Number(n.h)*canvas.height)),reused:true}
+        }
+        return detected[i]||detected[detected.length-1]||{x:0,y:0,w:canvas.width,h:canvas.height}
+      });
       for(let i=0;i<Math.min(pageLabels.length,bands.length);i++){
         const label=pageLabels[i],b=bands[i],region=crop(canvas,b.x,b.y,b.w,b.h),words=await recognizeWords(worker,region),matches=matchKnownFields(label.fields||[],words,region.width,region.height);
         for(const m of matches)m.field.sourceBox=m.sourceBox;
         const locatedBarcodes=await locateBarcodeBoxes(region,label),widthMm=physical?physical.width*(b.w/canvas.width):null,heightMm=physical?physical.height*(b.h/canvas.height):null;
-        label.sourceGeometry={widthPx:region.width,heightPx:region.height,widthMm:widthMm?round2(widthMm):null,heightMm:heightMm?round2(heightMm):null,physicalSizeKnown:!!(widthMm&&heightMm),imageWidthPx:canvas.width,imageHeightPx:canvas.height,regionPx:{x:b.x,y:b.y,w:b.w,h:b.h},regionNormalized:{x:round2(b.x/canvas.width),y:round2(b.y/canvas.height),w:round2(b.w/canvas.width),h:round2(b.h/canvas.height)},locatedFields:matches.length,totalFields:(label.fields||[]).length,locatedBarcodes,totalBarcodes:(label.barcodes||[]).length,method:'corrected-label-region+known-value-layout-ocr+barcode-position'};
+        label.sourceGeometry={widthPx:region.width,heightPx:region.height,widthMm:widthMm?round2(widthMm):null,heightMm:heightMm?round2(heightMm):null,physicalSizeKnown:!!(widthMm&&heightMm),imageWidthPx:canvas.width,imageHeightPx:canvas.height,regionPx:{x:b.x,y:b.y,w:b.w,h:b.h},regionNormalized:{x:round2(b.x/canvas.width),y:round2(b.y/canvas.height),w:round2(b.w/canvas.width),h:round2(b.h/canvas.height)},locatedFields:matches.length,totalFields:(label.fields||[]).length,locatedBarcodes,totalBarcodes:(label.barcodes||[]).length,method:(b.reused?'reused-analysis-region':'detected-label-region')+'+known-value-layout-ocr+barcode-position'};
       }
     }
   }
