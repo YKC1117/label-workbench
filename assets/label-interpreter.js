@@ -135,7 +135,7 @@
   function detectLabelBands(canvas){
     const x=canvas.getContext('2d',{willReadFrequently:true}),im=x.getImageData(0,0,canvas.width,canvas.height),d=im.data,step=Math.max(1,Math.ceil(canvas.width/1500)),counts=new Uint32Array(canvas.height),sampled=Math.ceil(canvas.width/step);
     for(let y=0;y<canvas.height;y++){let n=0;for(let xx=0;xx<canvas.width;xx+=step){const i=(y*canvas.width+xx)*4;if(grayAt(d,i)<228)n++}counts[y]=n}
-    const threshold=Math.max(5,Math.round(sampled*.005));let rs=mergeRuns(runs([...counts].map(n=>n>threshold)),Math.max(12,Math.round(canvas.height*.022)));rs=rs.filter(r=>r[1]-r[0]>=Math.max(50,canvas.height*.045));if(!rs.length||rs.length>8)rs=[[0,canvas.height-1]];
+    const threshold=Math.max(5,Math.round(sampled*.005));let rs=mergeRuns(runs([...counts].map(n=>n>threshold)),Math.max(12,Math.round(canvas.height*.075)));rs=rs.filter(r=>r[1]-r[0]>=Math.max(50,canvas.height*.045));if(!rs.length||rs.length>8)rs=[[0,canvas.height-1]];
     return rs.map(([a,b])=>{const py=Math.round(canvas.height*.018),y=Math.max(0,a-py),y2=Math.min(canvas.height,b+py),rough=crop(canvas,0,y,canvas.width,y2-y),cb=contentBounds(rough,240);return{x:cb.x,y:y+cb.y,w:cb.w,h:cb.h}});
   }
 
