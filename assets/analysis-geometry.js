@@ -119,10 +119,10 @@
         if(!b)continue;
         const region=crop(canvas,b.x,b.y,b.w,b.h),words=await recognizeWords(worker,region),matches=matchKnownFields(label.fields||[],words,region.width,region.height);
         for(const m of matches)m.field.sourceBox={...m.sourceBox,coordinateSpace:'rectified-label'};
-        const locatedBarcodes=await locateBarcodeBoxes(region,label),widthMm=physical?physical.width*(b.w/canvas.width):null,heightMm=physical?physical.height*(b.h/canvas.height):null;
+        const locatedBarcodes=await locateBarcodeBoxes(region,label),fullPage=!!physical&&b.x<=canvas.width*.01&&b.y<=canvas.height*.01&&b.w>=canvas.width*.98&&b.h>=canvas.height*.98,widthMm=fullPage?physical.width:null,heightMm=fullPage?physical.height:null;
         label.coordinateSpace='rectified-label';
         label.sourceRegion={x:b.x,y:b.y,w:b.w,h:b.h,sourceWidth:canvas.width,sourceHeight:canvas.height,normalized:{x:round2(b.x/canvas.width),y:round2(b.y/canvas.height),w:round2(b.w/canvas.width),h:round2(b.h/canvas.height)},method:b.method||'detected-label-region'};
-        label.sourceGeometry={widthPx:region.width,heightPx:region.height,widthMm:widthMm?round2(widthMm):null,heightMm:heightMm?round2(heightMm):null,sizeSource:widthMm&&heightMm?'pdf-page-region':null,coordinateSpace:'rectified-label',regionBoxPx:{x:b.x,y:b.y,w:b.w,h:b.h},locatedFields:matches.length,totalFields:(label.fields||[]).length,locatedBarcodes,totalBarcodes:(label.barcodes||[]).length,method:'rectified-label-known-value-layout-ocr+barcode-position'};
+        label.sourceGeometry={widthPx:region.width,heightPx:region.height,widthMm:widthMm?round2(widthMm):null,heightMm:heightMm?round2(heightMm):null,sizeSource:widthMm&&heightMm?'pdf-full-page':null,coordinateSpace:'rectified-label',regionBoxPx:{x:b.x,y:b.y,w:b.w,h:b.h},locatedFields:matches.length,totalFields:(label.fields||[]).length,locatedBarcodes,totalBarcodes:(label.barcodes||[]).length,method:'rectified-label-known-value-layout-ocr+barcode-position'};
         for(const o of label.textObjects||[])if(o?.sourceBox)o.sourceBox={...o.sourceBox,coordinateSpace:'rectified-label'};
         for(const bRow of label.barcodes||[])if(bRow?.sourceBox)bRow.sourceBox={...bRow.sourceBox,coordinateSpace:'rectified-label'};
       }
