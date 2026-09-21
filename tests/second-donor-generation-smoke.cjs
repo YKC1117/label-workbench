@@ -27,7 +27,10 @@ const label={
   if(parsed.header.applicationVersion!=='2022 R2'||parsed.header.compatibleVersion!=='2022 R1')throw new Error('version changed');
   if(!parsed.header.text.includes('<TemplateSize>120 x 72 mm</TemplateSize>'))throw new Error('TemplateSize not rewritten');
   const map=M.mapContainer(await F.inflateContainer(parsed)),objects=map.objects;
-  if(objects.length!==40)throw new Error(`root count ${objects.length}`);
+  const expectedRoots=label.fields.length+label.barcodes.length;
+  if(objects.length!==expectedRoots)throw new Error(`root count ${objects.length}/${expectedRoots}`);
+  if(objects.some(o=>Number(o.xMil)===50000||Number(o.yMil)===50000))throw new Error('unused donor root was hidden at 50000 mil instead of removed');
+  if(out.layout?.removedDonorRoots!==(40-expectedRoots))throw new Error(`removed donor roots ${out.layout?.removedDonorRoots}`);
   const visible=objects.filter(o=>Number.isFinite(o.xMil)&&Number.isFinite(o.yMil)&&o.xMil<50000&&o.yMil<50000);
   const visibleC128=visible.filter(o=>o.kind==='barcode'&&o.barcodeType==='Code 128'),visibleDm=visible.filter(o=>o.kind==='barcode'&&o.barcodeType==='Data Matrix');
   if(visibleC128.length!==5)throw new Error(`visible Code128 ${visibleC128.length}`);
@@ -39,5 +42,5 @@ const label={
   for(const b of label.barcodes){const o=visible.find(x=>x.kind==='barcode'&&x.resolvedPreview===b.text);if(!o)throw new Error(`missing barcode ${b.text}`);const pos=L.boxToLayout(b.sourceBox,{width:120,height:72}).mil;if(o.xMil!==pos.x||o.yMil!==pos.y)throw new Error(`barcode position mismatch ${b.text}`)}
   const sizedContainer=await F.inflateContainer(parsed),dv=new DataView(sizedContainer.buffer,sizedContainer.byteOffset,sizedContainer.byteLength);let pairs=0;for(let i=0;i<=dv.byteLength-8;i++)if(dv.getInt32(i,true)===L.mmToMil(120)&&dv.getInt32(i+4,true)===L.mmToMil(72))pairs++;
   if(pairs<2)throw new Error(`internal size pair rewrite missing: ${pairs}`);
-  console.log('PASS: generated BTW round-trips 12 Text + 5 independent Code128 + 1 DataMatrix at source positions and 120x72mm');
+  console.log('PASS: generated BTW contains only 12 Text + 5 independent Code128 + 1 DataMatrix roots, no 50000 mil residue, at source positions and 120x72mm');
 })().catch(e=>{console.error(e);process.exit(1)});
