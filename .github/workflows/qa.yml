@@ -51,6 +51,7 @@ jobs:
           node --check tools/create-btw-runtime-fixture.cjs
           node --check tools/verify-btw-runtime-fixture.cjs
           node --check tools/verify-btw-manual-edit.cjs
+          node --check tools/run-layout-case.cjs
           node --check tests/runtime-fixture-smoke.cjs
           node --check tests/manual-edit-verifier-smoke.cjs
       - name: PowerShell runtime verifier syntax check
