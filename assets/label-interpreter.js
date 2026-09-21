@@ -262,8 +262,11 @@
         }
         if(an.includes(bn)||bn.includes(an)){
           const longer=an.length>=bn.length?i:j,shorter=longer===i?j:i;
-          const L=rows[longer],S=rows[shorter];
-          if(contains(L,S)&&spatialTextScore(L)>=spatialTextScore(S)-8)drop.add(shorter)
+          const L=rows[longer],S=rows[shorter],la=area(L),sa=area(S),areaRatio=Math.min(la,sa)/Math.max(.000001,Math.max(la,sa));
+          /* Only collapse substring OCR when the boxes describe essentially the same
+             physical object. A whole-line box containing separate caption/value boxes
+             must survive this pass so the composite pass below can prefer the children. */
+          if(areaRatio>=.68&&contains(L,S)&&spatialTextScore(L)>=spatialTextScore(S)-8)drop.add(shorter)
         }
       }
     }
