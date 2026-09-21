@@ -28,7 +28,7 @@ const label={
   if(!parsed.header.text.includes('<TemplateSize>120 x 72 mm</TemplateSize>'))throw new Error('TemplateSize not rewritten');
   const map=M.mapContainer(await F.inflateContainer(parsed)),objects=map.objects;
   if(objects.length!==40)throw new Error(`root count ${objects.length}`);
-  const visible=objects.filter(o=>Number.isFinite(o.xMil)&&Number.isFinite(o.yMil)&&o.xMil<50000&&o.yMil<50000);
+  const visible=objects.filter(o=>(o.kind==='text'&&String(o.value||'').trim())||(o.kind==='barcode'&&String(o.resolvedPreview||o.components?.join('')||'').trim()));
   const visibleC128=visible.filter(o=>o.kind==='barcode'&&o.barcodeType==='Code 128'),visibleDm=visible.filter(o=>o.kind==='barcode'&&o.barcodeType==='Data Matrix');
   if(visibleC128.length!==5)throw new Error(`visible Code128 ${visibleC128.length}`);
   if(visibleDm.length!==1)throw new Error(`visible DataMatrix ${visibleDm.length}`);

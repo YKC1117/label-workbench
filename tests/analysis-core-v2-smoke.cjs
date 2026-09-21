@@ -79,7 +79,7 @@ for(const f of[
 
 (async()=>{
   const core=window.LabelWorkbenchAnalysisCoreV2;
-  assert(core?.BUILD==='20260918-analysis-core-v2-200','unexpected deterministic core build');
+  assert(core?.BUILD==='20260921-analysis-core-v2-210-object-ids','unexpected deterministic core build');
 
   const file={name:'第一個.pdf',type:'application/pdf'};
   const result=await core.run([file]);
@@ -100,6 +100,8 @@ for(const f of[
   assert(staged===1,'BTW bridge must stage exactly once and only after final analysis');
   assert(renderedResult===stagedResult,'rendered and staged results must be the same final object');
   assert(stagedResult.labels[0].sourceGeometry?.widthMm===100,'final geometry was not preserved into staged result');
+  assert(fields.every(f=>/^lw-field-/.test(f.id||'')),'stable field IDs were not assigned before staging');
+  assert(result.labels[0].barcodes.every(b=>/^lw-barcode-/.test(b.id||'')),'stable barcode IDs were not assigned before staging');
 
   const gate=window.LabelWorkbenchBtwProductionGate;
   const prepared=gate.prepareResult(result);

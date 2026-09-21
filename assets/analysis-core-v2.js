@@ -5,7 +5,7 @@
 (function(){
   'use strict';
 
-  const BUILD='20260918-analysis-core-v2-200';
+  const BUILD='20260921-analysis-core-v2-210-object-ids';
   let generation=0;
   let latestResult=null;
   let latestFiles=[];
@@ -25,6 +25,32 @@
   function requireApi(name,api,method){
     if(!api||typeof api[method]!=='function')throw new Error(name+' 元件未就緒');
     return api;
+  }
+
+  function stableHash(value){
+    const s=String(value??'');let h=2166136261;
+    for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}
+    return(h>>>0).toString(36)
+  }
+  function boxKey(box){
+    if(!box)return'no-box';
+    return['x','y','w','h'].map(k=>Number(box?.[k]||0).toFixed(5)).join(',')
+  }
+  function ensureObjectId(row,type,index,label){
+    if(row?.id)return row.id;
+    const content=type==='barcode'?String(row?.text??row?.value??row?.data??''):String(row?.text??row?.value??'');
+    const name=String(row?.code||row?.name||row?.format||'');
+    row.id=`lw-${type}-${stableHash([label?.sourceName,label?.page,label?.index,type,name,content,boxKey(row?.sourceBox),index].join('|'))}`;
+    row.objectType=type;row.coordinateSpace=row?.sourceBox?.coordinateSpace||label?.coordinateSpace||'rectified-label';
+    return row.id
+  }
+  function assignObjectIds(result){
+    for(const label of result?.labels||[]){
+      (label.fields||[]).forEach((row,i)=>ensureObjectId(row,'field',i,label));
+      (label.textObjects||[]).forEach((row,i)=>ensureObjectId(row,'text',i,label));
+      (label.barcodes||[]).forEach((row,i)=>ensureObjectId(row,'barcode',i,label));
+    }
+    return result
   }
 
   async function run(files){
@@ -57,6 +83,7 @@
     if(my!==generation)return result;
 
     progress('6/6 整理結果…');
+    assignObjectIds(result);
     I.renderResult(arr,result);
     window.LabelWorkbenchFinalDisplay?.enforce?.(result);
     window.LabelWorkbenchAnalysisCopy?.decorate?.();
@@ -76,7 +103,7 @@
   }
 
   window.LabelWorkbenchAnalysisCoreV2={
-    BUILD,run,mediaFile,
+    BUILD,run,mediaFile,stableHash,boxKey,ensureObjectId,assignObjectIds,
     invalidate(){generation++;latestResult=null;latestFiles=[]},
     get latestResult(){return latestResult},
     get latestFiles(){return latestFiles.slice()},

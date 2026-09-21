@@ -122,7 +122,7 @@ for(const f of[
   assert(parsed.header.applicationVersion==='2022 R2'&&parsed.header.compatibleVersion==='2022 R1','BarTender 2022 header changed');
   assert(parsed.header.text.includes('<TemplateSize>100 x 65 mm</TemplateSize>'),'100 x 65 mm TemplateSize missing');
   const mapped=M.mapContainer(await F.inflateContainer(parsed));
-  const visible=mapped.objects.filter(o=>Number.isFinite(o.xMil)&&Number.isFinite(o.yMil)&&o.xMil<50000&&o.yMil<50000);
+  const visible=mapped.objects.filter(o=>(o.kind==='text'&&String(o.value||'').trim())||(o.kind==='barcode'&&String(o.resolvedPreview||o.components?.join('')||'').trim()));
   const textObjects=visible.filter(o=>o.kind==='text');
   const barcodeObjects=visible.filter(o=>o.kind==='barcode');
   assert(textObjects.length===11,`visible text count ${textObjects.length}`);

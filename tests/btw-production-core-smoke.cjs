@@ -2,6 +2,16 @@ const fs=require('fs');
 const vm=require('vm');
 
 function assert(cond,msg){if(!cond)throw new Error(msg)}
+function geo(result){
+  for(const label of result?.labels||[]){
+    label.sourceGeometry={...(label.sourceGeometry||{}),widthMm:100,heightMm:65,sizeSource:'test-confirmed'};
+    let n=0;
+    for(const key of ['fields','textObjects','barcodes'])for(const row of label[key]||[]){
+      if(!row.sourceBox){const i=n++;row.sourceBox={x:.05+(i%3)*.28,y:.06+Math.floor(i/3)*.12,w:.18,h:key==='barcodes'?.10:.055,coordinateSpace:'rectified-label'}}
+    }
+  }
+  return result
+}
 
 const calls=[];
 const c={
@@ -40,7 +50,7 @@ for(const f of['assets/analysis-confidence-guard.js','assets/btw-production-gate
 
 (async()=>{
   const P=c.LabelWorkbenchBtwProductionCore;
-  assert(P?.BUILD==='20260918-btw-production-core-140-itf14','unexpected production core build');
+  assert(P?.BUILD==='20260921-btw-production-core-150-layout-safe','unexpected production core build');
 
   const result={labels:[{sourceName:'第一個.pdf',fields:[
     {code:'1P',name:'PART NO',value:'W25NO1GWZEIR',barcodeVerified:true,alternatives:[],conflict:false},
@@ -48,37 +58,37 @@ for(const f of['assets/analysis-confidence-guard.js','assets/btw-production-gate
   ],barcodes:[{format:'Code 128',text:'W25NO1GWZEIR'}]}]};
 
   const qrResult={labels:[{sourceName:'qr.png',fields:[],textObjects:[{text:'QR TEST',sourceBox:{x:.1,y:.1,w:.2,h:.05}}],barcodes:[{format:'QR Code',text:'https://example.test/qr'}]}]};
-  const qrGenerated=await P.generate(qrResult,[{name:'qr.png',type:'image/png'}],()=>{});
+  const qrGenerated=await P.generate(geo(qrResult),[{name:'qr.png',type:'image/png'}],()=>{});
   assert(qrGenerated.routes[0]==='family'&&calls[0][0]==='family','QR must route to native family generator before other BTW generators');
 
   calls.length=0;
   const upcResult={labels:[{sourceName:'upc.png',fields:[],textObjects:[{text:'UPC TEST'}],barcodes:[{format:'UPC-A',text:'036000291452'}]}]};
-  const upcGenerated=await P.generate(upcResult,[{name:'upc.png',type:'image/png'}],()=>{});
+  const upcGenerated=await P.generate(geo(upcResult),[{name:'upc.png',type:'image/png'}],()=>{});
   assert(upcGenerated.routes[0]==='family'&&calls[0][0]==='family','UPC-A must route to native family generator before other BTW generators');
 
   calls.length=0;
   const eanResult={labels:[{sourceName:'ean.png',fields:[],textObjects:[{text:'EAN TEST'}],barcodes:[{format:'EAN-13',text:'4006381333931'}]}]};
-  const eanGenerated=await P.generate(eanResult,[{name:'ean.png',type:'image/png'}],()=>{});
+  const eanGenerated=await P.generate(geo(eanResult),[{name:'ean.png',type:'image/png'}],()=>{});
   assert(eanGenerated.routes[0]==='family'&&calls[0][0]==='family','EAN-13 must route to native family generator before other BTW generators');
 
   calls.length=0;
   const gs1Result={labels:[{sourceName:'gs1.png',fields:[],textObjects:[{text:'GS1 TEST'}],barcodes:[{format:'GS1-128',text:'010950110153000310ABC123'}]}]};
-  const gs1Generated=await P.generate(gs1Result,[{name:'gs1.png',type:'image/png'}],()=>{});
+  const gs1Generated=await P.generate(geo(gs1Result),[{name:'gs1.png',type:'image/png'}],()=>{});
   assert(gs1Generated.routes[0]==='family'&&calls[0][0]==='family','GS1-128 must route to native family generator before other BTW generators');
 
   calls.length=0;
   const pdfResult={labels:[{sourceName:'pdf417.png',fields:[],textObjects:[{text:'PDF417 TEST'}],barcodes:[{format:'PDF417',text:'PDF417_NATIVE_PAYLOAD_20260918'}]}]};
-  const pdfGenerated=await P.generate(pdfResult,[{name:'pdf417.png',type:'image/png'}],()=>{});
+  const pdfGenerated=await P.generate(geo(pdfResult),[{name:'pdf417.png',type:'image/png'}],()=>{});
   assert(pdfGenerated.routes[0]==='family'&&calls[0][0]==='family','PDF417 must route to native family generator before other BTW generators');
 
   calls.length=0;
   const itfResult={labels:[{sourceName:'itf14.png',fields:[],textObjects:[{text:'ITF14 TEST'}],barcodes:[{format:'ITF-14',text:'10012345000017'}]}]};
-  const itfGenerated=await P.generate(itfResult,[{name:'itf14.png',type:'image/png'}],()=>{});
+  const itfGenerated=await P.generate(geo(itfResult),[{name:'itf14.png',type:'image/png'}],()=>{});
   assert(itfGenerated.routes[0]==='family'&&calls[0][0]==='family','ITF-14 must route to native family generator before other BTW generators');
 
   calls.length=0;
   const progress=[];
-  const generated=await P.generate(result,[{name:'第一個.pdf',type:'application/pdf'}],m=>progress.push(m));
+  const generated=await P.generate(geo(result),[{name:'第一個.pdf',type:'application/pdf'}],m=>progress.push(m));
   assert(generated.routes.length===1&&generated.routes[0]==='second','second donor must be first production choice');
   assert(calls.length===1&&calls[0][0]==='second','wrong generator was called');
   const passed=calls[0][1];
@@ -89,12 +99,12 @@ for(const f of['assets/analysis-confidence-guard.js','assets/btw-production-gate
 
   calls.length=0;
   c.LabelWorkbenchBtwSecondNative.canGenerate=()=>false;
-  const rich=await P.generate(result,[],()=>{});
+  const rich=await P.generate(geo(result),[],()=>{});
   assert(rich.routes[0]==='rich'&&calls[0][0]==='rich','rich donor must be second choice');
 
   calls.length=0;
   c.LabelWorkbenchBtwRichNative.canGenerate=()=>false;
-  const native=await P.generate(result,[],()=>{});
+  const native=await P.generate(geo(result),[],()=>{});
   assert(native.routes[0]==='native'&&calls[0][0]==='native','native generator must be final fallback');
 
   console.log('PASS: deterministic BTW production core routes family -> second -> rich -> native while preserving the production safety gate');

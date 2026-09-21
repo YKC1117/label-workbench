@@ -36,7 +36,7 @@ const label={
   if(!parsed.header.text.includes('<TemplateSize>95 x 55 mm</TemplateSize>'))throw new Error('generic label TemplateSize not rewritten');
 
   const objects=M.mapContainer(await F.inflateContainer(parsed)).objects;
-  const visible=objects.filter(o=>Number.isFinite(o.xMil)&&Number.isFinite(o.yMil)&&o.xMil<50000&&o.yMil<50000);
+  const visible=objects.filter(o=>(o.kind==='text'&&String(o.value||'').trim())||(o.kind==='barcode'&&String(o.resolvedPreview||o.components?.join('')||'').trim()));
   const visibleText=visible.filter(o=>o.kind==='text');
   if(visibleText.length!==textObjects.length)throw new Error(`visible text count ${visibleText.length}/${textObjects.length}`);
 

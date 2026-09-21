@@ -5,7 +5,7 @@
 (function(){
   'use strict';
 
-  const BUILD='20260918-btnp230-website-only-ux';
+  const BUILD='20260921-btnp240-photo-size-confirm';
   const FORMAT_SRC='assets/btw-format.js?v=20260911-btw011';
   const NATIVE_SRC='assets/btw-native.js?v=20260911-btwn321-safe-base64';
   const PRODUCTION_SRC='assets/btw-production-core.js?v=20260918-btwpc100';
@@ -55,6 +55,31 @@
     return !!(b?.latestResult?.labels?.length&&b?.latestFiles?.some?.(f=>f?.type?.startsWith?.('image/')||f?.type==='application/pdf'||/\.(jpe?g|png|webp|gif|bmp|pdf)$/i.test(f?.name||''))&&!b.latestResult?.tableSource)
   }
 
+  function validPhysicalSize(label){
+    const g=label?.sourceGeometry||{},w=Number(g.widthMm),h=Number(g.heightMm);
+    return w>=5&&w<=1000&&h>=5&&h<=1000
+  }
+  function parsePhysicalSize(raw){
+    const m=String(raw||'').trim().match(/([0-9]+(?:\.[0-9]+)?)\s*(?:mm)?\s*[x×＊*]\s*([0-9]+(?:\.[0-9]+)?)\s*(?:mm)?/i);
+    if(!m)return null;
+    const width=Number(m[1]),height=Number(m[2]);
+    return width>=5&&width<=1000&&height>=5&&height<=1000?{width,height}:null
+  }
+  function cloneResult(result){return JSON.parse(JSON.stringify(result))}
+  function confirmPhysicalSizes(result){
+    if((result?.labels||[]).every(validPhysicalSize))return result;
+    if(typeof window.prompt!=='function')throw new Error('照片原稿缺少標籤實際尺寸，請先確認寬 × 高 mm');
+    const out=cloneResult(result);
+    for(let i=0;i<(out.labels||[]).length;i++){
+      const label=out.labels[i];if(validPhysicalSize(label))continue;
+      const raw=window.prompt('標籤 '+(i+1)+' 無法從照片可靠判斷實際毫米尺寸。請輸入「寬 x 高 mm」，例如 100 x 65。','');
+      if(raw===null)throw new Error('已取消 BTW 建立：尚未確認標籤實際尺寸');
+      const size=parsePhysicalSize(raw);
+      if(!size)throw new Error('標籤尺寸格式不正確，請輸入例如 100 x 65');
+      label.sourceGeometry={...(label.sourceGeometry||{}),widthMm:size.width,heightMm:size.height,sizeSource:'user-confirmed'};
+    }
+    return out
+  }
   let downloading=false;
   function downloadStatus(message,error=false){
     const host=el('analysisResult');if(!host)return;
@@ -72,11 +97,13 @@
     const buttons=[el('analysisBtNative'),el('btNativeDownload')].filter(Boolean);
     buttons.forEach(x=>{x.disabled=true;x.dataset.oldText=x.textContent;x.textContent='正在建立可編輯 .BTW…'});
     try{
-      const api=await ensureProduction();
-      const generated=await api.generate(result,files,msg=>buttons.forEach(x=>x.textContent=msg||'正在建立可編輯 .BTW…'));
+      const api=await ensureProduction(),productionResult=confirmPhysicalSizes(result);
+      const generated=await api.generate(productionResult,files,msg=>buttons.forEach(x=>x.textContent=msg||'正在建立可編輯 .BTW…'));
       if(b.latestResult!==result)throw new Error('原稿已變更，請完成新原稿分析後再下載');
       const out=await api.downloadGenerated(generated);
-      downloadStatus('已送出 .BTW 下載，請查看瀏覽器下載清單。');
+      const graphics=Number(generated?.prepared?.report?.graphicsPendingTotal||0),unmanaged=(generated?.outputs||[]).reduce((n,x)=>n+(x?.layout?.unmanagedObjects?.length||0),0);
+      const extra=[graphics?(graphics+' 個圖示／標記仍需人工確認'):'',unmanaged?(unmanaged+' 個 donor 非資料物件尚無安全刪除欄位'):''].filter(Boolean).join('；');
+      downloadStatus(extra?'已送出 .BTW 下載；'+extra+'。':'已送出 .BTW 下載，請查看瀏覽器下載清單。',!!unmanaged);
       if(out?.ok)toast(out.count>1?`已建立 ${out.count} 個 BarTender .BTW`:'可編輯 .BTW 已下載');
       return !!out?.ok
     }catch(err){
@@ -144,5 +171,5 @@
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 
-  window.LabelWorkbenchBtNativePrimary={BUILD,ensureCopy,ensureFormat,ensureNative,ensureProduction,downloadEditable,decorateAnalysis,decorateBt,refresh};
+  window.LabelWorkbenchBtNativePrimary={BUILD,ensureCopy,ensureFormat,ensureNative,ensureProduction,validPhysicalSize,parsePhysicalSize,confirmPhysicalSizes,downloadEditable,decorateAnalysis,decorateBt,refresh};
 })();

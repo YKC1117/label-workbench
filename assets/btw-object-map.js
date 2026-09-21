@@ -6,7 +6,7 @@
  */
 (function(){
   'use strict';
-  const BUILD='20260918-btw-object-map-044-itf-i25';
+  const BUILD='20260921-btw-object-map-045-empty-slots';
   const ROOT='Root.MasterSelectedObject.';
   const FONT_MARKER=new Uint8Array([0x03,0x02,0x01,0x22]);
   const PLACEHOLDER='(???) ???-????';
@@ -95,7 +95,22 @@
     const candidates=after.filter(e=>{const v=String(e.text||'').trim();return v&&v.length<=240&&!blocked.test(v)&&v!=='None'&&!/^Root\./.test(v)&&!/^<ErrorHandling>/.test(v)&&!/^\[[^\]]+\]\*$/.test(v)&&!/^0123456789/.test(v)&&!/^\(___\)/.test(v)&&!/^\(999\)/.test(v)&&!/^Sample Prompt$/i.test(v)});
     return candidates.at(-1)||null
   }
-  function primaryValueEntry(strings,kind,root,nameEntry){if(kind!=='text')return null;let hit=null;const dense=strings.filter(e=>String(e.text??'')!=='');for(let i=0;i<dense.length-1;i++){if(dense[i].text!==PLACEHOLDER)continue;const n=dense[i+1];if(!n?.text||/^(?:Box Options|DataSource|Text \d+|文字範例)$/i.test(n.text))continue;hit=n}if(!hit&&/\.Text Control$/i.test(String(root||'')))hit=simpleTextControlCandidate(strings,nameEntry);return hit}
+  function primaryValueEntry(strings,kind,root,nameEntry){
+    if(kind!=='text')return null;
+    let hit=null;
+    for(let i=0;i<strings.length-1;i++){
+      if(strings[i].text!==PLACEHOLDER)continue;
+      const n=strings[i+1];if(!n)continue;
+      const v=String(n.text??'');
+      if(/^(?:Box Options|DataSource|Text \d+|文字範例)$/i.test(v))continue;
+      // An empty serialized slot immediately after the placeholder is still the
+      // canonical datasource value. Do not skip it and accidentally promote a
+      // later donor caption/metadata string into visible text.
+      hit=n;
+    }
+    if(!hit&&/\.Text Control$/i.test(String(root||'')))hit=simpleTextControlCandidate(strings,nameEntry);
+    return hit
+  }
   function blockedBarcodeGroupValue(v){return /^(?:文字範例|Sample Text|Sample Prompt|Enter Data|Box Options|DataSource|Screen Data|GeneralDsPage|ValidationPage|PromptOptionsPage|Functions and Subs|OnProcessData|OnPostSerialize)$/i.test(v)||/^<ErrorHandling>/i.test(v)||/^Root\./.test(v)}
   function barcodeComponentEntries(strings){
     const groups=[];
@@ -191,12 +206,18 @@
       if(Object.prototype.hasOwnProperty.call(edit,'barcodeValue')){
         if(obj.kind!=='barcode')throw new Error(`${obj.name||obj.id} 不是條碼物件`);
         if(obj.componentEntries.length!==1)throw new Error(`${obj.name||obj.id} 有 ${obj.componentEntries.length} 段資料來源；請使用 barcodeComponents 精準寫回`);
-        replacements.push({entry:obj.componentEntries[0].entry,value:String(edit.barcodeValue??''),object:obj})
+        const value=String(edit.barcodeValue??''),component=obj.componentEntries[0];
+        replacements.push({entry:component.entry,value,object:obj});
+        if(value===''&&component.readEntry&&component.readEntry.offset!==component.entry.offset)replacements.push({entry:component.readEntry,value:'',object:obj})
       }
       if(Object.prototype.hasOwnProperty.call(edit,'barcodeComponents')){
         if(obj.kind!=='barcode')throw new Error(`${obj.name||obj.id} 不是條碼物件`);
         if(!Array.isArray(edit.barcodeComponents)||edit.barcodeComponents.length!==obj.componentEntries.length)throw new Error(`${obj.name||obj.id} 條碼資料段數不符：需要 ${obj.componentEntries.length} 段`);
-        obj.componentEntries.forEach((c,i)=>replacements.push({entry:c.entry,value:String(edit.barcodeComponents[i]??''),object:obj}))
+        obj.componentEntries.forEach((c,i)=>{
+          const value=String(edit.barcodeComponents[i]??'');
+          replacements.push({entry:c.entry,value,object:obj});
+          if(value===''&&c.readEntry&&c.readEntry.offset!==c.entry.offset)replacements.push({entry:c.readEntry,value:'',object:obj})
+        })
       }
     }
 
