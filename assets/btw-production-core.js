@@ -5,7 +5,7 @@
 (function(){
   'use strict';
 
-  const BUILD='20260918-btw-production-core-140-itf14';
+  const BUILD='20260921-btw-production-core-150-layout-safe';
   const JSZIP_SRC='https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js';
   let zipPromise=null;
 
@@ -45,6 +45,19 @@
     return gate.prepareResult(result);
   }
 
+  function physicalSize(label){
+    const g=label?.sourceGeometry||{},width=Number(g.widthMm),height=Number(g.heightMm);
+    return width>=5&&width<=1000&&height>=5&&height<=1000?{width,height,sizeSource:g.sizeSource||'confirmed'}:null
+  }
+  function requireProductionGeometry(label,index){
+    const size=physicalSize(label);
+    if(!size)throw new Error(`標籤 ${index+1} 尚未確認實際寬 × 高 mm，停止產生 BTW`);
+    const rows=[...(label?.textObjects||[]),...(label?.barcodes||[])].filter(x=>String(x?.text??x?.value??x?.data??'').trim());
+    const missing=rows.filter(x=>!x?.sourceBox);
+    if(missing.length)throw new Error(`標籤 ${index+1} 有 ${missing.length} 個物件缺少校正後位置，停止產生 BTW，避免套用 donor 預設座標`);
+    return size
+  }
+
   function selectGenerator(label){
     const F=window.LabelWorkbenchBtwFamilyNative;
     const S=window.LabelWorkbenchBtwSecondNative;
@@ -70,6 +83,7 @@
     const outputs=[];
     const routes=[];
     for(let i=0;i<labels.length;i++){
+      requireProductionGeometry(labels[i],i);
       const route=selectGenerator(labels[i]);
       routes.push(route.mode);
       const modeText=route.mode==='family'?'QR / Code39 / UPC-A / EAN-13 / GS1-128 / PDF417 / ITF-14 原生條碼':route.mode==='second'?'5C128+1DM':route.mode==='rich'?'多物件':'CEA fallback';
@@ -117,7 +131,7 @@
   }
 
   window.LabelWorkbenchBtwProductionCore={
-    BUILD,prepare,selectGenerator,generate,downloadGenerated,downloadFromAnalysis
+    BUILD,prepare,physicalSize,requireProductionGeometry,selectGenerator,generate,downloadGenerated,downloadFromAnalysis
   };
   console.info('[Label Workbench] deterministic BTW production core',BUILD);
 })();
