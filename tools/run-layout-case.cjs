@@ -80,6 +80,12 @@ function dataUrlToBuffer(s){return Buffer.from(String(s).split(',')[1]||'','base
     });
     fs.writeFileSync(path.join(outDir,'corrected-label.png'),dataUrlToBuffer(visual.crop));
     fs.writeFileSync(path.join(outDir,'source-region.png'),dataUrlToBuffer(visual.full));
+    fs.writeFileSync(path.join(outDir,'correction.json'),JSON.stringify({
+      orientationRotationDeg:Number(model.result.labels[0]?.rotation||0),
+      labelCropApplied:true,
+      perspectiveCorrectionApplied:false,
+      note:'corrected-label.png currently means orientation-corrected + cropped label region; no homography/perspective warp is applied.'
+    },null,2),'utf8');
 
     if(!sizeArg){
       fs.writeFileSync(path.join(outDir,'SIZE_REQUIRED.txt'),'Image analysis completed. Real label width x height in mm is required before BTW export. Do not guess donor size.','utf8');
