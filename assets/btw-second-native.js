@@ -57,6 +57,10 @@
     const L=window.LabelWorkbenchBtwLayout;if(!L?.boxToLayout||!box)return null;
     try{return L.boxToLayout(box,target)}catch{return null}
   }
+  function sourceFontSize(layout,current){
+    const h=Number(layout?.mm?.h);if(!(h>0))return Number.isFinite(Number(current))?Number(current):null;
+    return Math.round(Math.max(5,Math.min(42,h/0.3527777778*0.72))*10)/10
+  }
   function fallbackTextPos(i,count,target){
     const cols=count>17?2:1,rows=Math.max(1,Math.ceil(count/cols)),col=i%cols,row=Math.floor(i/cols),x=.045+col*(cols===2?.49:0),y=.045+row*(.86/rows);
     return{xMil:mmToMil(x*target.width),yMil:mmToMil(y*target.height)}
@@ -102,8 +106,9 @@
     const edits=new Map();for(const o of before.objects)edits.set(o.index,{index:o.index,xMil:OFF,yMil:OFF});
     const expectedText=[];
     P.fields.forEach((field,i)=>{
-      const obj=donorPool.texts[i],layout=sourceLayout(field?.sourceBox,target),pos=layout?.mil?{xMil:layout.mil.x,yMil:layout.mil.y}:fallbackTextPos(i,P.fields.length,target),value=textValue(field);
-      edits.set(obj.index,{index:obj.index,value,...pos});expectedText.push({index:obj.index,value,...pos})
+      const obj=donorPool.texts[i],layout=sourceLayout(field?.sourceBox,target),pos=layout?.mil?{xMil:layout.mil.x,yMil:layout.mil.y}:fallbackTextPos(i,P.fields.length,target),value=textValue(field),fontSize=sourceFontSize(layout,obj.fontSize),edit={index:obj.index,value,...pos};
+      if(fontSize!=null&&obj.fontSizeOffset!=null)edit.fontSize=fontSize;
+      edits.set(obj.index,edit);expectedText.push({index:obj.index,value,fontSize:edit.fontSize??obj.fontSize,...pos})
     });
 
     const expectedBarcode=[],used={c128:0,dm:0},barRows=requestedBarcodeRows(P);
@@ -122,7 +127,7 @@
     for(const exp of expectedText){
       const got=after.objects.find(o=>o.index===exp.index);
       if(!got||String(got.value??'')!==exp.value)throw new Error(`BTW 文字 round-trip 失敗：${exp.value}`);
-      if(!near(got.xMil,exp.xMil)||!near(got.yMil,exp.yMil))throw new Error(`BTW 文字位置 round-trip 失敗：${exp.value}`)
+      if(!near(got.xMil,exp.xMil)||!near(got.yMil,exp.yMil))throw new Error(`BTW 文字位置 round-trip 失敗：${exp.value}`);if(exp.fontSize!=null&&got.fontSize!=null&&!near(got.fontSize,exp.fontSize,.11))throw new Error(`BTW 文字字級 round-trip 失敗：${exp.value}`)
     }
     for(const exp of expectedBarcode){
       const got=after.objects.find(o=>o.index===exp.index);
