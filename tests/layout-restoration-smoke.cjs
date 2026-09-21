@@ -2,7 +2,7 @@ const fs=require('fs'),vm=require('vm');
 
 function loadInterpreter(){
   const c={console,Math,Date,setInterval,clearInterval,setTimeout,Uint8Array,ArrayBuffer,TextDecoder,TextEncoder,
-    window:null,globalThis:null,document:{readyState:'loading',addEventListener(){},createElement(){return{}},head:{appendChild(){}}}};
+    window:null,globalThis:null,document:{readyState:'loading',addEventListener(){},createElement(tag){if(tag!=='canvas')return{};const canvas={width:1,height:1,getContext(){return{fillStyle:'#fff',fillRect(){},drawImage(){},getImageData(){return{data:new Uint8ClampedArray(canvas.width*canvas.height*4)}}}}};return canvas},head:{appendChild(){}}}};
   c.window=c;c.globalThis=c;vm.createContext(c);
   vm.runInContext(fs.readFileSync('assets/label-interpreter.js','utf8'),c,{filename:'label-interpreter.js'});
   return c.LabelWorkbenchInterpreter;
