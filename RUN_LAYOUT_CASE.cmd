@@ -3,7 +3,7 @@ setlocal
 cd /d "%~dp0"
 
 if "%~1"=="" (
-  echo Usage: RUN_LAYOUT_CASE.cmd "C:\path\Image.jpg" 100x65
+  echo Usage: RUN_LAYOUT_CASE.cmd "C:\path\Image.jpg" WIDTHxHEIGHT-mm
   exit /b 2
 )
 
