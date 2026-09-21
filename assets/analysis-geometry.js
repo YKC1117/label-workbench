@@ -5,7 +5,7 @@
  */
 (function(){
   'use strict';
-  const BUILD='20260911-analysis-geometry-110-barcode-pdf-mm';
+  const BUILD='20260921-analysis-geometry-120-rectified-label';
   const PDF_SRC='https://cdn.jsdelivr.net/npm/pdfjs-dist@6.3.289/build/pdf.min.mjs';
   const TESS_SRC='https://cdn.jsdelivr.net/npm/tesseract.js@7.0.0/dist/tesseract.min.js';
   const TESS_WORKER='https://cdn.jsdelivr.net/npm/tesseract.js@7.0.0/dist/worker.min.js';
@@ -113,13 +113,18 @@
       let canvas=ext(file)==='pdf'?await pdfPageCanvas(file,pageNo):await imageCanvas(file);let physical=canvas.__lwPhysicalMm||null;
       const pageLabels=labels.filter(l=>Number(l.page||1)===pageNo).sort((a,b)=>Number(a.index||1)-Number(b.index||1)),rotation=Number(pageLabels[0]?.rotation||0);
       if(rotation&&typeof A.rotateCanvas==='function'){canvas=A.rotateCanvas(canvas,rotation);if(physical&&(rotation===90||rotation===270))physical={width:physical.height,height:physical.width}}
-      let bands=typeof A.detectLabelBands==='function'?A.detectLabelBands(canvas):[{x:0,y:0,w:canvas.width,h:canvas.height}];
-      if(pageLabels.length===1)bands=[{x:0,y:0,w:canvas.width,h:canvas.height}];
-      for(let i=0;i<Math.min(pageLabels.length,bands.length);i++){
-        const label=pageLabels[i],b=bands[i],region=crop(canvas,b.x,b.y,b.w,b.h),words=await recognizeWords(worker,region),matches=matchKnownFields(label.fields||[],words,region.width,region.height);
-        for(const m of matches)m.field.sourceBox=m.sourceBox;
+      const bands=typeof A.detectLabelBands==='function'?A.detectLabelBands(canvas):[{x:0,y:0,w:canvas.width,h:canvas.height,method:'full-source-fallback'}];
+      for(let i=0;i<pageLabels.length;i++){
+        const label=pageLabels[i],bandIndex=Number.isInteger(Number(label?.regionIndex))?Number(label.regionIndex):i,b=bands[bandIndex]||bands[i]||null;
+        if(!b)continue;
+        const region=crop(canvas,b.x,b.y,b.w,b.h),words=await recognizeWords(worker,region),matches=matchKnownFields(label.fields||[],words,region.width,region.height);
+        for(const m of matches)m.field.sourceBox={...m.sourceBox,coordinateSpace:'rectified-label'};
         const locatedBarcodes=await locateBarcodeBoxes(region,label),widthMm=physical?physical.width*(b.w/canvas.width):null,heightMm=physical?physical.height*(b.h/canvas.height):null;
-        label.sourceGeometry={widthPx:region.width,heightPx:region.height,widthMm:widthMm?round2(widthMm):null,heightMm:heightMm?round2(heightMm):null,locatedFields:matches.length,totalFields:(label.fields||[]).length,locatedBarcodes,totalBarcodes:(label.barcodes||[]).length,method:'known-value-layout-ocr+barcode-position'};
+        label.coordinateSpace='rectified-label';
+        label.sourceRegion={x:b.x,y:b.y,w:b.w,h:b.h,sourceWidth:canvas.width,sourceHeight:canvas.height,normalized:{x:round2(b.x/canvas.width),y:round2(b.y/canvas.height),w:round2(b.w/canvas.width),h:round2(b.h/canvas.height)},method:b.method||'detected-label-region'};
+        label.sourceGeometry={widthPx:region.width,heightPx:region.height,widthMm:widthMm?round2(widthMm):null,heightMm:heightMm?round2(heightMm):null,sizeSource:widthMm&&heightMm?'pdf-page-region':null,coordinateSpace:'rectified-label',regionBoxPx:{x:b.x,y:b.y,w:b.w,h:b.h},locatedFields:matches.length,totalFields:(label.fields||[]).length,locatedBarcodes,totalBarcodes:(label.barcodes||[]).length,method:'rectified-label-known-value-layout-ocr+barcode-position'};
+        for(const o of label.textObjects||[])if(o?.sourceBox)o.sourceBox={...o.sourceBox,coordinateSpace:'rectified-label'};
+        for(const bRow of label.barcodes||[])if(bRow?.sourceBox)bRow.sourceBox={...bRow.sourceBox,coordinateSpace:'rectified-label'};
       }
     }
   }
