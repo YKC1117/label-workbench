@@ -5,7 +5,7 @@
  */
 (function(){
   'use strict';
-  const BUILD='20260911-analysis-geometry-110-barcode-pdf-mm';
+  const BUILD='20260921-analysis-geometry-120-corrected-label-region';
   const PDF_SRC='https://cdn.jsdelivr.net/npm/pdfjs-dist@6.3.289/build/pdf.min.mjs';
   const TESS_SRC='https://cdn.jsdelivr.net/npm/tesseract.js@7.0.0/dist/tesseract.min.js';
   const TESS_WORKER='https://cdn.jsdelivr.net/npm/tesseract.js@7.0.0/dist/worker.min.js';
@@ -114,12 +114,11 @@
       const pageLabels=labels.filter(l=>Number(l.page||1)===pageNo).sort((a,b)=>Number(a.index||1)-Number(b.index||1)),rotation=Number(pageLabels[0]?.rotation||0);
       if(rotation&&typeof A.rotateCanvas==='function'){canvas=A.rotateCanvas(canvas,rotation);if(physical&&(rotation===90||rotation===270))physical={width:physical.height,height:physical.width}}
       let bands=typeof A.detectLabelBands==='function'?A.detectLabelBands(canvas):[{x:0,y:0,w:canvas.width,h:canvas.height}];
-      if(pageLabels.length===1)bands=[{x:0,y:0,w:canvas.width,h:canvas.height}];
       for(let i=0;i<Math.min(pageLabels.length,bands.length);i++){
         const label=pageLabels[i],b=bands[i],region=crop(canvas,b.x,b.y,b.w,b.h),words=await recognizeWords(worker,region),matches=matchKnownFields(label.fields||[],words,region.width,region.height);
         for(const m of matches)m.field.sourceBox=m.sourceBox;
         const locatedBarcodes=await locateBarcodeBoxes(region,label),widthMm=physical?physical.width*(b.w/canvas.width):null,heightMm=physical?physical.height*(b.h/canvas.height):null;
-        label.sourceGeometry={widthPx:region.width,heightPx:region.height,widthMm:widthMm?round2(widthMm):null,heightMm:heightMm?round2(heightMm):null,locatedFields:matches.length,totalFields:(label.fields||[]).length,locatedBarcodes,totalBarcodes:(label.barcodes||[]).length,method:'known-value-layout-ocr+barcode-position'};
+        label.sourceGeometry={widthPx:region.width,heightPx:region.height,widthMm:widthMm?round2(widthMm):null,heightMm:heightMm?round2(heightMm):null,physicalSizeKnown:!!(widthMm&&heightMm),imageWidthPx:canvas.width,imageHeightPx:canvas.height,regionPx:{x:b.x,y:b.y,w:b.w,h:b.h},regionNormalized:{x:round2(b.x/canvas.width),y:round2(b.y/canvas.height),w:round2(b.w/canvas.width),h:round2(b.h/canvas.height)},locatedFields:matches.length,totalFields:(label.fields||[]).length,locatedBarcodes,totalBarcodes:(label.barcodes||[]).length,method:'corrected-label-region+known-value-layout-ocr+barcode-position'};
       }
     }
   }
