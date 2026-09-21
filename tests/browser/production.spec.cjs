@@ -42,7 +42,8 @@ for(const extension of ['pdf','png','jpg']){
   for(const t of label.textObjects)for(const b of label.barcodes)expect(overlapFraction(t.sourceBox,b.sourceBox)).toBeLessThan(.58);
   expect(label.sourceGeometry.widthPx).toBeGreaterThan(0);
   expect(warnings.filter(w=>/readiness timed out|fallback route/.test(w))).toEqual([]);
-  if(extension!=='pdf')page.once('dialog',async d=>{expect(d.message()).toMatch(/寬×高 mm|寬 × 高 mm/);await d.accept('100×65')});
+  const explicitImageSize=extension==='jpg'?'140×38':'100×65';
+  if(extension!=='pdf')page.once('dialog',async d=>{expect(d.message()).toMatch(/寬×高 mm|寬 × 高 mm/);await d.accept(explicitImageSize)});
   const downloadPromise=page.waitForEvent('download',{timeout:45000});
   await button.click();
   const download=await downloadPromise;
@@ -64,12 +65,19 @@ for(const extension of ['pdf','png','jpg']){
   const templateSize={widthMm:Number(sizeMatch[1]),heightMm:Number(sizeMatch[2])};
   expect(templateSize.widthMm).toBeGreaterThan(0);
   expect(templateSize.heightMm).toBeGreaterThan(0);
+  if(extension==='jpg'){
+    expect(templateSize.widthMm).toBeCloseTo(140,2);
+    expect(templateSize.heightMm).toBeCloseTo(38,2);
+  }
   const container=zlib.inflateSync(parsed.compressedContainer);
   expect(container.length).toBeGreaterThan(1000);
   const decoded=c.LabelWorkbenchBtwObjectMap.mapContainer(container).objects;
   expect(decoded.length).toBeGreaterThan(0);
   const textObjects=decoded.filter(o=>o.kind==='text'&&String(o.value||'').trim());
   expect(textObjects.map(t=>t.value).join('\n')).toMatch(/Made in Taiwan/i);
+  const sourceValues=new Set(label.textObjects.map(o=>String(o.text||'').trim()).filter(Boolean));
+  const printableText=decoded.filter(o=>o.kind==='text'&&String(o.value||'').trim()&&Number.isFinite(o.xMm)&&Number.isFinite(o.yMm)&&o.xMm>=0&&o.yMm>=0&&o.xMm<=templateSize.widthMm&&o.yMm<=templateSize.heightMm);
+  for(const o of printableText)expect(sourceValues.has(String(o.value||'').trim())).toBe(true);
   const c128=decoded.find(o=>o.kind==='barcode'&&o.barcodeType==='Code 128'&&o.resolvedPreview==='ABC123');
   expect(c128).toBeTruthy();
   expect(c128.componentEntries.length).toBeGreaterThan(0);
