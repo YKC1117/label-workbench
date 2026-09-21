@@ -9,7 +9,7 @@ const ROOT=path.resolve(__dirname,'..');
 const imagePath=path.resolve(process.argv[2]||'');
 const sizeArg=String(process.argv[3]||'').trim();
 if(!process.argv[2]||!fs.existsSync(imagePath)){
-  console.error('Usage: node tools/run-layout-case.cjs <Image.jpg> [100x65]');
+  console.error('Usage: node tools/run-layout-case.cjs <Image.jpg> <WIDTHxHEIGHT-mm>');
   process.exit(2);
 }
 const outDir=path.join(ROOT,'artifacts','manual-case');
