@@ -19,9 +19,8 @@ if not exist "node_modules\@playwright\test" (
   if errorlevel 1 exit /b 1
 )
 
-call npx playwright install chromium
-if errorlevel 1 exit /b 1
-
+rem Do not download Playwright browsers here. The runner first uses installed Chrome/Edge.
+rem If needed, set LW_BROWSER_PATH to an existing Chromium-based browser executable.
 node tools\run-layout-case.cjs "%~1" "%~2"
 set RC=%ERRORLEVEL%
 
