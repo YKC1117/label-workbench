@@ -40,6 +40,7 @@ for(const extension of ['pdf','png','jpg']){
   expect(label.barcodes.some(b=>/code.?128/i.test(b.format)&&b.text==='ABC123')).toBe(true);
   expect(label.sourceGeometry.widthPx).toBeGreaterThan(0);
   expect(warnings.filter(w=>/readiness timed out|fallback route/.test(w))).toEqual([]);
+  if(extension!=='pdf')page.once('dialog',async d=>{expect(d.message()).toMatch(/寬×高 mm|寬 × 高 mm/);await d.accept('100×65')});
   const downloadPromise=page.waitForEvent('download',{timeout:45000});
   await button.click();
   const download=await downloadPromise;
