@@ -127,7 +127,8 @@ function dataUrlToBuffer(s){return Buffer.from(String(s).split(',')[1]||'','base
     };
     fs.writeFileSync(path.join(outDir,'summary.json'),JSON.stringify(summary,null,2),'utf8');
     if(!sizeMatches)throw new Error('Exported TemplateSize does not match explicit physical size '+sizeArg);
-    if(residualOffCanvas.length)console.error('RESIDUAL_OFF_CANVAS',JSON.stringify(residualOffCanvas.slice(0,12)));
+    if(residualOffCanvas.length)throw new Error('Exported BTW still contains '+residualOffCanvas.length+' donor object(s) hidden at 50000 mil');
+    if(outOfBoundsAnchors.length)throw new Error('Exported BTW contains '+outOfBoundsAnchors.length+' object anchor(s) outside the requested label size');
     await page.screenshot({path:path.join(outDir,'analysis-page.png'),fullPage:true});
     console.log('PASS');
     console.log('Artifacts: '+outDir);
