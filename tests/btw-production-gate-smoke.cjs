@@ -36,7 +36,7 @@ const original={labels:[{sourceName:'第一個.pdf',fields,barcodes:[
 
 (async()=>{
   const G=c.LabelWorkbenchBtwProductionGate,N=c.LabelWorkbenchBtwNative;
-  assert(G?.BUILD==='20260918-btw-production-gate-110-textobjects','unexpected production gate build');
+  assert(G?.BUILD==='20260921-btw-production-gate-120-object-model','unexpected production gate build');
   assert(G.installed===true&&N.__productionGateWrapped===true,'production gate did not wrap native download');
 
   const prepared=G.prepareResult(original);
