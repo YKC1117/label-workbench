@@ -7,6 +7,7 @@ const crypto=require('node:crypto');
 
 test.afterEach(async({page},info)=>{if(info.status!==info.expectedStatus){console.log('FAILED PAGE',await page.locator('#analysisResult').innerText().catch(()=>''));}});
 const APP_PATH=process.env.E2E_APP_PATH||'/';
+function overlapFraction(a,b){if(!a||!b)return 0;const ax2=a.x+a.w,ay2=a.y+a.h,bx2=b.x+b.w,by2=b.y+b.h,iw=Math.max(0,Math.min(ax2,bx2)-Math.max(a.x,b.x)),ih=Math.max(0,Math.min(ay2,by2)-Math.max(a.y,b.y)),area=Math.max(0,a.w*a.h);return area?(iw*ih)/area:0}
 
 // No substituted OCR, decoder, analysis result, seed, generator, Blob or download.
 // A: structural checks below. B: real Chromium download. C: NOT BarTender acceptance.
@@ -38,6 +39,7 @@ for(const extension of ['pdf','png','jpg']){
   expect(label.textObjects.map(o=>o.text).join('\n')).toMatch(/Made in Taiwan/i);
   expect(label.textObjects.some(o=>o.sourceBox)).toBe(true);
   expect(label.barcodes.some(b=>/code.?128/i.test(b.format)&&b.text==='ABC123')).toBe(true);
+  for(const t of label.textObjects)for(const b of label.barcodes)expect(overlapFraction(t.sourceBox,b.sourceBox)).toBeLessThan(.58);
   expect(label.sourceGeometry.widthPx).toBeGreaterThan(0);
   expect(warnings.filter(w=>/readiness timed out|fallback route/.test(w))).toEqual([]);
   if(extension!=='pdf')page.once('dialog',async d=>{expect(d.message()).toMatch(/寬×高 mm|寬 × 高 mm/);await d.accept('100×65')});
