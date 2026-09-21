@@ -6,7 +6,7 @@
 (function(){
   'use strict';
 
-  const BUILD='20260919-v184-pdf-legacy';
+  const BUILD='20260921-v185-label-region-basis';
   // PDF.js modern build assumes very new JS runtime APIs (including Map#getOrInsertComputed).
   // Use the matching legacy display/worker pair so real users on older Chromium/Safari can still render PDFs.
   const PDF_SRC='https://cdn.jsdelivr.net/npm/pdfjs-dist@6.3.289/legacy/build/pdf.min.mjs';
@@ -132,11 +132,33 @@
   function runs(flags){const out=[];let start=null;for(let i=0;i<flags.length;i++){if(flags[i]&&start===null)start=i;if(!flags[i]&&start!==null){out.push([start,i-1]);start=null}}if(start!==null)out.push([start,flags.length-1]);return out}
   function mergeRuns(list,maxGap){const out=[];for(const r of list){if(!out.length||r[0]-out[out.length-1][1]>maxGap)out.push([...r]);else out[out.length-1][1]=r[1]}return out}
 
+  function mergeDetectedBands(boxes,width,height){
+    const list=(boxes||[]).filter(b=>b&&b.w>0&&b.h>0).map(b=>({...b})).sort((a,b)=>a.y-b.y||a.x-b.x);
+    const out=[],maxGap=Math.max(18,height*.14);
+    const xOverlap=(a,b)=>Math.max(0,Math.min(a.x+a.w,b.x+b.w)-Math.max(a.x,b.x))/Math.max(1,Math.min(a.w,b.w));
+    for(const b of list){
+      const last=out[out.length-1],gap=last?b.y-(last.y+last.h):Infinity;
+      if(last&&gap<=maxGap&&xOverlap(last,b)>=.42){
+        const x0=Math.min(last.x,b.x),y0=Math.min(last.y,b.y),x1=Math.max(last.x+last.w,b.x+b.w),y1=Math.max(last.y+last.h,b.y+b.h);
+        last.x=x0;last.y=y0;last.w=x1-x0;last.h=y1-y0;continue
+      }
+      out.push({...b})
+    }
+    return out
+  }
+  function normalizeLabelRegions(boxes,width,height){
+    const full={x:0,y:0,w:width,h:height,method:'full-source-fallback'};
+    const merged=mergeDetectedBands(boxes,width,height);
+    if(!merged.length)return[full];
+    if(merged.length>8)return[full];
+    return merged.map((b,index)=>({...b,index,method:'detected-label-region'}))
+  }
   function detectLabelBands(canvas){
     const x=canvas.getContext('2d',{willReadFrequently:true}),im=x.getImageData(0,0,canvas.width,canvas.height),d=im.data,step=Math.max(1,Math.ceil(canvas.width/1500)),counts=new Uint32Array(canvas.height),sampled=Math.ceil(canvas.width/step);
     for(let y=0;y<canvas.height;y++){let n=0;for(let xx=0;xx<canvas.width;xx+=step){const i=(y*canvas.width+xx)*4;if(grayAt(d,i)<228)n++}counts[y]=n}
-    const threshold=Math.max(5,Math.round(sampled*.005));let rs=mergeRuns(runs([...counts].map(n=>n>threshold)),Math.max(12,Math.round(canvas.height*.022)));rs=rs.filter(r=>r[1]-r[0]>=Math.max(50,canvas.height*.045));if(rs.length<2||rs.length>8)rs=[[0,canvas.height-1]];
-    return rs.map(([a,b])=>{const py=Math.round(canvas.height*.018),y=Math.max(0,a-py),y2=Math.min(canvas.height,b+py),rough=crop(canvas,0,y,canvas.width,y2-y),cb=contentBounds(rough,240);return{x:cb.x,y:y+cb.y,w:cb.w,h:cb.h}});
+    const threshold=Math.max(5,Math.round(sampled*.005));let rs=mergeRuns(runs([...counts].map(n=>n>threshold)),Math.max(12,Math.round(canvas.height*.022)));rs=rs.filter(r=>r[1]-r[0]>=Math.max(50,canvas.height*.045));
+    const boxes=rs.map(([a,b])=>{const py=Math.round(canvas.height*.018),y=Math.max(0,a-py),y2=Math.min(canvas.height,b+py),rough=crop(canvas,0,y,canvas.width,y2-y),cb=contentBounds(rough,240);return{x:cb.x,y:y+cb.y,w:cb.w,h:cb.h}});
+    return normalizeLabelRegions(boxes,canvas.width,canvas.height);
   }
 
   function cleanLine(v){return String(v||'').replace(/[\u2018\u2019]/g,"'").replace(/[\u201C\u201D]/g,'"').replace(/[|¦]+/g,' ').replace(/\s+/g,' ').trim()}
@@ -315,8 +337,11 @@
   }
 
   async function processCanvas(canvas,sourceName,pageNo,worker,labels,onProgress){
-    const best=await chooseOrientation(worker,canvas,onProgress);let bands=detectLabelBands(best.canvas);if(bands.length===1)bands=[{x:0,y:0,w:best.canvas.width,h:best.canvas.height}];onProgress?.(`找到 ${bands.length} 個標籤區域，正在逐張整理…`);
-    for(let i=0;i<bands.length;i++){const b=bands[i],region=crop(best.canvas,b.x,b.y,b.w,b.h),read=await readRegionFields(worker,region,onProgress),barcodes=await scanRegionDeep(region,labels.length+1,onProgress),allText=read.passes.map(p=>p.text).join('\n'),marks=detectMarks(allText);labels.push({sourceName,page:pageNo,index:i+1,rotation:best.deg,fields:read.fields,textObjects:read.textObjects||[],barcodes,marks})}
+    const best=await chooseOrientation(worker,canvas,onProgress),bands=detectLabelBands(best.canvas);onProgress?.(`找到 ${bands.length} 個標籤區域，正在逐張整理…`);
+    for(let i=0;i<bands.length;i++){
+      const b=bands[i],region=crop(best.canvas,b.x,b.y,b.w,b.h),read=await readRegionFields(worker,region,onProgress),barcodes=await scanRegionDeep(region,labels.length+1,onProgress),allText=read.passes.map(p=>p.text).join('\n'),marks=detectMarks(allText);
+      labels.push({sourceName,page:pageNo,index:i+1,rotation:best.deg,regionIndex:i,sourceRegion:{x:b.x,y:b.y,w:b.w,h:b.h,sourceWidth:best.canvas.width,sourceHeight:best.canvas.height,method:b.method||'detected-label-region'},coordinateSpace:'rectified-label',fields:read.fields,textObjects:read.textObjects||[],barcodes,marks})
+    }
   }
 
   async function interpretPdf(file,onProgress,sharedWorker){const pdfjs=await loadPdf(),pdf=await pdfjs.getDocument({data:new Uint8Array(await file.arrayBuffer())}).promise,pageLimit=Math.min(pdf.numPages,3),labels=[],own=!sharedWorker,worker=sharedWorker||await createWorker(onProgress);try{for(let p=1;p<=pageLimit;p++){onProgress?.(`正在讀取 ${file.name} 第 ${p}/${pageLimit} 頁…`);const page=await pdf.getPage(p),canvas=await renderPage(page);await processCanvas(canvas,file.name,p,worker,labels,onProgress)}}finally{if(own)try{await worker.terminate()}catch{}}return{pdfPages:pdf.numPages,labels}}
@@ -351,5 +376,5 @@
     return result
   }
 
-  window.LabelWorkbenchInterpreter={BUILD,scoreText,parseFields,spatialFields,aggregateFields,genericTextObjects,genericFieldsFromTextObjects,mergeGenericFields,lineSegments,needsTileFallback,detectLabelBands,rotateCanvas,interpretPdf,interpretImage,interpretFiles,productionText,questionsText,renderInterpretation,renderResult,analyze};
+  window.LabelWorkbenchInterpreter={BUILD,scoreText,parseFields,spatialFields,aggregateFields,genericTextObjects,genericFieldsFromTextObjects,mergeGenericFields,lineSegments,needsTileFallback,mergeDetectedBands,normalizeLabelRegions,detectLabelBands,rotateCanvas,interpretPdf,interpretImage,interpretFiles,productionText,questionsText,renderInterpretation,renderResult,analyze};
 })();
