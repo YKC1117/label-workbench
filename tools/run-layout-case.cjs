@@ -79,11 +79,14 @@ function dataUrlToBuffer(s){return Buffer.from(String(s).split(',')[1]||'','base
     fs.writeFileSync(path.join(outDir,'corrected-label.png'),dataUrlToBuffer(visual.crop));
     fs.writeFileSync(path.join(outDir,'source-region.png'),dataUrlToBuffer(visual.full));
 
-    if(sizeArg){
-      page.once('dialog',async d=>{await d.accept(sizeArg)});
-    }else{
-      page.once('dialog',async d=>{console.error('Physical size required by app: '+d.message());await d.dismiss()});
+    if(!sizeArg){
+      fs.writeFileSync(path.join(outDir,'SIZE_REQUIRED.txt'),'Image analysis completed. Real label width x height in mm is required before BTW export. Do not guess donor size.','utf8');
+      console.log('SIZE_REQUIRED');
+      console.log('Analysis evidence: '+outDir);
+      process.exitCode=3;
+      return;
     }
+    page.once('dialog',async d=>{await d.accept(sizeArg)});
     const dp=page.waitForEvent('download',{timeout:60000});
     await button.click();
     const download=await dp;
