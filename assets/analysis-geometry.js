@@ -16,6 +16,8 @@
   const norm=v=>String(v??'').toUpperCase().replace(/[^A-Z0-9\u3400-\u9FFF]/g,'');
   const clamp01=v=>Math.max(0,Math.min(1,Number(v)||0));
   const round2=v=>Math.round(Number(v)*100)/100;
+  function boxOverlapFraction(a,b){if(!a||!b)return 0;const ax1=Number(a.x)||0,ay1=Number(a.y)||0,ax2=ax1+(Number(a.w)||0),ay2=ay1+(Number(a.h)||0),bx1=Number(b.x)||0,by1=Number(b.y)||0,bx2=bx1+(Number(b.w)||0),by2=by1+(Number(b.h)||0),iw=Math.max(0,Math.min(ax2,bx2)-Math.max(ax1,bx1)),ih=Math.max(0,Math.min(ay2,by2)-Math.max(ay1,by1)),area=Math.max(0,(ax2-ax1)*(ay2-ay1));return area>0?(iw*ih)/area:0}
+  function suppressBarcodeOccludedText(label){const bars=(label?.barcodes||[]).filter(b=>b?.sourceBox);if(!bars.length)return 0;const before=(label?.textObjects||[]),kept=before.filter(t=>!bars.some(b=>boxOverlapFraction(t?.sourceBox,b.sourceBox)>=.58));label.textObjects=kept;return before.length-kept.length}
 
   function loadScript(src,globalName){
     if(globalThis[globalName])return Promise.resolve(globalThis[globalName]);
@@ -124,8 +126,8 @@
       for(let i=0;i<Math.min(pageLabels.length,bands.length);i++){
         const label=pageLabels[i],b=bands[i],region=crop(canvas,b.x,b.y,b.w,b.h),words=await recognizeWords(worker,region),matches=matchKnownFields(label.fields||[],words,region.width,region.height);
         for(const m of matches)m.field.sourceBox=m.sourceBox;
-        const locatedBarcodes=await locateBarcodeBoxes(region,label),widthMm=physical?physical.width*(b.w/canvas.width):null,heightMm=physical?physical.height*(b.h/canvas.height):null;
-        label.sourceGeometry={widthPx:region.width,heightPx:region.height,widthMm:widthMm?round2(widthMm):null,heightMm:heightMm?round2(heightMm):null,physicalSizeKnown:!!(widthMm&&heightMm),imageWidthPx:canvas.width,imageHeightPx:canvas.height,regionPx:{x:b.x,y:b.y,w:b.w,h:b.h},regionNormalized:{x:round2(b.x/canvas.width),y:round2(b.y/canvas.height),w:round2(b.w/canvas.width),h:round2(b.h/canvas.height)},locatedFields:matches.length,totalFields:(label.fields||[]).length,locatedBarcodes,totalBarcodes:(label.barcodes||[]).length,method:(b.reused?'reused-analysis-region':'detected-label-region')+'+known-value-layout-ocr+barcode-position'};
+        const locatedBarcodes=await locateBarcodeBoxes(region,label),suppressedBarcodeText=suppressBarcodeOccludedText(label),widthMm=physical?physical.width*(b.w/canvas.width):null,heightMm=physical?physical.height*(b.h/canvas.height):null;
+        label.sourceGeometry={widthPx:region.width,heightPx:region.height,widthMm:widthMm?round2(widthMm):null,heightMm:heightMm?round2(heightMm):null,physicalSizeKnown:!!(widthMm&&heightMm),imageWidthPx:canvas.width,imageHeightPx:canvas.height,regionPx:{x:b.x,y:b.y,w:b.w,h:b.h},regionNormalized:{x:round2(b.x/canvas.width),y:round2(b.y/canvas.height),w:round2(b.w/canvas.width),h:round2(b.h/canvas.height)},locatedFields:matches.length,totalFields:(label.fields||[]).length,locatedBarcodes,totalBarcodes:(label.barcodes||[]).length,suppressedBarcodeText,method:(b.reused?'reused-analysis-region':'detected-label-region')+'+known-value-layout-ocr+barcode-position'};
       }
     }
   }
@@ -139,5 +141,5 @@
   function install(){const A=window.LabelWorkbenchInterpreter;if(!A?.analyze||A.__geometryWrapped)return false;const base=A.analyze.bind(A);A.analyze=async function(files){const arr=[...(files||[])],result=await base(arr);return refine(arr,result)};A.__geometryWrapped=true;A.refineGeometry=refine;console.info('[Label Workbench] source geometry assist',BUILD);return true}
   if(!install()){let tries=0;const timer=setInterval(()=>{tries++;if(install()||tries>100)clearInterval(timer)},80)}
 
-  window.LabelWorkbenchAnalysisGeometry={BUILD,norm,charSimilarity,wordsFromBlocks,candidateSpans,matchKnownFields,collectPoints,positionToBox,scanScale,matchKnownBarcodes,refine,install};
+  window.LabelWorkbenchAnalysisGeometry={BUILD,norm,charSimilarity,wordsFromBlocks,candidateSpans,matchKnownFields,collectPoints,positionToBox,scanScale,matchKnownBarcodes,boxOverlapFraction,suppressBarcodeOccludedText,refine,install};
 })();
