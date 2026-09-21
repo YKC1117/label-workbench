@@ -218,12 +218,16 @@
   function stripObjectRecords(container,indexes){
     const remove=new Set((indexes||[]).map(Number).filter(Number.isInteger));
     if(!remove.size)return u8(container).slice();
-    const data=u8(container),map=mapContainer(data),ranges=[];
+    const data=u8(container),map=mapContainer(data),tags=scanTags(data),ranges=[];
     for(const index of remove){
       const o=map.objects.find(x=>x.index===index);
       if(!o)throw new Error(`BTW strip 找不到物件 index ${index}`);
       if(o.syntheticFromTag)throw new Error(`BTW strip 不允許刪除 synthetic 物件：${o.name||o.id}`);
-      const start=Number(o.recordStart),end=Number(o.recordEnd);
+      let start=Number(o.recordStart),end=Number(o.recordEnd);
+      if(o.kind==='barcode'&&o.owner){
+        const owner=[...tags].reverse().find(t=>t.type===o.owner&&t.offset<=start&&start-t.offset<=96);
+        if(owner)start=owner.offset;
+      }
       if(!(Number.isInteger(start)&&Number.isInteger(end)&&start>=0&&end>start&&end<=data.length))throw new Error(`BTW strip 邊界無效：${o.name||o.id}`);
       ranges.push({index,start,end,name:o.name||o.id})
     }
