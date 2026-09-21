@@ -6,7 +6,6 @@
   'use strict';
   const BUILD='20260918-btw-second-native-110-textobjects';
   const SEED_ID='LW-SECOND-SANITIZED-2022-R2';
-  const OFF=50000;
   const MAX_TEXT=33;
   const MAX_C128=5;
   const MAX_DM=1;
@@ -103,12 +102,11 @@
 
     /* Re-map after size rewrite so all edit offsets are derived from the bytes being edited. */
     before=M.mapContainer(container);donorPool=pool(before.objects);assertPool(donorPool);
-    const edits=new Map();for(const o of before.objects)edits.set(o.index,{index:o.index,xMil:OFF,yMil:OFF});
-    const expectedText=[];
+    const edits=new Map(),activeIndexes=new Set(),expectedText=[];
     P.fields.forEach((field,i)=>{
       const obj=donorPool.texts[i],layout=sourceLayout(field?.sourceBox,target),pos=layout?.mil?{xMil:layout.mil.x,yMil:layout.mil.y}:fallbackTextPos(i,P.fields.length,target),value=textValue(field),fontSize=sourceFontSize(layout,obj.fontSize),edit={index:obj.index,value,...pos};
       if(fontSize!=null&&obj.fontSizeOffset!=null)edit.fontSize=fontSize;
-      edits.set(obj.index,edit);expectedText.push({index:obj.index,value,fontSize:edit.fontSize??obj.fontSize,...pos})
+      edits.set(obj.index,edit);activeIndexes.add(obj.index);expectedText.push({index:obj.index,value,fontSize:edit.fontSize??obj.fontSize,...pos})
     });
 
     const expectedBarcode=[],used={c128:0,dm:0},barRows=requestedBarcodeRows(P);
@@ -116,13 +114,16 @@
       const list=item.type==='Data Matrix'?donorPool.dm:donorPool.c128,key=item.type==='Data Matrix'?'dm':'c128',obj=list[used[key]++];
       if(!obj)throw new Error(`5C128+1DM donor 缺少 ${item.type} 原生物件`);
       const layout=sourceLayout(item.row?.sourceBox,target),pos=layout?.mil?{xMil:layout.mil.x,yMil:layout.mil.y}:fallbackBarcodePos(i,barRows.length,target),edit=barcodeEdit(obj,item.value,pos);
-      edits.set(obj.index,edit);expectedBarcode.push({index:obj.index,type:item.type,value:item.value,...pos})
+      edits.set(obj.index,edit);activeIndexes.add(obj.index);expectedBarcode.push({index:obj.index,type:item.type,value:item.value,...pos})
     });
 
-    const edited=M.editContainer(container,[...edits.values()]),rebuilt0=await F.rebuild(parsed,edited),rebuilt=target.source?F.replaceTemplateSize(rebuilt0,target.width,target.height):rebuilt0;
+    const edited=M.editContainer(container,[...edits.values()]);
+    const removeIndexes=before.objects.filter(o=>!activeIndexes.has(o.index)&&(donorPool.texts.some(x=>x.index===o.index)||donorPool.c128.some(x=>x.index===o.index)||donorPool.dm.some(x=>x.index===o.index)||o.kind==='line')).map(o=>o.index);
+    const stripped=M.stripObjectRecords(edited,removeIndexes),rebuilt0=await F.rebuild(parsed,stripped),rebuilt=target.source?F.replaceTemplateSize(rebuilt0,target.width,target.height):rebuilt0;
     const check=F.parseStructure(rebuilt),round=await F.inflateContainer(check),after=M.mapContainer(round);
     if(!/^2022\b/.test(check.header?.applicationVersion||'')||!/^2022\b/.test(check.header?.compatibleVersion||''))throw new Error('5C128+1DM BTW 重建後版本驗證失敗');
-    if(after.objects.length!==rootCount)throw new Error(`5C128+1DM BTW root count 改變：${after.objects.length}/${rootCount}`);
+    if(after.objects.length!==activeIndexes.size)throw new Error(`5C128+1DM BTW 未使用 donor root 未清乾淨：${after.objects.length}/${activeIndexes.size}`);
+    if(after.objects.some(o=>Number(o.xMil)===50000||Number(o.yMil)===50000))throw new Error('5C128+1DM BTW 仍有 50000 mil 紙外殘留物件');
 
     for(const exp of expectedText){
       const got=after.objects.find(o=>o.index===exp.index);
@@ -141,7 +142,7 @@
       if(!text.includes(`<TemplateSize>${wanted}</TemplateSize>`))throw new Error('BTW TemplateSize round-trip 驗證失敗')
     }
 
-    return{name:outputName(label,index),bytes:rebuilt,kind:P.kind,barcodes:{dataMatrix:P.dm.map(barcodeText),code128:P.c128.map(barcodeText)},layout:{target,internalSizeOffsets:sized.offsets,text:expectedText,barcodes:expectedBarcode},header:check.header,seed:SEED_ID}
+    return{name:outputName(label,index),bytes:rebuilt,kind:P.kind,barcodes:{dataMatrix:P.dm.map(barcodeText),code128:P.c128.map(barcodeText)},layout:{target,internalSizeOffsets:sized.offsets,text:expectedText,barcodes:expectedBarcode,removedDonorRoots:removeIndexes.length,originalRootCount:rootCount},header:check.header,seed:SEED_ID}
   }
 
   window.LabelWorkbenchBtwSecondNative={BUILD,SEED_ID,MAX_TEXT,MAX_C128,MAX_DM,plan,canGenerate,pool,generateOne};
