@@ -6,7 +6,7 @@
 (function(){
   'use strict';
 
-  const BUILD='20260919-v184-pdf-legacy';
+  const BUILD='20260921-v185-label-region-layout-id';
   // PDF.js modern build assumes very new JS runtime APIs (including Map#getOrInsertComputed).
   // Use the matching legacy display/worker pair so real users on older Chromium/Safari can still render PDFs.
   const PDF_SRC='https://cdn.jsdelivr.net/npm/pdfjs-dist@6.3.289/legacy/build/pdf.min.mjs';
@@ -135,7 +135,7 @@
   function detectLabelBands(canvas){
     const x=canvas.getContext('2d',{willReadFrequently:true}),im=x.getImageData(0,0,canvas.width,canvas.height),d=im.data,step=Math.max(1,Math.ceil(canvas.width/1500)),counts=new Uint32Array(canvas.height),sampled=Math.ceil(canvas.width/step);
     for(let y=0;y<canvas.height;y++){let n=0;for(let xx=0;xx<canvas.width;xx+=step){const i=(y*canvas.width+xx)*4;if(grayAt(d,i)<228)n++}counts[y]=n}
-    const threshold=Math.max(5,Math.round(sampled*.005));let rs=mergeRuns(runs([...counts].map(n=>n>threshold)),Math.max(12,Math.round(canvas.height*.022)));rs=rs.filter(r=>r[1]-r[0]>=Math.max(50,canvas.height*.045));if(rs.length<2||rs.length>8)rs=[[0,canvas.height-1]];
+    const threshold=Math.max(5,Math.round(sampled*.005));let rs=mergeRuns(runs([...counts].map(n=>n>threshold)),Math.max(12,Math.round(canvas.height*.022)));rs=rs.filter(r=>r[1]-r[0]>=Math.max(50,canvas.height*.045));if(!rs.length||rs.length>8)rs=[[0,canvas.height-1]];
     return rs.map(([a,b])=>{const py=Math.round(canvas.height*.018),y=Math.max(0,a-py),y2=Math.min(canvas.height,b+py),rough=crop(canvas,0,y,canvas.width,y2-y),cb=contentBounds(rough,240);return{x:cb.x,y:y+cb.y,w:cb.w,h:cb.h}});
   }
 
@@ -315,8 +315,14 @@
   }
 
   async function processCanvas(canvas,sourceName,pageNo,worker,labels,onProgress){
-    const best=await chooseOrientation(worker,canvas,onProgress);let bands=detectLabelBands(best.canvas);if(bands.length===1)bands=[{x:0,y:0,w:best.canvas.width,h:best.canvas.height}];onProgress?.(`找到 ${bands.length} 個標籤區域，正在逐張整理…`);
-    for(let i=0;i<bands.length;i++){const b=bands[i],region=crop(best.canvas,b.x,b.y,b.w,b.h),read=await readRegionFields(worker,region,onProgress),barcodes=await scanRegionDeep(region,labels.length+1,onProgress),allText=read.passes.map(p=>p.text).join('\n'),marks=detectMarks(allText);labels.push({sourceName,page:pageNo,index:i+1,rotation:best.deg,fields:read.fields,textObjects:read.textObjects||[],barcodes,marks})}
+    const best=await chooseOrientation(worker,canvas,onProgress);const bands=detectLabelBands(best.canvas);onProgress?.(`找到 ${bands.length} 個標籤區域，正在逐張整理…`);
+    for(let i=0;i<bands.length;i++){
+      const b=bands[i],region=crop(best.canvas,b.x,b.y,b.w,b.h),read=await readRegionFields(worker,region,onProgress),barcodes=await scanRegionDeep(region,labels.length+1,onProgress),allText=read.passes.map(p=>p.text).join('\n'),marks=detectMarks(allText),prefix=`${sourceName}#${pageNo}.${i+1}`;
+      const fields=(read.fields||[]).map((x,j)=>({...x,layoutId:x.layoutId||`${prefix}:field:${j+1}`}));
+      const textObjects=(read.textObjects||[]).map((x,j)=>({...x,layoutId:x.layoutId||`${prefix}:text:${j+1}`}));
+      const barcodeRows=(barcodes||[]).map((x,j)=>({...x,layoutId:x.layoutId||`${prefix}:barcode:${j+1}`}));
+      labels.push({sourceName,page:pageNo,index:i+1,rotation:best.deg,fields,textObjects,barcodes:barcodeRows,marks,sourceRegion:{x:b.x,y:b.y,w:b.w,h:b.h,imageWidth:best.canvas.width,imageHeight:best.canvas.height,normalized:{x:b.x/best.canvas.width,y:b.y/best.canvas.height,w:b.w/best.canvas.width,h:b.h/best.canvas.height}}})
+    }
   }
 
   async function interpretPdf(file,onProgress,sharedWorker){const pdfjs=await loadPdf(),pdf=await pdfjs.getDocument({data:new Uint8Array(await file.arrayBuffer())}).promise,pageLimit=Math.min(pdf.numPages,3),labels=[],own=!sharedWorker,worker=sharedWorker||await createWorker(onProgress);try{for(let p=1;p<=pageLimit;p++){onProgress?.(`正在讀取 ${file.name} 第 ${p}/${pageLimit} 頁…`);const page=await pdf.getPage(p),canvas=await renderPage(page);await processCanvas(canvas,file.name,p,worker,labels,onProgress)}}finally{if(own)try{await worker.terminate()}catch{}}return{pdfPages:pdf.numPages,labels}}
