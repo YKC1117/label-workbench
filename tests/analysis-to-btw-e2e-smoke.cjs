@@ -125,6 +125,8 @@ for(const f of[
   const visible=mapped.objects.filter(o=>Number.isFinite(o.xMil)&&Number.isFinite(o.yMil)&&o.xMil<50000&&o.yMil<50000);
   const textObjects=visible.filter(o=>o.kind==='text');
   const barcodeObjects=visible.filter(o=>o.kind==='barcode');
+  assert(mapped.objects.length===17,`expected only 11 Text + 6 barcode roots, got ${mapped.objects.length}`);
+  assert(!mapped.objects.some(o=>Number(o.xMil)===50000||Number(o.yMil)===50000),'unused donor roots must be removed, not hidden at 50000 mil');
   assert(textObjects.length===11,`visible text count ${textObjects.length}`);
   assert(barcodeObjects.filter(o=>o.barcodeType==='Code 128').length===5,'expected 5 visible Code128 objects');
   assert(barcodeObjects.filter(o=>o.barcodeType==='Data Matrix').length===1,'expected 1 visible Data Matrix object');
