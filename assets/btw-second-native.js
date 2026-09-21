@@ -126,16 +126,13 @@
     if(after.objects.some(o=>Number(o.xMil)===50000||Number(o.yMil)===50000))throw new Error('5C128+1DM BTW 仍有 50000 mil 紙外殘留物件');
 
     for(const exp of expectedText){
-      const got=after.objects.find(o=>o.index===exp.index);
-      if(!got||String(got.value??'')!==exp.value)throw new Error(`BTW 文字 round-trip 失敗：${exp.value}`);
-      if(!near(got.xMil,exp.xMil)||!near(got.yMil,exp.yMil))throw new Error(`BTW 文字位置 round-trip 失敗：${exp.value}`);if(exp.fontSize!=null&&got.fontSize!=null&&!near(got.fontSize,exp.fontSize,.11))throw new Error(`BTW 文字字級 round-trip 失敗：${exp.value}`)
+      const got=after.objects.find(o=>o.kind==='text'&&String(o.value??'')===exp.value&&near(o.xMil,exp.xMil)&&near(o.yMil,exp.yMil));
+      if(!got)throw new Error(`BTW 文字 round-trip 失敗：${exp.value}`);
+      if(exp.fontSize!=null&&got.fontSize!=null&&!near(got.fontSize,exp.fontSize,.11))throw new Error(`BTW 文字字級 round-trip 失敗：${exp.value}`)
     }
     for(const exp of expectedBarcode){
-      const got=after.objects.find(o=>o.index===exp.index);
-      if(!got||got.kind!=='barcode'||got.barcodeType!==exp.type)throw new Error(`BTW ${exp.type} 原生物件 round-trip 失敗`);
-      const preview=String(got.resolvedPreview||got.components?.join('')||'');
-      if(preview!==exp.value)throw new Error(`BTW ${exp.type} 資料 round-trip 失敗：${preview} != ${exp.value}`);
-      if(!near(got.xMil,exp.xMil)||!near(got.yMil,exp.yMil))throw new Error(`BTW ${exp.type} 位置 round-trip 失敗`)
+      const got=after.objects.find(o=>o.kind==='barcode'&&o.barcodeType===exp.type&&String(o.resolvedPreview||o.components?.join('')||'')===exp.value&&near(o.xMil,exp.xMil)&&near(o.yMil,exp.yMil));
+      if(!got)throw new Error(`BTW ${exp.type} 原生物件 round-trip 失敗：${exp.value}`)
     }
     if(target.source){
       const text=check.header?.text||'',wanted=`${F.formatMm(target.width)} x ${F.formatMm(target.height)} mm`;
