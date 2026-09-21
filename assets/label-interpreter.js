@@ -297,6 +297,7 @@
   function fieldVerified(field,barcodes){const v=norm(field.value);if(v.length<2)return null;return barcodes.find(b=>{const t=norm(b.text);return t===v||t.includes(v)||(v.includes(t)&&t.length>=4)})||null}
   function fieldState(field,barcodes){if(fieldVerified(field,barcodes))return'barcode';if(field.repeat>=2&&!field.conflict)return'high';if(field.spatial&&!field.conflict&&field.repeat>=1)return'medium';return'pending'}
   function detectMarks(text){const t=String(text||'').toUpperCase(),out=[];if(/ROHS/.test(t))out.push('RoHS');if(/\bHF\b/.test(t))out.push('HF');if(/\bPB\b/.test(t))out.push('Pb 標誌');return out}
+  function isGraphicMarkText(value){const s=cleanLine(value).toUpperCase().replace(/[®™©]/g,'').trim();return /^(?:ROHS(?:\s+COMPLIANT)?|HF|PB|PB\s*FREE|LEAD\s*FREE)$/.test(s)}
 
   function makeTiles(canvas){const c=enhanceCanvas(canvas,'gray'),out=[],overlap=.10;for(let ry=0;ry<2;ry++)for(let rx=0;rx<2;rx++){const x0=Math.max(0,(rx*.5-overlap)*c.width),y0=Math.max(0,(ry*.5-overlap)*c.height),x1=Math.min(c.width,((rx+1)*.5+overlap)*c.width),y1=Math.min(c.height,((ry+1)*.5+overlap)*c.height);out.push(crop(c,x0,y0,x1-x0,y1-y0))}return out}
 
@@ -332,7 +333,7 @@
     for(let i=0;i<bands.length;i++){
       const b=bands[i],region=crop(best.canvas,b.x,b.y,b.w,b.h),read=await readRegionFields(worker,region,onProgress),barcodes=await scanRegionDeep(region,labels.length+1,onProgress),allText=read.passes.map(p=>p.text).join('\n'),marks=detectMarks(allText),prefix=`${sourceName}#${pageNo}.${i+1}`;
       const fields=(read.fields||[]).map((x,j)=>({...x,layoutId:x.layoutId||`${prefix}:field:${j+1}`}));
-      const textObjects=(read.textObjects||[]).map((x,j)=>({...x,layoutId:x.layoutId||`${prefix}:text:${j+1}`}));
+      const textObjects=(read.textObjects||[]).filter(x=>!isGraphicMarkText(x?.text)).map((x,j)=>({...x,layoutId:x.layoutId||`${prefix}:text:${j+1}`}));
       const barcodeRows=(barcodes||[]).map((x,j)=>({...x,layoutId:x.layoutId||`${prefix}:barcode:${j+1}`}));
       labels.push({sourceName,page:pageNo,index:i+1,rotation:best.deg,fields,textObjects,barcodes:barcodeRows,marks,sourceRegion:{x:b.x,y:b.y,w:b.w,h:b.h,imageWidth:best.canvas.width,imageHeight:best.canvas.height,normalized:{x:b.x/best.canvas.width,y:b.y/best.canvas.height,w:b.w/best.canvas.width,h:b.h/best.canvas.height}}})
     }
