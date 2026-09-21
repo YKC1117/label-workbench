@@ -116,19 +116,43 @@ function dataUrlToBuffer(s){return Buffer.from(String(s).split(',')[1]||'','base
     const requestedSize=requested?{widthMm:Number(requested[1]),heightMm:Number(requested[2])}:null;
     const residualOffCanvas=decoded.filter(o=>Number(o.xMil)===50000||Number(o.yMil)===50000).map(o=>({index:o.index,kind:o.kind,name:o.name,value:o.value||'',barcodeType:o.barcodeType||'',components:o.components||[],xMil:o.xMil,yMil:o.yMil}));
     const outOfBoundsAnchors=templateSize?decoded.filter(o=>Number.isFinite(Number(o.xMm))&&Number.isFinite(Number(o.yMm))&&(Number(o.xMm)<0||Number(o.yMm)<0||Number(o.xMm)>templateSize.widthMm||Number(o.yMm)>templateSize.heightMm)).map(o=>({index:o.index,kind:o.kind,name:o.name,value:o.value||'',xMm:o.xMm,yMm:o.yMm})):[];
+    const label=model.result.labels[0]||{};
+    const sourceTextValues=new Set((label.textObjects||[]).map(o=>String(o?.text||'').trim()).filter(Boolean));
+    if(!sourceTextValues.size)for(const field of (label.fields||[])){const v=String(field?.value||'').trim();if(v)sourceTextValues.add(v)}
+    const decodedText=decoded.filter(o=>o.kind==='text'&&String(o.value||'').trim());
+    const unexpectedText=decodedText.filter(o=>!sourceTextValues.has(String(o.value||'').trim())).map(o=>({index:o.index,name:o.name,value:o.value,xMm:o.xMm,yMm:o.yMm}));
+    const normType=v=>String(v||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+    const barcodeValue=o=>String(o?.resolvedPreview||o?.components?.join('')||'').trim();
+    const sourceBarcodes=(label.barcodes||[]).map(b=>({type:normType(b?.format),value:String(b?.text??b?.value??'').trim()})).filter(b=>b.value);
+    const decodedBarcodes=decoded.filter(o=>o.kind==='barcode'&&barcodeValue(o));
+    const unexpectedBarcodes=decodedBarcodes.filter(o=>!sourceBarcodes.some(b=>b.value===barcodeValue(o)&&b.type===normType(o.barcodeType))).map(o=>({index:o.index,name:o.name,type:o.barcodeType,value:barcodeValue(o),xMm:o.xMm,yMm:o.yMm}));
+    const syntheticObjects=decoded.filter(o=>o.syntheticFromTag).map(o=>({index:o.index,kind:o.kind,name:o.name,owner:o.owner}));
+    const duplicateObjects=[];
+    for(let i=0;i<decodedText.length;i++)for(let j=i+1;j<decodedText.length;j++){
+      const a=decodedText[i],b=decodedText[j];
+      if(String(a.value||'').trim()===String(b.value||'').trim()&&Number(a.xMil)===Number(b.xMil)&&Number(a.yMil)===Number(b.yMil))duplicateObjects.push({value:a.value,indexes:[a.index,b.index],xMil:a.xMil,yMil:a.yMil})
+    }
+    const overlapFraction=(a,b)=>{if(!a||!b)return 0;const ax2=Number(a.x)+Number(a.w),ay2=Number(a.y)+Number(a.h),bx2=Number(b.x)+Number(b.w),by2=Number(b.y)+Number(b.h),iw=Math.max(0,Math.min(ax2,bx2)-Math.max(Number(a.x),Number(b.x))),ih=Math.max(0,Math.min(ay2,by2)-Math.max(Number(a.y),Number(b.y))),area=Math.max(0,Number(a.w)*Number(a.h));return area?(iw*ih)/area:0};
+    const severeSourceOverlaps=[];
+    for(const t of (label.textObjects||[]))for(const b of (label.barcodes||[])){const fraction=overlapFraction(t?.sourceBox,b?.sourceBox);if(fraction>=.58)severeSourceOverlaps.push({text:t.text,barcode:String(b?.text||''),fraction:Math.round(fraction*1000)/1000})}
 
-    fs.writeFileSync(path.join(outDir,'btw-decoded.json'),JSON.stringify({templateSize,requestedSize,objectCount:decoded.length,residualOffCanvas,outOfBoundsAnchors,objects:decoded},null,2),'utf8');
+    fs.writeFileSync(path.join(outDir,'btw-decoded.json'),JSON.stringify({templateSize,requestedSize,objectCount:decoded.length,residualOffCanvas,outOfBoundsAnchors,unexpectedText,unexpectedBarcodes,syntheticObjects,duplicateObjects,severeSourceOverlaps,objects:decoded},null,2),'utf8');
     const sizeMatches=!!(templateSize&&requestedSize&&Math.abs(templateSize.widthMm-requestedSize.widthMm)<.02&&Math.abs(templateSize.heightMm-requestedSize.heightMm)<.02);
     const summary={
       input:imagePath,sizeArg:sizeArg||null,output:btwPath,
       label:model.result.labels[0],
-      outputInspection:{templateSize,requestedSize,sizeMatches,objectCount:decoded.length,residualOffCanvasCount:residualOffCanvas.length,outOfBoundsAnchorCount:outOfBoundsAnchors.length},
+      outputInspection:{templateSize,requestedSize,sizeMatches,objectCount:decoded.length,residualOffCanvasCount:residualOffCanvas.length,outOfBoundsAnchorCount:outOfBoundsAnchors.length,unexpectedTextCount:unexpectedText.length,unexpectedBarcodeCount:unexpectedBarcodes.length,syntheticObjectCount:syntheticObjects.length,duplicateObjectCount:duplicateObjects.length,severeSourceOverlapCount:severeSourceOverlaps.length},
       consoleErrors,pageErrors
     };
     fs.writeFileSync(path.join(outDir,'summary.json'),JSON.stringify(summary,null,2),'utf8');
     if(!sizeMatches)throw new Error('Exported TemplateSize does not match explicit physical size '+sizeArg);
     if(residualOffCanvas.length)throw new Error('Exported BTW still contains '+residualOffCanvas.length+' donor object(s) hidden at 50000 mil');
     if(outOfBoundsAnchors.length)throw new Error('Exported BTW contains '+outOfBoundsAnchors.length+' object anchor(s) outside the requested label size');
+    if(unexpectedText.length)throw new Error('Exported BTW contains '+unexpectedText.length+' text object(s) not present in the analysis source model');
+    if(unexpectedBarcodes.length)throw new Error('Exported BTW contains '+unexpectedBarcodes.length+' barcode object(s) whose decoded type/payload do not match the analysis');
+    if(syntheticObjects.length)throw new Error('Exported BTW still contains '+syntheticObjects.length+' synthetic donor barcode object(s)');
+    if(duplicateObjects.length)throw new Error('Exported BTW contains '+duplicateObjects.length+' duplicate text object(s) at the same position');
+    if(severeSourceOverlaps.length)throw new Error('Analysis still contains '+severeSourceOverlaps.length+' severe text/barcode overlap(s)');
     await page.screenshot({path:path.join(outDir,'analysis-page.png'),fullPage:true});
     console.log('PASS');
     console.log('Artifacts: '+outDir);
