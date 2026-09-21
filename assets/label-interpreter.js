@@ -136,7 +136,20 @@
     const x=canvas.getContext('2d',{willReadFrequently:true}),im=x.getImageData(0,0,canvas.width,canvas.height),d=im.data,step=Math.max(1,Math.ceil(canvas.width/1500)),counts=new Uint32Array(canvas.height),sampled=Math.ceil(canvas.width/step);
     for(let y=0;y<canvas.height;y++){let n=0;for(let xx=0;xx<canvas.width;xx+=step){const i=(y*canvas.width+xx)*4;if(grayAt(d,i)<228)n++}counts[y]=n}
     const threshold=Math.max(5,Math.round(sampled*.005));let rs=mergeRuns(runs([...counts].map(n=>n>threshold)),Math.max(12,Math.round(canvas.height*.075)));rs=rs.filter(r=>r[1]-r[0]>=Math.max(50,canvas.height*.045));if(!rs.length||rs.length>8)rs=[[0,canvas.height-1]];
-    return rs.map(([a,b])=>{const py=Math.round(canvas.height*.018),y=Math.max(0,a-py),y2=Math.min(canvas.height,b+py),rough=crop(canvas,0,y,canvas.width,y2-y),cb=contentBounds(rough,240);return{x:cb.x,y:y+cb.y,w:cb.w,h:cb.h}});
+    const boxes=rs.map(([a,b])=>{const py=Math.round(canvas.height*.018),y=Math.max(0,a-py),y2=Math.min(canvas.height,b+py),rough=crop(canvas,0,y,canvas.width,y2-y),cb=contentBounds(rough,240);return{x:cb.x,y:y+cb.y,w:cb.w,h:cb.h}});
+    const merged=[];
+    for(const box of boxes){
+      const prev=merged[merged.length-1];
+      if(prev){
+        const gap=box.y-(prev.y+prev.h),overlap=Math.max(0,Math.min(prev.x+prev.w,box.x+box.w)-Math.max(prev.x,box.x)),overlapRatio=overlap/Math.max(1,Math.min(prev.w,box.w));
+        if(gap<=canvas.height*.20&&overlapRatio>=.45){
+          const x0=Math.min(prev.x,box.x),y0=Math.min(prev.y,box.y),x1=Math.max(prev.x+prev.w,box.x+box.w),y1=Math.max(prev.y+prev.h,box.y+box.h);
+          prev.x=x0;prev.y=y0;prev.w=x1-x0;prev.h=y1-y0;continue
+        }
+      }
+      merged.push({...box})
+    }
+    return merged;
   }
 
   function cleanLine(v){return String(v||'').replace(/[\u2018\u2019]/g,"'").replace(/[\u201C\u201D]/g,'"').replace(/[|¦]+/g,' ').replace(/\s+/g,' ').trim()}
