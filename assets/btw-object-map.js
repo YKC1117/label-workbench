@@ -215,6 +215,27 @@
     }
     return out;
   }
+  function stripObjectRecords(container,indexes){
+    const remove=new Set((indexes||[]).map(Number).filter(Number.isInteger));
+    if(!remove.size)return u8(container).slice();
+    const data=u8(container),map=mapContainer(data),ranges=[];
+    for(const index of remove){
+      const o=map.objects.find(x=>x.index===index);
+      if(!o)throw new Error(`BTW strip 找不到物件 index ${index}`);
+      if(o.syntheticFromTag)throw new Error(`BTW strip 不允許刪除 synthetic 物件：${o.name||o.id}`);
+      const start=Number(o.recordStart),end=Number(o.recordEnd);
+      if(!(Number.isInteger(start)&&Number.isInteger(end)&&start>=0&&end>start&&end<=data.length))throw new Error(`BTW strip 邊界無效：${o.name||o.id}`);
+      ranges.push({index,start,end,name:o.name||o.id})
+    }
+    ranges.sort((a,b)=>a.start-b.start);
+    for(let i=1;i<ranges.length;i++)if(ranges[i].start<ranges[i-1].end)throw new Error(`BTW strip record 重疊：${ranges[i-1].name} / ${ranges[i].name}`);
+    let out=data.slice();
+    for(const r of [...ranges].sort((a,b)=>b.start-a.start))out=new Uint8Array([...out.slice(0,r.start),...out.slice(r.end)]);
+    const after=mapContainer(out);
+    if(after.objects.length!==map.objects.length-ranges.length)throw new Error(`BTW strip root count 驗證失敗：${map.objects.length}→${after.objects.length}，預期 ${map.objects.length-ranges.length}`);
+    return out
+  }
+
   async function decodeBtw(buffer){const F=window.LabelWorkbenchBtwFormat;if(!F?.parseStructure||!F?.inflateContainer)throw new Error('BTW 格式解析器尚未載入');const parsed=F.parseStructure(buffer),container=await F.inflateContainer(parsed),map=mapContainer(container);return{parsed,container,map}}
   async function rebuildBtw(buffer,edits){const F=window.LabelWorkbenchBtwFormat;if(!F?.rebuild)throw new Error('BTW 重建元件尚未載入');const decoded=await decodeBtw(buffer),edited=editContainer(decoded.container,edits),bytes=await F.rebuild(decoded.parsed,edited),verify=await decodeBtw(bytes);return{bytes,objects:verify.map.objects,header:verify.parsed.header}}
   function objectSummary(o){if(o.kind==='barcode'){const parts=(o.resolvedComponents||[]).map(x=>x.type==='object'?`${x.ref} → ${x.value||'（空）'}`:x.value).filter(Boolean);return parts.length?parts.join(' ｜ '):(o.value||'尚未解出資料組成')}return o.value||'—'}
@@ -225,5 +246,5 @@
   function bindAnalysis(){const input=document.getElementById('analysisFiles');if(!input||input.dataset.lwBtwObjectMap)return;input.dataset.lwBtwObjectMap='1';input.addEventListener('change',e=>{analyzeBtwFiles(e.target.files).catch(err=>console.warn('[Label Workbench] BTW object analysis failed',err))})}
   function init(){bindAnalysis();let tries=0;const t=setInterval(()=>{bindAnalysis();if(document.getElementById('analysisFiles')||tries++>80)clearInterval(t)},100)}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
-  window.LabelWorkbenchBtwObjectMap={BUILD,mapContainer,editContainer,decodeBtw,rebuildBtw,milToMm,mmToMil,renderDecoded,analyzeBtwFiles};console.info('[Label Workbench] BTW object map',BUILD);
+  window.LabelWorkbenchBtwObjectMap={BUILD,mapContainer,editContainer,stripObjectRecords,decodeBtw,rebuildBtw,milToMm,mmToMil,renderDecoded,analyzeBtwFiles};console.info('[Label Workbench] BTW object map',BUILD);
 })();
