@@ -243,6 +243,52 @@
       return{text:best.text,sourceBox:{...best.sourceBox,confidence},confidence,repeat,generic:true}
     }).filter(x=>x.repeat>=2||x.confidence>=68).sort((a,b)=>Math.abs(a.sourceBox.y-b.sourceBox.y)<.012?a.sourceBox.x-b.sourceBox.x:a.sourceBox.y-b.sourceBox.y)
   }
+  function spatialTextScore(o){return (Number(o?.repeat||0)*18)+(Number(o?.confidence||0))+(Math.min(120,String(o?.text||'').length)*.08)}
+  function dedupeSpatialTextObjects(objects){
+    const rows=(objects||[]).filter(o=>textNorm(o?.text)&&o?.sourceBox).map((o,i)=>({...o,__order:i})),drop=new Set();
+    const area=o=>Math.max(0,Number(o?.sourceBox?.w||0)*Number(o?.sourceBox?.h||0));
+    const contains=(outer,inner)=>boxOverlapFraction(inner?.sourceBox,outer?.sourceBox)>=.82;
+    const readSort=(a,b)=>Math.abs(Number(a.sourceBox.y)-Number(b.sourceBox.y))<Math.max(Number(a.sourceBox.h),Number(b.sourceBox.h))*.5?Number(a.sourceBox.x)-Number(b.sourceBox.x):Number(a.sourceBox.y)-Number(b.sourceBox.y);
+    for(let i=0;i<rows.length;i++){
+      if(drop.has(i))continue;
+      const a=rows[i],an=textNorm(a.text);
+      for(let j=i+1;j<rows.length;j++){
+        if(drop.has(j))continue;
+        const b=rows[j],bn=textNorm(b.text);
+        const sameSpot=boxOverlapFraction(a.sourceBox,b.sourceBox)>=.64||boxOverlapFraction(b.sourceBox,a.sourceBox)>=.64;
+        if(!sameSpot)continue;
+        if(an===bn){
+          const sa=spatialTextScore(a),sb=spatialTextScore(b);drop.add(sa>=sb?j:i);if(drop.has(i))break;continue
+        }
+        if(an.includes(bn)||bn.includes(an)){
+          const longer=an.length>=bn.length?i:j,shorter=longer===i?j:i;
+          const L=rows[longer],S=rows[shorter];
+          if(contains(L,S)&&spatialTextScore(L)>=spatialTextScore(S)-8)drop.add(shorter)
+        }
+      }
+    }
+    for(let i=0;i<rows.length;i++){
+      if(drop.has(i))continue;
+      const parent=rows[i],pn=textNorm(parent.text),pa=area(parent);if(pn.length<4||!(pa>0))continue;
+      const children=rows.map((o,j)=>({o,j})).filter(x=>x.j!==i&&!drop.has(x.j)&&area(x.o)<pa*.82&&contains(parent,x.o)).sort((a,b)=>readSort(a.o,b.o));
+      for(let start=0;start<children.length;start++){
+        let joined='';
+        for(let end=start;end<Math.min(children.length,start+4);end++){
+          joined+=textNorm(children[end].o.text);
+          if(end-start<1)continue;
+          if(joined===pn){
+            const childScore=children.slice(start,end+1).reduce((n,x)=>n+spatialTextScore(x.o),0)/(end-start+1);
+            if(childScore>=spatialTextScore(parent)-12){drop.add(i)}
+            break
+          }
+          if(!pn.startsWith(joined))break
+        }
+        if(drop.has(i))break
+      }
+    }
+    return rows.filter((_,i)=>!drop.has(i)).sort(readSort).map(({__order,...o})=>o)
+  }
+
   function likelyCaption(v){
     const s=cleanLine(v),n=textNorm(s);if(!n||s.length>42)return false;
     const digit=(n.match(/[0-9]/g)||[]).length,letters=(n.match(/[A-Z\u3400-\u9FFF]/g)||[]).length;
@@ -322,7 +368,7 @@
     passes.push(await recognize(worker,gray,'6',true));
     passes.push(await recognize(worker,gray,'11',true));
     passes.push(await recognize(worker,bw,'6',true));
-    const textObjects=genericTextObjects(passes,region.width,region.height);
+    const textObjects=dedupeSpatialTextObjects(genericTextObjects(passes,region.width,region.height));
     let fields=mergeGenericFields(aggregateFields(passes),genericFieldsFromTextObjects(textObjects));
     if(needsTileFallback(passes,textObjects,fields)){
       const tiles=makeTiles(region);for(let i=0;i<tiles.length;i++){onProgress?.(`正在補讀細小區域… ${i+1}/${tiles.length}`);passes.push(await recognize(worker,tiles[i],'11',true))}fields=mergeGenericFields(aggregateFields(passes),genericFieldsFromTextObjects(textObjects));
@@ -373,5 +419,5 @@
     return result
   }
 
-  window.LabelWorkbenchInterpreter={BUILD,scoreText,parseFields,spatialFields,aggregateFields,genericTextObjects,genericFieldsFromTextObjects,mergeGenericFields,lineSegments,needsTileFallback,detectLabelBands,boxOverlapFraction,isBarcodeOccludedText,rotateCanvas,interpretPdf,interpretImage,interpretFiles,productionText,questionsText,renderInterpretation,renderResult,analyze};
+  window.LabelWorkbenchInterpreter={BUILD,scoreText,parseFields,spatialFields,aggregateFields,genericTextObjects,dedupeSpatialTextObjects,genericFieldsFromTextObjects,mergeGenericFields,lineSegments,needsTileFallback,detectLabelBands,boxOverlapFraction,isBarcodeOccludedText,rotateCanvas,interpretPdf,interpretImage,interpretFiles,productionText,questionsText,renderInterpretation,renderResult,analyze};
 })();
