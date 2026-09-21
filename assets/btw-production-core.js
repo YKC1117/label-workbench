@@ -84,12 +84,13 @@
     const routes=[];
     for(let i=0;i<labels.length;i++){
       requireProductionGeometry(labels[i],i);
+      const layoutReport=window.LabelWorkbenchBtwLayout?.assertSourceLayout?.(labels[i])||null;
       const route=selectGenerator(labels[i]);
       routes.push(route.mode);
       const modeText=route.mode==='family'?'QR / Code39 / UPC-A / EAN-13 / GS1-128 / PDF417 / ITF-14 原生條碼':route.mode==='second'?'5C128+1DM':route.mode==='rich'?'多物件':'CEA fallback';
       onProgress?.(`正在建立 ${modeText} 可編輯 BTW ${i+1}/${labels.length}`);
       const out=await route.api.generateOne(labels[i],i);
-      outputs.push({...out,productionMode:route.mode});
+      outputs.push({...out,productionMode:route.mode,sourceLayoutValidation:layoutReport});
     }
 
     return{prepared,labels,outputs,routes,files:[...(files||[])]};
