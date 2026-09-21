@@ -149,7 +149,7 @@
     const activeText=new Set(expectedText.map(x=>x.index)),activeBarcode=new Set(expectedBarcode.map(x=>x.index));
     const staleText=after.objects.filter(o=>donorPool.texts.some(x=>x.index===o.index)&&!activeText.has(o.index)&&String(o.value||'').trim());
     const staleBarcode=after.objects.filter(o=>[...donorPool.c128,...donorPool.dm].some(x=>x.index===o.index)&&!activeBarcode.has(o.index)&&String(o.resolvedPreview||o.components?.join('')||'').trim());
-    if(staleText.length||staleBarcode.length)throw new Error(`BTW donor 資料殘留：文字 ${staleText.length}、條碼 ${staleBarcode.length}`);
+    if(staleText.length||staleBarcode.length)throw new Error(`BTW donor 資料殘留：文字 ${staleText.length}、條碼 ${staleBarcode.length}；`+JSON.stringify({text:staleText.map(o=>({index:o.index,name:o.name,value:o.value})),barcode:staleBarcode.map(o=>({index:o.index,name:o.name,preview:o.resolvedPreview,components:o.components,refs:o.linkedDataSourceRefs}))}));
     if(target.source){
       const text=check.header?.text||'',wanted=`${F.formatMm(target.width)} x ${F.formatMm(target.height)} mm`;
       if(!text.includes(`<TemplateSize>${wanted}</TemplateSize>`))throw new Error('BTW TemplateSize round-trip 驗證失敗')
