@@ -130,12 +130,10 @@ for(const f of[
   assert(barcodeObjects.filter(o=>o.barcodeType==='Data Matrix').length===1,'expected 1 visible Data Matrix object');
 
   prod.fields.forEach((f,i)=>{
-    const expected=out.layout.text[i];
-    const obj=textObjects.find(o=>o.index===expected.index);
-    assert(obj,`BTW missing production text object ${f.code}:${f.value}`);
-    assert(String(obj.value??'')===f.value,`BTW text value mismatch ${f.code}:${obj.value} != ${f.value}`);
-    const pos=L.boxToLayout(f.sourceBox,{width:100,height:65}).mil;
-    assert(obj.xMil===pos.x&&obj.yMil===pos.y,`BTW position mismatch ${f.code}:${f.value}`);
+    const expected=out.layout.text[i],pos=L.boxToLayout(f.sourceBox,{width:100,height:65}).mil;
+    const obj=textObjects.find(o=>String(o.value??'')===f.value&&o.xMil===pos.x&&o.yMil===pos.y);
+    assert(obj,`BTW missing production text object ${f.code}:${f.value} at ${pos.x},${pos.y}`);
+    assert(expected&&expected.value===f.value&&expected.xMil===pos.x&&expected.yMil===pos.y,`BTW layout plan mismatch ${f.code}:${f.value}`);
   });
   for(const b of prod.barcodes){
     const obj=barcodeObjects.find(o=>String(o.resolvedPreview||'')===b.text);
