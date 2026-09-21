@@ -13,6 +13,7 @@ const APP_PATH=process.env.E2E_APP_PATH||'/';
 for(const extension of ['pdf','png','jpg']){
  test(`File -> analysis -> actual .btw download (${extension})`,async({page},testInfo)=>{
   const warnings=[],errors=[];
+  page.on('dialog',dialog=>dialog.accept('101.6 x 76.2'));
   page.on('console',m=>{if(m.type()==='warning')warnings.push(m.text());});
   page.on('pageerror',e=>{errors.push(e.message);console.log('PAGE ERROR',e.message)});
   page.on('console',m=>{if(m.type()==='error')console.log('CONSOLE ERROR',m.text())});
@@ -39,6 +40,9 @@ for(const extension of ['pdf','png','jpg']){
   expect(label.textObjects.some(o=>o.sourceBox)).toBe(true);
   expect(label.barcodes.some(b=>/code.?128/i.test(b.format)&&b.text==='ABC123')).toBe(true);
   expect(label.sourceGeometry.widthPx).toBeGreaterThan(0);
+  expect(label.sourceGeometry.coordinateSpace).toBe('rectified-label');
+  expect(label.sourceRegion?.w).toBeGreaterThan(0);
+  expect(label.sourceRegion?.h).toBeGreaterThan(0);
   expect(warnings.filter(w=>/readiness timed out|fallback route/.test(w))).toEqual([]);
   const downloadPromise=page.waitForEvent('download',{timeout:45000});
   await button.click();
@@ -80,6 +84,7 @@ for(const extension of ['pdf','png','jpg']){
 }
 
 test('production seed endpoint contract and visible failure recovery',async({page})=>{
+ page.on('dialog',dialog=>dialog.accept('101.6 x 76.2'));
  await page.goto(APP_PATH);
  await page.getByRole('button',{name:'⚡ 快速分析',exact:true}).click();
  await page.locator('#analysisFiles').setInputFiles(path.resolve('tests/fixtures/generic-label.pdf'));
