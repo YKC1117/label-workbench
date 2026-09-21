@@ -24,12 +24,44 @@ function serve(req,res){
   fs.createReadStream(file).pipe(res);
 }
 function dataUrlToBuffer(s){return Buffer.from(String(s).split(',')[1]||'','base64')}
+function installedBrowserCandidates(){
+  const out=[];
+  if(process.env.LW_BROWSER_PATH)out.push(process.env.LW_BROWSER_PATH);
+  if(process.platform==='win32'){
+    for(const base of [process.env.PROGRAMFILES,process.env['PROGRAMFILES(X86)'],process.env.LOCALAPPDATA].filter(Boolean)){
+      out.push(path.join(base,'Google','Chrome','Application','chrome.exe'));
+      out.push(path.join(base,'Microsoft','Edge','Application','msedge.exe'));
+    }
+  }else if(process.platform==='darwin'){
+    out.push('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome');
+    out.push('/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge');
+  }else{
+    out.push('/usr/bin/google-chrome','/usr/bin/google-chrome-stable','/usr/bin/microsoft-edge','/usr/bin/microsoft-edge-stable','/usr/bin/chromium','/usr/bin/chromium-browser');
+  }
+  return [...new Set(out.filter(Boolean))];
+}
+function findInstalledBrowser(){return installedBrowserCandidates().find(p=>fs.existsSync(p))||null}
+async function launchBrowser(){
+  const installed=findInstalledBrowser(),attempts=[];
+  if(installed){
+    try{
+      const browser=await chromium.launch({headless:true,executablePath:installed});
+      return{browser,source:'system',executablePath:installed}
+    }catch(error){attempts.push('system '+installed+': '+String(error?.message||error))}
+  }
+  try{
+    const browser=await chromium.launch({headless:true});
+    return{browser,source:'playwright',executablePath:chromium.executablePath()}
+  }catch(error){attempts.push('playwright bundled chromium: '+String(error?.message||error))}
+  throw new Error('No usable Chromium browser. Install Chrome/Edge or set LW_BROWSER_PATH. Attempts:\n'+attempts.join('\n'))
+}
 
 (async()=>{
   const server=http.createServer(serve);
   await new Promise((resolve,reject)=>server.listen(0,'127.0.0.1',e=>e?reject(e):resolve()));
   const port=server.address().port;
-  const browser=await chromium.launch({headless:true});
+  const launched=await launchBrowser(),browser=launched.browser;
+  console.log('Browser: '+launched.source+' '+(launched.executablePath||''));
   const page=await browser.newPage({acceptDownloads:true,viewport:{width:1440,height:1100}});
   const consoleErrors=[],pageErrors=[];
   page.on('console',m=>{if(m.type()==='error')consoleErrors.push(m.text())});
@@ -140,6 +172,7 @@ function dataUrlToBuffer(s){return Buffer.from(String(s).split(',')[1]||'','base
     const sizeMatches=!!(templateSize&&requestedSize&&Math.abs(templateSize.widthMm-requestedSize.widthMm)<.02&&Math.abs(templateSize.heightMm-requestedSize.heightMm)<.02);
     const summary={
       input:imagePath,sizeArg:sizeArg||null,output:btwPath,
+      browser:{source:launched.source,executablePath:launched.executablePath||null},
       label:model.result.labels[0],
       outputInspection:{templateSize,requestedSize,sizeMatches,objectCount:decoded.length,residualOffCanvasCount:residualOffCanvas.length,outOfBoundsAnchorCount:outOfBoundsAnchors.length,unexpectedTextCount:unexpectedText.length,unexpectedBarcodeCount:unexpectedBarcodes.length,syntheticObjectCount:syntheticObjects.length,duplicateObjectCount:duplicateObjects.length,severeSourceOverlapCount:severeSourceOverlaps.length},
       consoleErrors,pageErrors
