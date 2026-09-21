@@ -1,6 +1,8 @@
 const fs=require('node:fs');
 const path=require('node:path');
 const http=require('node:http');
+const vm=require('node:vm');
+const zlib=require('node:zlib');
 const {chromium}=require('@playwright/test');
 
 const ROOT=path.resolve(__dirname,'..');
@@ -93,12 +95,33 @@ function dataUrlToBuffer(s){return Buffer.from(String(s).split(',')[1]||'','base
     const btwPath=path.join(outDir,'case-output.btw');
     await download.saveAs(btwPath);
 
+    const bytes=fs.readFileSync(btwPath);
+    const sandbox={console,Uint8Array,ArrayBuffer,DataView,TextDecoder,TextEncoder,Buffer,
+      atob:s=>Buffer.from(s,'base64').toString('binary'),
+      document:{readyState:'loading',addEventListener(){},getElementById(){return null}}};
+    sandbox.window=sandbox;sandbox.globalThis=sandbox;vm.createContext(sandbox);
+    for(const name of ['btw-format','btw-object-map'])vm.runInContext(fs.readFileSync(path.join(ROOT,'assets',name+'.js'),'utf8'),sandbox,{filename:name+'.js'});
+    const parsed=sandbox.LabelWorkbenchBtwFormat.parseStructure(bytes);
+    const container=zlib.inflateSync(parsed.compressedContainer);
+    const decoded=sandbox.LabelWorkbenchBtwObjectMap.mapContainer(container).objects;
+    const m=/<TemplateSize>\s*([\d.]+)\s*x\s*([\d.]+)\s*mm<\/TemplateSize>/i.exec(parsed.header?.text||'');
+    const templateSize=m?{widthMm:Number(m[1]),heightMm:Number(m[2])}:null;
+    const requested=/^\s*(\d+(?:\.\d+)?)\s*[x×]\s*(\d+(?:\.\d+)?)\s*$/i.exec(sizeArg);
+    const requestedSize=requested?{widthMm:Number(requested[1]),heightMm:Number(requested[2])}:null;
+    const residualOffCanvas=decoded.filter(o=>Number(o.xMil)===50000||Number(o.yMil)===50000).map(o=>({index:o.index,kind:o.kind,name:o.name,value:o.value||'',barcodeType:o.barcodeType||'',components:o.components||[],xMil:o.xMil,yMil:o.yMil}));
+    const outOfBoundsAnchors=templateSize?decoded.filter(o=>Number.isFinite(Number(o.xMm))&&Number.isFinite(Number(o.yMm))&&(Number(o.xMm)<0||Number(o.yMm)<0||Number(o.xMm)>templateSize.widthMm||Number(o.yMm)>templateSize.heightMm)).map(o=>({index:o.index,kind:o.kind,name:o.name,value:o.value||'',xMm:o.xMm,yMm:o.yMm})):[];
+
+    fs.writeFileSync(path.join(outDir,'btw-decoded.json'),JSON.stringify({templateSize,requestedSize,objectCount:decoded.length,residualOffCanvas,outOfBoundsAnchors,objects:decoded},null,2),'utf8');
+    const sizeMatches=!!(templateSize&&requestedSize&&Math.abs(templateSize.widthMm-requestedSize.widthMm)<.02&&Math.abs(templateSize.heightMm-requestedSize.heightMm)<.02);
     const summary={
       input:imagePath,sizeArg:sizeArg||null,output:btwPath,
       label:model.result.labels[0],
+      outputInspection:{templateSize,requestedSize,sizeMatches,objectCount:decoded.length,residualOffCanvasCount:residualOffCanvas.length,outOfBoundsAnchorCount:outOfBoundsAnchors.length},
       consoleErrors,pageErrors
     };
     fs.writeFileSync(path.join(outDir,'summary.json'),JSON.stringify(summary,null,2),'utf8');
+    if(!sizeMatches)throw new Error('Exported TemplateSize does not match explicit physical size '+sizeArg);
+    if(residualOffCanvas.length)console.error('RESIDUAL_OFF_CANVAS',JSON.stringify(residualOffCanvas.slice(0,12)));
     await page.screenshot({path:path.join(outDir,'analysis-page.png'),fullPage:true});
     console.log('PASS');
     console.log('Artifacts: '+outDir);
