@@ -72,6 +72,19 @@ if(!remapped.sourceBox||Math.abs(remapped.sourceBox.x-.3)>.0001||Math.abs(remapp
   throw new Error('cropped barcode sourceBox did not restore to label coordinates: '+JSON.stringify(remapped.sourceBox));
 }
 
+// Generic behavior: identical payloads at two distinct physical positions are two barcodes,
+// while repeated scans of the same physical barcode collapse to the best geometry.
+const samePayloadDifferentPlaces=I.dedupeBarcodes([
+  {format:'Code 128',text:'SAME-PAYLOAD',sourceBox:{x:.05,y:.15,w:.40,h:.07}},
+  {format:'Code 128',text:'SAME-PAYLOAD',sourceBox:{x:.05,y:.70,w:.40,h:.07}}
+]);
+if(samePayloadDifferentPlaces.length!==2)throw new Error('same barcode payload at distinct positions must remain two independent objects');
+const repeatedSameBarcode=I.dedupeBarcodes([
+  {format:'Code 128',text:'ONE-BARCODE'},
+  {format:'Code 128',text:'ONE-BARCODE',sourceBox:{x:.2,y:.3,w:.5,h:.08}}
+]);
+if(repeatedSameBarcode.length!==1||!repeatedSameBarcode[0].sourceBox)throw new Error('duplicate scans of one barcode must keep the located geometry');
+
 const c2={console,Math,Date,setInterval,clearInterval,setTimeout,Uint8Array,ArrayBuffer,DataView,TextDecoder,TextEncoder,Blob,Response,Promise,window:null,globalThis:null,document:{readyState:'loading',addEventListener(){}}};
 c2.window=c2;c2.globalThis=c2;vm.createContext(c2);
 vm.runInContext(fs.readFileSync('assets/btw-rich-native.js','utf8'),c2,{filename:'btw-rich-native.js'});
