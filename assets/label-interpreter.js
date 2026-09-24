@@ -6,7 +6,7 @@
 (function(){
   'use strict';
 
-  const BUILD='20260924-v185-photo-label-region';
+  const BUILD='20260919-v184-pdf-legacy';
   // PDF.js modern build assumes very new JS runtime APIs (including Map#getOrInsertComputed).
   // Use the matching legacy display/worker pair so real users on older Chromium/Safari can still render PDFs.
   const PDF_SRC='https://cdn.jsdelivr.net/npm/pdfjs-dist@6.3.289/legacy/build/pdf.min.mjs';
