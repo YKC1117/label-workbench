@@ -51,6 +51,27 @@ const deduped=I.dedupeSpatialTextObjects([
 if(deduped.some(o=>o.text==='MLOT NO ABC123'))throw new Error('parent whole-line duplicate should yield to reliable child caption/value objects');
 if(deduped.filter(o=>o.text==='BIN').length!==2)throw new Error('same legal text at distinct positions must not be deduped');
 
+const binObjects=I.dedupeSpatialTextObjects([
+  {text:'BIN: 1',confidence:76,repeat:1,sourceBox:{x:.10,y:.62,w:.20,h:.08}},
+  {text:'BIN:',confidence:91,repeat:2,sourceBox:{x:.105,y:.625,w:.11,h:.075}},
+  {text:'1',confidence:93,repeat:2,sourceBox:{x:.218,y:.625,w:.035,h:.075}},
+  {text:'一',confidence:70,repeat:1,sourceBox:{x:.92,y:.10,w:.012,h:.006}}
+]);
+if(binObjects.some(o=>o.text==='BIN: 1'))throw new Error('partial whole-line duplicate should yield to BIN caption + value children');
+if(binObjects.some(o=>o.text==='一'))throw new Error('tiny line-shaped OCR noise should be removed');
+if(!binObjects.some(o=>o.text==='BIN:')||!binObjects.some(o=>o.text==='1'))throw new Error('BIN caption/value children were lost');
+
+if(typeof I.remapBarcodeSourceBox!=='function')throw new Error('barcode crop sourceBox remap helper missing');
+const remapped=I.remapBarcodeSourceBox(
+  {format:'Code 128',text:'ABC',sourceBox:{x:.25,y:.5,w:.5,h:.25}},
+  {x:0,y:60,w:800,h:180},
+  {x:100,y:120,w:800,h:360},
+  1000,600
+);
+if(!remapped.sourceBox||Math.abs(remapped.sourceBox.x-.3)>.0001||Math.abs(remapped.sourceBox.y-.45)>.0001||Math.abs(remapped.sourceBox.w-.4)>.0001||Math.abs(remapped.sourceBox.h-.075)>.0001){
+  throw new Error('cropped barcode sourceBox did not restore to label coordinates: '+JSON.stringify(remapped.sourceBox));
+}
+
 const c2={console,Math,Date,setInterval,clearInterval,setTimeout,Uint8Array,ArrayBuffer,DataView,TextDecoder,TextEncoder,Blob,Response,Promise,window:null,globalThis:null,document:{readyState:'loading',addEventListener(){}}};
 c2.window=c2;c2.globalThis=c2;vm.createContext(c2);
 vm.runInContext(fs.readFileSync('assets/btw-rich-native.js','utf8'),c2,{filename:'btw-rich-native.js'});
@@ -59,4 +80,4 @@ if(!R?.sourceFontSize)throw new Error('sourceFontSize missing');
 const small=R.sourceFontSize({mm:{h:2.6}},12),large=R.sourceFontSize({mm:{h:6.2}},12);
 if(!(small>=5&&large>small&&large<=42))throw new Error('source font scaling invalid '+JSON.stringify({small,large}));
 
-console.log('PASS: light photo label on gray desk, existing crop, OCR dedupe, and source-driven font sizing');
+console.log('PASS: photo crop, OCR dedupe/noise filtering, barcode crop coordinate restoration, and source-driven font sizing');
