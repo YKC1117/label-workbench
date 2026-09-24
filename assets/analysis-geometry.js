@@ -5,7 +5,7 @@
  */
 (function(){
   'use strict';
-  const BUILD='20260911-analysis-geometry-110-barcode-pdf-mm';
+  const BUILD='20260921-analysis-geometry-120-corrected-label-region';
   const PDF_SRC='https://cdn.jsdelivr.net/npm/pdfjs-dist@6.3.289/build/pdf.min.mjs';
   const TESS_SRC='https://cdn.jsdelivr.net/npm/tesseract.js@7.0.0/dist/tesseract.min.js';
   const TESS_WORKER='https://cdn.jsdelivr.net/npm/tesseract.js@7.0.0/dist/worker.min.js';
@@ -16,6 +16,8 @@
   const norm=v=>String(v??'').toUpperCase().replace(/[^A-Z0-9\u3400-\u9FFF]/g,'');
   const clamp01=v=>Math.max(0,Math.min(1,Number(v)||0));
   const round2=v=>Math.round(Number(v)*100)/100;
+  function boxOverlapFraction(a,b){if(!a||!b)return 0;const ax1=Number(a.x)||0,ay1=Number(a.y)||0,ax2=ax1+(Number(a.w)||0),ay2=ay1+(Number(a.h)||0),bx1=Number(b.x)||0,by1=Number(b.y)||0,bx2=bx1+(Number(b.w)||0),by2=by1+(Number(b.h)||0),iw=Math.max(0,Math.min(ax2,bx2)-Math.max(ax1,bx1)),ih=Math.max(0,Math.min(ay2,by2)-Math.max(ay1,by1)),area=Math.max(0,(ax2-ax1)*(ay2-ay1));return area>0?(iw*ih)/area:0}
+  function suppressBarcodeOccludedText(label){const bars=(label?.barcodes||[]).filter(b=>b?.sourceBox);if(!bars.length)return 0;const before=(label?.textObjects||[]),kept=before.filter(t=>!bars.some(b=>boxOverlapFraction(t?.sourceBox,b.sourceBox)>=.58));label.textObjects=kept;return before.length-kept.length}
 
   function loadScript(src,globalName){
     if(globalThis[globalName])return Promise.resolve(globalThis[globalName]);
@@ -99,12 +101,21 @@
   }
   async function createWorker(){const T=await loadScript(TESS_SRC,'Tesseract');const worker=await T.createWorker(['eng','chi_tra'],1,{workerPath:TESS_WORKER});try{await worker.setParameters({tessedit_pageseg_mode:T.PSM?.SPARSE_TEXT||'11',preserve_interword_spaces:'1'})}catch{}return worker}
   async function recognizeWords(worker,canvas){const r=await worker.recognize(canvas,{}, {text:true,blocks:true});return wordsFromBlocks(r?.data?.blocks||[])}
+  function validSourceBox(box){
+    if(!box)return false;
+    const x=Number(box.x),y=Number(box.y),w=Number(box.w),h=Number(box.h);
+    return Number.isFinite(x)&&Number.isFinite(y)&&Number.isFinite(w)&&Number.isFinite(h)&&x>=0&&y>=0&&w>0&&h>0&&x<=1&&y<=1&&x+w<=1.02&&y+h<=1.02
+  }
   async function locateBarcodeBoxes(region,label){
-    const core=window.LabelWorkbenchBarcodeCore;if(!core?.scanCanvas||!(label?.barcodes||[]).length)return 0;
+    const rows=(label?.barcodes||[]),already=rows.filter(b=>validSourceBox(b?.sourceBox)).length,missing=rows.filter(b=>!validSourceBox(b?.sourceBox));
+    const core=window.LabelWorkbenchBarcodeCore;
+    if(!missing.length)return already;
+    if(!core?.scanCanvas)return already;
     try{
-      const scanned=await core.scanCanvas(region,'版面定位全圖'),scale=scanScale(region.width,region.height),sw=Math.round(region.width*scale),sh=Math.round(region.height*scale),matches=matchKnownBarcodes(label.barcodes,scanned,sw,sh);
-      for(const m of matches)m.barcode.sourceBox=m.sourceBox;return matches.length
-    }catch(err){console.warn('[Label Workbench] barcode geometry skipped',err);return 0}
+      const scanned=await core.scanCanvas(region,'版面定位全圖'),scale=scanScale(region.width,region.height),sw=Math.round(region.width*scale),sh=Math.round(region.height*scale),matches=matchKnownBarcodes(missing,scanned,sw,sh);
+      for(const m of matches)m.barcode.sourceBox=m.sourceBox;
+      return already+matches.length
+    }catch(err){console.warn('[Label Workbench] barcode geometry skipped',err);return already}
   }
 
   async function locateFile(file,labels,worker,A){
@@ -113,13 +124,19 @@
       let canvas=ext(file)==='pdf'?await pdfPageCanvas(file,pageNo):await imageCanvas(file);let physical=canvas.__lwPhysicalMm||null;
       const pageLabels=labels.filter(l=>Number(l.page||1)===pageNo).sort((a,b)=>Number(a.index||1)-Number(b.index||1)),rotation=Number(pageLabels[0]?.rotation||0);
       if(rotation&&typeof A.rotateCanvas==='function'){canvas=A.rotateCanvas(canvas,rotation);if(physical&&(rotation===90||rotation===270))physical={width:physical.height,height:physical.width}}
-      let bands=typeof A.detectLabelBands==='function'?A.detectLabelBands(canvas):[{x:0,y:0,w:canvas.width,h:canvas.height}];
-      if(pageLabels.length===1)bands=[{x:0,y:0,w:canvas.width,h:canvas.height}];
+      const detected=typeof A.detectLabelBands==='function'?A.detectLabelBands(canvas):[{x:0,y:0,w:canvas.width,h:canvas.height}];
+      const bands=pageLabels.map((label,i)=>{
+        const n=label?.sourceRegion?.normalized;
+        if(n&&Number.isFinite(Number(n.x))&&Number.isFinite(Number(n.y))&&Number(n.w)>0&&Number(n.h)>0){
+          return{x:Math.max(0,Math.round(Number(n.x)*canvas.width)),y:Math.max(0,Math.round(Number(n.y)*canvas.height)),w:Math.max(1,Math.round(Number(n.w)*canvas.width)),h:Math.max(1,Math.round(Number(n.h)*canvas.height)),reused:true}
+        }
+        return detected[i]||detected[detected.length-1]||{x:0,y:0,w:canvas.width,h:canvas.height}
+      });
       for(let i=0;i<Math.min(pageLabels.length,bands.length);i++){
         const label=pageLabels[i],b=bands[i],region=crop(canvas,b.x,b.y,b.w,b.h),words=await recognizeWords(worker,region),matches=matchKnownFields(label.fields||[],words,region.width,region.height);
         for(const m of matches)m.field.sourceBox=m.sourceBox;
-        const locatedBarcodes=await locateBarcodeBoxes(region,label),widthMm=physical?physical.width*(b.w/canvas.width):null,heightMm=physical?physical.height*(b.h/canvas.height):null;
-        label.sourceGeometry={widthPx:region.width,heightPx:region.height,widthMm:widthMm?round2(widthMm):null,heightMm:heightMm?round2(heightMm):null,locatedFields:matches.length,totalFields:(label.fields||[]).length,locatedBarcodes,totalBarcodes:(label.barcodes||[]).length,method:'known-value-layout-ocr+barcode-position'};
+        const locatedBarcodes=await locateBarcodeBoxes(region,label),suppressedBarcodeText=suppressBarcodeOccludedText(label),widthMm=physical?physical.width*(b.w/canvas.width):null,heightMm=physical?physical.height*(b.h/canvas.height):null;
+        label.sourceGeometry={widthPx:region.width,heightPx:region.height,widthMm:widthMm?round2(widthMm):null,heightMm:heightMm?round2(heightMm):null,physicalSizeKnown:!!(widthMm&&heightMm),imageWidthPx:canvas.width,imageHeightPx:canvas.height,regionPx:{x:b.x,y:b.y,w:b.w,h:b.h},regionNormalized:{x:round2(b.x/canvas.width),y:round2(b.y/canvas.height),w:round2(b.w/canvas.width),h:round2(b.h/canvas.height)},locatedFields:matches.length,totalFields:(label.fields||[]).length,locatedBarcodes,totalBarcodes:(label.barcodes||[]).length,suppressedBarcodeText,method:(b.reused?'reused-analysis-region':'detected-label-region')+'+known-value-layout-ocr+barcode-position'};
       }
     }
   }
@@ -133,5 +150,5 @@
   function install(){const A=window.LabelWorkbenchInterpreter;if(!A?.analyze||A.__geometryWrapped)return false;const base=A.analyze.bind(A);A.analyze=async function(files){const arr=[...(files||[])],result=await base(arr);return refine(arr,result)};A.__geometryWrapped=true;A.refineGeometry=refine;console.info('[Label Workbench] source geometry assist',BUILD);return true}
   if(!install()){let tries=0;const timer=setInterval(()=>{tries++;if(install()||tries>100)clearInterval(timer)},80)}
 
-  window.LabelWorkbenchAnalysisGeometry={BUILD,norm,charSimilarity,wordsFromBlocks,candidateSpans,matchKnownFields,collectPoints,positionToBox,scanScale,matchKnownBarcodes,refine,install};
+  window.LabelWorkbenchAnalysisGeometry={BUILD,norm,charSimilarity,wordsFromBlocks,candidateSpans,matchKnownFields,collectPoints,positionToBox,scanScale,matchKnownBarcodes,validSourceBox,boxOverlapFraction,suppressBarcodeOccludedText,refine,install};
 })();

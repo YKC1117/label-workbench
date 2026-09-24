@@ -30,6 +30,14 @@ if(deduped.length!==2)throw new Error(`Expected 2 deduped results, got ${deduped
 if(deduped[0].format!=='Code 39')throw new Error('Normalized format should be used in dedupe output');
 if(api.key({format:'QR Code',text:'A'})===api.key({format:'QR Code',text:'B'}))throw new Error('Result key must include content');
 if(typeof api.selfTest!=='function'||typeof api.scanCanvas!=='function')throw new Error('Diagnostic/manual scan APIs missing');
+if(typeof api.sourceBoxFromPosition!=='function')throw new Error('ZXing position to sourceBox helper missing');
+const sb=api.sourceBoxFromPosition({topLeft:{x:30,y:20},topRight:{x:180,y:20},bottomRight:{x:180,y:60},bottomLeft:{x:30,y:60}},300,100);
+if(!sb||Math.abs(sb.x-.1)>.0001||Math.abs(sb.y-.2)>.0001||Math.abs(sb.w-.5)>.0001||Math.abs(sb.h-.4)>.0001)throw new Error('ZXing position normalization failed: '+JSON.stringify(sb));
+const located=api.dedupe([
+  {format:'CODE_128',text:'LOCATED',engine:'first'},
+  {format:'CODE_128',text:'LOCATED',engine:'second',position:{a:{x:10,y:10},b:{x:30,y:30}},sourceBox:{x:.1,y:.1,w:.2,h:.2}}
+]);
+if(located.length!==1||!located[0].sourceBox)throw new Error('dedupe must preserve the located barcode result');
 if(!source.includes("fillStyle='#fff'")||!source.includes('標準化全圖'))throw new Error('Barcode canvas must normalize transparent images onto white before decode');
 if(!source.includes('longSide<1600')||!source.includes('1600/Math.max'))throw new Error('Deep scan must upscale small clipboard-style images');
 
@@ -61,7 +69,7 @@ if(htmlSources.length!==2||!htmlSources[0].startsWith('data:image/png')||htmlSou
 if(!uiSource.includes("run(files,{deep:true,mode:'paste'})"))throw new Error('Pasted images must automatically use deep scan');
 if(uiSource.includes('id="barcodePasteBtn"'))throw new Error('Redundant clipboard paste button must not return');
 
-console.log('PASS: barcode format normalization');
+console.log('PASS: barcode format normalization and ZXing sourceBox preservation');
 console.log('PASS: transparent/clipboard images normalize onto white');
 console.log('PASS: small images are upscaled for deep scan');
 console.log('PASS: direct clipboard image extraction');

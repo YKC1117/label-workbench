@@ -56,7 +56,7 @@ const barcodes=barcodePayloads.map((text,i)=>({
   format:i===0?'Data Matrix':'Code 128',text,
   sourceBox:i===0?{x:.75,y:.05,w:.16,h:.22}:{x:.05+(i-1)%2*.48,y:.53+Math.floor((i-1)/2)*.105,w:.38,h:.06}
 }));
-const raw={files:1,pages:1,labels:[{sourceName:'第一個.pdf',page:1,index:1,sourceGeometry:{widthMm:100,heightMm:65},fields,barcodes,marks:[]}]};
+const raw={files:1,pages:1,labels:[{sourceName:'第一個.pdf',page:1,index:1,sourceGeometry:{widthMm:140,heightMm:38},fields,barcodes,marks:[]}]};
 
 let rendered=0,staged=0;
 window.LabelWorkbenchInterpreter={
@@ -120,27 +120,27 @@ for(const f of[
   assert(out.seed==='LW-SECOND-SANITIZED-2022-R2','wrong production donor');
   const parsed=F.parseStructure(out.bytes);
   assert(parsed.header.applicationVersion==='2022 R2'&&parsed.header.compatibleVersion==='2022 R1','BarTender 2022 header changed');
-  assert(parsed.header.text.includes('<TemplateSize>100 x 65 mm</TemplateSize>'),'100 x 65 mm TemplateSize missing');
+  assert(parsed.header.text.includes('<TemplateSize>140 x 38 mm</TemplateSize>'),'140 x 38 mm TemplateSize missing');
   const mapped=M.mapContainer(await F.inflateContainer(parsed));
   const visible=mapped.objects.filter(o=>Number.isFinite(o.xMil)&&Number.isFinite(o.yMil)&&o.xMil<50000&&o.yMil<50000);
   const textObjects=visible.filter(o=>o.kind==='text');
   const barcodeObjects=visible.filter(o=>o.kind==='barcode');
+  assert(mapped.objects.length===17,`expected only 11 Text + 6 barcode roots, got ${mapped.objects.length}`);
+  assert(!mapped.objects.some(o=>Number(o.xMil)===50000||Number(o.yMil)===50000),'unused donor roots must be removed, not hidden at 50000 mil');
   assert(textObjects.length===11,`visible text count ${textObjects.length}`);
   assert(barcodeObjects.filter(o=>o.barcodeType==='Code 128').length===5,'expected 5 visible Code128 objects');
   assert(barcodeObjects.filter(o=>o.barcodeType==='Data Matrix').length===1,'expected 1 visible Data Matrix object');
 
   prod.fields.forEach((f,i)=>{
-    const expected=out.layout.text[i];
-    const obj=textObjects.find(o=>o.index===expected.index);
-    assert(obj,`BTW missing production text object ${f.code}:${f.value}`);
-    assert(String(obj.value??'')===f.value,`BTW text value mismatch ${f.code}:${obj.value} != ${f.value}`);
-    const pos=L.boxToLayout(f.sourceBox,{width:100,height:65}).mil;
-    assert(obj.xMil===pos.x&&obj.yMil===pos.y,`BTW position mismatch ${f.code}:${f.value}`);
+    const expected=out.layout.text[i],pos=L.boxToLayout(f.sourceBox,{width:140,height:38}).mil;
+    const obj=textObjects.find(o=>String(o.value??'')===f.value&&o.xMil===pos.x&&o.yMil===pos.y);
+    assert(obj,`BTW missing production text object ${f.code}:${f.value} at ${pos.x},${pos.y}`);
+    assert(expected&&expected.value===f.value&&expected.xMil===pos.x&&expected.yMil===pos.y,`BTW layout plan mismatch ${f.code}:${f.value}`);
   });
   for(const b of prod.barcodes){
     const obj=barcodeObjects.find(o=>String(o.resolvedPreview||'')===b.text);
     assert(obj,`BTW missing independent barcode ${b.text}`);
-    const pos=L.boxToLayout(b.sourceBox,{width:100,height:65}).mil;
+    const pos=L.boxToLayout(b.sourceBox,{width:140,height:38}).mil;
     assert(obj.xMil===pos.x&&obj.yMil===pos.y,`BTW barcode position mismatch ${b.text}`);
   }
   const visibleValues=textObjects.map(o=>String(o.value??''));

@@ -33,8 +33,10 @@ async function verifyManualEdit(filePath){
   if(!String(parsed.header?.text||'').includes(`<TemplateSize>${sizeText}</TemplateSize>`))throw new Error(`TemplateSize mismatch: ${sizeText}`);
 
   const map=M.mapContainer(await F.inflateContainer(parsed)),objects=map.objects;
-  if(objects.length!==40)throw new Error(`root object count changed: ${objects.length}/40`);
-  const visible=objects.filter(o=>Number.isFinite(o.xMil)&&Number.isFinite(o.yMil)&&o.xMil<50000&&o.yMil<50000);
+  const expectedRoots=expected.fields.length+expected.barcodes.length;
+  if(objects.length!==expectedRoots)throw new Error(`root object count changed: ${objects.length}/${expectedRoots}`);
+  if(objects.some(o=>Number(o.xMil)===50000||Number(o.yMil)===50000))throw new Error('unused donor root is hidden at 50000 mil instead of removed');
+  const visible=objects.filter(o=>Number.isFinite(o.xMil)&&Number.isFinite(o.yMil)&&o.xMil>=0&&o.yMil>=0&&o.xMil<50000&&o.yMil<50000);
   const visibleText=visible.filter(o=>o.kind==='text');
   const c128=visible.filter(o=>o.kind==='barcode'&&o.barcodeType==='Code 128');
   const dm=visible.filter(o=>o.kind==='barcode'&&o.barcodeType==='Data Matrix');

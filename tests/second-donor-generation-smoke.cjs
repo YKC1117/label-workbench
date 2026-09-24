@@ -6,7 +6,7 @@ for(const f of['assets/btw-format.js','assets/btw-object-map.js','assets/btw-lay
 
 const label={
   sourceName:'five-code-one-dm.pdf',
-  sourceGeometry:{widthMm:120,heightMm:72},
+  sourceGeometry:{widthMm:140,heightMm:38},
   fields:Array.from({length:12},(_,i)=>({name:`FIELD_${i+1}`,value:`VALUE_${String(i+1).padStart(2,'0')}`,sourceBox:{x:.03+(i%3)*.2,y:.03+Math.floor(i/3)*.1,w:.15,h:.04}})),
   barcodes:[
     {format:'Data Matrix',text:'DM-TEST-001-ABC',sourceBox:{x:.72,y:.05,w:.12,h:.20}},
@@ -21,13 +21,24 @@ const label={
 (async()=>{
   const S=c.LabelWorkbenchBtwSecondNative,F=c.LabelWorkbenchBtwFormat,M=c.LabelWorkbenchBtwObjectMap,L=c.LabelWorkbenchBtwLayout;
   if(!S.canGenerate(label))throw new Error('5C128+1DM plan unexpectedly rejected');
+  const missingGeometry={...label,barcodes:label.barcodes.map((b,i)=>i===1?{...b,sourceBox:null}:{...b})};
+  let geometryRejected=false;
+  try{await S.generateOne(missingGeometry,0)}catch(error){geometryRejected=/sourceBox|座標不完整/.test(String(error?.message||error))}
+  if(!geometryRejected)throw new Error('known-size 5C128+1DM output must reject missing barcode sourceBox instead of using fallback coordinates');
+  const missingTextGeometry={...label,fields:label.fields.map((f,i)=>i===2?{...f,sourceBox:null}:{...f})};
+  let textGeometryRejected=false;
+  try{await S.generateOne(missingTextGeometry,0)}catch(error){textGeometryRejected=/sourceBox|座標不完整/.test(String(error?.message||error))}
+  if(!textGeometryRejected)throw new Error('known-size output must reject missing text sourceBox instead of using fallback coordinates');
   const out=await S.generateOne(label,0);
   if(out.seed!=='LW-SECOND-SANITIZED-2022-R2')throw new Error(`seed ${out.seed}`);
   const parsed=F.parseStructure(out.bytes);
   if(parsed.header.applicationVersion!=='2022 R2'||parsed.header.compatibleVersion!=='2022 R1')throw new Error('version changed');
-  if(!parsed.header.text.includes('<TemplateSize>120 x 72 mm</TemplateSize>'))throw new Error('TemplateSize not rewritten');
+  if(!parsed.header.text.includes('<TemplateSize>140 x 38 mm</TemplateSize>'))throw new Error('TemplateSize not rewritten');
   const map=M.mapContainer(await F.inflateContainer(parsed)),objects=map.objects;
-  if(objects.length!==40)throw new Error(`root count ${objects.length}`);
+  const expectedRoots=label.fields.length+label.barcodes.length;
+  if(objects.length!==expectedRoots)throw new Error(`root count ${objects.length}/${expectedRoots}`);
+  if(objects.some(o=>Number(o.xMil)===50000||Number(o.yMil)===50000))throw new Error('unused donor root was hidden at 50000 mil instead of removed');
+  if(out.layout?.removedDonorRoots!==(40-expectedRoots))throw new Error(`removed donor roots ${out.layout?.removedDonorRoots}`);
   const visible=objects.filter(o=>Number.isFinite(o.xMil)&&Number.isFinite(o.yMil)&&o.xMil<50000&&o.yMil<50000);
   const visibleC128=visible.filter(o=>o.kind==='barcode'&&o.barcodeType==='Code 128'),visibleDm=visible.filter(o=>o.kind==='barcode'&&o.barcodeType==='Data Matrix');
   if(visibleC128.length!==5)throw new Error(`visible Code128 ${visibleC128.length}`);
@@ -35,9 +46,31 @@ const label={
   const wanted=label.barcodes.map(b=>b.text),actual=[...visibleDm,...visibleC128].map(o=>o.resolvedPreview);
   for(const value of wanted)if(!actual.includes(value))throw new Error(`missing independent barcode ${value}; got ${JSON.stringify(actual)}`);
   if(new Set(actual).size!==6)throw new Error('barcode values are not independent');
-  for(const f of label.fields){const o=visible.find(x=>x.kind==='text'&&x.value===f.value);if(!o)throw new Error(`missing field ${f.value}`);const pos=L.boxToLayout(f.sourceBox,{width:120,height:72}).mil;if(o.xMil!==pos.x||o.yMil!==pos.y)throw new Error(`field position mismatch ${f.value}`)}
-  for(const b of label.barcodes){const o=visible.find(x=>x.kind==='barcode'&&x.resolvedPreview===b.text);if(!o)throw new Error(`missing barcode ${b.text}`);const pos=L.boxToLayout(b.sourceBox,{width:120,height:72}).mil;if(o.xMil!==pos.x||o.yMil!==pos.y)throw new Error(`barcode position mismatch ${b.text}`)}
-  const sizedContainer=await F.inflateContainer(parsed),dv=new DataView(sizedContainer.buffer,sizedContainer.byteOffset,sizedContainer.byteLength);let pairs=0;for(let i=0;i<=dv.byteLength-8;i++)if(dv.getInt32(i,true)===L.mmToMil(120)&&dv.getInt32(i+4,true)===L.mmToMil(72))pairs++;
+  for(const f of label.fields){const o=visible.find(x=>x.kind==='text'&&x.value===f.value);if(!o)throw new Error(`missing field ${f.value}`);const pos=L.boxToLayout(f.sourceBox,{width:140,height:38}).mil;if(o.xMil!==pos.x||o.yMil!==pos.y)throw new Error(`field position mismatch ${f.value}`)}
+  for(const b of label.barcodes){const o=visible.find(x=>x.kind==='barcode'&&x.resolvedPreview===b.text);if(!o)throw new Error(`missing barcode ${b.text}`);const pos=L.boxToLayout(b.sourceBox,{width:140,height:38}).mil;if(o.xMil!==pos.x||o.yMil!==pos.y)throw new Error(`barcode position mismatch ${b.text}`)}
+  const sizedContainer=await F.inflateContainer(parsed),dv=new DataView(sizedContainer.buffer,sizedContainer.byteOffset,sizedContainer.byteLength);let pairs=0;for(let i=0;i<=dv.byteLength-8;i++)if(dv.getInt32(i,true)===L.mmToMil(140)&&dv.getInt32(i+4,true)===L.mmToMil(38))pairs++;
   if(pairs<2)throw new Error(`internal size pair rewrite missing: ${pairs}`);
-  console.log('PASS: generated BTW round-trips 12 Text + 5 independent Code128 + 1 DataMatrix at source positions and 120x72mm');
+
+  // The same normalized layout must map correctly to a completely different customer label size.
+  // This proves production layout is dimension-driven, not hardcoded to the 140x38 regression fixture.
+  const altLabel={
+    ...label,
+    sourceName:'another-customer-label.png',
+    sourceGeometry:{widthMm:96,heightMm:54},
+    fields:label.fields.slice(0,8).map((f,i)=>({...f,name:`ALT_FIELD_${i+1}`,value:`ALT_VALUE_${i+1}`,sourceBox:{x:.04+(i%2)*.42,y:.05+Math.floor(i/2)*.12,w:.28,h:.05}})),
+    barcodes:[
+      {format:'Data Matrix',text:'ALT-DM-900',sourceBox:{x:.76,y:.06,w:.16,h:.24}},
+      {format:'Code 128',text:'ALT-C128-A',sourceBox:{x:.05,y:.56,w:.38,h:.07}},
+      {format:'Code 128',text:'ALT-C128-B',sourceBox:{x:.52,y:.56,w:.38,h:.07}},
+      {format:'Code 128',text:'ALT-C128-C',sourceBox:{x:.05,y:.68,w:.38,h:.07}},
+      {format:'Code 128',text:'ALT-C128-D',sourceBox:{x:.52,y:.68,w:.38,h:.07}},
+      {format:'Code 128',text:'ALT-C128-E',sourceBox:{x:.28,y:.82,w:.44,h:.07}}
+    ]
+  };
+  const alt=await S.generateOne(altLabel,1),altParsed=F.parseStructure(alt.bytes),altObjects=M.mapContainer(await F.inflateContainer(altParsed)).objects;
+  if(!altParsed.header.text.includes('<TemplateSize>96 x 54 mm</TemplateSize>'))throw new Error('arbitrary customer TemplateSize was not rewritten to 96x54mm');
+  if(altObjects.some(o=>Number(o.xMil)===50000||Number(o.yMil)===50000))throw new Error('arbitrary-size output contains 50000 mil residue');
+  for(const f of altLabel.fields){const o=altObjects.find(x=>x.kind==='text'&&x.value===f.value);if(!o)throw new Error(`alt missing field ${f.value}`);const pos=L.boxToLayout(f.sourceBox,{width:96,height:54}).mil;if(o.xMil!==pos.x||o.yMil!==pos.y)throw new Error(`alt field position mismatch ${f.value}`)}
+  for(const b of altLabel.barcodes){const o=altObjects.find(x=>x.kind==='barcode'&&x.resolvedPreview===b.text);if(!o)throw new Error(`alt missing barcode ${b.text}`);const pos=L.boxToLayout(b.sourceBox,{width:96,height:54}).mil;if(o.xMil!==pos.x||o.yMil!==pos.y)throw new Error(`alt barcode position mismatch ${b.text}`)}
+  console.log('PASS: generic 5C128+1DM layout restores normalized source geometry at both 140x38mm and unrelated 96x54mm sizes, rejects missing geometry, and leaves no donor residue');
 })().catch(e=>{console.error(e);process.exit(1)});

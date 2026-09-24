@@ -30,11 +30,17 @@
   }
   function key(r){return`${formatName(r?.format)}\0${String(r?.text??'')}`}
   function dedupe(a){
-    const s=new Set(),o=[];
+    const byKey=new Map(),o=[];
     for(const x of a||[]){
       if(x?.text==null||String(x.text)==='')continue;
-      const r={format:formatName(x.format),text:String(x.text),engine:x.engine||'',source:x.source||'',position:x.position||null};
-      const k=key(r);if(s.has(k))continue;s.add(k);o.push(r);if(o.length>=MAX_RESULTS)break;
+      const r={format:formatName(x.format),text:String(x.text),engine:x.engine||'',source:x.source||'',position:x.position||null,sourceBox:x.sourceBox||null};
+      const k=key(r),at=byKey.get(k);
+      if(at!=null){
+        const prev=o[at],prevQ=(prev?.sourceBox?2:0)+(prev?.position?1:0),nextQ=(r.sourceBox?2:0)+(r.position?1:0);
+        if(nextQ>prevQ)o[at]=r;
+        continue;
+      }
+      byKey.set(k,o.length);o.push(r);if(o.length>=MAX_RESULTS)break;
     }
     return o;
   }
@@ -101,6 +107,24 @@
     q.putImageData(im,0,0);return c;
   }
   function imageData(c){return c.getContext('2d',{willReadFrequently:true}).getImageData(0,0,c.width,c.height)}
+  const clamp01=v=>Math.max(0,Math.min(1,Number(v)||0));
+  function collectPositionPoints(v,out=[]){
+    if(!v||typeof v!=='object')return out;
+    if(Number.isFinite(Number(v.x))&&Number.isFinite(Number(v.y)))out.push({x:Number(v.x),y:Number(v.y)});
+    if(Array.isArray(v))for(const item of v)collectPositionPoints(item,out);
+    else for(const [k,item] of Object.entries(v))if(k!=='x'&&k!=='y')collectPositionPoints(item,out);
+    return out;
+  }
+  function sourceBoxFromPosition(position,width,height){
+    const pts=collectPositionPoints(position,[]),w=Number(width),h=Number(height);
+    if(pts.length<2||!(w>0&&h>0))return null;
+    const xs=pts.map(p=>p.x),ys=pts.map(p=>p.y),x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys);
+    if(!(x1>x0&&y1>y0))return null;
+    return{x:clamp01(x0/w),y:clamp01(y0/h),w:clamp01((x1-x0)/w),h:clamp01((y1-y0)/h),engine:'ZXing-position'};
+  }
+  function attachCanvasSourceBoxes(rows,width,height){
+    return(rows||[]).map(row=>row?.sourceBox?row:{...row,sourceBox:sourceBoxFromPosition(row?.position,width,height)});
+  }
   function native(canvas){
     if(!('BarcodeDetector'in globalThis))return Promise.resolve([]);
     return (async()=>{try{const f=await BarcodeDetector.getSupportedFormats();if(!f?.length)return[];const d=new BarcodeDetector({formats:f}),r=await d.detect(canvas);return dedupe(r.map(x=>({format:x.format,text:x.rawValue,engine:'BarcodeDetector',source:'瀏覽器原生'})))}catch{return[]}})();
@@ -150,11 +174,11 @@
   }
   async function scanCanvas(c,source='指定區域'){
     const z=scale(c,Math.max(1.5,Math.min(4,MAX_DIM/Math.max(c.width,c.height)))),all=[],data=imageData(z);
-    all.push(...await decodeZX(data,source,deepProfile));
+    all.push(...attachCanvasSourceBoxes(await decodeZX(data,source,deepProfile),z.width,z.height));
     if(!dedupe(all).length)all.push(...await decodeZBar(data,source+' · ZBar'));
-    if(!dedupe(all).length)all.push(...await decodeZX(imageData(threshold(z)),source+' · 高對比',deepProfile));
+    if(!dedupe(all).length)all.push(...attachCanvasSourceBoxes(await decodeZX(imageData(threshold(z)),source+' · 高對比',deepProfile),z.width,z.height));
     return dedupe(all);
   }
 
-  window.LabelWorkbenchBarcodeCore={VERSION:'1.2',ZXING_VERSION:ZX,formatName,visibleText,key,dedupe,selfTest,loadImage,canvasFromImage,crop,scale,threshold,imageData,scanFile,scanCanvas,state};
+  window.LabelWorkbenchBarcodeCore={VERSION:'1.2',ZXING_VERSION:ZX,formatName,visibleText,key,dedupe,selfTest,loadImage,canvasFromImage,crop,scale,threshold,imageData,collectPositionPoints,sourceBoxFromPosition,attachCanvasSourceBoxes,scanFile,scanCanvas,state};
 })();

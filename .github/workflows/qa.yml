@@ -26,6 +26,7 @@ jobs:
           node --check tests/btw-barcode-read-slot-smoke.cjs
           node --check tests/btw-caption-adapter-smoke.cjs
           node --check tests/analysis-geometry-smoke.cjs
+          node --check tests/layout-restoration-smoke.cjs
           node --check tests/btw-layout-map-smoke.cjs
           node --check tests/btw-native-smoke.cjs
           node --check assets/btw-family-native.js
@@ -50,6 +51,7 @@ jobs:
           node --check tools/create-btw-runtime-fixture.cjs
           node --check tools/verify-btw-runtime-fixture.cjs
           node --check tools/verify-btw-manual-edit.cjs
+          node --check tools/run-layout-case.cjs
           node --check tests/runtime-fixture-smoke.cjs
           node --check tests/manual-edit-verifier-smoke.cjs
       - name: PowerShell runtime verifier syntax check
@@ -155,6 +157,8 @@ jobs:
         run: node tests/analysis-geometry-smoke.cjs
       - name: Source geometry to BTW coordinate mapping tests
         run: node tests/btw-layout-map-smoke.cjs
+      - name: Photo label crop and source font restoration regression
+        run: node tests/layout-restoration-smoke.cjs
       - name: Barcode generator and production-analysis smoke tests
         run: node tests/v15-smoke.cjs
       - name: BT optional table-pack and safe launch smoke tests

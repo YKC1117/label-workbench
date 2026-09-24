@@ -21,4 +21,7 @@ const fuzzy=G.charSimilarity('W25N01GWZEIR','W25NO1GWZEIR');if(!(fuzzy>.84&&fuzz
 const pos={topLeft:{x:100,y:40},topRight:{x:300,y:40},bottomRight:{x:300,y:120},bottomLeft:{x:100,y:120}};
 const bb=G.positionToBox(pos,800,400);if(!bb||Math.abs(bb.x-.125)>.001||Math.abs(bb.y-.1)>.001||Math.abs(bb.w-.25)>.001||Math.abs(bb.h-.2)>.001)throw new Error('barcode position box mismatch '+JSON.stringify(bb));
 const existing=[{format:'Code 128',text:'ABC123'}],scanned=[{format:'Code 128',text:'ABC123',position:pos}];const bm=G.matchKnownBarcodes(existing,scanned,800,400);if(bm.length!==1||Math.abs(bm[0].sourceBox.x-.125)>.001)throw new Error('barcode match geometry failed');
-console.log('PASS: known text fields and native barcode positions map to normalized source geometry');
+if(typeof G.validSourceBox!=='function'||!G.validSourceBox({x:.1,y:.2,w:.3,h:.1})||G.validSourceBox({x:.95,y:.2,w:.2,h:.1}))throw new Error('existing barcode sourceBox validity guard failed');
+const label={textObjects:[{text:'Made in Taiwan',sourceBox:{x:.05,y:.1,w:.3,h:.08}},{text:'II',sourceBox:{x:.13,y:.55,w:.54,h:.20}}],barcodes:[{format:'Code 128',text:'ABC123',sourceBox:{x:.12,y:.54,w:.56,h:.22}}]};
+const removed=G.suppressBarcodeOccludedText(label);if(removed!==1||label.textObjects.length!==1||label.textObjects[0].text!=='Made in Taiwan')throw new Error('barcode OCR suppression failed '+JSON.stringify(label));
+console.log('PASS: known text fields, native barcode positions and barcode-overlap OCR suppression map to normalized source geometry');
