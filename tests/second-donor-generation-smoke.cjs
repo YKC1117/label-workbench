@@ -21,6 +21,10 @@ const label={
 (async()=>{
   const S=c.LabelWorkbenchBtwSecondNative,F=c.LabelWorkbenchBtwFormat,M=c.LabelWorkbenchBtwObjectMap,L=c.LabelWorkbenchBtwLayout;
   if(!S.canGenerate(label))throw new Error('5C128+1DM plan unexpectedly rejected');
+  const missingGeometry={...label,barcodes:label.barcodes.map((b,i)=>i===1?{...b,sourceBox:null}:{...b})};
+  let geometryRejected=false;
+  try{await S.generateOne(missingGeometry,0)}catch(error){geometryRejected=/sourceBox|座標不完整/.test(String(error?.message||error))}
+  if(!geometryRejected)throw new Error('known-size 5C128+1DM output must reject missing barcode sourceBox instead of using fallback coordinates');
   const out=await S.generateOne(label,0);
   if(out.seed!=='LW-SECOND-SANITIZED-2022-R2')throw new Error(`seed ${out.seed}`);
   const parsed=F.parseStructure(out.bytes);
