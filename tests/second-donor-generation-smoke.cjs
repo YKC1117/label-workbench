@@ -25,6 +25,10 @@ const label={
   let geometryRejected=false;
   try{await S.generateOne(missingGeometry,0)}catch(error){geometryRejected=/sourceBox|座標不完整/.test(String(error?.message||error))}
   if(!geometryRejected)throw new Error('known-size 5C128+1DM output must reject missing barcode sourceBox instead of using fallback coordinates');
+  const missingTextGeometry={...label,fields:label.fields.map((f,i)=>i===2?{...f,sourceBox:null}:{...f})};
+  let textGeometryRejected=false;
+  try{await S.generateOne(missingTextGeometry,0)}catch(error){textGeometryRejected=/sourceBox|座標不完整/.test(String(error?.message||error))}
+  if(!textGeometryRejected)throw new Error('known-size output must reject missing text sourceBox instead of using fallback coordinates');
   const out=await S.generateOne(label,0);
   if(out.seed!=='LW-SECOND-SANITIZED-2022-R2')throw new Error(`seed ${out.seed}`);
   const parsed=F.parseStructure(out.bytes);
@@ -46,5 +50,27 @@ const label={
   for(const b of label.barcodes){const o=visible.find(x=>x.kind==='barcode'&&x.resolvedPreview===b.text);if(!o)throw new Error(`missing barcode ${b.text}`);const pos=L.boxToLayout(b.sourceBox,{width:140,height:38}).mil;if(o.xMil!==pos.x||o.yMil!==pos.y)throw new Error(`barcode position mismatch ${b.text}`)}
   const sizedContainer=await F.inflateContainer(parsed),dv=new DataView(sizedContainer.buffer,sizedContainer.byteOffset,sizedContainer.byteLength);let pairs=0;for(let i=0;i<=dv.byteLength-8;i++)if(dv.getInt32(i,true)===L.mmToMil(140)&&dv.getInt32(i+4,true)===L.mmToMil(38))pairs++;
   if(pairs<2)throw new Error(`internal size pair rewrite missing: ${pairs}`);
-  console.log('PASS: generated BTW contains only 12 Text + 5 independent Code128 + 1 DataMatrix roots, no 50000 mil residue, at source positions and 140x38mm');
+
+  // The same normalized layout must map correctly to a completely different customer label size.
+  // This proves production layout is dimension-driven, not hardcoded to the 140x38 regression fixture.
+  const altLabel={
+    ...label,
+    sourceName:'another-customer-label.png',
+    sourceGeometry:{widthMm:96,heightMm:54},
+    fields:label.fields.slice(0,8).map((f,i)=>({...f,name:`ALT_FIELD_${i+1}`,value:`ALT_VALUE_${i+1}`,sourceBox:{x:.04+(i%2)*.42,y:.05+Math.floor(i/2)*.12,w:.28,h:.05}})),
+    barcodes:[
+      {format:'Data Matrix',text:'ALT-DM-900',sourceBox:{x:.76,y:.06,w:.16,h:.24}},
+      {format:'Code 128',text:'ALT-C128-A',sourceBox:{x:.05,y:.56,w:.38,h:.07}},
+      {format:'Code 128',text:'ALT-C128-B',sourceBox:{x:.52,y:.56,w:.38,h:.07}},
+      {format:'Code 128',text:'ALT-C128-C',sourceBox:{x:.05,y:.68,w:.38,h:.07}},
+      {format:'Code 128',text:'ALT-C128-D',sourceBox:{x:.52,y:.68,w:.38,h:.07}},
+      {format:'Code 128',text:'ALT-C128-E',sourceBox:{x:.28,y:.82,w:.44,h:.07}}
+    ]
+  };
+  const alt=await S.generateOne(altLabel,1),altParsed=F.parseStructure(alt.bytes),altObjects=M.mapContainer(await F.inflateContainer(altParsed)).objects;
+  if(!altParsed.header.text.includes('<TemplateSize>96 x 54 mm</TemplateSize>'))throw new Error('arbitrary customer TemplateSize was not rewritten to 96x54mm');
+  if(altObjects.some(o=>Number(o.xMil)===50000||Number(o.yMil)===50000))throw new Error('arbitrary-size output contains 50000 mil residue');
+  for(const f of altLabel.fields){const o=altObjects.find(x=>x.kind==='text'&&x.value===f.value);if(!o)throw new Error(`alt missing field ${f.value}`);const pos=L.boxToLayout(f.sourceBox,{width:96,height:54}).mil;if(o.xMil!==pos.x||o.yMil!==pos.y)throw new Error(`alt field position mismatch ${f.value}`)}
+  for(const b of altLabel.barcodes){const o=altObjects.find(x=>x.kind==='barcode'&&x.resolvedPreview===b.text);if(!o)throw new Error(`alt missing barcode ${b.text}`);const pos=L.boxToLayout(b.sourceBox,{width:96,height:54}).mil;if(o.xMil!==pos.x||o.yMil!==pos.y)throw new Error(`alt barcode position mismatch ${b.text}`)}
+  console.log('PASS: generic 5C128+1DM layout restores normalized source geometry at both 140x38mm and unrelated 96x54mm sizes, rejects missing geometry, and leaves no donor residue');
 })().catch(e=>{console.error(e);process.exit(1)});
