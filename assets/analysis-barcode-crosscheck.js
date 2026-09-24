@@ -56,15 +56,6 @@
     }
     return changed
   }
-  function editDistance(a,b){'),rx=new RegExp(escaped,'i');
-    let changed=0;
-    for(const obj of label?.textObjects||[]){
-      const raw=String(obj?.text||'');if(!raw)continue;
-      if(norm(raw)===beforeNorm){obj.text=after;changed++;continue}
-      if(rx.test(raw)){obj.text=raw.replace(rx,after);changed++}
-    }
-    return changed
-  }
   function editDistance(a,b){const x=norm(a),y=norm(b);if(!x||!y)return 999;const prev=Array.from({length:y.length+1},(_,i)=>i);for(let i=1;i<=x.length;i++){const cur=[i];for(let j=1;j<=y.length;j++)cur[j]=Math.min(cur[j-1]+1,prev[j]+1,prev[j-1]+(x[i-1]===y[j-1]?0:1));for(let j=0;j<cur.length;j++)prev[j]=cur[j]}return prev[y.length]}
   function refineField(field,barcodes){
     const code=String(field?.code||'').toUpperCase().replace(/[^A-Z0-9]/g,'');if(!code)return field;
