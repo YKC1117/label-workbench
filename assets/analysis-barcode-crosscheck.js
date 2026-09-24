@@ -47,7 +47,15 @@
   function syncCorrectedTextObjects(label,beforeValue,afterValue){
     const before=clean(beforeValue),after=clean(afterValue),beforeNorm=norm(before),afterNorm=norm(after);
     if(!before||!after||beforeNorm===afterNorm)return 0;
-    const escaped=before.replace(/[.*+?^$(){}|[\]\\]/g,'\\  function barcodeValues(code,barcodes){const out=[];for(const b of barcodes||[])out.push(...extractCodeValues(code,b));return uniq(out)}
+    const needle=before.toLowerCase();let changed=0;
+    for(const obj of label?.textObjects||[]){
+      const raw=String(obj?.text||'');if(!raw)continue;
+      if(norm(raw)===beforeNorm){obj.text=after;changed++;continue}
+      const at=raw.toLowerCase().indexOf(needle);
+      if(at>=0){obj.text=raw.slice(0,at)+after+raw.slice(at+before.length);changed++}
+    }
+    return changed
+  }
   function editDistance(a,b){'),rx=new RegExp(escaped,'i');
     let changed=0;
     for(const obj of label?.textObjects||[]){
