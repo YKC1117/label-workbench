@@ -6,7 +6,7 @@
 (function(){
   'use strict';
 
-  const BUILD='20260919-v184-pdf-legacy';
+  const BUILD='20260924-v186-barcode-sourcebox';
   // PDF.js modern build assumes very new JS runtime APIs (including Map#getOrInsertComputed).
   // Use the matching legacy display/worker pair so real users on older Chromium/Safari can still render PDFs.
   const PDF_SRC='https://cdn.jsdelivr.net/npm/pdfjs-dist@6.3.289/legacy/build/pdf.min.mjs';
@@ -275,10 +275,15 @@
     }).filter(x=>x.repeat>=2||x.confidence>=68).sort((a,b)=>Math.abs(a.sourceBox.y-b.sourceBox.y)<.012?a.sourceBox.x-b.sourceBox.x:a.sourceBox.y-b.sourceBox.y)
   }
   function spatialTextScore(o){return (Number(o?.repeat||0)*18)+(Number(o?.confidence||0))+(Math.min(120,String(o?.text||'').length)*.08)}
+  function isTinyLineNoise(o){
+    const t=cleanLine(o?.text).replace(/\s/g,''),b=o?.sourceBox||{},w=Number(b.w)||0,h=Number(b.h)||0;
+    return/^[一丨]+$/.test(t)&&t.length<=2&&(w<.035||h<.018||Math.min(w,h)<.01)
+  }
   function dedupeSpatialTextObjects(objects){
-    const rows=(objects||[]).filter(o=>textNorm(o?.text)&&o?.sourceBox).map((o,i)=>({...o,__order:i})),drop=new Set();
+    const rows=(objects||[]).filter(o=>textNorm(o?.text)&&o?.sourceBox&&!isTinyLineNoise(o)).map((o,i)=>({...o,__order:i})),drop=new Set();
     const area=o=>Math.max(0,Number(o?.sourceBox?.w||0)*Number(o?.sourceBox?.h||0));
     const contains=(outer,inner)=>boxOverlapFraction(inner?.sourceBox,outer?.sourceBox)>=.82;
+    const centerInside=(outer,inner)=>{const a=outer?.sourceBox||{},b=inner?.sourceBox||{},cx=Number(b.x)+Number(b.w)/2,cy=Number(b.y)+Number(b.h)/2,p=.01;return cx>=Number(a.x)-p&&cx<=Number(a.x)+Number(a.w)+p&&cy>=Number(a.y)-p&&cy<=Number(a.y)+Number(a.h)+p};
     const readSort=(a,b)=>Math.abs(Number(a.sourceBox.y)-Number(b.sourceBox.y))<Math.max(Number(a.sourceBox.h),Number(b.sourceBox.h))*.5?Number(a.sourceBox.x)-Number(b.sourceBox.x):Number(a.sourceBox.y)-Number(b.sourceBox.y);
     for(let i=0;i<rows.length;i++){
       if(drop.has(i))continue;
@@ -304,7 +309,7 @@
     for(let i=0;i<rows.length;i++){
       if(drop.has(i))continue;
       const parent=rows[i],pn=textNorm(parent.text),pa=area(parent);if(pn.length<4||!(pa>0))continue;
-      const children=rows.map((o,j)=>({o,j})).filter(x=>x.j!==i&&!drop.has(x.j)&&area(x.o)<pa*.82&&contains(parent,x.o)).sort((a,b)=>readSort(a.o,b.o));
+      const children=rows.map((o,j)=>({o,j})).filter(x=>x.j!==i&&!drop.has(x.j)&&area(x.o)<pa*.82&&(contains(parent,x.o)||centerInside(parent,x.o))).sort((a,b)=>readSort(a.o,b.o));
       for(let start=0;start<children.length;start++){
         let joined='';
         for(let end=start;end<Math.min(children.length,start+4);end++){
@@ -372,8 +377,39 @@
     return out;
   }
 
-  function dedupeBarcodes(rows){const s=new Set(),out=[];for(const r of rows||[]){const k=`${r.format||''}|${r.text||''}`;if(!r.text||s.has(k))continue;s.add(k);out.push(r)}return out}
-  async function scanRegionDeep(canvas,labelNo,onProgress){const core=window.LabelWorkbenchBarcodeCore;if(!core?.scanCanvas)return[];const c=trimCanvas(canvas),candidates=[{c,name:`標籤 ${labelNo} 全圖`}],h=c.height*.30;for(let i=0;i<6;i++){const y=Math.min(c.height-h,i*c.height*.14);candidates.push({c:crop(c,0,y,c.width,h),name:`標籤 ${labelNo} 區域 ${i+1}`})}const all=[];for(let i=0;i<candidates.length;i++){onProgress?.(`正在讀取標籤 ${labelNo} 的條碼… ${i+1}/${candidates.length}`);try{all.push(...await core.scanCanvas(candidates[i].c,candidates[i].name))}catch(e){console.warn('[LW interpreter barcode]',e)}}return dedupeBarcodes(all)}
+  function barcodeGeometryScore(r){return(r?.sourceBox?2:0)+(r?.position?1:0)}
+  function barcodeSameSpot(a,b){
+    const A=a?.sourceBox,B=b?.sourceBox;if(!A||!B)return true;
+    if(boxOverlapFraction(A,B)>=.28||boxOverlapFraction(B,A)>=.28)return true;
+    const ax=Number(A.x)+Number(A.w)/2,ay=Number(A.y)+Number(A.h)/2,bx=Number(B.x)+Number(B.w)/2,by=Number(B.y)+Number(B.h)/2;
+    return Math.abs(ax-bx)<Math.max(.025,Math.min(Number(A.w)||0,Number(B.w)||0)*.65)&&Math.abs(ay-by)<Math.max(.025,Math.min(Number(A.h)||0,Number(B.h)||0)*.65)
+  }
+  function dedupeBarcodes(rows){
+    const out=[];
+    for(const r of rows||[]){
+      if(!r?.text)continue;const key=`${r.format||''}|${r.text||''}`,at=out.findIndex(x=>`${x.format||''}|${x.text||''}`===key&&barcodeSameSpot(x,r));
+      if(at<0){out.push(r);continue}
+      if(barcodeGeometryScore(r)>barcodeGeometryScore(out[at]))out[at]=r
+    }
+    return out
+  }
+  function remapBarcodeSourceBox(row,candidate,trimBounds,regionWidth,regionHeight){
+    const b=row?.sourceBox;if(!b)return row;
+    const cw=Number(candidate?.w||candidate?.c?.width)||1,ch=Number(candidate?.h||candidate?.c?.height)||1,ox=Number(trimBounds?.x||0)+Number(candidate?.x||0),oy=Number(trimBounds?.y||0)+Number(candidate?.y||0);
+    const sourceBox={...b,x:clamp01((ox+Number(b.x||0)*cw)/regionWidth),y:clamp01((oy+Number(b.y||0)*ch)/regionHeight),w:clamp01(Number(b.w||0)*cw/regionWidth),h:clamp01(Number(b.h||0)*ch/regionHeight)};
+    return{...row,sourceBox}
+  }
+  async function scanRegionDeep(canvas,labelNo,onProgress){
+    const core=window.LabelWorkbenchBarcodeCore;if(!core?.scanCanvas)return[];
+    const trimBounds=contentBounds(canvas),c=crop(canvas,trimBounds.x,trimBounds.y,trimBounds.w,trimBounds.h),candidates=[{c,x:0,y:0,w:c.width,h:c.height,name:`標籤 ${labelNo} 全圖`}],h=c.height*.30;
+    for(let i=0;i<6;i++){const y=Math.min(c.height-h,i*c.height*.14),part=crop(c,0,y,c.width,h);candidates.push({c:part,x:0,y,w:part.width,h:part.height,name:`標籤 ${labelNo} 區域 ${i+1}`})}
+    const all=[];
+    for(let i=0;i<candidates.length;i++){
+      const candidate=candidates[i];onProgress?.(`正在讀取標籤 ${labelNo} 的條碼… ${i+1}/${candidates.length}`);
+      try{all.push(...(await core.scanCanvas(candidate.c,candidate.name)).map(row=>remapBarcodeSourceBox(row,candidate,trimBounds,canvas.width,canvas.height)))}catch(e){console.warn('[LW interpreter barcode]',e)}
+    }
+    return dedupeBarcodes(all)
+  }
   function fieldVerified(field,barcodes){const v=norm(field.value);if(v.length<2)return null;return barcodes.find(b=>{const t=norm(b.text);return t===v||t.includes(v)||(v.includes(t)&&t.length>=4)})||null}
   function fieldState(field,barcodes){if(fieldVerified(field,barcodes))return'barcode';if(field.repeat>=2&&!field.conflict)return'high';if(field.spatial&&!field.conflict&&field.repeat>=1)return'medium';return'pending'}
   function detectMarks(text){const t=String(text||'').toUpperCase(),out=[];if(/ROHS/.test(t))out.push('RoHS');if(/\bHF\b/.test(t))out.push('HF');if(/\bPB\b/.test(t))out.push('Pb 標誌');return out}
@@ -453,5 +489,5 @@
     return result
   }
 
-  window.LabelWorkbenchInterpreter={BUILD,scoreText,parseFields,spatialFields,aggregateFields,genericTextObjects,dedupeSpatialTextObjects,genericFieldsFromTextObjects,mergeGenericFields,lineSegments,needsTileFallback,detectLabelBands,boxOverlapFraction,isBarcodeOccludedText,rotateCanvas,interpretPdf,interpretImage,interpretFiles,productionText,questionsText,renderInterpretation,renderResult,analyze};
+  window.LabelWorkbenchInterpreter={BUILD,scoreText,parseFields,spatialFields,aggregateFields,genericTextObjects,dedupeSpatialTextObjects,isTinyLineNoise,genericFieldsFromTextObjects,mergeGenericFields,lineSegments,needsTileFallback,detectLabelBands,boxOverlapFraction,isBarcodeOccludedText,barcodeSameSpot,dedupeBarcodes,remapBarcodeSourceBox,scanRegionDeep,rotateCanvas,interpretPdf,interpretImage,interpretFiles,productionText,questionsText,renderInterpretation,renderResult,analyze};
 })();
