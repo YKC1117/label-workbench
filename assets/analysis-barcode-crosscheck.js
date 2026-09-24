@@ -44,6 +44,19 @@
     return uniq(delimited);
   }
   function barcodeValues(code,barcodes){const out=[];for(const b of barcodes||[])out.push(...extractCodeValues(code,b));return uniq(out)}
+  function syncCorrectedTextObjects(label,beforeValue,afterValue){
+    const before=clean(beforeValue),after=clean(afterValue),beforeNorm=norm(before),afterNorm=norm(after);
+    if(!before||!after||beforeNorm===afterNorm)return 0;
+    const escaped=before.replace(/[.*+?^$(){}|[\]\\]/g,'\\  function barcodeValues(code,barcodes){const out=[];for(const b of barcodes||[])out.push(...extractCodeValues(code,b));return uniq(out)}
+  function editDistance(a,b){'),rx=new RegExp(escaped,'i');
+    let changed=0;
+    for(const obj of label?.textObjects||[]){
+      const raw=String(obj?.text||'');if(!raw)continue;
+      if(norm(raw)===beforeNorm){obj.text=after;changed++;continue}
+      if(rx.test(raw)){obj.text=raw.replace(rx,after);changed++}
+    }
+    return changed
+  }
   function editDistance(a,b){const x=norm(a),y=norm(b);if(!x||!y)return 999;const prev=Array.from({length:y.length+1},(_,i)=>i);for(let i=1;i<=x.length;i++){const cur=[i];for(let j=1;j<=y.length;j++)cur[j]=Math.min(cur[j-1]+1,prev[j]+1,prev[j-1]+(x[i-1]===y[j-1]?0:1));for(let j=0;j<cur.length;j++)prev[j]=cur[j]}return prev[y.length]}
   function refineField(field,barcodes){
     const code=String(field?.code||'').toUpperCase().replace(/[^A-Z0-9]/g,'');if(!code)return field;
@@ -55,7 +68,15 @@
     field.__barcodeConflict=true;field.__barcodeEvidence=values.join(' / ');field.__barcodeEvidenceSource='decoded-conflict';field.barcodeVerified=false;
     const merged=[...values,...(field.alternatives||[])];field.alternatives=uniq(merged).slice(0,3);return field;
   }
-  function refineLabel(label){const bars=Array.isArray(label?.barcodes)?label.barcodes:[];for(const field of label?.fields||[])refineField(field,bars);return label}
+  function refineLabel(label){
+    const bars=Array.isArray(label?.barcodes)?label.barcodes:[];
+    for(const field of label?.fields||[]){
+      const before=String(field?.value||'');
+      refineField(field,bars);
+      if(field?.__barcodeCorrectedFromOcr&&before&&String(field?.value||''))syncCorrectedTextObjects(label,before,field.value)
+    }
+    return label
+  }
   function refineResult(result){for(const label of result?.labels||[])refineLabel(label);return result}
   function patchDom(result){
     const host=document.getElementById('analysisResult');if(!host||!result?.labels)return;
@@ -65,5 +86,5 @@
   }
   function install(){const A=api();if(!A?.analyze||A.__barcodeCrosscheckWrapped)return false;const base=A.analyze.bind(A);A.analyze=async function(files){const result=await base(files);refineResult(result);patchDom(result);return result};A.__barcodeCrosscheckWrapped=true;console.info('[Label Workbench] barcode cross-check',BUILD);return true}
   if(!install()){let tries=0;const timer=setInterval(()=>{tries++;if(install()||tries>100)clearInterval(timer)},80)}
-  window.LabelWorkbenchBarcodeCrosscheck={BUILD,extractCodeValues,barcodeValues,editDistance,refineField,refineLabel,refineResult,install};
+  window.LabelWorkbenchBarcodeCrosscheck={BUILD,extractCodeValues,barcodeValues,syncCorrectedTextObjects,editDistance,refineField,refineLabel,refineResult,install};
 })();
