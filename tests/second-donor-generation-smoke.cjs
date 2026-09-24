@@ -39,7 +39,7 @@ const label={
   for(const value of wanted)if(!actual.includes(value))throw new Error(`missing independent barcode ${value}; got ${JSON.stringify(actual)}`);
   if(new Set(actual).size!==6)throw new Error('barcode values are not independent');
   for(const f of label.fields){const o=visible.find(x=>x.kind==='text'&&x.value===f.value);if(!o)throw new Error(`missing field ${f.value}`);const pos=L.boxToLayout(f.sourceBox,{width:140,height:38}).mil;if(o.xMil!==pos.x||o.yMil!==pos.y)throw new Error(`field position mismatch ${f.value}`)}
-  for(const b of label.barcodes){const o=visible.find(x=>x.kind==='barcode'&&x.resolvedPreview===b.text);if(!o)throw new Error(`missing barcode ${b.text}`);const pos=L.boxToLayout(b.sourceBox,{width:120,height:72}).mil;if(o.xMil!==pos.x||o.yMil!==pos.y)throw new Error(`barcode position mismatch ${b.text}`)}
+  for(const b of label.barcodes){const o=visible.find(x=>x.kind==='barcode'&&x.resolvedPreview===b.text);if(!o)throw new Error(`missing barcode ${b.text}`);const pos=L.boxToLayout(b.sourceBox,{width:140,height:38}).mil;if(o.xMil!==pos.x||o.yMil!==pos.y)throw new Error(`barcode position mismatch ${b.text}`)}
   const sizedContainer=await F.inflateContainer(parsed),dv=new DataView(sizedContainer.buffer,sizedContainer.byteOffset,sizedContainer.byteLength);let pairs=0;for(let i=0;i<=dv.byteLength-8;i++)if(dv.getInt32(i,true)===L.mmToMil(140)&&dv.getInt32(i+4,true)===L.mmToMil(38))pairs++;
   if(pairs<2)throw new Error(`internal size pair rewrite missing: ${pairs}`);
   console.log('PASS: generated BTW contains only 12 Text + 5 independent Code128 + 1 DataMatrix roots, no 50000 mil residue, at source positions and 140x38mm');
