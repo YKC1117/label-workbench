@@ -101,12 +101,21 @@
   }
   async function createWorker(){const T=await loadScript(TESS_SRC,'Tesseract');const worker=await T.createWorker(['eng','chi_tra'],1,{workerPath:TESS_WORKER});try{await worker.setParameters({tessedit_pageseg_mode:T.PSM?.SPARSE_TEXT||'11',preserve_interword_spaces:'1'})}catch{}return worker}
   async function recognizeWords(worker,canvas){const r=await worker.recognize(canvas,{}, {text:true,blocks:true});return wordsFromBlocks(r?.data?.blocks||[])}
+  function validSourceBox(box){
+    if(!box)return false;
+    const x=Number(box.x),y=Number(box.y),w=Number(box.w),h=Number(box.h);
+    return Number.isFinite(x)&&Number.isFinite(y)&&Number.isFinite(w)&&Number.isFinite(h)&&x>=0&&y>=0&&w>0&&h>0&&x<=1&&y<=1&&x+w<=1.02&&y+h<=1.02
+  }
   async function locateBarcodeBoxes(region,label){
-    const core=window.LabelWorkbenchBarcodeCore;if(!core?.scanCanvas||!(label?.barcodes||[]).length)return 0;
+    const rows=(label?.barcodes||[]),already=rows.filter(b=>validSourceBox(b?.sourceBox)).length,missing=rows.filter(b=>!validSourceBox(b?.sourceBox));
+    const core=window.LabelWorkbenchBarcodeCore;
+    if(!missing.length)return already;
+    if(!core?.scanCanvas)return already;
     try{
-      const scanned=await core.scanCanvas(region,'版面定位全圖'),scale=scanScale(region.width,region.height),sw=Math.round(region.width*scale),sh=Math.round(region.height*scale),matches=matchKnownBarcodes(label.barcodes,scanned,sw,sh);
-      for(const m of matches)m.barcode.sourceBox=m.sourceBox;return matches.length
-    }catch(err){console.warn('[Label Workbench] barcode geometry skipped',err);return 0}
+      const scanned=await core.scanCanvas(region,'版面定位全圖'),scale=scanScale(region.width,region.height),sw=Math.round(region.width*scale),sh=Math.round(region.height*scale),matches=matchKnownBarcodes(missing,scanned,sw,sh);
+      for(const m of matches)m.barcode.sourceBox=m.sourceBox;
+      return already+matches.length
+    }catch(err){console.warn('[Label Workbench] barcode geometry skipped',err);return already}
   }
 
   async function locateFile(file,labels,worker,A){
@@ -141,5 +150,5 @@
   function install(){const A=window.LabelWorkbenchInterpreter;if(!A?.analyze||A.__geometryWrapped)return false;const base=A.analyze.bind(A);A.analyze=async function(files){const arr=[...(files||[])],result=await base(arr);return refine(arr,result)};A.__geometryWrapped=true;A.refineGeometry=refine;console.info('[Label Workbench] source geometry assist',BUILD);return true}
   if(!install()){let tries=0;const timer=setInterval(()=>{tries++;if(install()||tries>100)clearInterval(timer)},80)}
 
-  window.LabelWorkbenchAnalysisGeometry={BUILD,norm,charSimilarity,wordsFromBlocks,candidateSpans,matchKnownFields,collectPoints,positionToBox,scanScale,matchKnownBarcodes,boxOverlapFraction,suppressBarcodeOccludedText,refine,install};
+  window.LabelWorkbenchAnalysisGeometry={BUILD,norm,charSimilarity,wordsFromBlocks,candidateSpans,matchKnownFields,collectPoints,positionToBox,scanScale,matchKnownBarcodes,validSourceBox,boxOverlapFraction,suppressBarcodeOccludedText,refine,install};
 })();
