@@ -52,6 +52,10 @@
     if(width>=5&&height>=5&&width<=1000&&height<=1000)return{width,height,source:true};
     return{...DONOR_SIZE,source:false}
   }
+  function validSourceBox(box){
+    const x=Number(box?.x),y=Number(box?.y),w=Number(box?.w),h=Number(box?.h);
+    return Number.isFinite(x)&&Number.isFinite(y)&&Number.isFinite(w)&&Number.isFinite(h)&&x>=0&&y>=0&&w>0&&h>0&&x<=1&&y<=1&&x+w<=1.02&&y+h<=1.02
+  }
   function sourceLayout(box,target){
     const L=window.LabelWorkbenchBtwLayout;if(!L?.boxToLayout||!box)return null;
     try{return L.boxToLayout(box,target)}catch{return null}
@@ -102,6 +106,11 @@
 
     /* Re-map after size rewrite so all edit offsets are derived from the bytes being edited. */
     before=M.mapContainer(container);donorPool=pool(before.objects);assertPool(donorPool);
+    if(target.source){
+      const missingText=P.fields.filter(item=>!validSourceBox(item?.sourceBox));
+      const missingBarcode=requestedBarcodeRows(P).filter(item=>!validSourceBox(item?.row?.sourceBox));
+      if(missingText.length||missingBarcode.length)throw new Error(`5C128+1DM 版面座標不完整：文字 ${missingText.length}、條碼 ${missingBarcode.length} 缺少 sourceBox；停止使用預設位置產檔`)
+    }
     const edits=new Map(),activeIndexes=new Set(),expectedText=[];
     P.fields.forEach((field,i)=>{
       const obj=donorPool.texts[i],layout=sourceLayout(field?.sourceBox,target),pos=layout?.mil?{xMil:layout.mil.x,yMil:layout.mil.y}:fallbackTextPos(i,P.fields.length,target),value=textValue(field),fontSize=sourceFontSize(layout,obj.fontSize),edit={index:obj.index,value,...pos};
@@ -142,6 +151,6 @@
     return{name:outputName(label,index),bytes:rebuilt,kind:P.kind,barcodes:{dataMatrix:P.dm.map(barcodeText),code128:P.c128.map(barcodeText)},layout:{target,internalSizeOffsets:sized.offsets,text:expectedText,barcodes:expectedBarcode,removedDonorRoots:removeIndexes.length,originalRootCount:rootCount},header:check.header,seed:SEED_ID}
   }
 
-  window.LabelWorkbenchBtwSecondNative={BUILD,SEED_ID,MAX_TEXT,MAX_C128,MAX_DM,plan,canGenerate,pool,generateOne};
+  window.LabelWorkbenchBtwSecondNative={BUILD,SEED_ID,MAX_TEXT,MAX_C128,MAX_DM,plan,canGenerate,pool,validSourceBox,generateOne};
   console.info('[Label Workbench] sanitized 5C128+1DM native generator',BUILD);
 })();
