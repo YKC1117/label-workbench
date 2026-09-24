@@ -6,7 +6,7 @@
 (function(){
   'use strict';
 
-  const BUILD='20260919-v184-pdf-legacy';
+  const BUILD='20260924-v185-photo-label-region';
   // PDF.js modern build assumes very new JS runtime APIs (including Map#getOrInsertComputed).
   // Use the matching legacy display/worker pair so real users on older Chromium/Safari can still render PDFs.
   const PDF_SRC='https://cdn.jsdelivr.net/npm/pdfjs-dist@6.3.289/legacy/build/pdf.min.mjs';
@@ -132,8 +132,39 @@
   function runs(flags){const out=[];let start=null;for(let i=0;i<flags.length;i++){if(flags[i]&&start===null)start=i;if(!flags[i]&&start!==null){out.push([start,i-1]);start=null}}if(start!==null)out.push([start,flags.length-1]);return out}
   function mergeRuns(list,maxGap){const out=[];for(const r of list){if(!out.length||r[0]-out[out.length-1][1]>maxGap)out.push([...r]);else out[out.length-1][1]=r[1]}return out}
 
+  /* A photographed white label can sit on a gray surface. In that case the
+     dark-pixel scan below sees the entire surface as one label. Find the broad
+     light sheet first, using row coverage so reflections do not count. */
+  function detectLightLabelBands(canvas,data,step){
+    const width=canvas.width,height=canvas.height,sampled=Math.ceil(width/step);
+    if(width<80||height<80)return[];
+    const light=new Uint8Array(height);
+    for(let y=0;y<height;y++){
+      let count=0;
+      for(let x=0;x<width;x+=step)if(grayAt(data,(y*width+x)*4)>205)count++;
+      light[y]=count>=sampled*.44?1:0;
+    }
+    const spans=mergeRuns(runs(light),Math.max(10,Math.round(height*.065)))
+      .filter(([a,b])=>a>height*.015&&b<height*.985&&b-a>=Math.max(40,height*.075)&&b-a<height*.8);
+    if(!spans.length||spans.length>8)return[];
+    const boxes=[];
+    for(const [a,b] of spans){
+      const sampleY=Math.max(1,Math.ceil((b-a+1)/200)),sampleRows=Math.ceil((b-a+1)/sampleY),columns=new Uint16Array(sampled);
+      for(let y=a;y<=b;y+=sampleY)for(let x=0,col=0;x<width;x+=step,col++){
+        if(grayAt(data,(y*width+x)*4)>205)columns[col]++;
+      }
+      let first=-1,last=-1;
+      for(let col=0;col<sampled;col++)if(columns[col]>=sampleRows*.22){if(first<0)first=col;last=col}
+      if(first<0||(last-first+1)*step<width*.35)continue;
+      const px=Math.round(width*.008),py=Math.round(height*.006),x=Math.max(0,first*step-px),y=Math.max(0,a-py);
+      boxes.push({x,y,w:Math.min(width,(last+1)*step+px)-x,h:Math.min(height,b+py+1)-y});
+    }
+    return boxes;
+  }
+
   function detectLabelBands(canvas){
     const x=canvas.getContext('2d',{willReadFrequently:true}),im=x.getImageData(0,0,canvas.width,canvas.height),d=im.data,step=Math.max(1,Math.ceil(canvas.width/1500)),counts=new Uint32Array(canvas.height),sampled=Math.ceil(canvas.width/step);
+    const light=detectLightLabelBands(canvas,d,step);if(light.length)return light;
     for(let y=0;y<canvas.height;y++){let n=0;for(let xx=0;xx<canvas.width;xx+=step){const i=(y*canvas.width+xx)*4;if(grayAt(d,i)<228)n++}counts[y]=n}
     const threshold=Math.max(5,Math.round(sampled*.005));let rs=mergeRuns(runs([...counts].map(n=>n>threshold)),Math.max(12,Math.round(canvas.height*.075)));rs=rs.filter(r=>r[1]-r[0]>=Math.max(50,canvas.height*.045));if(!rs.length||rs.length>8)rs=[[0,canvas.height-1]];
     const boxes=rs.map(([a,b])=>{const py=Math.round(canvas.height*.018),y=Math.max(0,a-py),y2=Math.min(canvas.height,b+py),rough=crop(canvas,0,y,canvas.width,y2-y),cb=contentBounds(rough,240);return{x:cb.x,y:y+cb.y,w:cb.w,h:cb.h}});

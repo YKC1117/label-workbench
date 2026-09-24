@@ -146,6 +146,10 @@ async function launchBrowser(){
     const templateSize=m?{widthMm:Number(m[1]),heightMm:Number(m[2])}:null;
     const requested=/^\s*(\d+(?:\.\d+)?)\s*[x×]\s*(\d+(?:\.\d+)?)\s*$/i.exec(sizeArg);
     const requestedSize=requested?{widthMm:Number(requested[1]),heightMm:Number(requested[2])}:null;
+    const region=model.result.labels[0]?.sourceRegion||{};
+    const regionAspect=Number(region.w)>0&&Number(region.h)>0?Number(region.w)/Number(region.h):null;
+    const targetAspect=requestedSize?requestedSize.widthMm/requestedSize.heightMm:null;
+    const aspectMismatch=regionAspect&&targetAspect?Math.max(regionAspect,targetAspect)/Math.min(regionAspect,targetAspect):null;
     const residualOffCanvas=decoded.filter(o=>Number(o.xMil)===50000||Number(o.yMil)===50000).map(o=>({index:o.index,kind:o.kind,name:o.name,value:o.value||'',barcodeType:o.barcodeType||'',components:o.components||[],xMil:o.xMil,yMil:o.yMil}));
     const outOfBoundsAnchors=templateSize?decoded.filter(o=>Number.isFinite(Number(o.xMm))&&Number.isFinite(Number(o.yMm))&&(Number(o.xMm)<0||Number(o.yMm)<0||Number(o.xMm)>templateSize.widthMm||Number(o.yMm)>templateSize.heightMm)).map(o=>({index:o.index,kind:o.kind,name:o.name,value:o.value||'',xMm:o.xMm,yMm:o.yMm})):[];
     const label=model.result.labels[0]||{};
@@ -174,11 +178,12 @@ async function launchBrowser(){
       input:imagePath,sizeArg:sizeArg||null,output:btwPath,
       browser:{source:launched.source,executablePath:launched.executablePath||null},
       label:model.result.labels[0],
-      outputInspection:{templateSize,requestedSize,sizeMatches,objectCount:decoded.length,residualOffCanvasCount:residualOffCanvas.length,outOfBoundsAnchorCount:outOfBoundsAnchors.length,unexpectedTextCount:unexpectedText.length,unexpectedBarcodeCount:unexpectedBarcodes.length,syntheticObjectCount:syntheticObjects.length,duplicateObjectCount:duplicateObjects.length,severeSourceOverlapCount:severeSourceOverlaps.length},
+      outputInspection:{templateSize,requestedSize,sizeMatches,regionAspect,targetAspect,aspectMismatch,objectCount:decoded.length,residualOffCanvasCount:residualOffCanvas.length,outOfBoundsAnchorCount:outOfBoundsAnchors.length,unexpectedTextCount:unexpectedText.length,unexpectedBarcodeCount:unexpectedBarcodes.length,syntheticObjectCount:syntheticObjects.length,duplicateObjectCount:duplicateObjects.length,severeSourceOverlapCount:severeSourceOverlaps.length},
       consoleErrors,pageErrors
     };
     fs.writeFileSync(path.join(outDir,'summary.json'),JSON.stringify(summary,null,2),'utf8');
     if(!sizeMatches)throw new Error('Exported TemplateSize does not match explicit physical size '+sizeArg);
+    if(aspectMismatch==null||aspectMismatch>2.2)throw new Error('Detected label region aspect ratio does not match the requested physical label size; inspect source-region.png before accepting the BTW');
     if(residualOffCanvas.length)throw new Error('Exported BTW still contains '+residualOffCanvas.length+' donor object(s) hidden at 50000 mil');
     if(outOfBoundsAnchors.length)throw new Error('Exported BTW contains '+outOfBoundsAnchors.length+' object anchor(s) outside the requested label size');
     if(unexpectedText.length)throw new Error('Exported BTW contains '+unexpectedText.length+' text object(s) not present in the analysis source model');
