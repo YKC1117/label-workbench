@@ -129,7 +129,7 @@ for(const f of[
 
 (async()=>{
   const ui=c.LabelWorkbenchBtNativePrimary;
-  assert(ui?.BUILD==='20260929-btnp240-controlled-production-deps','unexpected BTW primary build');
+  assert(ui?.BUILD==='20260929-btnp250-manual-download-fallback','unexpected BTW primary build');
 
   ui.decorateAnalysis();
 
@@ -145,6 +145,10 @@ for(const f of[
   assert(legacyDownloadCalls===0,'website click leaked into legacy wrapped download path');
   assert(downloads.length===1,'browser download was not triggered exactly once');
   assert(/\.btw$/i.test(downloads[0].name),`browser downloaded the wrong file type: ${downloads[0].name}`);
+  const manual=elements.get('btwManualDownload');
+  assert(manual,'manual BTW download fallback was not rendered');
+  const manualLink=manual.children.find(x=>x.tagName==='A');
+  assert(manualLink&&/\.btw$/i.test(manualLink.download)&&/^blob:/.test(manualLink.href),'manual BTW fallback link is invalid');
   assert(toasts.some(x=>/可編輯 \.BTW 已下載/.test(x)),'success toast was not shown');
   assert(button.disabled===false,'BTW button stayed disabled after download');
   assert(/下載可編輯 \.BTW/.test(button.textContent),'BTW button label was not restored');

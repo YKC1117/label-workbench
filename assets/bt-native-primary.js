@@ -5,7 +5,7 @@
 (function(){
   'use strict';
 
-  const BUILD='20260929-btnp240-controlled-production-deps';
+  const BUILD='20260929-btnp250-manual-download-fallback';
   const FORMAT_SRC='assets/btw-format.js?v=20260911-btw011';
   const NATIVE_SRC='assets/btw-native.js?v=20260911-btwn321-safe-base64';
   const PRODUCTION_SRC='assets/btw-production-core.js?v=20260918-btwpc100';
@@ -15,7 +15,7 @@
     ['assets/btw-object-map.js?v=20260929-btw-object-map-045',()=>window.LabelWorkbenchBtwObjectMap,'BTW object map'],
     ['assets/btw-production-gate.js?v=20260918-btw-production-gate',()=>window.LabelWorkbenchBtwProductionGate,'BTW production gate'],
     ['assets/btw-controlled-donor.js?v=20260929-controlled-donor-100',()=>window.LabelWorkbenchBtwControlledDonor,'BTW controlled donor'],
-    ['assets/btw-second-native.js?v=20260929-second-native-200',()=>window.LabelWorkbenchBtwSecondNative,'BTW controlled native'],
+    ['assets/btw-second-native.js?v=20260929-second-native-240',()=>window.LabelWorkbenchBtwSecondNative,'BTW controlled native'],
     ['assets/btw-rich-native.js?v=20260918-btw-rich-150',()=>window.LabelWorkbenchBtwRichNative,'BTW rich native'],
     ['assets/btw-family-native.js?v=20260918-btw-family-140',()=>window.LabelWorkbenchBtwFamilyNative,'BTW family native']
   ];
@@ -101,6 +101,18 @@
     if(!status){status=document.createElement('div');status.id='btwDownloadStatus';status.setAttribute('role','status');host.appendChild(status)}
     status.className=error?'note warn-note':'footer-note';status.textContent=message;
   }
+  function installManualDownload(generated){
+    const host=el('analysisResult'),outputs=generated?.outputs||[];if(!host||outputs.length!==1)return null;
+    const out=outputs[0];if(!out?.bytes||!out?.name)return null;
+    const old=el('btwManualDownload');if(old)old.remove();
+    if(window.__lwBtwManualUrl){try{URL.revokeObjectURL(window.__lwBtwManualUrl)}catch{}window.__lwBtwManualUrl=null}
+    const url=URL.createObjectURL(new Blob([out.bytes],{type:'application/octet-stream'}));
+    window.__lwBtwManualUrl=url;
+    const box=document.createElement('div');box.id='btwManualDownload';box.className='note';
+    const a=document.createElement('a');a.href=url;a.download=out.name;a.textContent='手動下載剛產生的 .BTW';a.className='btn primary';
+    const p=document.createElement('div');p.className='footer-note';p.textContent='若瀏覽器沒有自動下載，請直接按這個按鈕。重新分析前都可以再下載。';
+    box.appendChild(a);box.appendChild(p);host.appendChild(box);return a
+  }
   async function downloadEditable(){
     if(downloading)return false;
     const b=bridge();
@@ -114,8 +126,9 @@
       const api=await ensureProduction(),exportResult=withConfirmedPhysicalSizes(result,files);
       const generated=await api.generate(exportResult,files,msg=>buttons.forEach(x=>x.textContent=msg||'正在建立可編輯 .BTW…'));
       if(b.latestResult!==result)throw new Error('原稿已變更，請完成新原稿分析後再下載');
+      installManualDownload(generated);
       const out=await api.downloadGenerated(generated);
-      downloadStatus('已送出 .BTW 下載，請查看瀏覽器下載清單。');
+      downloadStatus('已建立 .BTW。若沒有自動下載，可使用下方「手動下載剛產生的 .BTW」。');
       if(out?.ok)toast(out.count>1?`已建立 ${out.count} 個 BarTender .BTW`:'可編輯 .BTW 已下載');
       return !!out?.ok
     }catch(err){
@@ -183,5 +196,5 @@
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 
-  window.LabelWorkbenchBtNativePrimary={BUILD,ensureCopy,ensureFormat,ensureNative,ensureProduction,validPhysicalSize,parsePhysicalSize,withConfirmedPhysicalSizes,downloadEditable,decorateAnalysis,decorateBt,refresh};
+  window.LabelWorkbenchBtNativePrimary={BUILD,ensureCopy,ensureFormat,ensureNative,ensureProduction,validPhysicalSize,parsePhysicalSize,withConfirmedPhysicalSizes,downloadStatus,installManualDownload,downloadEditable,decorateAnalysis,decorateBt,refresh};
 })();

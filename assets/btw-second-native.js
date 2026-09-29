@@ -1,13 +1,13 @@
 /* Label Workbench controlled native BTW generator v0.2.0
  * Uses a sanitized, verified hand-laid-out BarTender 2022 R2 donor as a controlled
- * object library: 29 ordinary Text, 5 Code 128 and 1 Data Matrix native objects.
+ * object library: 29 ordinary Text + 3 overflow Text, 5 Code 128 and 1 Data Matrix native objects.
  * Customer content/positions are still supplied by Quick Analysis.
  */
 (function(){
   'use strict';
-  const BUILD='20260929-btw-second-native-230-geometry-matched-all';
+  const BUILD='20260929-btw-second-native-240-32text-overflow';
   const SEED_ID='LW-CONTROLLED-140x38-2022-R2';
-  const MAX_TEXT=29;
+  const MAX_TEXT=32;
   const MAX_C128=5;
   const MAX_DM=1;
   const DONOR_SIZE={width:140,height:38};
@@ -41,8 +41,7 @@
   function reusableText(objects){return objects.filter(o=>
     o.kind==='text'&&
     /^(?:Text|文字)\s*\d+/i.test(o.name||'')&&
-    /DataSourceGeneral/i.test(String(o.rootPath||''))&&
-    !/\.Border$/i.test(String(o.rootPath||''))&&
+    (/DataSourceGeneral/i.test(String(o.rootPath||''))||/\.Border$/i.test(String(o.rootPath||'')))&&
     o.valueEntry
   )}
   function pool(objects){
@@ -96,7 +95,10 @@
     const spatial=has?(Math.abs(Number(box.x)-p.x)*1.15+Math.abs(Number(box.y)-p.y)*1.5):0;
     const want=Math.max(1,visualChars(textValue(field))),have=Math.max(1,visualChars(obj?.value||'LW'));
     const length=Math.abs(Math.log(want/have))*.16;
-    return spatial+length
+    /* Three donor Text roots are serialized under Border. They are writable and
+       preserve X/Y/font/value correctly, but keep them as overflow slots only. */
+    const overflow=/\.Border$/i.test(String(obj?.rootPath||''))?8:0;
+    return spatial+length+overflow
   }
   function assignTextPool(fields,texts){
     const available=[...(texts||[])],out=[];
