@@ -36,10 +36,11 @@ const label={
   if(!parsed.header.text.includes('<TemplateSize>140 x 38 mm</TemplateSize>'))throw new Error('TemplateSize not rewritten');
   const map=M.mapContainer(await F.inflateContainer(parsed)),objects=map.objects;
   const expectedRoots=label.fields.length+label.barcodes.length;
-  if(objects.length!==expectedRoots)throw new Error(`root count ${objects.length}/${expectedRoots}`);
-  if(objects.some(o=>Number(o.xMil)===50000||Number(o.yMil)===50000))throw new Error('unused donor root was hidden at 50000 mil instead of removed');
-  if(out.layout?.removedDonorRoots!==(40-expectedRoots))throw new Error(`removed donor roots ${out.layout?.removedDonorRoots}`);
-  const visible=objects.filter(o=>Number.isFinite(o.xMil)&&Number.isFinite(o.yMil)&&o.xMil<50000&&o.yMil<50000);
+  if(objects.length!==out.layout?.originalRootCount)throw new Error(`donor root graph changed ${objects.length}/${out.layout?.originalRootCount}`);
+  if(out.layout?.parkedDonorRoots!==(objects.length-expectedRoots))throw new Error(`parked donor roots ${out.layout?.parkedDonorRoots}`);
+  const parked=objects.filter(o=>Number(o.xMil)===S.OFF&&Number(o.yMil)===S.OFF);
+  if(parked.length!==out.layout.parkedDonorRoots)throw new Error(`off-canvas donor count ${parked.length}/${out.layout.parkedDonorRoots}`);
+  const visible=objects.filter(o=>Number.isFinite(o.xMil)&&Number.isFinite(o.yMil)&&o.xMil>=0&&o.yMil>=0&&o.xMil<S.OFF&&o.yMil<S.OFF);
   const visibleC128=visible.filter(o=>o.kind==='barcode'&&o.barcodeType==='Code 128'),visibleDm=visible.filter(o=>o.kind==='barcode'&&o.barcodeType==='Data Matrix');
   if(visibleC128.length!==5)throw new Error(`visible Code128 ${visibleC128.length}`);
   if(visibleDm.length!==1)throw new Error(`visible DataMatrix ${visibleDm.length}`);
@@ -69,8 +70,10 @@ const label={
   };
   const alt=await S.generateOne(altLabel,1),altParsed=F.parseStructure(alt.bytes),altObjects=M.mapContainer(await F.inflateContainer(altParsed)).objects;
   if(!altParsed.header.text.includes('<TemplateSize>96 x 54 mm</TemplateSize>'))throw new Error('arbitrary customer TemplateSize was not rewritten to 96x54mm');
-  if(altObjects.some(o=>Number(o.xMil)===50000||Number(o.yMil)===50000))throw new Error('arbitrary-size output contains 50000 mil residue');
+  if(altObjects.length!==alt.layout?.originalRootCount)throw new Error('arbitrary-size donor root graph changed');
+  const altParked=altObjects.filter(o=>Number(o.xMil)===S.OFF&&Number(o.yMil)===S.OFF);
+  if(altParked.length!==alt.layout?.parkedDonorRoots)throw new Error(`arbitrary-size parked donor count ${altParked.length}/${alt.layout?.parkedDonorRoots}`);
   for(const f of altLabel.fields){const o=altObjects.find(x=>x.kind==='text'&&x.value===f.value);if(!o)throw new Error(`alt missing field ${f.value}`);const pos=L.boxToLayout(f.sourceBox,{width:96,height:54}).mil;if(o.xMil!==pos.x||o.yMil!==pos.y)throw new Error(`alt field position mismatch ${f.value}`)}
   for(const b of altLabel.barcodes){const o=altObjects.find(x=>x.kind==='barcode'&&x.resolvedPreview===b.text);if(!o)throw new Error(`alt missing barcode ${b.text}`);const pos=L.boxToLayout(b.sourceBox,{width:96,height:54}).mil;if(o.xMil!==pos.x||o.yMil!==pos.y)throw new Error(`alt barcode position mismatch ${b.text}`)}
-  console.log('PASS: generic 5C128+1DM layout restores normalized source geometry at both 140x38mm and unrelated 96x54mm sizes, rejects missing geometry, and leaves no donor residue');
+  console.log('PASS: generic 5C128+1DM layout restores normalized source geometry at both 140x38mm and unrelated 96x54mm sizes, rejects missing geometry, while preserving the native donor object graph');
 })().catch(e=>{console.error(e);process.exit(1)});
