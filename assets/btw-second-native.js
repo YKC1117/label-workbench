@@ -49,7 +49,7 @@
     const acx=Number(A.x)+Number(A.w)/2,acy=Number(A.y)+Number(A.h)/2,bcx=Number(B.x)+Number(B.w)/2,bcy=Number(B.y)+Number(B.h)/2;
     const dx=Math.abs(acx-bcx),dy=Math.abs(acy-bcy),wx=Math.max(.018,(Number(A.w)+Number(B.w))*.62);
     const short=Math.max(textDedupKey(a).length,textDedupKey(b).length)<=8;
-    const hy=Math.max(.065:.012,(Number(A.h)+Number(B.h))*(short?1.35:.82));
+    const hy=Math.max(short ? .065 : .012,(Number(A.h)+Number(B.h))*(short ? 1.35 : .82));
     return dx<=wx&&dy<=hy
   }
   function dedupeTextFields(items){
