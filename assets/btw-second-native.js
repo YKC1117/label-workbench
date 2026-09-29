@@ -177,7 +177,7 @@
       const len=data[i+4]|(data[i+5]<<8);if(len<3||len>80||i+6+len+8>data.length)continue;
       let type='';let ok=true;
       for(let j=0;j<len;j++){const b=data[i+6+j];if(b<0x20||b>0x7e){ok=false;break}type+=String.fromCharCode(b)}
-      if(!ok||!['LineData','CircleData','PictureData'].includes(type))continue;
+      if(!ok||!['LineData','CircleData'].includes(type))continue;
       const at=i+6+len,x=dv.getInt32(at,true),y=dv.getInt32(at+4,true);
       if(Math.abs(x)>=1000000||Math.abs(y)>=1000000)continue;
       dv.setInt32(at,OFF,true);dv.setInt32(at+4,OFF,true);parked.push({type,offset:at,from:{x,y}})
