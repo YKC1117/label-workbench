@@ -20,8 +20,10 @@ function plausible(type,v){
 (async()=>{
  const D=c.LabelWorkbenchBtwControlledDonor,F=c.LabelWorkbenchBtwFormat,M=c.LabelWorkbenchBtwObjectMap;
  const bytes=new Uint8Array(await D.bytes()),p=F.parseStructure(bytes),container=await F.inflateContainer(p),m=M.mapContainer(container);
- const bars=m.objects.filter(o=>o.kind==='barcode'&&o.barcodeType==='Code 128').slice(0,5);
- if(bars.length!==5)throw new Error('expected 5 Code128, got '+bars.length);
+ const dm=m.objects.filter(o=>o.kind==='barcode'&&o.barcodeType==='Data Matrix'&&o.componentEntries?.length);
+ const dmIds=new Set(dm.map(o=>o.index));
+ const bars=m.objects.filter(o=>o.kind==='barcode'&&!dmIds.has(o.index)&&o.componentEntries?.length).slice(0,5);
+ if(bars.length!==5)throw new Error('expected 5 writable Code128 roots, got '+bars.length);
  console.log('CODE128_OBJECTS '+JSON.stringify(bars.map(o=>({index:o.index,name:o.name,x:o.xMil,y:o.yMil,value:o.resolvedPreview||o.components?.join('')||'',recordLength:o.recordEnd-o.recordStart,owner:o.owner,root:o.rootPath}))));
  const recs=bars.map(o=>container.slice(o.recordStart,o.recordEnd));
  const max=Math.min(...recs.map(r=>r.length),1024);
