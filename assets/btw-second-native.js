@@ -48,7 +48,7 @@
   function pool(objects){
     const dm=objects.filter(o=>o.kind==='barcode'&&o.barcodeType==='Data Matrix'&&o.componentEntries?.length);
     const dmIndexes=new Set(dm.map(o=>o.index));
-    const c128=objects.filter(o=>o.kind==='barcode'&&!dmIndexes.has(o.index)&&o.componentEntries?.length);
+    const c128=objects.filter(o=>o.kind==='barcode'&&!dmIndexes.has(o.index)&&o.barcodeType==='Code 128'&&o.componentEntries?.length);
     return{texts:reusableText(objects),c128,dm}
   }
   function assertPool(p){
