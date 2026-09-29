@@ -78,6 +78,13 @@ const round=v=>Number.isFinite(v)?Math.round(v*1000)/1000:null;
     }
     console.log('CODE128_WINDOW_STRINGS '+JSON.stringify(entries));
     console.log('CODE128_WINDOW_NUMERIC '+JSON.stringify(numeric));
+    const typed=[];
+    const dv=new DataView(container.buffer,container.byteOffset,container.byteLength);
+    for(let rel=1120;rel<=1320;rel+=2){
+      const off=o.recordStart+rel;if(off+8>o.recordEnd)break;
+      typed.push({rel,u16le:dv.getUint16(off,true),u16be:dv.getUint16(off,false),i32le:dv.getInt32(off,true),f32le:round(dv.getFloat32(off,true)),f64le:round(dv.getFloat64(off,true))});
+    }
+    console.log('BARCODE_TYPED_WINDOW '+JSON.stringify(typed));
   }
   console.log('PASS: BTW object size diagnostic complete');
 })().catch(e=>{console.error(e);process.exit(1)});
