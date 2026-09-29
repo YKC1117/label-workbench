@@ -110,6 +110,20 @@
     for(const off of offsets){dv.setInt32(off,w,true);dv.setInt32(off+4,h,true)}
     return{container:out,offsets}
   }
+  function parkAuxiliaryGraphics(container){
+    const data=container instanceof Uint8Array?new Uint8Array(container):new Uint8Array(container),dv=new DataView(data.buffer,data.byteOffset,data.byteLength),parked=[];
+    for(let i=0;i+16<data.length;i++){
+      if(data[i]!==0xff||data[i+1]!==0xff||data[i+2]!==0x01||data[i+3]!==0x00)continue;
+      const len=data[i+4]|(data[i+5]<<8);if(len<3||len>80||i+6+len+8>data.length)continue;
+      let type='';let ok=true;
+      for(let j=0;j<len;j++){const b=data[i+6+j];if(b<0x20||b>0x7e){ok=false;break}type+=String.fromCharCode(b)}
+      if(!ok||!['LineData','CircleData'].includes(type))continue;
+      const at=i+6+len,x=dv.getInt32(at,true),y=dv.getInt32(at+4,true);
+      if(Math.abs(x)>=1000000||Math.abs(y)>=1000000)continue;
+      dv.setInt32(at,OFF,true);dv.setInt32(at+4,OFF,true);parked.push({type,offset:at,from:{x,y}})
+    }
+    return{container:data,parked}
+  }
   function barcodeEdit(obj,value,pos){
     if(!obj?.componentEntries?.length)throw new Error(`${obj?.name||'條碼'} 沒有可安全寫入的 datasource slot`);
     const components=obj.componentEntries.map((_,i)=>i===0?String(value):'');
@@ -125,9 +139,9 @@
     const seed=new Uint8Array(await D.bytes()),parsed=F.parseStructure(seed);
     if(parsed.header?.applicationVersion!=='2022 R2'||parsed.header?.compatibleVersion!=='2022 R1')throw new Error('5C128+1DM donor 版本不是 BarTender 2022 R2 / 2022 R1 相容');
     let container=await F.inflateContainer(parsed),before=M.mapContainer(container),donorPool=pool(before.objects);assertPool(donorPool);
-    const rootCount=before.objects.length,target=targetSize(label),sized=rewriteInternalSize(container,target);container=sized.container;
+    const rootCount=before.objects.length,target=targetSize(label),sized=rewriteInternalSize(container,target),aux=parkAuxiliaryGraphics(sized.container);container=aux.container;
 
-    /* Re-map after size rewrite so all edit offsets are derived from the bytes being edited. */
+    /* Re-map after fixed-width size/auxiliary rewrites so all edit offsets are derived from the bytes being edited. */
     before=M.mapContainer(container);donorPool=pool(before.objects);assertPool(donorPool);
     if(target.source){
       const missingText=P.fields.filter(item=>!validSourceBox(item?.sourceBox));
@@ -176,9 +190,9 @@
       if(!text.includes(`<TemplateSize>${wanted}</TemplateSize>`))throw new Error('BTW TemplateSize round-trip 驗證失敗')
     }
 
-    return{name:outputName(label,index),bytes:rebuilt,kind:P.kind,barcodes:{dataMatrix:P.dm.map(barcodeText),code128:P.c128.map(barcodeText)},layout:{target,internalSizeOffsets:sized.offsets,text:expectedText,barcodes:expectedBarcode,parkedDonorRoots:parkedIndexes.length,originalRootCount:rootCount},header:check.header,seed:SEED_ID}
+    return{name:outputName(label,index),bytes:rebuilt,kind:P.kind,barcodes:{dataMatrix:P.dm.map(barcodeText),code128:P.c128.map(barcodeText)},layout:{target,internalSizeOffsets:sized.offsets,text:expectedText,barcodes:expectedBarcode,parkedDonorRoots:parkedIndexes.length,parkedAuxiliaryGraphics:aux.parked,originalRootCount:rootCount},header:check.header,seed:SEED_ID}
   }
 
-  window.LabelWorkbenchBtwSecondNative={BUILD,SEED_ID,MAX_TEXT,MAX_C128,MAX_DM,OFF,plan,canGenerate,pool,validSourceBox,generateOne};
+  window.LabelWorkbenchBtwSecondNative={BUILD,SEED_ID,MAX_TEXT,MAX_C128,MAX_DM,OFF,plan,canGenerate,pool,validSourceBox,parkAuxiliaryGraphics,generateOne};
   console.info('[Label Workbench] controlled 5C128+1DM native generator',BUILD);
 })();
