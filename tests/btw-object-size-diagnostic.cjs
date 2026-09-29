@@ -30,5 +30,32 @@ const round=v=>Number.isFinite(v)?Math.round(v*1000)/1000:null;
       xMil:o.xMil,yMil:o.yMil,xMm:o.xMm,yMm:o.yMm,fontSize:o.fontSize,words
     }));
   }
+  const allStrings=F.scanUtf16Strings(container,{minLength:0,maxLength:10000,includeEmpty:true});
+  const insideString=(off)=>allStrings.some(e=>off>=e.offset&&off<e.end);
+  const scanNumeric=(group,kind)=>{
+    const byStart=new Map(),byEnd=new Map();
+    for(const o of group){
+      for(let off=o.recordStart;off+4<=o.recordEnd;off+=4){
+        if(insideString(off)||insideString(off+3))continue;
+        const rel=off-o.recordStart,tail=o.recordEnd-off;
+        const iv=i32(container,off),fv=f32(container,off);
+        if(iv>0&&iv<=5000){
+          if(!byStart.has(rel))byStart.set(rel,[]);byStart.get(rel).push({index:o.index,value:iv});
+          if(!byEnd.has(tail))byEnd.set(tail,[]);byEnd.get(tail).push({index:o.index,value:iv});
+        }
+        if(Number.isFinite(fv)&&fv>0.001&&fv<=1000){
+          const key='f'+rel;if(!byStart.has(key))byStart.set(key,[]);byStart.get(key).push({index:o.index,value:round(fv)});
+          const tkey='f'+tail;if(!byEnd.has(tkey))byEnd.set(tkey,[]);byEnd.get(tkey).push({index:o.index,value:round(fv)});
+        }
+      }
+    }
+    const compact=(map)=>[...map.entries()].filter(([,v])=>new Set(v.map(x=>x.index)).size>=Math.max(3,group.length-1)).map(([offset,values])=>({offset,values})).slice(0,120);
+    console.log('NUMERIC_COMMON_START '+kind+' '+JSON.stringify(compact(byStart)));
+    console.log('NUMERIC_COMMON_END '+kind+' '+JSON.stringify(compact(byEnd)));
+  };
+  const code128=objects.filter(o=>o.kind==='barcode'&&o.barcodeType==='Code 128');
+  const textPool=objects.filter(o=>o.kind==='text'&&/^(?:Text|文字)\\s*\\d+/i.test(o.name||''));
+  scanNumeric(code128,'Code128');
+  scanNumeric(textPool.slice(0,12),'Text');
   console.log('PASS: BTW object size diagnostic complete');
 })().catch(e=>{console.error(e);process.exit(1)});
