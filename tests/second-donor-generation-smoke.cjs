@@ -35,6 +35,15 @@ const label={
   if(parsed.header.applicationVersion!=='2022 R2'||parsed.header.compatibleVersion!=='2022 R1')throw new Error('version changed');
   if(!parsed.header.text.includes('<TemplateSize>140 x 38 mm</TemplateSize>'))throw new Error('TemplateSize not rewritten');
   const map=M.mapContainer(await F.inflateContainer(parsed)),objects=map.objects;
+  const renderedContainer=await F.inflateContainer(parsed),rdv=new DataView(renderedContainer.buffer,renderedContainer.byteOffset,renderedContainer.byteLength),auxCoords=[];
+  for(let i=0;i+16<renderedContainer.length;i++){
+    if(renderedContainer[i]!==0xff||renderedContainer[i+1]!==0xff||renderedContainer[i+2]!==0x01||renderedContainer[i+3]!==0x00)continue;
+    const len=renderedContainer[i+4]|(renderedContainer[i+5]<<8);if(len<3||len>80||i+6+len+8>renderedContainer.length)continue;
+    let type='';let ok=true;for(let j=0;j<len;j++){const b=renderedContainer[i+6+j];if(b<0x20||b>0x7e){ok=false;break}type+=String.fromCharCode(b)}
+    if(!ok||!['LineData','CircleData'].includes(type))continue;
+    const at=i+6+len;auxCoords.push({type,x:rdv.getInt32(at,true),y:rdv.getInt32(at+4,true)})
+  }
+  if(auxCoords.length<2||auxCoords.some(x=>x.x!==S.OFF||x.y!==S.OFF))throw new Error('controlled donor auxiliary line/circle graphics were not parked off-canvas');
   const donorBytes=new Uint8Array(await c.LabelWorkbenchBtwControlledDonor.bytes()),donorParsed=F.parseStructure(donorBytes),donorObjects=M.mapContainer(await F.inflateContainer(donorParsed)).objects;
   const expectedRoots=label.fields.length+label.barcodes.length;
   if(objects.length!==out.layout?.originalRootCount)throw new Error(`donor root graph changed ${objects.length}/${out.layout?.originalRootCount}`);
