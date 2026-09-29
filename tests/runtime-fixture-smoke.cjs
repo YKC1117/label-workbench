@@ -8,7 +8,7 @@ const {verifyFixture}=require('../tools/verify-btw-runtime-fixture.cjs');
   const dir=fs.mkdtempSync(path.join(os.tmpdir(),'lw-btw-runtime-fixture-'));
   const file=path.join(dir,'LabelWorkbench_Runtime_Acceptance.btw');
   const created=await createFixture(file);
-  if(created.seed!=='LW-SECOND-SANITIZED-2022-R2')throw new Error(`unexpected seed ${created.seed}`);
+  if(created.seed!=='LW-CONTROLLED-140x38-2022-R2')throw new Error(`unexpected seed ${created.seed}`);
   const report=await verifyFixture(file);
   if(report.visibleCode128!==5||report.visibleDataMatrix!==1)throw new Error(`unexpected barcode pool ${JSON.stringify(report)}`);
   if(report.visibleText!==6)throw new Error(`unexpected visible fixture text count ${report.visibleText}`);
