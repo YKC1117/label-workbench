@@ -112,7 +112,11 @@
       const missingBarcode=requestedBarcodeRows(P).filter(item=>!validSourceBox(item?.row?.sourceBox));
       if(missingText.length||missingBarcode.length)throw new Error(`5C128+1DM 版面座標不完整：文字 ${missingText.length}、條碼 ${missingBarcode.length} 缺少 sourceBox；停止使用預設位置產檔`)
     }
-    /* Preserve the donor's serialized object graph. Removing raw object records can leave\n       BarTender-internal references/counts inconsistent even when our parser still round-trips.\n       Park every donor object off-canvas, then move only requested objects back onto the label. */\n    const edits=new Map(),activeIndexes=new Set(),expectedText=[];\n    for(const o of before.objects)edits.set(o.index,{index:o.index,xMil:OFF,yMil:OFF});
+    /* Preserve the donor's serialized object graph. Removing raw object records can leave
+       BarTender-internal references/counts inconsistent even when our parser still round-trips.
+       Park every donor object off-canvas, then move only requested objects back onto the label. */
+    const edits=new Map(),activeIndexes=new Set(),expectedText=[];
+    for(const o of before.objects)edits.set(o.index,{index:o.index,xMil:OFF,yMil:OFF});
     P.fields.forEach((field,i)=>{
       const obj=donorPool.texts[i],layout=sourceLayout(field?.sourceBox,target),pos=layout?.mil?{xMil:layout.mil.x,yMil:layout.mil.y}:fallbackTextPos(i,P.fields.length,target),value=textValue(field),fontSize=sourceFontSize(layout,obj.fontSize),edit={index:obj.index,value,...pos};
       if(fontSize!=null&&obj.fontSizeOffset!=null)edit.fontSize=fontSize;
@@ -127,10 +131,14 @@
       edits.set(obj.index,edit);activeIndexes.add(obj.index);expectedBarcode.push({index:obj.index,type:item.type,value:item.value,...pos})
     });
 
-    const edited=M.editContainer(container,[...edits.values()]);\n    const parkedIndexes=before.objects.filter(o=>!activeIndexes.has(o.index)).map(o=>o.index);\n    const rebuilt0=await F.rebuild(parsed,edited),rebuilt=target.source?F.replaceTemplateSize(rebuilt0,target.width,target.height):rebuilt0;
+    const edited=M.editContainer(container,[...edits.values()]);
+    const parkedIndexes=before.objects.filter(o=>!activeIndexes.has(o.index)).map(o=>o.index);
+    const rebuilt0=await F.rebuild(parsed,edited),rebuilt=target.source?F.replaceTemplateSize(rebuilt0,target.width,target.height):rebuilt0;
     const check=F.parseStructure(rebuilt),round=await F.inflateContainer(check),after=M.mapContainer(round);
     if(!/^2022\b/.test(check.header?.applicationVersion||'')||!/^2022\b/.test(check.header?.compatibleVersion||''))throw new Error('5C128+1DM BTW 重建後版本驗證失敗');
-    if(after.objects.length!==rootCount)throw new Error(`5C128+1DM donor root 數改變：${rootCount}→${after.objects.length}`);\n    const parked=after.objects.filter(o=>parkedIndexes.includes(o.index));\n    if(parked.length!==parkedIndexes.length||parked.some(o=>o.xMil!==OFF||o.yMil!==OFF))throw new Error(`5C128+1DM donor 紙外停放驗證失敗：${parked.length}/${parkedIndexes.length}`);
+    if(after.objects.length!==rootCount)throw new Error(`5C128+1DM donor root 數改變：${rootCount}→${after.objects.length}`);
+    const parked=after.objects.filter(o=>parkedIndexes.includes(o.index));
+    if(parked.length!==parkedIndexes.length||parked.some(o=>o.xMil!==OFF||o.yMil!==OFF))throw new Error(`5C128+1DM donor 紙外停放驗證失敗：${parked.length}/${parkedIndexes.length}`);
 
     for(const exp of expectedText){
       const got=after.objects.find(o=>o.kind==='text'&&String(o.value??'')===exp.value&&near(o.xMil,exp.xMil)&&near(o.yMil,exp.yMil));
