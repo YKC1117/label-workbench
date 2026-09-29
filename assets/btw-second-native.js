@@ -1,15 +1,16 @@
-/* Label Workbench sanitized single-donor native BTW generator v0.1.0
- * Uses the sanitized user-provided BarTender 2022 R2 donor with 33 Text,
- * 5 Code 128 and 1 Data Matrix native objects. No object transplant/concatenation.
+/* Label Workbench controlled native BTW generator v0.2.0
+ * Uses a sanitized, verified hand-laid-out BarTender 2022 R2 donor as a controlled
+ * object library: 29 ordinary Text, 5 Code 128 and 1 Data Matrix native objects.
+ * Customer content/positions are still supplied by Quick Analysis.
  */
 (function(){
   'use strict';
-  const BUILD='20260918-btw-second-native-110-textobjects';
-  const SEED_ID='LW-SECOND-SANITIZED-2022-R2';
-  const MAX_TEXT=33;
+  const BUILD='20260929-btw-second-native-200-controlled-donor';
+  const SEED_ID='LW-CONTROLLED-140x38-2022-R2';
+  const MAX_TEXT=29;
   const MAX_C128=5;
   const MAX_DM=1;
-  const DONOR_SIZE={width:100,height:65};
+  const DONOR_SIZE={width:140,height:38};
   const OFF=50000;
   const MAX_SIZE_PAIRS=16;
 
@@ -37,7 +38,13 @@
   }
   function canGenerate(label){return!!plan(label)}
 
-  function reusableText(objects){return objects.filter(o=>o.kind==='text'&&/^(?:Text|文字)\s*\d+/i.test(o.name||'')&&o.valueEntry)}
+  function reusableText(objects){return objects.filter(o=>
+    o.kind==='text'&&
+    /^(?:Text|文字)\s*\d+/i.test(o.name||'')&&
+    /DataSourceGeneral/i.test(String(o.rootPath||''))&&
+    !/\.Border$/i.test(String(o.rootPath||''))&&
+    o.valueEntry
+  )}
   function pool(objects){return{
     texts:reusableText(objects),
     c128:objects.filter(o=>o.kind==='barcode'&&o.barcodeType==='Code 128'&&o.componentEntries?.length),
@@ -61,9 +68,24 @@
     const L=window.LabelWorkbenchBtwLayout;if(!L?.boxToLayout||!box)return null;
     try{return L.boxToLayout(box,target)}catch{return null}
   }
-  function sourceFontSize(layout,current){
-    const h=Number(layout?.mm?.h);if(!(h>0))return Number.isFinite(Number(current))?Number(current):null;
-    return Math.round(Math.max(5,Math.min(42,h/0.3527777778*0.72))*10)/10
+  function visualChars(value){
+    let units=0;
+    for(const ch of String(value??'')){
+      if(/[\u3400-\u9FFF]/.test(ch))units+=1;
+      else if(/\s/.test(ch))units+=.34;
+      else if(/[MW@#%]/.test(ch))units+=.78;
+      else if(/[ilI1.,:;|!'()\[\]]/.test(ch))units+=.34;
+      else units+=.56;
+    }
+    return Math.max(1,units)
+  }
+  function sourceFontSize(layout,current,value){
+    const h=Number(layout?.mm?.h),w=Number(layout?.mm?.w),fallback=Number.isFinite(Number(current))&&Number(current)>0?Number(current):6;
+    if(!(h>0)&&!(w>0))return fallback;
+    const byHeight=h>0?h/0.3527777778*.76:Infinity;
+    const units=visualChars(value);
+    const byWidth=w>0?w/(0.3527777778*Math.max(1,units))*.88:Infinity;
+    return Math.round(Math.max(4.5,Math.min(18,byHeight,byWidth))*10)/10
   }
   function fallbackTextPos(i,count,target){
     const cols=count>17?2:1,rows=Math.max(1,Math.ceil(count/cols)),col=i%cols,row=Math.floor(i/cols),x=.045+col*(cols===2?.49:0),y=.045+row*(.86/rows);
@@ -82,7 +104,7 @@
     const same=near(target.width,DONOR_SIZE.width,.03)&&near(target.height,DONOR_SIZE.height,.03),out=new Uint8Array(container);
     if(same)return{container:out,offsets:[]};
     const offsets=sizePairOffsets(out);
-    if(!offsets.length)throw new Error('5C128+1DM donor 找不到 100×65mm 內部尺寸 pair');
+    if(!offsets.length)throw new Error('controlled donor 找不到 140×38mm 內部尺寸 pair');
     if(offsets.length>MAX_SIZE_PAIRS)throw new Error(`5C128+1DM donor 尺寸 pair 異常：${offsets.length}`);
     const dv=new DataView(out.buffer,out.byteOffset,out.byteLength),w=mmToMil(target.width),h=mmToMil(target.height);
     for(const off of offsets){dv.setInt32(off,w,true);dv.setInt32(off+4,h,true)}
@@ -97,8 +119,8 @@
 
   async function generateOne(label,index=0){
     const P=plan(label);if(!P)throw new Error('此標籤超出 5C128+1DM native donor 可安全建立範圍');
-    const D=window.LabelWorkbenchBtwSecondDonor,F=window.LabelWorkbenchBtwFormat,M=window.LabelWorkbenchBtwObjectMap;
-    if(!D?.bytes||!F?.parseStructure||!F?.inflateContainer||!F?.rebuild||!F?.replaceTemplateSize||!M?.mapContainer||!M?.editContainer)throw new Error('5C128+1DM BTW 元件尚未載入');
+    const D=window.LabelWorkbenchBtwControlledDonor,F=window.LabelWorkbenchBtwFormat,M=window.LabelWorkbenchBtwObjectMap;
+    if(!D?.bytes||!F?.parseStructure||!F?.inflateContainer||!F?.rebuild||!F?.replaceTemplateSize||!M?.mapContainer||!M?.editContainer)throw new Error('controlled 5C128+1DM BTW 元件尚未載入');
 
     const seed=new Uint8Array(await D.bytes()),parsed=F.parseStructure(seed);
     if(parsed.header?.applicationVersion!=='2022 R2'||parsed.header?.compatibleVersion!=='2022 R1')throw new Error('5C128+1DM donor 版本不是 BarTender 2022 R2 / 2022 R1 相容');
@@ -118,7 +140,7 @@
     const edits=new Map(),activeIndexes=new Set(),expectedText=[];
     for(const o of before.objects)edits.set(o.index,{index:o.index,xMil:OFF,yMil:OFF});
     P.fields.forEach((field,i)=>{
-      const obj=donorPool.texts[i],layout=sourceLayout(field?.sourceBox,target),pos=layout?.mil?{xMil:layout.mil.x,yMil:layout.mil.y}:fallbackTextPos(i,P.fields.length,target),value=textValue(field),fontSize=sourceFontSize(layout,obj.fontSize),edit={index:obj.index,value,...pos};
+      const obj=donorPool.texts[i],layout=sourceLayout(field?.sourceBox,target),pos=layout?.mil?{xMil:layout.mil.x,yMil:layout.mil.y}:fallbackTextPos(i,P.fields.length,target),value=textValue(field),fontSize=sourceFontSize(layout,obj.fontSize,value),edit={index:obj.index,value,...pos};
       if(fontSize!=null&&obj.fontSizeOffset!=null)edit.fontSize=fontSize;
       edits.set(obj.index,edit);activeIndexes.add(obj.index);expectedText.push({index:obj.index,value,fontSize:edit.fontSize??obj.fontSize,...pos})
     });
@@ -158,5 +180,5 @@
   }
 
   window.LabelWorkbenchBtwSecondNative={BUILD,SEED_ID,MAX_TEXT,MAX_C128,MAX_DM,OFF,plan,canGenerate,pool,validSourceBox,generateOne};
-  console.info('[Label Workbench] sanitized 5C128+1DM native generator',BUILD);
+  console.info('[Label Workbench] controlled 5C128+1DM native generator',BUILD);
 })();
