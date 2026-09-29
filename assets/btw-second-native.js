@@ -146,7 +146,7 @@
       if(o===self)return false;
       const t=textValue(o);if(!t||textKey(t)===textKey(v)||!t.endsWith(v))return false;
       const prefix=t.slice(0,t.length-v.length).trimEnd();
-      return /[：:]\s*$/.test(prefix)||/^\([^)]{1,8}\)/.test(prefix)||/[A-Z][A-Z0-9 ]{1,16}$/i.test(prefix)
+      return /[：:]\s*$/.test(prefix)||/^\([^)]{1,8}\)/.test(prefix)
     })
   }
   function suppressStandaloneLinkedValues(items,linkedValues){
