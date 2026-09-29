@@ -5,7 +5,7 @@
  */
 (function(){
   'use strict';
-  const BUILD='20260929-btw-second-native-280-linked-text-layout';
+  const BUILD='20260929-btw-second-native-290-text-collision-line';
   const SEED_ID='LW-CONTROLLED-140x38-2022-R2';
   const MAX_TEXT=29;
   const MAX_C128=5;
@@ -138,6 +138,41 @@
     const scale=Math.max(.55,Math.min(1.8,target.height/DONOR_SIZE.height));
     return Math.round(base*scale*10)/10
   }
+  function stripLinkedValueFromField(field,linkedValues){
+    const original=textValue(field);if(!original)return field;
+    const values=[...(linkedValues||[])].map(v=>String(v??'').trim()).filter(Boolean).sort((a,b)=>b.length-a.length);
+    for(const value of values){
+      if(textKey(original)===textKey(value))return field;
+      if(!original.endsWith(value))continue;
+      const prefix=original.slice(0,original.length-value.length).trimEnd();
+      if(!/[：:]\s*$/.test(prefix))continue;
+      const box=field?.sourceBox,ratio=Math.max(.18,Math.min(1,visualChars(prefix)/Math.max(1,visualChars(original))));
+      const next={...field,text:prefix,value:field?.text==null?prefix:field.value};
+      if(validSourceBox(box))next.sourceBox={...box,w:Math.max(.012,Number(box.w)*ratio)};
+      return next
+    }
+    return field
+  }
+  function stripLinkedValuesFromFields(items,linkedValues){
+    return (items||[]).map(x=>stripLinkedValueFromField(x,linkedValues)).filter(x=>textValue(x))
+  }
+  function boxesOverlap(a,b){
+    if(!validSourceBox(a)||!validSourceBox(b))return false;
+    const ix=Math.max(0,Math.min(Number(a.x)+Number(a.w),Number(b.x)+Number(b.w))-Math.max(Number(a.x),Number(b.x)));
+    const iy=Math.max(0,Math.min(Number(a.y)+Number(a.h),Number(b.y)+Number(b.h))-Math.max(Number(a.y),Number(b.y)));
+    return ix>0&&iy>0&&ix*iy>=Math.min(Number(a.w)*Number(a.h),Number(b.w)*Number(b.h))*.12
+  }
+  function avoidBarcodeCollision(field,barcodeRows){
+    const box=field?.sourceBox;if(!validSourceBox(box))return field;
+    let next={...box};
+    for(const row of barcodeRows||[]){
+      const b=row?.sourceBox;if(!validSourceBox(b)||!boxesOverlap(next,b))continue;
+      const tc=Number(next.y)+Number(next.h)/2,bc=Number(b.y)+Number(b.h)/2,margin=.006;
+      if(tc<=bc)next.y=Math.max(0,Number(b.y)-Number(next.h)-margin);
+      else next.y=Math.min(1-Number(next.h),Number(b.y)+Number(b.h)+margin)
+    }
+    return next.y===box.y?field:{...field,sourceBox:next}
+  }
   function textStyleScore(field,obj){
     const box=field?.sourceBox||{},p=donorNormalizedPos(obj),has=validSourceBox(box);
     const spatial=has?(Math.abs(Number(box.x)-p.x)*1.15+Math.abs(Number(box.y)-p.y)*1.5):0;
@@ -266,6 +301,16 @@
     for(const off of offsets){dv.setInt32(off,w,true);dv.setInt32(off+4,h,true)}
     return{container:out,offsets}
   }
+  function lineEndpointOffsets(data,dv,at,x,y){
+    const end=Math.min(data.length-16,at+240);
+    for(let off=at+8;off<=end;off+=4){
+      const x1=dv.getInt32(off,true),y1=dv.getInt32(off+4,true),x2=dv.getInt32(off+8,true),y2=dv.getInt32(off+12,true);
+      if([x1,y1,x2,y2].some(v=>Math.abs(v)>=1000000))continue;
+      if(x1===x2&&y1===y2)continue;
+      if(Math.abs((x1+x2)/2-x)<=2&&Math.abs((y1+y2)/2-y)<=2)return{off,x1,y1,x2,y2}
+    }
+    return null
+  }
   function parkAuxiliaryGraphics(container){
     const data=container instanceof Uint8Array?new Uint8Array(container):new Uint8Array(container),dv=new DataView(data.buffer,data.byteOffset,data.byteLength),parked=[];
     for(let i=0;i+16<data.length;i++){
@@ -276,7 +321,12 @@
       if(!ok||!['LineData','CircleData'].includes(type))continue;
       const at=i+6+len,x=dv.getInt32(at,true),y=dv.getInt32(at+4,true);
       if(Math.abs(x)>=1000000||Math.abs(y)>=1000000)continue;
-      dv.setInt32(at,OFF,true);dv.setInt32(at+4,OFF,true);parked.push({type,offset:at,from:{x,y}})
+      const endpoints=type==='LineData'?lineEndpointOffsets(data,dv,at,x,y):null,dx=OFF-x,dy=OFF-y;
+      if(endpoints){
+        dv.setInt32(endpoints.off,endpoints.x1+dx,true);dv.setInt32(endpoints.off+4,endpoints.y1+dy,true);
+        dv.setInt32(endpoints.off+8,endpoints.x2+dx,true);dv.setInt32(endpoints.off+12,endpoints.y2+dy,true)
+      }
+      dv.setInt32(at,OFF,true);dv.setInt32(at+4,OFF,true);parked.push({type,offset:at,from:{x,y},lineEndpoints:!!endpoints})
     }
     return{container:data,parked}
   }
@@ -326,7 +376,7 @@
       }
     }
 
-    const remainingFields=[...P.fields],reservedIndexes=new Set(reserved.keys());
+    let remainingFields=[...P.fields];const reservedIndexes=new Set(reserved.keys());
     for(const ref of reserved.values()){
       const obj=before.objects.find(o=>o.index===ref.index);if(!obj)throw new Error(`Code128 linked Text 不存在：${ref.ref||ref.index}`);
       const field=takeMatchingField(remainingFields,ref.value,obj),value=String(ref.value??''),pos=linkedTextPos(obj,ref.barcodeObj,ref.barcodePos,target)||fallbackTextPos(expectedText.length,P.fields.length,target);
@@ -339,11 +389,14 @@
         edits.set(obj.index,{index:obj.index,value,xMil:OFF,yMil:OFF})
       }
     }
+    const linkedValues=[...reserved.values()].map(x=>x.value).filter(Boolean);
+    remainingFields=stripLinkedValuesFromFields(remainingFields,linkedValues);
 
     const freeTexts=donorPool.texts.filter(o=>!reservedIndexes.has(o.index)),fit=compactTextFields(remainingFields,freeTexts.length);
     const textAssignments=assignTextPool(fit.fields,freeTexts);
+    const sourceBarcodes=[...P.dm,...P.c128];
     textAssignments.forEach(({field,obj,score},i)=>{
-      const layout=sourceLayout(field?.sourceBox,target),pos=layout?.mil?{xMil:layout.mil.x,yMil:layout.mil.y}:fallbackTextPos(i,fit.fields.length,target),value=textValue(field),fontSize=sourceFontSize(layout,obj.fontSize,value),edit={index:obj.index,value,...pos};
+      const adjusted=avoidBarcodeCollision(field,sourceBarcodes),layout=sourceLayout(adjusted?.sourceBox,target),pos=layout?.mil?{xMil:layout.mil.x,yMil:layout.mil.y}:fallbackTextPos(i,fit.fields.length,target),value=textValue(adjusted),fontSize=sourceFontSize(layout,obj.fontSize,value),edit={index:obj.index,value,...pos};
       if(obj.fontNameOffset!=null)edit.fontName='Microsoft JhengHei';
       if(fontSize!=null&&obj.fontSizeOffset!=null)edit.fontSize=fontSize;
       edits.set(obj.index,edit);activeIndexes.add(obj.index);expectedText.push({index:obj.index,value,fontName:edit.fontName??obj.fontName,fontSize:edit.fontSize??obj.fontSize,styleScore:Math.round(score*1000)/1000,...pos})
@@ -382,6 +435,6 @@
     return{name:outputName(label,index),bytes:rebuilt,kind:P.kind,barcodes:{dataMatrix:P.dm.map(barcodeText),code128:P.c128.map(barcodeText)},layout:{target,internalSizeOffsets:sized.offsets,text:expectedText,barcodes:expectedBarcode,parkedDonorRoots:parkedIndexes.length,parkedAuxiliaryGraphics:aux.parked,originalRootCount:rootCount,textCompaction:{input:P.inputTextCount,written:expectedText.length,omitted:[...P.omittedText,...fit.omitted].map(x=>textValue(x))},linkedCode128:c128Assignments.filter(x=>x.structure).length},header:check.header,seed:SEED_ID}
   }
 
-  window.LabelWorkbenchBtwSecondNative={BUILD,SEED_ID,MAX_TEXT,MAX_C128,MAX_DM,OFF,plan,canGenerate,pool,validSourceBox,textPriority,textDedupKey,boxesNear,dedupeTextFields,compactTextFields,textStyleScore,assignTextPool,barcodeStyleScore,code128Structure,assignBarcodePool,assignCode128Pool,takeMatchingField,linkedTextPos,linkedFontSize,parkAuxiliaryGraphics,generateOne};
+  window.LabelWorkbenchBtwSecondNative={BUILD,SEED_ID,MAX_TEXT,MAX_C128,MAX_DM,OFF,plan,canGenerate,pool,validSourceBox,textPriority,textDedupKey,boxesNear,dedupeTextFields,compactTextFields,textStyleScore,assignTextPool,barcodeStyleScore,code128Structure,assignBarcodePool,assignCode128Pool,takeMatchingField,linkedTextPos,linkedFontSize,stripLinkedValueFromField,stripLinkedValuesFromFields,boxesOverlap,avoidBarcodeCollision,lineEndpointOffsets,parkAuxiliaryGraphics,generateOne};
   console.info('[Label Workbench] controlled 5C128+1DM native generator',BUILD);
 })();
