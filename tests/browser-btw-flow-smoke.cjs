@@ -129,7 +129,7 @@ for(const f of[
 
 (async()=>{
   const ui=c.LabelWorkbenchBtNativePrimary;
-  assert(ui?.BUILD==='20260929-btnp240-controlled-production-deps','unexpected BTW primary build');
+  assert(ui?.BUILD==='20260929-btnp250-manual-download-fallback','unexpected BTW primary build');
 
   ui.decorateAnalysis();
 
