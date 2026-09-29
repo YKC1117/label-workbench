@@ -5,7 +5,7 @@
  */
 (function(){
   'use strict';
-  const BUILD='20260929-btw-second-native-240-32text-overflow';
+  const BUILD='20260929-btw-second-native-250-text-capacity-compaction';
   const SEED_ID='LW-CONTROLLED-140x38-2022-R2';
   const MAX_TEXT=32;
   const MAX_C128=5;
@@ -31,10 +31,28 @@
     return(label?.fields||[]).filter(f=>textValue(f))
   }
   function unsupported(label){return rows(label).filter(b=>!isDm(b)&&!isC128(b))}
+  function textReadOrder(a,b){
+    const A=a?.sourceBox||{},B=b?.sourceBox||{},ay=Number(A.y),by=Number(B.y),ah=Number(A.h)||0,bh=Number(B.h)||0;
+    return Math.abs(ay-by)<Math.max(ah,bh,.012)*.55?Number(A.x)-Number(B.x):ay-by
+  }
+  function textPriority(o){
+    const value=textValue(o),box=o?.sourceBox||{},confidence=Math.max(0,Math.min(100,Number(o?.confidence||o?.sourceBox?.confidence||0))),repeat=Math.max(0,Number(o?.repeat||0));
+    const geometry=validSourceBox(box)?18:0,semantic=o?.semanticSplit?9:0,repeatScore=Math.min(4,repeat)*7,confidenceScore=confidence*.22,lengthScore=Math.min(40,value.length)*.12;
+    const tiny=(Number(box?.w)||0)<.006||(Number(box?.h)||0)<.006?-18:0;
+    const single=value.replace(/\s/g,'').length===1&&confidence<80&&repeat<2?-14:0;
+    return geometry+semantic+repeatScore+confidenceScore+lengthScore+tiny+single
+  }
+  function compactTextFields(items,max=MAX_TEXT){
+    const rows=[...(items||[])].filter(o=>textValue(o));
+    if(rows.length<=max)return{fields:rows,omitted:[],inputCount:rows.length};
+    const ranked=rows.map((o,i)=>({o,i,score:textPriority(o)})).sort((a,b)=>b.score-a.score||a.i-b.i);
+    const keep=ranked.slice(0,max).map(x=>x.o).sort(textReadOrder),kept=new Set(keep),omitted=rows.filter(x=>!kept.has(x));
+    return{fields:keep,omitted,inputCount:rows.length}
+  }
   function plan(label){
-    const fs=fields(label),all=rows(label),dm=all.filter(isDm),c128=all.filter(isC128);
-    if(fs.length>MAX_TEXT||unsupported(label).length||dm.length>MAX_DM||c128.length>MAX_C128)return null;
-    return{fields:fs,dm,c128,kind:dm.length&&c128.length?'mixed':dm.length?'dm':c128.length?'c128':'text'}
+    const raw=fields(label),fit=compactTextFields(raw,MAX_TEXT),all=rows(label),dm=all.filter(isDm),c128=all.filter(isC128);
+    if(unsupported(label).length||dm.length>MAX_DM||c128.length>MAX_C128)return null;
+    return{fields:fit.fields,omittedText:fit.omitted,inputTextCount:fit.inputCount,dm,c128,kind:dm.length&&c128.length?'mixed':dm.length?'dm':c128.length?'c128':'text'}
   }
   function canGenerate(label){return!!plan(label)}
 
@@ -239,9 +257,9 @@
       if(!text.includes(`<TemplateSize>${wanted}</TemplateSize>`))throw new Error('BTW TemplateSize round-trip 驗證失敗')
     }
 
-    return{name:outputName(label,index),bytes:rebuilt,kind:P.kind,barcodes:{dataMatrix:P.dm.map(barcodeText),code128:P.c128.map(barcodeText)},layout:{target,internalSizeOffsets:sized.offsets,text:expectedText,barcodes:expectedBarcode,parkedDonorRoots:parkedIndexes.length,parkedAuxiliaryGraphics:aux.parked,originalRootCount:rootCount},header:check.header,seed:SEED_ID}
+    return{name:outputName(label,index),bytes:rebuilt,kind:P.kind,barcodes:{dataMatrix:P.dm.map(barcodeText),code128:P.c128.map(barcodeText)},layout:{target,internalSizeOffsets:sized.offsets,text:expectedText,barcodes:expectedBarcode,parkedDonorRoots:parkedIndexes.length,parkedAuxiliaryGraphics:aux.parked,originalRootCount:rootCount,textCompaction:{input:P.inputTextCount,written:P.fields.length,omitted:P.omittedText.map(x=>textValue(x))}},header:check.header,seed:SEED_ID}
   }
 
-  window.LabelWorkbenchBtwSecondNative={BUILD,SEED_ID,MAX_TEXT,MAX_C128,MAX_DM,OFF,plan,canGenerate,pool,validSourceBox,textStyleScore,assignTextPool,barcodeStyleScore,assignBarcodePool,parkAuxiliaryGraphics,generateOne};
+  window.LabelWorkbenchBtwSecondNative={BUILD,SEED_ID,MAX_TEXT,MAX_C128,MAX_DM,OFF,plan,canGenerate,pool,validSourceBox,textPriority,compactTextFields,textStyleScore,assignTextPool,barcodeStyleScore,assignBarcodePool,parkAuxiliaryGraphics,generateOne};
   console.info('[Label Workbench] controlled 5C128+1DM native generator',BUILD);
 })();

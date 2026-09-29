@@ -82,8 +82,8 @@ jobs:
         run: |
           grep -q 'assets/analysis-entry.js?v=20260919-v148' index.html
           grep -q 'assets/barcode-reader.js?v=20260919-v391' index.html
-          grep -q '標籤製作工作台 · v1.9.55' index.html
-          grep -q '更新：2026/09/19 00:36' index.html
+          grep -q '標籤製作工作台 · v1.9.56' index.html
+          grep -q 'id="buildMeta"' index.html
           grep -q 'assets/analysis-race-guard.js?v=20260914-v139' index.html
           grep -q "BUILD='20260919-analysis-entry-148-isolation'" assets/analysis-entry.js
           grep -q "dataset.priorityBound='true'" assets/analysis-entry.js
@@ -92,7 +92,7 @@ jobs:
           grep -q "BUILD='20260919-v391-production-e2e'" assets/barcode-reader.js
           grep -q "BUILD='20260919-v184-pdf-legacy'" assets/label-interpreter.js
           grep -q "BUILD='20260918-btw-production-gate-110-textobjects'" assets/btw-production-gate.js
-          grep -q "BUILD='20260929-btw-second-native-240-32text-overflow'" assets/btw-second-native.js
+          grep -q "BUILD='20260929-btw-second-native-250-text-capacity-compaction'" assets/btw-second-native.js
           grep -q 'analysis-core-v2.js' assets/barcode-reader.js
           grep -q "BUILD='20260918-analysis-core-v2-200'" assets/analysis-core-v2.js
           grep -q 'LabelWorkbenchModuleLoader={BUILD,ready:true}' assets/barcode-reader.js
@@ -116,7 +116,7 @@ jobs:
           grep -q "BUILD='20260918-btw-family-native-140-itf14'" assets/btw-family-native.js
           grep -q 'btw-production-core.js' assets/barcode-reader.js
           grep -q "BUILD='20260918-btw-production-core-140-itf14'" assets/btw-production-core.js
-          grep -q "BUILD='20260929-btnp250-manual-download-fallback'" assets/bt-native-primary.js
+          grep -q "BUILD='20260929-btnp260-overflow-diagnostics'" assets/bt-native-primary.js
           grep -q "ensureProduction" assets/bt-native-primary.js
           grep -q "await ensureProduction()" assets/bt-native-primary.js
           grep -q '不用另外安裝網站工具' index.html
