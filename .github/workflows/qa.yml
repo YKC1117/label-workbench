@@ -91,7 +91,7 @@ jobs:
           grep -q "BUILD='20260919-v391-production-e2e'" assets/barcode-reader.js
           grep -q "BUILD='20260919-v184-pdf-legacy'" assets/label-interpreter.js
           grep -q "BUILD='20260918-btw-production-gate-110-textobjects'" assets/btw-production-gate.js
-          grep -q "BUILD='20260929-btw-second-native-200-controlled-donor'" assets/btw-second-native.js
+          grep -q "BUILD='20260929-btw-second-native-230-geometry-matched-all'" assets/btw-second-native.js
           grep -q 'analysis-core-v2.js' assets/barcode-reader.js
           grep -q "BUILD='20260918-analysis-core-v2-200'" assets/analysis-core-v2.js
           grep -q 'LabelWorkbenchModuleLoader={BUILD,ready:true}' assets/barcode-reader.js
