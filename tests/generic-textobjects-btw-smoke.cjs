@@ -51,8 +51,8 @@ const label={
     if(o.xMil!==pos.x||o.yMil!==pos.y)throw new Error(`generic text position mismatch: ${t.text}`);
   }
 
-  const c128=visible.find(o=>o.kind==='barcode'&&o.barcodeType==='Code 128'&&o.resolvedPreview==='GENERIC-C128-123');
   const dm=visible.find(o=>o.kind==='barcode'&&o.barcodeType==='Data Matrix'&&o.resolvedPreview==='DM-GENERIC-456');
+  const c128=visible.find(o=>o.kind==='barcode'&&o.index!==dm?.index&&o.resolvedPreview==='GENERIC-C128-123');
   if(!c128||!dm)throw new Error('generic barcode objects missing after BTW round-trip');
 
   console.log('PASS: arbitrary customer textObjects round-trip with requested Text/barcode roots visible while the native donor graph stays intact off-canvas');
