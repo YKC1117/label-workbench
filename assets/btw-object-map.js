@@ -6,7 +6,7 @@
  */
 (function(){
   'use strict';
-  const BUILD='20260929-btw-object-map-046-line-endpoints';
+  const BUILD='20260929-btw-object-map-045-text-box-position';
   const ROOT='Root.MasterSelectedObject.';
   const FONT_MARKER=new Uint8Array([0x03,0x02,0x01,0x22]);
   const PLACEHOLDER='(???) ???-????';
@@ -65,19 +65,6 @@
     const xOffset=at-20,yOffset=at-16,xMil=readI32(data,xOffset),yMil=readI32(data,yOffset);
     if(Math.abs(xMil)>=1000000||Math.abs(yMil)>=1000000)return null;
     return{xMil,yMil,xOffset,yOffset,markerOffset:at}
-  }
-  function lineEndpointInfo(data,start,end,xMil,yMil){
-    if(!Number.isFinite(xMil)||!Number.isFinite(yMil))return null;
-    const limit=Math.min(end,start+640);
-    for(let off=start+20;off+16<=limit;off+=4){
-      const x1=readI32(data,off),y1=readI32(data,off+4),x2=readI32(data,off+8),y2=readI32(data,off+12);
-      if([x1,y1,x2,y2].some(v=>Math.abs(v)>20000))continue;
-      if(x1===x2&&y1===y2)continue;
-      if(Math.abs((x1+x2)/2-xMil)<=2&&Math.abs((y1+y2)/2-yMil)<=2){
-        return{x1,y1,x2,y2,x1Offset:off,y1Offset:off+4,x2Offset:off+8,y2Offset:off+12}
-      }
-    }
-    return null
   }
   function kindFor(root,name){
     if(/^(?:文字|Text)\s*\d*/i.test(name))return'text';
@@ -154,8 +141,8 @@
       const root=roots[i],recordStart=Math.max(0,root.offset-20),recordEnd=i+1<roots.length?Math.max(recordStart,roots[i+1].offset-20):Math.max(recordStart,nextTagOffset(tags,root.offset,data.length));
       const strings=entries.filter(e=>e.offset>=root.offset&&e.offset<recordEnd),nameEntry=strings.find((e,j)=>j>0&&e.text&&!String(e.text).startsWith(ROOT))||null,name=String(nameEntry?.text||'');
       let x=null,y=null;if(recordStart+8<=data.length){const a=readI32(data,recordStart),b=readI32(data,recordStart+4);if(Math.abs(a)<1000000&&Math.abs(b)<1000000){x=a;y=b}}
-      const rootPath=String(root.text||''),owner=ownerFor(tags,recordStart),kind=kindFor(rootPath,name),valueEntry=primaryValueEntry(strings,kind,rootPath,nameEntry),font=fontInfo(data,recordStart,recordEnd),textBox=kind==='text'?textBoxPositionInfo(data,strings,recordStart,recordEnd):null,lineEndpoints=kind==='line'?lineEndpointInfo(data,recordStart,recordEnd,x,y):null,componentEntries=kind==='barcode'?barcodeComponentEntries(strings):[],components=componentEntries.map(x=>x.value),barcodeType=kind==='barcode'?barcodeTypeFor(owner,rootPath,strings):'';
-      objects.push({id:`obj-${i+1}`,index:i,kind,name,owner,rootPath,recordStart,recordEnd,rootOffset:root.offset,xMil:x,yMil:y,xMm:milToMm(x),yMm:milToMm(y),textBoxXMil:textBox?.xMil??null,textBoxYMil:textBox?.yMil??null,textBoxXOffset:textBox?.xOffset??null,textBoxYOffset:textBox?.yOffset??null,textBoxMarkerOffset:textBox?.markerOffset??null,lineX1Mil:lineEndpoints?.x1??null,lineY1Mil:lineEndpoints?.y1??null,lineX2Mil:lineEndpoints?.x2??null,lineY2Mil:lineEndpoints?.y2??null,lineX1Offset:lineEndpoints?.x1Offset??null,lineY1Offset:lineEndpoints?.y1Offset??null,lineX2Offset:lineEndpoints?.x2Offset??null,lineY2Offset:lineEndpoints?.y2Offset??null,value:valueEntry?.text||'',valueEntry:compactEntry(valueEntry),fontName:font?.name||'',fontNameOffset:font?.nameOffset??null,fontNameBytes:font?.nameBytes??null,fontSize:font?.size??null,fontSizeOffset:font?.sizeOffset??null,components,componentEntries,barcodeType,stringsCount:strings.length});
+      const rootPath=String(root.text||''),owner=ownerFor(tags,recordStart),kind=kindFor(rootPath,name),valueEntry=primaryValueEntry(strings,kind,rootPath,nameEntry),font=fontInfo(data,recordStart,recordEnd),textBox=kind==='text'?textBoxPositionInfo(data,strings,recordStart,recordEnd):null,componentEntries=kind==='barcode'?barcodeComponentEntries(strings):[],components=componentEntries.map(x=>x.value),barcodeType=kind==='barcode'?barcodeTypeFor(owner,rootPath,strings):'';
+      objects.push({id:`obj-${i+1}`,index:i,kind,name,owner,rootPath,recordStart,recordEnd,rootOffset:root.offset,xMil:x,yMil:y,xMm:milToMm(x),yMm:milToMm(y),textBoxXMil:textBox?.xMil??null,textBoxYMil:textBox?.yMil??null,textBoxXOffset:textBox?.xOffset??null,textBoxYOffset:textBox?.yOffset??null,textBoxMarkerOffset:textBox?.markerOffset??null,value:valueEntry?.text||'',valueEntry:compactEntry(valueEntry),fontName:font?.name||'',fontNameOffset:font?.nameOffset??null,fontNameBytes:font?.nameBytes??null,fontSize:font?.size??null,fontSizeOffset:font?.sizeOffset??null,components,componentEntries,barcodeType,stringsCount:strings.length});
     }
     // Some BarTender barcode records are introduced by a native Bc...Data tag
     // without a new Root.MasterSelectedObject string. Create a synthetic object
@@ -215,17 +202,11 @@
       if(edit.xMil!=null||edit.xMm!=null){
         const v=edit.xMil!=null?Number(edit.xMil):mmToMil(edit.xMm);
         if(obj.kind==='text'&&obj.textBoxXOffset!=null&&Number.isFinite(obj.textBoxXMil)&&Number.isFinite(obj.xMil))writeI32(out,obj.textBoxXOffset,obj.textBoxXMil+(v-obj.xMil));
-        if(obj.kind==='line'&&obj.lineX1Offset!=null&&obj.lineX2Offset!=null&&Number.isFinite(obj.xMil)){
-          const dx=v-obj.xMil;writeI32(out,obj.lineX1Offset,obj.lineX1Mil+dx);writeI32(out,obj.lineX2Offset,obj.lineX2Mil+dx)
-        }
         writeI32(out,obj.recordStart,v)
       }
       if(edit.yMil!=null||edit.yMm!=null){
         const v=edit.yMil!=null?Number(edit.yMil):mmToMil(edit.yMm);
         if(obj.kind==='text'&&obj.textBoxYOffset!=null&&Number.isFinite(obj.textBoxYMil)&&Number.isFinite(obj.yMil))writeI32(out,obj.textBoxYOffset,obj.textBoxYMil+(v-obj.yMil));
-        if(obj.kind==='line'&&obj.lineY1Offset!=null&&obj.lineY2Offset!=null&&Number.isFinite(obj.yMil)){
-          const dy=v-obj.yMil;writeI32(out,obj.lineY1Offset,obj.lineY1Mil+dy);writeI32(out,obj.lineY2Offset,obj.lineY2Mil+dy)
-        }
         writeI32(out,obj.recordStart+4,v)
       }
       if(edit.fontName!=null){if(obj.fontNameOffset==null||!obj.fontNameBytes)throw new Error(`${obj.name||obj.id} 尚未定位可安全寫入的字型欄位`);writeFixedUtf16(out,obj.fontNameOffset,obj.fontNameBytes,String(edit.fontName))}
@@ -296,5 +277,5 @@
   function bindAnalysis(){const input=document.getElementById('analysisFiles');if(!input||input.dataset.lwBtwObjectMap)return;input.dataset.lwBtwObjectMap='1';input.addEventListener('change',e=>{analyzeBtwFiles(e.target.files).catch(err=>console.warn('[Label Workbench] BTW object analysis failed',err))})}
   function init(){bindAnalysis();let tries=0;const t=setInterval(()=>{bindAnalysis();if(document.getElementById('analysisFiles')||tries++>80)clearInterval(t)},100)}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
-  window.LabelWorkbenchBtwObjectMap={BUILD,mapContainer,editContainer,stripObjectRecords,decodeBtw,rebuildBtw,milToMm,mmToMil,textBoxPositionInfo,lineEndpointInfo,renderDecoded,analyzeBtwFiles};console.info('[Label Workbench] BTW object map',BUILD);
+  window.LabelWorkbenchBtwObjectMap={BUILD,mapContainer,editContainer,stripObjectRecords,decodeBtw,rebuildBtw,milToMm,mmToMil,textBoxPositionInfo,renderDecoded,analyzeBtwFiles};console.info('[Label Workbench] BTW object map',BUILD);
 })();
