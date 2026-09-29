@@ -14,8 +14,9 @@ for(const f of['assets/btw-format.js','assets/btw-object-map.js','assets/btw-con
   if(parsed.header.compatibleVersion!=='2022 R1')throw new Error(`compat ${parsed.header.compatibleVersion}`);
   const container=await F.inflateContainer(parsed),map=M.mapContainer(container),objects=map.objects;
   const texts=objects.filter(o=>o.kind==='text'&&/^(?:Text|文字)\s*\d+/i.test(o.name||'')&&/DataSourceGeneral/i.test(String(o.rootPath||''))&&o.valueEntry);
-  const c128=objects.filter(o=>o.kind==='barcode'&&o.barcodeType==='Code 128');
-  const dm=objects.filter(o=>o.kind==='barcode'&&o.barcodeType==='Data Matrix');
+  const dm=objects.filter(o=>o.kind==='barcode'&&o.barcodeType==='Data Matrix'&&o.componentEntries?.length);
+  const dmIndexes=new Set(dm.map(o=>o.index));
+  const c128=objects.filter(o=>o.kind==='barcode'&&!dmIndexes.has(o.index)&&o.componentEntries?.length);
   const marks=objects.filter(o=>o.kind==='text'&&/\.Border$/i.test(String(o.rootPath||'')));
   if(texts.length!==29)throw new Error(`text pool ${texts.length}`);
   if(c128.length!==5)throw new Error(`Code128 pool ${c128.length}`);
