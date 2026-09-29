@@ -47,6 +47,7 @@ jobs:
           node --check tests/btw-text-box-position-smoke.cjs
           node --check tests/controlled-donor-capacity-smoke.cjs
           node --check tests/controlled-donor-code128-inventory.cjs
+          node --check tests/controlled-code128-linked-sources-smoke.cjs
           node --check tests/generic-textobjects-btw-smoke.cjs
           node --check tests/analysis-to-btw-e2e-smoke.cjs
           node --check tests/analysis-barcode-crosscheck-smoke.cjs
@@ -93,7 +94,7 @@ jobs:
           grep -q "BUILD='20260919-v391-production-e2e'" assets/barcode-reader.js
           grep -q "BUILD='20260919-v184-pdf-legacy'" assets/label-interpreter.js
           grep -q "BUILD='20260918-btw-production-gate-110-textobjects'" assets/btw-production-gate.js
-          grep -q "BUILD='20260929-btw-second-native-260-clean-text-only'" assets/btw-second-native.js
+          grep -q "BUILD='20260929-btw-second-native-270-linked-code128'" assets/btw-second-native.js
           grep -q 'analysis-core-v2.js' assets/barcode-reader.js
           grep -q "BUILD='20260918-analysis-core-v2-200'" assets/analysis-core-v2.js
           grep -q 'LabelWorkbenchModuleLoader={BUILD,ready:true}' assets/barcode-reader.js
@@ -195,6 +196,8 @@ jobs:
         run: node tests/controlled-donor-text-inventory.cjs
       - name: Controlled donor Code128 geometry inventory
         run: node tests/controlled-donor-code128-inventory.cjs
+      - name: Linked Code128 datasource preservation
+        run: node tests/controlled-code128-linked-sources-smoke.cjs
       - name: Real-label controlled donor capacity
         run: node tests/controlled-donor-capacity-smoke.cjs
       - name: Upload BTW geometry diagnostic
