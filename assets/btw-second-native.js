@@ -5,7 +5,7 @@
  */
 (function(){
   'use strict';
-  const BUILD='20260929-btw-second-native-300-hidden-linked-visible-lines';
+  const BUILD='20260929-btw-second-native-310-split-caption-value';
   const SEED_ID='LW-CONTROLLED-140x38-2022-R2';
   const MAX_TEXT=29;
   const MAX_C128=5;
@@ -140,24 +140,36 @@
     const scale=Math.max(.55,Math.min(1.8,target.height/DONOR_SIZE.height));
     return Math.round(base*scale*10)/10
   }
-  function hasCaptionForLinkedValue(items,value,self){
-    const v=String(value??'').trim();if(!v)return false;
-    return (items||[]).some(o=>{
-      if(o===self)return false;
-      const t=textValue(o);if(!t||textKey(t)===textKey(v)||!t.endsWith(v))return false;
-      const prefix=t.slice(0,t.length-v.length).trimEnd();
-      return /[：:]\s*$/.test(prefix)||/^\([^)]{1,8}\)/.test(prefix)
-    })
+  function captionPrefixForLinkedValue(raw,value){
+    const text=String(raw??'').trim(),v=String(value??'').trim();
+    if(!text||!v||textKey(text)===textKey(v)||!text.endsWith(v))return '';
+    const prefix=text.slice(0,text.length-v.length).trimEnd();
+    return /[：:]\s*$/.test(prefix)||/^\([^)]{1,8}\)/.test(prefix)?prefix:''
   }
-  function suppressStandaloneLinkedValues(items,linkedValues){
-    const rows=[...(items||[])].filter(o=>textValue(o)),values=[...(linkedValues||[])].map(v=>String(v??'').trim()).filter(Boolean);
-    const omitted=[],fields=[];
-    for(const row of rows){
-      const raw=textValue(row),match=values.find(v=>textKey(raw)===textKey(v));
-      if(match&&hasCaptionForLinkedValue(rows,match,row)){omitted.push(row);continue}
-      fields.push(row)
+  function splitCaptionValueField(field,linkedValues){
+    const raw=textValue(field);if(!raw)return[field];
+    const values=[...(linkedValues||[])].map(v=>String(v??'').trim()).filter(Boolean).sort((a,b)=>b.length-a.length);
+    for(const value of values){
+      const prefix=captionPrefixForLinkedValue(raw,value);if(!prefix)continue;
+      const base={...field,semanticSplit:true},box=field?.sourceBox,total=visualChars(prefix)+visualChars(value),captionRatio=Math.max(.16,Math.min(.84,visualChars(prefix)/Math.max(1,total)));
+      const caption={...base,text:prefix,value:prefix,splitRole:'caption'},val={...base,text:value,value,splitRole:'value'};
+      if(validSourceBox(box)){
+        const gap=Math.min(.008,Number(box.w)*.035),usable=Math.max(.012,Number(box.w)-gap),cw=Math.max(.012,usable*captionRatio),vw=Math.max(.012,usable-cw);
+        caption.sourceBox={...box,w:cw};
+        val.sourceBox={...box,x:Math.min(.995,Number(box.x)+cw+gap),w:Math.min(vw,1-(Number(box.x)+cw+gap))};
+      }
+      return[caption,val]
     }
-    return{fields,omitted}
+    return[field]
+  }
+  function splitLinkedVisibleFields(items,linkedValues){
+    const out=[];let splitCount=0;
+    for(const row of items||[]){
+      const parts=splitCaptionValueField(row,linkedValues);if(parts.length>1)splitCount++;
+      out.push(...parts)
+    }
+    const dedupe=dedupeTextFields(out);
+    return{fields:dedupe.fields,omitted:dedupe.omitted,splitCount}
   }
   function boxesOverlap(a,b){
     if(!validSourceBox(a)||!validSourceBox(b))return false;
@@ -165,22 +177,26 @@
     const iy=Math.max(0,Math.min(Number(a.y)+Number(a.h),Number(b.y)+Number(b.h))-Math.max(Number(a.y),Number(b.y)));
     return ix>0&&iy>0&&ix*iy>=Math.min(Number(a.w)*Number(a.h),Number(b.w)*Number(b.h))*.12
   }
+  function paddedBarcodeBox(row,textBox){
+    const b=row?.sourceBox;if(!validSourceBox(b))return null;
+    const py=Math.max(.012,Math.min(.045,Number(textBox?.h||0)*.65)),px=.004,x=Math.max(0,Number(b.x)-px),y=Math.max(0,Number(b.y)-py),right=Math.min(1,Number(b.x)+Number(b.w)+px),bottom=Math.min(1,Number(b.y)+Number(b.h)+py);
+    return{x,y,w:right-x,h:bottom-y}
+  }
   function overlapsAnyBarcode(box,barcodeRows){
-    return (barcodeRows||[]).some(row=>validSourceBox(row?.sourceBox)&&boxesOverlap(box,row.sourceBox))
+    return (barcodeRows||[]).some(row=>{const safe=paddedBarcodeBox(row,box);return safe&&boxesOverlap(box,safe)})
   }
   function avoidBarcodeCollision(field,barcodeRows){
     const box=field?.sourceBox;if(!validSourceBox(box)||!overlapsAnyBarcode(box,barcodeRows))return field;
-    const margin=.006,candidates=[{...box}];
+    const margin=.008,candidates=[];
     for(const row of barcodeRows||[]){
-      const b=row?.sourceBox;if(!validSourceBox(b))continue;
-      candidates.push({...box,y:Math.max(0,Number(b.y)-Number(box.h)-margin)});
-      candidates.push({...box,y:Math.min(1-Number(box.h),Number(b.y)+Number(b.h)+margin)})
+      const safe=paddedBarcodeBox(row,box);if(!safe)continue;
+      candidates.push({...box,y:Math.max(0,Number(safe.y)-Number(box.h)-margin)});
+      candidates.push({...box,y:Math.min(1-Number(box.h),Number(safe.y)+Number(safe.h)+margin)})
     }
     const viable=candidates.filter(c=>!overlapsAnyBarcode(c,barcodeRows));
     if(!viable.length)return field;
     viable.sort((a,b)=>Math.abs(Number(a.y)-Number(box.y))-Math.abs(Number(b.y)-Number(box.y)));
-    const next=viable[0];
-    return next.y===box.y?field:{...field,sourceBox:next}
+    return{...field,sourceBox:viable[0]}
   }
   function textStyleScore(field,obj){
     const box=field?.sourceBox||{},p=donorNormalizedPos(obj),has=validSourceBox(box);
@@ -385,18 +401,22 @@
       }
     }
 
-    let remainingFields=[...P.fields];const reservedIndexes=new Set(reserved.keys());
+    let remainingFields=[...P.fields];const reservedIndexes=new Set(reserved.keys()),sourceBarcodes=[...P.dm,...P.c128];
+    const linkedValues=[...reserved.values()].map(x=>x.value).filter(Boolean),split=splitLinkedVisibleFields(remainingFields,linkedValues);
+    remainingFields=[...split.fields];
     for(const ref of reserved.values()){
       const obj=before.objects.find(o=>o.index===ref.index);if(!obj)throw new Error(`Code128 linked Text 不存在：${ref.ref||ref.index}`);
-      const value=String(ref.value??'');
-      edits.set(obj.index,{index:obj.index,value,xMil:OFF,yMil:OFF});
+      const value=String(ref.value??''),field=takeMatchingField(remainingFields,value,obj);
+      if(field){
+        const adjusted=avoidBarcodeCollision(field,sourceBarcodes),layout=sourceLayout(adjusted?.sourceBox,target),pos=layout?.mil?{xMil:layout.mil.x,yMil:layout.mil.y}:linkedTextPos(obj,ref.barcodeObj,ref.barcodePos,target)||fallbackTextPos(expectedText.length,P.fields.length,target),fontSize=sourceFontSize(layout,obj.fontSize,value),edit={index:obj.index,value,...pos};
+        if(obj.fontNameOffset!=null)edit.fontName='Microsoft JhengHei';
+        if(fontSize!=null&&obj.fontSizeOffset!=null)edit.fontSize=fontSize;
+        edits.set(obj.index,edit);activeIndexes.add(obj.index);expectedText.push({index:obj.index,value,fontName:edit.fontName??obj.fontName,fontSize:edit.fontSize??obj.fontSize,linkedBarcode:true,splitValue:field?.splitRole==='value',...pos})
+      }else edits.set(obj.index,{index:obj.index,value,xMil:OFF,yMil:OFF})
     }
-    const linkedValues=[...reserved.values()].map(x=>x.value).filter(Boolean),suppressed=suppressStandaloneLinkedValues(remainingFields,linkedValues);
-    remainingFields=suppressed.fields;
 
     const freeTexts=donorPool.texts.filter(o=>!reservedIndexes.has(o.index)),fit=compactTextFields(remainingFields,freeTexts.length);
     const textAssignments=assignTextPool(fit.fields,freeTexts);
-    const sourceBarcodes=[...P.dm,...P.c128];
     textAssignments.forEach(({field,obj,score},i)=>{
       const adjusted=avoidBarcodeCollision(field,sourceBarcodes),layout=sourceLayout(adjusted?.sourceBox,target),pos=layout?.mil?{xMil:layout.mil.x,yMil:layout.mil.y}:fallbackTextPos(i,fit.fields.length,target),value=textValue(adjusted),fontSize=sourceFontSize(layout,obj.fontSize,value),edit={index:obj.index,value,...pos};
       if(obj.fontNameOffset!=null)edit.fontName='Microsoft JhengHei';
@@ -434,9 +454,9 @@
       if(!text.includes(`<TemplateSize>${wanted}</TemplateSize>`))throw new Error('BTW TemplateSize round-trip 驗證失敗')
     }
 
-    return{name:outputName(label,index),bytes:rebuilt,kind:P.kind,barcodes:{dataMatrix:P.dm.map(barcodeText),code128:P.c128.map(barcodeText)},layout:{target,internalSizeOffsets:sized.offsets,text:expectedText,barcodes:expectedBarcode,parkedDonorRoots:parkedIndexes.length,parkedAuxiliaryGraphics:aux.parked,originalRootCount:rootCount,textCompaction:{input:P.inputTextCount,written:expectedText.length,omitted:[...P.omittedText,...suppressed.omitted,...fit.omitted].map(x=>textValue(x))},linkedCode128:c128Assignments.filter(x=>x.structure).length},header:check.header,seed:SEED_ID}
+    return{name:outputName(label,index),bytes:rebuilt,kind:P.kind,barcodes:{dataMatrix:P.dm.map(barcodeText),code128:P.c128.map(barcodeText)},layout:{target,internalSizeOffsets:sized.offsets,text:expectedText,barcodes:expectedBarcode,parkedDonorRoots:parkedIndexes.length,parkedAuxiliaryGraphics:aux.parked,originalRootCount:rootCount,textCompaction:{input:P.inputTextCount,written:expectedText.length,omitted:[...P.omittedText,...split.omitted,...fit.omitted].map(x=>textValue(x)),captionValueSplits:split.splitCount},linkedCode128:c128Assignments.filter(x=>x.structure).length},header:check.header,seed:SEED_ID}
   }
 
-  window.LabelWorkbenchBtwSecondNative={BUILD,SEED_ID,MAX_TEXT,MAX_C128,MAX_DM,OFF,plan,canGenerate,pool,validSourceBox,textPriority,textDedupKey,boxesNear,dedupeTextFields,compactTextFields,textStyleScore,assignTextPool,barcodeStyleScore,code128Structure,assignBarcodePool,assignCode128Pool,takeMatchingField,linkedTextPos,linkedFontSize,hasCaptionForLinkedValue,suppressStandaloneLinkedValues,boxesOverlap,overlapsAnyBarcode,avoidBarcodeCollision,lineEndpointOffsets,parkAuxiliaryGraphics,generateOne};
+  window.LabelWorkbenchBtwSecondNative={BUILD,SEED_ID,MAX_TEXT,MAX_C128,MAX_DM,OFF,plan,canGenerate,pool,validSourceBox,textPriority,textDedupKey,boxesNear,dedupeTextFields,compactTextFields,textStyleScore,assignTextPool,barcodeStyleScore,code128Structure,assignBarcodePool,assignCode128Pool,takeMatchingField,linkedTextPos,linkedFontSize,captionPrefixForLinkedValue,splitCaptionValueField,splitLinkedVisibleFields,boxesOverlap,paddedBarcodeBox,overlapsAnyBarcode,avoidBarcodeCollision,lineEndpointOffsets,parkAuxiliaryGraphics,generateOne};
   console.info('[Label Workbench] controlled 5C128+1DM native generator',BUILD);
 })();
