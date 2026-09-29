@@ -179,6 +179,13 @@ jobs:
         run: node tests/second-donor-generation-smoke.cjs
       - name: BTW object serialized size diagnostic
         run: node tests/btw-object-size-diagnostic.cjs
+      - name: Upload BTW geometry diagnostic
+        uses: actions/upload-artifact@v4
+        with:
+          name: btw-geometry-diagnostic
+          path: artifacts/btw-diagnostic/
+          if-no-files-found: error
+          retention-days: 3
       - name: Deterministic BarTender runtime acceptance fixture
         run: node tests/runtime-fixture-smoke.cjs
       - name: Manual BarTender Designer edit verifier regression
