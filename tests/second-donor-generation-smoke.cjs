@@ -35,11 +35,20 @@ const label={
   if(parsed.header.applicationVersion!=='2022 R2'||parsed.header.compatibleVersion!=='2022 R1')throw new Error('version changed');
   if(!parsed.header.text.includes('<TemplateSize>140 x 38 mm</TemplateSize>'))throw new Error('TemplateSize not rewritten');
   const map=M.mapContainer(await F.inflateContainer(parsed)),objects=map.objects;
+  const donorBytes=new Uint8Array(await c.LabelWorkbenchBtwSecondDonor.bytes()),donorParsed=F.parseStructure(donorBytes),donorObjects=M.mapContainer(await F.inflateContainer(donorParsed)).objects;
   const expectedRoots=label.fields.length+label.barcodes.length;
   if(objects.length!==out.layout?.originalRootCount)throw new Error(`donor root graph changed ${objects.length}/${out.layout?.originalRootCount}`);
   if(out.layout?.parkedDonorRoots!==(objects.length-expectedRoots))throw new Error(`parked donor roots ${out.layout?.parkedDonorRoots}`);
   const parked=objects.filter(o=>Number(o.xMil)===S.OFF&&Number(o.yMil)===S.OFF);
   if(parked.length!==out.layout.parkedDonorRoots)throw new Error(`off-canvas donor count ${parked.length}/${out.layout.parkedDonorRoots}`);
+  for(const o of objects.filter(x=>x.kind==='text'&&Number.isFinite(x.textBoxXMil)&&Number.isFinite(x.textBoxYMil))){
+    const before=donorObjects.find(x=>x.index===o.index);if(!before||!Number.isFinite(before.textBoxXMil)||!Number.isFinite(before.textBoxYMil))throw new Error(`missing donor Text Box geometry for index ${o.index}`);
+    if(o.textBoxXMil-o.xMil!==before.textBoxXMil-before.xMil)throw new Error(`Text Box relative X changed at index ${o.index}`);
+    if(o.textBoxYMil-o.yMil!==before.textBoxYMil-before.yMil)throw new Error(`Text Box relative Y changed at index ${o.index}`);
+  }
+  for(const o of parked.filter(x=>x.kind==='text'&&Number.isFinite(x.textBoxXMil)&&Number.isFinite(x.textBoxYMil))){
+    if(o.textBoxXMil<40000||o.textBoxYMil<40000)throw new Error(`parked Text internal Box remained on-label at index ${o.index}: ${o.textBoxXMil}/${o.textBoxYMil}`)
+  }
   const visible=objects.filter(o=>Number.isFinite(o.xMil)&&Number.isFinite(o.yMil)&&o.xMil>=0&&o.yMil>=0&&o.xMil<S.OFF&&o.yMil<S.OFF);
   const visibleC128=visible.filter(o=>o.kind==='barcode'&&o.barcodeType==='Code 128'),visibleDm=visible.filter(o=>o.kind==='barcode'&&o.barcodeType==='Data Matrix');
   if(visibleC128.length!==5)throw new Error(`visible Code128 ${visibleC128.length}`);
