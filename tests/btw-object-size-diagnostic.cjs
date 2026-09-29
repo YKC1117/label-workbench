@@ -60,6 +60,15 @@ const round=v=>Number.isFinite(v)?Math.round(v*1000)/1000:null;
   const textPool=objects.filter(o=>o.kind==='text'&&/^(?:Text|文字)\\s*\\d+/i.test(o.name||''));
   scanNumeric(code128,'Code128');
   scanNumeric(textPool.slice(0,12),'Text');
+  for(const o of code128){
+    const rows=[];
+    for(let off=o.recordStart;off+4<=o.recordEnd;off+=4){
+      if(insideString(off)||insideString(off+3))continue;
+      const v=i32(container,off);
+      if(v>=50&&v<=800)rows.push({rel:off-o.recordStart,value:v});
+    }
+    console.log('BARCODE_SMALL_INT_CANDIDATES '+o.index+' '+JSON.stringify(rows.slice(0,250)));
+  }
   if(code128.length){
     const o=code128[0],entries=allStrings.filter(e=>e.offset>=o.recordStart+880&&e.offset<o.recordStart+1400).map(e=>({rel:e.offset-o.recordStart,text:e.text}));
     const numeric=[];
