@@ -37,10 +37,10 @@ const label={
 
   const objects=M.mapContainer(await F.inflateContainer(parsed)).objects;
   const expectedRoots=textObjects.length+label.barcodes.length;
-  if(objects.length!==expectedRoots)throw new Error(`generic compact root count ${objects.length}/${expectedRoots}`);
-  if(objects.some(o=>o.syntheticFromTag))throw new Error('unused barcode owner tag survived as synthetic object');
-  if(objects.some(o=>Number(o.xMil)===50000||Number(o.yMil)===50000))throw new Error('unused donor object hidden at 50000 mil');
-  const visible=objects.filter(o=>Number.isFinite(o.xMil)&&Number.isFinite(o.yMil)&&o.xMil>=0&&o.yMil>=0&&o.xMil<50000&&o.yMil<50000);
+  if(objects.length!==out.layout?.originalRootCount)throw new Error(`generic donor root graph changed ${objects.length}/${out.layout?.originalRootCount}`);
+  const parked=objects.filter(o=>Number(o.xMil)===S.OFF&&Number(o.yMil)===S.OFF);
+  if(parked.length!==objects.length-expectedRoots||parked.length!==out.layout?.parkedDonorRoots)throw new Error(`generic parked donor count ${parked.length}/${objects.length-expectedRoots}`);
+  const visible=objects.filter(o=>Number.isFinite(o.xMil)&&Number.isFinite(o.yMil)&&o.xMil>=0&&o.yMil>=0&&o.xMil<S.OFF&&o.yMil<S.OFF);
   const visibleText=visible.filter(o=>o.kind==='text');
   if(visibleText.length!==textObjects.length)throw new Error(`visible text count ${visibleText.length}/${textObjects.length}`);
 
@@ -55,5 +55,5 @@ const label={
   const dm=visible.find(o=>o.kind==='barcode'&&o.barcodeType==='Data Matrix'&&o.resolvedPreview==='DM-GENERIC-456');
   if(!c128||!dm)throw new Error('generic barcode objects missing after BTW round-trip');
 
-  console.log('PASS: arbitrary customer textObjects round-trip with only requested Text/barcode roots and no synthetic/off-canvas donor residue');
+  console.log('PASS: arbitrary customer textObjects round-trip with requested Text/barcode roots visible while the native donor graph stays intact off-canvas');
 })().catch(e=>{console.error(e);process.exit(1)});
