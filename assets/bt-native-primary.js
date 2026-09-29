@@ -5,7 +5,7 @@
 (function(){
   'use strict';
 
-  const BUILD='20260929-btnp250-manual-download-fallback';
+  const BUILD='20260929-btnp260-overflow-diagnostics';
   const FORMAT_SRC='assets/btw-format.js?v=20260911-btw011';
   const NATIVE_SRC='assets/btw-native.js?v=20260911-btwn321-safe-base64';
   const PRODUCTION_SRC='assets/btw-production-core.js?v=20260918-btwpc100';
@@ -15,7 +15,7 @@
     ['assets/btw-object-map.js?v=20260929-btw-object-map-045',()=>window.LabelWorkbenchBtwObjectMap,'BTW object map'],
     ['assets/btw-production-gate.js?v=20260918-btw-production-gate',()=>window.LabelWorkbenchBtwProductionGate,'BTW production gate'],
     ['assets/btw-controlled-donor.js?v=20260929-controlled-donor-100',()=>window.LabelWorkbenchBtwControlledDonor,'BTW controlled donor'],
-    ['assets/btw-second-native.js?v=20260929-second-native-240',()=>window.LabelWorkbenchBtwSecondNative,'BTW controlled native'],
+    ['assets/btw-second-native.js?v=20260929-second-native-250',()=>window.LabelWorkbenchBtwSecondNative,'BTW controlled native'],
     ['assets/btw-rich-native.js?v=20260918-btw-rich-150',()=>window.LabelWorkbenchBtwRichNative,'BTW rich native'],
     ['assets/btw-family-native.js?v=20260918-btw-family-140',()=>window.LabelWorkbenchBtwFamilyNative,'BTW family native']
   ];
@@ -77,7 +77,7 @@
     return w>=5&&w<=1000&&h>=5&&h<=1000
   }
   function parsePhysicalSize(value){
-    const m=String(value||'').trim().match(/^\s*(\d+(?:\.\d+)?)\s*(?:x|×|X|\*)\s*(\d+(?:\.\d+)?)\s*(?:mm)?\s*$/i);
+    const m=String(value||'').trim().replace(/＊/g,'*').match(/^\s*(\d+(?:\.\d+)?)\s*(?:x|×|\*)\s*(\d+(?:\.\d+)?)\s*(?:mm)?\s*$/i);
     if(!m)return null;const width=Number(m[1]),height=Number(m[2]);
     return width>=5&&width<=1000&&height>=5&&height<=1000?{width,height}:null
   }
@@ -87,13 +87,23 @@
     const labels=(result?.labels||[]).map((label,index)=>{
       if(validPhysicalSize(label)||!imageNames.has(label?.sourceName))return label;
       const title=(result?.labels||[]).length>1?'標籤 '+(index+1):'這張標籤';
-      const raw=window.prompt?.(title+'是照片／圖片，無法從像素判斷真實毫米尺寸。\n請輸入標籤實際「寬×高 mm」，例如：100×65');
+      const raw=window.prompt?.(title+'是照片／圖片，無法從像素判斷真實毫米尺寸。\n請輸入標籤實際「寬*高 mm」，例如：100*65\n也接受 100×65、100x65');
       const size=parsePhysicalSize(raw);
       if(!size)throw new Error('圖片無法可靠判斷實際毫米尺寸；請確認標籤寬 × 高 mm 後再下載 BTW');
       changed=true;
       return{...label,sourceGeometry:{...(label.sourceGeometry||{}),widthMm:size.width,heightMm:size.height,physicalSizeKnown:true,physicalSizeSource:'user-confirmed'}}
     });
     return changed?{...(result||{}),labels}:result
+  }
+  function analysisCounts(result){
+    let textCount=0,barcodeCount=0;
+    for(const label of result?.labels||[]){
+      const objs=(label?.textObjects||[]).filter(o=>String(o?.text??'').trim());
+      const fields=(label?.fields||[]).filter(o=>String(o?.value??o?.text??'').trim());
+      textCount+=objs.length||fields.length;
+      barcodeCount+=(label?.barcodes||[]).filter(b=>String(b?.text??b?.value??b?.data??'').trim()).length
+    }
+    return{textCount,barcodeCount,labelCount:(result?.labels||[]).length}
   }
   function downloadStatus(message,error=false){
     const host=el('analysisResult');if(!host)return;
@@ -128,12 +138,15 @@
       if(b.latestResult!==result)throw new Error('原稿已變更，請完成新原稿分析後再下載');
       installManualDownload(generated);
       const out=await api.downloadGenerated(generated);
-      downloadStatus('已建立 .BTW。若沒有自動下載，可使用下方「手動下載剛產生的 .BTW」。');
+      const compacted=(generated.outputs||[]).reduce((n,o)=>n+Number(o?.layout?.textCompaction?.omitted?.length||0),0);
+      const note=compacted>0?`；為符合可編輯物件容量，已略過 ${compacted} 個低優先／重複 OCR 文字（預覽仍保留原分析）`:'';
+      downloadStatus('已建立 .BTW'+note+'。若沒有自動下載，可使用下方「手動下載剛產生的 .BTW」。');
       if(out?.ok)toast(out.count>1?`已建立 ${out.count} 個 BarTender .BTW`:'可編輯 .BTW 已下載');
       return !!out?.ok
     }catch(err){
       console.error('[Label Workbench] editable BTW generation failed',err);
-      downloadStatus('可編輯 .BTW 建立停止：'+(err?.message||err),true);
+      const counts=analysisCounts(result),detail=`標籤 ${counts.labelCount}、文字 ${counts.textCount}、條碼 ${counts.barcodeCount}`;
+      downloadStatus('可編輯 .BTW 建立停止（'+detail+'）：'+(err?.message||err),true);
       toast('可編輯 .BTW 建立停止：'+(err?.message||err));return false
     }finally{
       downloading=false;
@@ -196,5 +209,5 @@
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 
-  window.LabelWorkbenchBtNativePrimary={BUILD,ensureCopy,ensureFormat,ensureNative,ensureProduction,validPhysicalSize,parsePhysicalSize,withConfirmedPhysicalSizes,downloadStatus,installManualDownload,downloadEditable,decorateAnalysis,decorateBt,refresh};
+  window.LabelWorkbenchBtNativePrimary={BUILD,ensureCopy,ensureFormat,ensureNative,ensureProduction,validPhysicalSize,parsePhysicalSize,withConfirmedPhysicalSizes,analysisCounts,downloadStatus,installManualDownload,downloadEditable,decorateAnalysis,decorateBt,refresh};
 })();
