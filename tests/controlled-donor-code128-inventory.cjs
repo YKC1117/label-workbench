@@ -20,6 +20,10 @@ function plausible(type,v){
 (async()=>{
  const D=c.LabelWorkbenchBtwControlledDonor,F=c.LabelWorkbenchBtwFormat,M=c.LabelWorkbenchBtwObjectMap;
  const bytes=new Uint8Array(await D.bytes()),p=F.parseStructure(bytes),container=await F.inflateContainer(p),m=M.mapContainer(container);
+ fs.mkdirSync('artifacts/btw-diagnostic',{recursive:true});
+ fs.writeFileSync('artifacts/btw-diagnostic/controlled-donor.btw',Buffer.from(bytes));
+ fs.writeFileSync('artifacts/btw-diagnostic/controlled-donor-container.bin',Buffer.from(container));
+ fs.writeFileSync('artifacts/btw-diagnostic/controlled-donor-object-map.json',JSON.stringify(m,null,2));
  const dm=m.objects.filter(o=>o.kind==='barcode'&&o.barcodeType==='Data Matrix'&&o.componentEntries?.length);
  const dmIds=new Set(dm.map(o=>o.index));
  const bars=m.objects.filter(o=>o.kind==='barcode'&&!dmIds.has(o.index)&&o.componentEntries?.length).slice(0,5);
