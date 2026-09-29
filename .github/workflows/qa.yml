@@ -49,6 +49,7 @@ jobs:
           node --check tests/analysis-to-btw-e2e-smoke.cjs
           node --check tests/analysis-barcode-crosscheck-smoke.cjs
           node --check tests/second-donor-pool-smoke.cjs
+          node --check assets/btw-controlled-donor.js
           node --check tests/second-donor-generation-smoke.cjs
           node --check tools/create-btw-runtime-fixture.cjs
           node --check tools/verify-btw-runtime-fixture.cjs
@@ -89,7 +90,7 @@ jobs:
           grep -q "BUILD='20260919-v391-production-e2e'" assets/barcode-reader.js
           grep -q "BUILD='20260919-v184-pdf-legacy'" assets/label-interpreter.js
           grep -q "BUILD='20260918-btw-production-gate-110-textobjects'" assets/btw-production-gate.js
-          grep -q "BUILD='20260918-btw-second-native-110-textobjects'" assets/btw-second-native.js
+          grep -q "BUILD='20260929-btw-second-native-200-controlled-donor'" assets/btw-second-native.js
           grep -q 'analysis-core-v2.js' assets/barcode-reader.js
           grep -q "BUILD='20260918-analysis-core-v2-200'" assets/analysis-core-v2.js
           grep -q 'LabelWorkbenchModuleLoader={BUILD,ready:true}' assets/barcode-reader.js
@@ -101,9 +102,9 @@ jobs:
           grep -q "SEED_FUNCTION='btw-seed'" assets/btw-native.js
           grep -q "BUILD='20260918-btwn232-seed-retry'" assets/btw-native.js
           grep -q 'btw-rich-native.js' assets/barcode-reader.js
-          grep -q 'btw-second-donor.js' assets/barcode-reader.js
+          grep -q 'btw-controlled-donor.js' assets/barcode-reader.js
           grep -q 'btw-second-native.js' assets/barcode-reader.js
-          grep -q "SEED_ID='LW-SECOND-SANITIZED-2022-R2'" assets/btw-second-native.js
+          grep -q "SEED_ID='LW-CONTROLLED-140x38-2022-R2'" assets/btw-second-native.js
           grep -q "MAX_C128=5" assets/btw-second-native.js
           grep -q "MAX_DM=1" assets/btw-second-native.js
           grep -q 'btw-production-gate.js' assets/barcode-reader.js
@@ -111,7 +112,7 @@ jobs:
           grep -q "BUILD='20260918-btw-family-native-140-itf14'" assets/btw-family-native.js
           grep -q 'btw-production-core.js' assets/barcode-reader.js
           grep -q "BUILD='20260918-btw-production-core-140-itf14'" assets/btw-production-core.js
-          grep -q "BUILD='20260918-btnp230-website-only-ux'" assets/bt-native-primary.js
+          grep -q "BUILD='20260929-btnp240-controlled-production-deps'" assets/bt-native-primary.js
           grep -q "ensureProduction" assets/bt-native-primary.js
           grep -q "await ensureProduction()" assets/bt-native-primary.js
           grep -q '不用另外安裝網站工具' index.html
@@ -212,7 +213,7 @@ jobs:
           cp assets/btw-format.js artifacts/runtime-acceptance/assets/
           cp assets/btw-object-map.js artifacts/runtime-acceptance/assets/
           cp assets/btw-layout-map.js artifacts/runtime-acceptance/assets/
-          cp assets/btw-second-donor.js artifacts/runtime-acceptance/assets/
+          cp assets/btw-controlled-donor.js artifacts/runtime-acceptance/assets/
           cp assets/btw-second-native.js artifacts/runtime-acceptance/assets/
           (
             cd artifacts/runtime-acceptance
@@ -226,7 +227,7 @@ jobs:
           test -s artifacts/runtime-acceptance/tools/verify-btw-runtime-suite.ps1
           test -s artifacts/runtime-acceptance/tools/verify-btw-runtime-fixture.cjs
           test -s artifacts/runtime-acceptance/tools/verify-btw-manual-edit.cjs
-          test -s artifacts/runtime-acceptance/assets/btw-second-donor.js
+          test -s artifacts/runtime-acceptance/assets/btw-controlled-donor.js
           test -s artifacts/runtime-acceptance/SHA256SUMS.txt
       - name: Upload BarTender runtime acceptance artifact
         uses: actions/upload-artifact@v4
