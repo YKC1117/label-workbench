@@ -30,6 +30,10 @@ const label={
 (async()=>{
   const S=c.LabelWorkbenchBtwSecondNative,F=c.LabelWorkbenchBtwFormat,M=c.LabelWorkbenchBtwObjectMap,L=c.LabelWorkbenchBtwLayout;
   if(!S.canGenerate(label))throw new Error('generic textObjects label unexpectedly rejected');
+  {
+    const db=new Uint8Array(await c.LabelWorkbenchBtwControlledDonor.bytes()),dp=F.parseStructure(db),dobjs=M.mapContainer(await F.inflateContainer(dp)).objects;
+    console.log('CONTROLLED_BARCODE_INVENTORY '+JSON.stringify(dobjs.filter(o=>o.kind==='barcode').map(o=>({index:o.index,name:o.name,owner:o.owner,root:o.rootPath,type:o.barcodeType,components:o.components,x:o.xMil,y:o.yMil,synthetic:!!o.syntheticFromTag}))));
+  }
   const out=await S.generateOne(label,0);
   const parsed=F.parseStructure(out.bytes);
   if(parsed.header.applicationVersion!=='2022 R2'||parsed.header.compatibleVersion!=='2022 R1')throw new Error('BarTender version changed');
