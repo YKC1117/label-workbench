@@ -44,9 +44,12 @@
       if(code<0x20)break;chars.push(String.fromCharCode(code));
     }
     const name=chars.join('').trim();if(!name)return null;
-    const sizeOffset=nameStart+64;let size=null;
-    if(sizeOffset+4<=end){const n=readF32(data,sizeOffset);if(Number.isFinite(n)&&n>=1&&n<=200)size=Math.round(n*1000)/1000}
-    return{name,size,sizeOffset:size==null?null:sizeOffset,markerOffset:marker};
+    const sizeOffset=nameStart+64;let size=null,rawSize=null,safeSizeOffset=null;
+    if(sizeOffset+4<=end){
+      const n=readF32(data,sizeOffset);rawSize=Number.isFinite(n)?Math.round(n*1000)/1000:null;
+      if(Number.isFinite(n)&&n>=0&&n<=200){size=rawSize;safeSizeOffset=sizeOffset}
+    }
+    return{name,size,rawSize,sizeOffset:safeSizeOffset,markerOffset:marker};
   }
   function textBoxPositionInfo(data,strings,start,end){
     const marker=(strings||[]).find(e=>String(e?.text||'')==='Box Options');
