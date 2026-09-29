@@ -59,10 +59,11 @@ const label={
     if(o.textBoxXMil<40000||o.textBoxYMil<40000)throw new Error(`parked Text internal Box remained on-label at index ${o.index}: ${o.textBoxXMil}/${o.textBoxYMil}`)
   }
   const visible=objects.filter(o=>Number.isFinite(o.xMil)&&Number.isFinite(o.yMil)&&o.xMil>=0&&o.yMil>=0&&o.xMil<S.OFF&&o.yMil<S.OFF);
-  const visibleC128=visible.filter(o=>o.kind==='barcode'&&o.barcodeType==='Code 128'),visibleDm=visible.filter(o=>o.kind==='barcode'&&o.barcodeType==='Data Matrix');
+  const visibleDm=visible.filter(o=>o.kind==='barcode'&&o.barcodeType==='Data Matrix');
+  const dmIndexes=new Set(visibleDm.map(o=>o.index)),visibleC128=visible.filter(o=>o.kind==='barcode'&&!dmIndexes.has(o.index)&&o.componentEntries?.length);
   if(visibleC128.length!==5)throw new Error(`visible Code128 ${visibleC128.length}`);
   if(visibleDm.length!==1)throw new Error(`visible DataMatrix ${visibleDm.length}`);
-  const wanted=label.barcodes.map(b=>b.text),actual=[...visibleDm,...visibleC128].map(o=>o.resolvedPreview);
+  const wanted=label.barcodes.map(b=>b.text),actual=[...visibleDm,...visibleC128].map(o=>o.resolvedPreview||o.components?.join('')||'');
   for(const value of wanted)if(!actual.includes(value))throw new Error(`missing independent barcode ${value}; got ${JSON.stringify(actual)}`);
   if(new Set(actual).size!==6)throw new Error('barcode values are not independent');
   for(const f of label.fields){const o=visible.find(x=>x.kind==='text'&&x.value===f.value);if(!o)throw new Error(`missing field ${f.value}`);const pos=L.boxToLayout(f.sourceBox,{width:140,height:38}).mil;if(o.xMil!==pos.x||o.yMil!==pos.y)throw new Error(`field position mismatch ${f.value}`)}
