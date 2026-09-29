@@ -5,7 +5,7 @@
  */
 (function(){
   'use strict';
-  const BUILD='20260929-btw-second-native-200-controlled-donor';
+  const BUILD='20260929-btw-second-native-220-font-normalized';
   const SEED_ID='LW-CONTROLLED-140x38-2022-R2';
   const MAX_TEXT=29;
   const MAX_C128=5;
@@ -180,8 +180,9 @@
     const textAssignments=assignTextPool(P.fields,donorPool.texts);
     textAssignments.forEach(({field,obj,score},i)=>{
       const layout=sourceLayout(field?.sourceBox,target),pos=layout?.mil?{xMil:layout.mil.x,yMil:layout.mil.y}:fallbackTextPos(i,P.fields.length,target),value=textValue(field),fontSize=sourceFontSize(layout,obj.fontSize,value),edit={index:obj.index,value,...pos};
+      if(obj.fontNameOffset!=null)edit.fontName='Microsoft JhengHei';
       if(fontSize!=null&&obj.fontSizeOffset!=null)edit.fontSize=fontSize;
-      edits.set(obj.index,edit);activeIndexes.add(obj.index);expectedText.push({index:obj.index,value,fontSize:edit.fontSize??obj.fontSize,styleScore:Math.round(score*1000)/1000,...pos})
+      edits.set(obj.index,edit);activeIndexes.add(obj.index);expectedText.push({index:obj.index,value,fontName:edit.fontName??obj.fontName,fontSize:edit.fontSize??obj.fontSize,styleScore:Math.round(score*1000)/1000,...pos})
     });
 
     const expectedBarcode=[],used={c128:0,dm:0},barRows=requestedBarcodeRows(P);
@@ -204,6 +205,7 @@
     for(const exp of expectedText){
       const got=after.objects.find(o=>o.kind==='text'&&String(o.value??'')===exp.value&&near(o.xMil,exp.xMil)&&near(o.yMil,exp.yMil));
       if(!got)throw new Error(`BTW 文字 round-trip 失敗：${exp.value}`);
+      if(exp.fontName&&got.fontName!==exp.fontName)throw new Error(`BTW 文字字型 round-trip 失敗：${exp.value} / ${got.fontName}`);
       if(exp.fontSize!=null&&got.fontSize!=null&&!near(got.fontSize,exp.fontSize,.11))throw new Error(`BTW 文字字級 round-trip 失敗：${exp.value}`)
     }
     for(const exp of expectedBarcode){
