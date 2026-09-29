@@ -57,5 +57,15 @@ const round=v=>Number.isFinite(v)?Math.round(v*1000)/1000:null;
   const textPool=objects.filter(o=>o.kind==='text'&&/^(?:Text|文字)\\s*\\d+/i.test(o.name||''));
   scanNumeric(code128,'Code128');
   scanNumeric(textPool.slice(0,12),'Text');
+  if(code128.length){
+    const o=code128[0],entries=allStrings.filter(e=>e.offset>=o.recordStart+880&&e.offset<o.recordStart+1400).map(e=>({rel:e.offset-o.recordStart,text:e.text}));
+    const numeric=[];
+    for(let rel=880;rel<=1400;rel+=4){
+      const off=o.recordStart+rel;if(off+4>o.recordEnd)break;
+      numeric.push({rel,hex:[...container.slice(off,off+4)].map(x=>x.toString(16).padStart(2,'0')).join(' '),i32:i32(container,off),f32:round(f32(container,off)),string:insideString(off)});
+    }
+    console.log('CODE128_WINDOW_STRINGS '+JSON.stringify(entries));
+    console.log('CODE128_WINDOW_NUMERIC '+JSON.stringify(numeric));
+  }
   console.log('PASS: BTW object size diagnostic complete');
 })().catch(e=>{console.error(e);process.exit(1)});
