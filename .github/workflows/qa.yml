@@ -189,6 +189,8 @@ jobs:
         run: node tests/btw-object-size-diagnostic.cjs
       - name: Native Text Box position follows primary geometry
         run: node tests/btw-text-box-position-smoke.cjs
+      - name: Controlled donor text inventory
+        run: node tests/controlled-donor-text-inventory.cjs
       - name: Upload BTW geometry diagnostic
         uses: actions/upload-artifact@v4
         with:
