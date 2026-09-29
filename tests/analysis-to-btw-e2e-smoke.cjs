@@ -117,7 +117,7 @@ for(const f of[
   assert(second.canGenerate(prod),'production label unexpectedly exceeds 5C128+1DM donor capacity');
 
   const out=await second.generateOne(prod,0);
-  assert(out.seed==='LW-SECOND-SANITIZED-2022-R2','wrong production donor');
+  assert(out.seed==='LW-CONTROLLED-140x38-2022-R2','wrong production donor');
   const parsed=F.parseStructure(out.bytes);
   assert(parsed.header.applicationVersion==='2022 R2'&&parsed.header.compatibleVersion==='2022 R1','BarTender 2022 header changed');
   assert(parsed.header.text.includes('<TemplateSize>140 x 38 mm</TemplateSize>'),'140 x 38 mm TemplateSize missing');
@@ -129,8 +129,10 @@ for(const f of[
   const parked=mapped.objects.filter(o=>Number(o.xMil)===second.OFF&&Number(o.yMil)===second.OFF);
   assert(parked.length===out.layout?.parkedDonorRoots,`parked donor root count ${parked.length}/${out.layout?.parkedDonorRoots}`);
   assert(textObjects.length===11,`visible text count ${textObjects.length}`);
-  assert(barcodeObjects.filter(o=>o.barcodeType==='Code 128').length===5,'expected 5 visible Code128 objects');
-  assert(barcodeObjects.filter(o=>o.barcodeType==='Data Matrix').length===1,'expected 1 visible Data Matrix object');
+  const visibleDm=barcodeObjects.filter(o=>o.barcodeType==='Data Matrix'),dmIndexes=new Set(visibleDm.map(o=>o.index));
+  const visibleC128=barcodeObjects.filter(o=>!dmIndexes.has(o.index)&&o.componentEntries?.length);
+  assert(visibleC128.length===5,'expected 5 visible Code128 objects');
+  assert(visibleDm.length===1,'expected 1 visible Data Matrix object');
 
   prod.fields.forEach((f,i)=>{
     const expected=out.layout.text[i],pos=L.boxToLayout(f.sourceBox,{width:140,height:38}).mil;
