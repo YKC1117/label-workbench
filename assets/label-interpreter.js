@@ -299,7 +299,7 @@
     }
     return groups.map(g=>{
       const rows=g.rows.sort((a,b)=>b.confidence-a.confidence),best=rows[0],confidence=best.confidence,repeat=rows.length;
-      return{text:best.text,sourceBox:{...best.sourceBox,confidence},confidence,repeat,generic:true}
+      return{text:best.text,sourceBox:{...best.sourceBox,confidence},confidence,repeat,generic:true,semanticSplit:rows.some(x=>x.semanticSplit)}
     }).filter(x=>x.repeat>=2||x.confidence>=68).sort((a,b)=>Math.abs(a.sourceBox.y-b.sourceBox.y)<.012?a.sourceBox.x-b.sourceBox.x:a.sourceBox.y-b.sourceBox.y)
   }
   function spatialTextScore(o){return (Number(o?.repeat||0)*18)+(Number(o?.confidence||0))+(Math.min(120,String(o?.text||'').length)*.08)}
@@ -332,7 +332,8 @@
           /* Collapse OCR variants only when they describe essentially the same physical
              object. Keep small child boxes so Caption:Value composites can be replaced by
              the semantic caption/value pair in the composite pass below. */
-          if((areaRatio>=.68&&contains(L,S)||lenRatio>=.68&&areaRatio>=.50&&nearCenter)&&spatialTextScore(L)>=spatialTextScore(S)-10)drop.add(shorter)
+          const protectedSemanticChild=!!S.semanticSplit&&!L.semanticSplit;
+          if(!protectedSemanticChild&&(areaRatio>=.68&&contains(L,S)||lenRatio>=.68&&areaRatio>=.50&&nearCenter)&&spatialTextScore(L)>=spatialTextScore(S)-10)drop.add(shorter)
         }
       }
     }
