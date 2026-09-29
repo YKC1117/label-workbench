@@ -43,6 +43,7 @@ jobs:
           node --check tests/analysis-core-v2-smoke.cjs
           node --check tests/analysis-isolation-smoke.cjs
           node --check tests/generic-label-model-smoke.cjs
+          node --check tests/text-object-segmentation-smoke.cjs
           node --check tests/generic-textobjects-btw-smoke.cjs
           node --check tests/analysis-to-btw-e2e-smoke.cjs
           node --check tests/analysis-barcode-crosscheck-smoke.cjs
@@ -147,6 +148,8 @@ jobs:
         run: node tests/analysis-isolation-smoke.cjs
       - name: Arbitrary-customer generic label object model
         run: node tests/generic-label-model-smoke.cjs
+      - name: Generic caption-value text-object segmentation
+        run: node tests/text-object-segmentation-smoke.cjs
       - name: Arbitrary-customer textObjects to editable BTW round trip
         run: node tests/generic-textobjects-btw-smoke.cjs
       - name: Internal analysis-to-BTW structural integrity (not runtime acceptance)
