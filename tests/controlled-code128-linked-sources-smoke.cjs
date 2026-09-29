@@ -40,10 +40,9 @@ const label={sourceName:'linked-code128.png',sourceGeometry:{widthMm:140,heightM
     assert(!o.components.some(x=>String(x).includes('#')),'full merged payload was written into barcode component slot');
   }
   const linkedText=out.layout.text.filter(x=>x.linkedBarcode);
-  assert(linkedText.length===14,'expected 14 linked visible Text datasource objects, got '+linkedText.length);
-  assert(linkedText.every(x=>x.donorRelative),'linked barcode text did not use donor-relative geometry');
+  assert(linkedText.length===0,'linked datasource Text must stay hidden off-canvas');
   for(const v of values){
-    assert(linkedText.some(x=>x.value===v),'linked visible Text value missing: '+v);
+    assert(out.layout.text.some(x=>x.value===v),'visible OCR Text value missing after hiding linked datasource: '+v);
   }
   const dups=[
     {text:'(10D)DATE NO: 2628',confidence:96,repeat:3,sourceBox:{x:.08,y:.40,w:.18,h:.04}},
@@ -54,5 +53,5 @@ const label={sourceName:'linked-code128.png',sourceGeometry:{widthMm:140,heightM
   const dd=S.dedupeTextFields(dups);
   assert(dd.fields.filter(x=>x.text==='(10D)DATE NO: 2628').length===1,'near duplicate text was not removed');
   assert(dd.fields.filter(x=>x.text==='SAME FAR AWAY').length===2,'far-apart legitimate repeated text was incorrectly removed');
-  console.log('PASS: linked Code128 text uses donor-relative layout and conservative near-duplicate text cleanup');
+  console.log('PASS: linked Code128 datasources stay hidden while visible OCR text and conservative dedupe remain intact');
 })().catch(e=>{console.error(e);process.exit(1)});

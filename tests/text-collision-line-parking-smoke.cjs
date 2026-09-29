@@ -6,16 +6,15 @@ for(const f of['assets/btw-format.js','assets/btw-object-map.js','assets/btw-lay
 (async()=>{
   const S=c.LabelWorkbenchBtwSecondNative,F=c.LabelWorkbenchBtwFormat,D=c.LabelWorkbenchBtwControlledDonor;
   const full={text:'(16D)DATE: 20260722',confidence:95,sourceBox:{x:.42,y:.36,w:.22,h:.05}};
-  const stripped=S.stripLinkedValueFromField(full,['20260722']);
-  assert(stripped.text==='(16D)DATE:','linked value suffix was not stripped from caption');
-  assert(stripped.sourceBox.w<full.sourceBox.w,'caption sourceBox width was not reduced after stripping value');
-  const exact=S.stripLinkedValueFromField({text:'20260722',sourceBox:{x:.5,y:.2,w:.1,h:.04}},['20260722']);
-  assert(exact.text==='20260722','exact linked value must remain available for datasource matching');
+  const exact={text:'20260722',confidence:91,sourceBox:{x:.67,y:.36,w:.08,h:.05}};
+  const sup=S.suppressStandaloneLinkedValues([full,exact],['20260722']);
+  assert(sup.fields.length===1&&sup.fields[0].text==='(16D)DATE: 20260722','complete caption+value line was not preserved');
+  assert(sup.omitted.length===1&&sup.omitted[0].text==='20260722','standalone linked value duplicate was not suppressed');
 
-  const collision={text:'CAPTION:',sourceBox:{x:.1,y:.22,w:.18,h:.06}};
+  const collision={text:'CAPTION:',sourceBox:{x:.1,y:.30,w:.18,h:.04}};
   const barcode={format:'Code 128',text:'ABC123',sourceBox:{x:.08,y:.24,w:.34,h:.08}};
   const moved=S.avoidBarcodeCollision(collision,[barcode]);
-  assert(moved.sourceBox.y+moved.sourceBox.h<=barcode.sourceBox.y+.0001,'caption was not moved outside barcode area');
+  assert(moved.sourceBox.y>=barcode.sourceBox.y+barcode.sourceBox.h,'nearest free collision slot should move this caption below the barcode');
 
   const seed=new Uint8Array(await D.bytes()),parsed=F.parseStructure(seed),container=await F.inflateContainer(parsed);
   const data=new Uint8Array(container),dv=new DataView(data.buffer,data.byteOffset,data.byteLength);
@@ -36,5 +35,5 @@ for(const f of['assets/btw-format.js','assets/btw-object-map.js','assets/btw-lay
   assert(dv2.getInt32(at,true)===S.OFF&&dv2.getInt32(at+4,true)===S.OFF,'LineData primary position was not parked');
   const x1=dv2.getInt32(ep.off,true),y1=dv2.getInt32(ep.off+4,true),x2=dv2.getInt32(ep.off+8,true),y2=dv2.getInt32(ep.off+12,true);
   assert(Math.abs((x1+x2)/2-S.OFF)<=2&&Math.abs((y1+y2)/2-S.OFF)<=2,'LineData endpoints stayed on-label after parking');
-  console.log('PASS: linked caption stripping, barcode collision avoidance, and native LineData endpoint parking');
+  console.log('PASS: linked standalone suppression, nearest-free barcode avoidance, and native LineData endpoint parking');
 })().catch(e=>{console.error(e);process.exit(1)});

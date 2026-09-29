@@ -5,7 +5,7 @@
  */
 (function(){
   'use strict';
-  const BUILD='20260929-btw-second-native-290-text-collision-line';
+  const BUILD='20260929-btw-second-native-300-hidden-linked-visible-lines';
   const SEED_ID='LW-CONTROLLED-140x38-2022-R2';
   const MAX_TEXT=29;
   const MAX_C128=5;
@@ -47,7 +47,9 @@
     const A=a?.sourceBox||{},B=b?.sourceBox||{};
     if(!validSourceBox(A)||!validSourceBox(B))return false;
     const acx=Number(A.x)+Number(A.w)/2,acy=Number(A.y)+Number(A.h)/2,bcx=Number(B.x)+Number(B.w)/2,bcy=Number(B.y)+Number(B.h)/2;
-    const dx=Math.abs(acx-bcx),dy=Math.abs(acy-bcy),wx=Math.max(.018,(Number(A.w)+Number(B.w))*.58),hy=Math.max(.012,(Number(A.h)+Number(B.h))*.78);
+    const dx=Math.abs(acx-bcx),dy=Math.abs(acy-bcy),wx=Math.max(.018,(Number(A.w)+Number(B.w))*.62);
+    const short=Math.max(textDedupKey(a).length,textDedupKey(b).length)<=8;
+    const hy=Math.max(short ? .065 : .012,(Number(A.h)+Number(B.h))*(short ? 1.35 : .82));
     return dx<=wx&&dy<=hy
   }
   function dedupeTextFields(items){
@@ -138,23 +140,24 @@
     const scale=Math.max(.55,Math.min(1.8,target.height/DONOR_SIZE.height));
     return Math.round(base*scale*10)/10
   }
-  function stripLinkedValueFromField(field,linkedValues){
-    const original=textValue(field);if(!original)return field;
-    const values=[...(linkedValues||[])].map(v=>String(v??'').trim()).filter(Boolean).sort((a,b)=>b.length-a.length);
-    for(const value of values){
-      if(textKey(original)===textKey(value))return field;
-      if(!original.endsWith(value))continue;
-      const prefix=original.slice(0,original.length-value.length).trimEnd();
-      if(!/[：:]\s*$/.test(prefix))continue;
-      const box=field?.sourceBox,ratio=Math.max(.18,Math.min(1,visualChars(prefix)/Math.max(1,visualChars(original))));
-      const next={...field,text:prefix,value:field?.text==null?prefix:field.value};
-      if(validSourceBox(box))next.sourceBox={...box,w:Math.max(.012,Number(box.w)*ratio)};
-      return next
-    }
-    return field
+  function hasCaptionForLinkedValue(items,value,self){
+    const v=String(value??'').trim();if(!v)return false;
+    return (items||[]).some(o=>{
+      if(o===self)return false;
+      const t=textValue(o);if(!t||textKey(t)===textKey(v)||!t.endsWith(v))return false;
+      const prefix=t.slice(0,t.length-v.length).trimEnd();
+      return /[：:]\s*$/.test(prefix)||/^\([^)]{1,8}\)/.test(prefix)
+    })
   }
-  function stripLinkedValuesFromFields(items,linkedValues){
-    return (items||[]).map(x=>stripLinkedValueFromField(x,linkedValues)).filter(x=>textValue(x))
+  function suppressStandaloneLinkedValues(items,linkedValues){
+    const rows=[...(items||[])].filter(o=>textValue(o)),values=[...(linkedValues||[])].map(v=>String(v??'').trim()).filter(Boolean);
+    const omitted=[],fields=[];
+    for(const row of rows){
+      const raw=textValue(row),match=values.find(v=>textKey(raw)===textKey(v));
+      if(match&&hasCaptionForLinkedValue(rows,match,row)){omitted.push(row);continue}
+      fields.push(row)
+    }
+    return{fields,omitted}
   }
   function boxesOverlap(a,b){
     if(!validSourceBox(a)||!validSourceBox(b))return false;
@@ -162,15 +165,21 @@
     const iy=Math.max(0,Math.min(Number(a.y)+Number(a.h),Number(b.y)+Number(b.h))-Math.max(Number(a.y),Number(b.y)));
     return ix>0&&iy>0&&ix*iy>=Math.min(Number(a.w)*Number(a.h),Number(b.w)*Number(b.h))*.12
   }
+  function overlapsAnyBarcode(box,barcodeRows){
+    return (barcodeRows||[]).some(row=>validSourceBox(row?.sourceBox)&&boxesOverlap(box,row.sourceBox))
+  }
   function avoidBarcodeCollision(field,barcodeRows){
-    const box=field?.sourceBox;if(!validSourceBox(box))return field;
-    let next={...box};
+    const box=field?.sourceBox;if(!validSourceBox(box)||!overlapsAnyBarcode(box,barcodeRows))return field;
+    const margin=.006,candidates=[{...box}];
     for(const row of barcodeRows||[]){
-      const b=row?.sourceBox;if(!validSourceBox(b)||!boxesOverlap(next,b))continue;
-      const tc=Number(next.y)+Number(next.h)/2,bc=Number(b.y)+Number(b.h)/2,margin=.006;
-      if(tc<=bc)next.y=Math.max(0,Number(b.y)-Number(next.h)-margin);
-      else next.y=Math.min(1-Number(next.h),Number(b.y)+Number(b.h)+margin)
+      const b=row?.sourceBox;if(!validSourceBox(b))continue;
+      candidates.push({...box,y:Math.max(0,Number(b.y)-Number(box.h)-margin)});
+      candidates.push({...box,y:Math.min(1-Number(box.h),Number(b.y)+Number(b.h)+margin)})
     }
+    const viable=candidates.filter(c=>!overlapsAnyBarcode(c,barcodeRows));
+    if(!viable.length)return field;
+    viable.sort((a,b)=>Math.abs(Number(a.y)-Number(box.y))-Math.abs(Number(b.y)-Number(box.y)));
+    const next=viable[0];
     return next.y===box.y?field:{...field,sourceBox:next}
   }
   function textStyleScore(field,obj){
@@ -379,18 +388,11 @@
     let remainingFields=[...P.fields];const reservedIndexes=new Set(reserved.keys());
     for(const ref of reserved.values()){
       const obj=before.objects.find(o=>o.index===ref.index);if(!obj)throw new Error(`Code128 linked Text 不存在：${ref.ref||ref.index}`);
-      const field=takeMatchingField(remainingFields,ref.value,obj),value=String(ref.value??''),pos=linkedTextPos(obj,ref.barcodeObj,ref.barcodePos,target)||fallbackTextPos(expectedText.length,P.fields.length,target);
-      if(field){
-        const fontSize=linkedFontSize(obj,target),edit={index:obj.index,value,...pos};
-        if(obj.fontNameOffset!=null)edit.fontName='Microsoft JhengHei';
-        if(fontSize!=null&&obj.fontSizeOffset!=null)edit.fontSize=fontSize;
-        edits.set(obj.index,edit);activeIndexes.add(obj.index);expectedText.push({index:obj.index,value,fontName:edit.fontName??obj.fontName,fontSize:edit.fontSize??obj.fontSize,linkedBarcode:true,donorRelative:true,...pos})
-      }else{
-        edits.set(obj.index,{index:obj.index,value,xMil:OFF,yMil:OFF})
-      }
+      const value=String(ref.value??'');
+      edits.set(obj.index,{index:obj.index,value,xMil:OFF,yMil:OFF});
     }
-    const linkedValues=[...reserved.values()].map(x=>x.value).filter(Boolean);
-    remainingFields=stripLinkedValuesFromFields(remainingFields,linkedValues);
+    const linkedValues=[...reserved.values()].map(x=>x.value).filter(Boolean),suppressed=suppressStandaloneLinkedValues(remainingFields,linkedValues);
+    remainingFields=suppressed.fields;
 
     const freeTexts=donorPool.texts.filter(o=>!reservedIndexes.has(o.index)),fit=compactTextFields(remainingFields,freeTexts.length);
     const textAssignments=assignTextPool(fit.fields,freeTexts);
@@ -432,9 +434,9 @@
       if(!text.includes(`<TemplateSize>${wanted}</TemplateSize>`))throw new Error('BTW TemplateSize round-trip 驗證失敗')
     }
 
-    return{name:outputName(label,index),bytes:rebuilt,kind:P.kind,barcodes:{dataMatrix:P.dm.map(barcodeText),code128:P.c128.map(barcodeText)},layout:{target,internalSizeOffsets:sized.offsets,text:expectedText,barcodes:expectedBarcode,parkedDonorRoots:parkedIndexes.length,parkedAuxiliaryGraphics:aux.parked,originalRootCount:rootCount,textCompaction:{input:P.inputTextCount,written:expectedText.length,omitted:[...P.omittedText,...fit.omitted].map(x=>textValue(x))},linkedCode128:c128Assignments.filter(x=>x.structure).length},header:check.header,seed:SEED_ID}
+    return{name:outputName(label,index),bytes:rebuilt,kind:P.kind,barcodes:{dataMatrix:P.dm.map(barcodeText),code128:P.c128.map(barcodeText)},layout:{target,internalSizeOffsets:sized.offsets,text:expectedText,barcodes:expectedBarcode,parkedDonorRoots:parkedIndexes.length,parkedAuxiliaryGraphics:aux.parked,originalRootCount:rootCount,textCompaction:{input:P.inputTextCount,written:expectedText.length,omitted:[...P.omittedText,...suppressed.omitted,...fit.omitted].map(x=>textValue(x))},linkedCode128:c128Assignments.filter(x=>x.structure).length},header:check.header,seed:SEED_ID}
   }
 
-  window.LabelWorkbenchBtwSecondNative={BUILD,SEED_ID,MAX_TEXT,MAX_C128,MAX_DM,OFF,plan,canGenerate,pool,validSourceBox,textPriority,textDedupKey,boxesNear,dedupeTextFields,compactTextFields,textStyleScore,assignTextPool,barcodeStyleScore,code128Structure,assignBarcodePool,assignCode128Pool,takeMatchingField,linkedTextPos,linkedFontSize,stripLinkedValueFromField,stripLinkedValuesFromFields,boxesOverlap,avoidBarcodeCollision,lineEndpointOffsets,parkAuxiliaryGraphics,generateOne};
+  window.LabelWorkbenchBtwSecondNative={BUILD,SEED_ID,MAX_TEXT,MAX_C128,MAX_DM,OFF,plan,canGenerate,pool,validSourceBox,textPriority,textDedupKey,boxesNear,dedupeTextFields,compactTextFields,textStyleScore,assignTextPool,barcodeStyleScore,code128Structure,assignBarcodePool,assignCode128Pool,takeMatchingField,linkedTextPos,linkedFontSize,hasCaptionForLinkedValue,suppressStandaloneLinkedValues,boxesOverlap,overlapsAnyBarcode,avoidBarcodeCollision,lineEndpointOffsets,parkAuxiliaryGraphics,generateOne};
   console.info('[Label Workbench] controlled 5C128+1DM native generator',BUILD);
 })();
