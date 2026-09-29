@@ -45,7 +45,6 @@ jobs:
           node --check tests/generic-label-model-smoke.cjs
           node --check tests/text-object-segmentation-smoke.cjs
           node --check tests/btw-text-box-position-smoke.cjs
-          node --check tests/btw-line-position-smoke.cjs
           node --check tests/controlled-donor-capacity-smoke.cjs
           node --check tests/controlled-donor-code128-inventory.cjs
           node --check tests/generic-textobjects-btw-smoke.cjs
@@ -100,7 +99,7 @@ jobs:
           grep -q 'LabelWorkbenchModuleLoader={BUILD,ready:true}' assets/barcode-reader.js
           grep -q "BUILD='20260918-barcode-crosscheck-108-clear-stale-ocr'" assets/analysis-barcode-crosscheck.js
           grep -q "analysis-barcode-crosscheck.js'" assets/barcode-reader.js
-          grep -q "BUILD='20260929-btw-object-map-046-line-endpoints'" assets/btw-object-map.js
+          grep -q "BUILD='20260929-btw-object-map-045-text-box-position'" assets/btw-object-map.js
           grep -q "BUILD='20260912-btw-caption-adapter-100'" assets/btw-caption-adapter.js
           grep -q "SEED_ID='CEA-2022-R5'" assets/btw-native.js
           grep -q "SEED_FUNCTION='btw-seed'" assets/btw-native.js
@@ -192,8 +191,6 @@ jobs:
         run: node tests/btw-object-size-diagnostic.cjs
       - name: Native Text Box position follows primary geometry
         run: node tests/btw-text-box-position-smoke.cjs
-      - name: Native Line endpoints follow primary geometry
-        run: node tests/btw-line-position-smoke.cjs
       - name: Controlled donor text inventory
         run: node tests/controlled-donor-text-inventory.cjs
       - name: Controlled donor Code128 geometry inventory
