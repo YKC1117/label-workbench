@@ -1,0 +1,26 @@
+name: BTW Geometry Diagnostic
+
+on:
+  push:
+    branches: [fix/quick-analysis-btw-layout-20260921]
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run BTW geometry diagnostic
+        run: node tests/btw-object-size-diagnostic.cjs
+      - name: Upload BTW geometry diagnostic
+        uses: actions/upload-artifact@v4
+        with:
+          name: btw-geometry-diagnostic-quick
+          path: artifacts/btw-diagnostic/
+          if-no-files-found: error
+          retention-days: 3

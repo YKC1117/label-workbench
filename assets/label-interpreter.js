@@ -132,11 +132,55 @@
   function runs(flags){const out=[];let start=null;for(let i=0;i<flags.length;i++){if(flags[i]&&start===null)start=i;if(!flags[i]&&start!==null){out.push([start,i-1]);start=null}}if(start!==null)out.push([start,flags.length-1]);return out}
   function mergeRuns(list,maxGap){const out=[];for(const r of list){if(!out.length||r[0]-out[out.length-1][1]>maxGap)out.push([...r]);else out[out.length-1][1]=r[1]}return out}
 
+  /* A photographed white label can sit on a gray surface. In that case the
+     dark-pixel scan below sees the entire surface as one label. Find the broad
+     light sheet first, using row coverage so reflections do not count. */
+  function detectLightLabelBands(canvas,data,step){
+    const width=canvas.width,height=canvas.height,sampled=Math.ceil(width/step);
+    if(width<80||height<80)return[];
+    const light=new Uint8Array(height);
+    for(let y=0;y<height;y++){
+      let count=0;
+      for(let x=0;x<width;x+=step)if(grayAt(data,(y*width+x)*4)>205)count++;
+      light[y]=count>=sampled*.44?1:0;
+    }
+    const spans=mergeRuns(runs(light),Math.max(10,Math.round(height*.065)))
+      .filter(([a,b])=>a>height*.015&&b<height*.985&&b-a>=Math.max(40,height*.075)&&b-a<height*.8);
+    if(!spans.length||spans.length>8)return[];
+    const boxes=[];
+    for(const [a,b] of spans){
+      const sampleY=Math.max(1,Math.ceil((b-a+1)/200)),sampleRows=Math.ceil((b-a+1)/sampleY),columns=new Uint16Array(sampled);
+      for(let y=a;y<=b;y+=sampleY)for(let x=0,col=0;x<width;x+=step,col++){
+        if(grayAt(data,(y*width+x)*4)>205)columns[col]++;
+      }
+      let first=-1,last=-1;
+      for(let col=0;col<sampled;col++)if(columns[col]>=sampleRows*.22){if(first<0)first=col;last=col}
+      if(first<0||(last-first+1)*step<width*.35)continue;
+      const px=Math.round(width*.008),py=Math.round(height*.006),x=Math.max(0,first*step-px),y=Math.max(0,a-py);
+      boxes.push({x,y,w:Math.min(width,(last+1)*step+px)-x,h:Math.min(height,b+py+1)-y});
+    }
+    return boxes;
+  }
+
   function detectLabelBands(canvas){
     const x=canvas.getContext('2d',{willReadFrequently:true}),im=x.getImageData(0,0,canvas.width,canvas.height),d=im.data,step=Math.max(1,Math.ceil(canvas.width/1500)),counts=new Uint32Array(canvas.height),sampled=Math.ceil(canvas.width/step);
+    const light=detectLightLabelBands(canvas,d,step);if(light.length)return light;
     for(let y=0;y<canvas.height;y++){let n=0;for(let xx=0;xx<canvas.width;xx+=step){const i=(y*canvas.width+xx)*4;if(grayAt(d,i)<228)n++}counts[y]=n}
-    const threshold=Math.max(5,Math.round(sampled*.005));let rs=mergeRuns(runs([...counts].map(n=>n>threshold)),Math.max(12,Math.round(canvas.height*.022)));rs=rs.filter(r=>r[1]-r[0]>=Math.max(50,canvas.height*.045));if(rs.length<2||rs.length>8)rs=[[0,canvas.height-1]];
-    return rs.map(([a,b])=>{const py=Math.round(canvas.height*.018),y=Math.max(0,a-py),y2=Math.min(canvas.height,b+py),rough=crop(canvas,0,y,canvas.width,y2-y),cb=contentBounds(rough,240);return{x:cb.x,y:y+cb.y,w:cb.w,h:cb.h}});
+    const threshold=Math.max(5,Math.round(sampled*.005));let rs=mergeRuns(runs([...counts].map(n=>n>threshold)),Math.max(12,Math.round(canvas.height*.075)));rs=rs.filter(r=>r[1]-r[0]>=Math.max(50,canvas.height*.045));if(!rs.length||rs.length>8)rs=[[0,canvas.height-1]];
+    const boxes=rs.map(([a,b])=>{const py=Math.round(canvas.height*.018),y=Math.max(0,a-py),y2=Math.min(canvas.height,b+py),rough=crop(canvas,0,y,canvas.width,y2-y),cb=contentBounds(rough,240);return{x:cb.x,y:y+cb.y,w:cb.w,h:cb.h}});
+    const merged=[];
+    for(const box of boxes){
+      const prev=merged[merged.length-1];
+      if(prev){
+        const gap=box.y-(prev.y+prev.h),overlap=Math.max(0,Math.min(prev.x+prev.w,box.x+box.w)-Math.max(prev.x,box.x)),overlapRatio=overlap/Math.max(1,Math.min(prev.w,box.w));
+        if(gap<=canvas.height*.20&&overlapRatio>=.45){
+          const x0=Math.min(prev.x,box.x),y0=Math.min(prev.y,box.y),x1=Math.max(prev.x+prev.w,box.x+box.w),y1=Math.max(prev.y+prev.h,box.y+box.h);
+          prev.x=x0;prev.y=y0;prev.w=x1-x0;prev.h=y1-y0;continue
+        }
+      }
+      merged.push({...box})
+    }
+    return merged;
   }
 
   function cleanLine(v){return String(v||'').replace(/[\u2018\u2019]/g,"'").replace(/[\u201C\u201D]/g,'"').replace(/[|¦]+/g,' ').replace(/\s+/g,' ').trim()}
@@ -230,6 +274,60 @@
       return{text:best.text,sourceBox:{...best.sourceBox,confidence},confidence,repeat,generic:true}
     }).filter(x=>x.repeat>=2||x.confidence>=68).sort((a,b)=>Math.abs(a.sourceBox.y-b.sourceBox.y)<.012?a.sourceBox.x-b.sourceBox.x:a.sourceBox.y-b.sourceBox.y)
   }
+  function spatialTextScore(o){return (Number(o?.repeat||0)*18)+(Number(o?.confidence||0))+(Math.min(120,String(o?.text||'').length)*.08)}
+  function isTinyLineNoise(o){
+    const t=cleanLine(o?.text).replace(/\s/g,''),b=o?.sourceBox||{},w=Number(b.w)||0,h=Number(b.h)||0;
+    return/^[一丨]+$/.test(t)&&t.length<=2&&(w<.035||h<.018||Math.min(w,h)<.01)
+  }
+  function dedupeSpatialTextObjects(objects){
+    const rows=(objects||[]).filter(o=>textNorm(o?.text)&&o?.sourceBox&&!isTinyLineNoise(o)).map((o,i)=>({...o,__order:i})),drop=new Set();
+    const area=o=>Math.max(0,Number(o?.sourceBox?.w||0)*Number(o?.sourceBox?.h||0));
+    const contains=(outer,inner)=>boxOverlapFraction(inner?.sourceBox,outer?.sourceBox)>=.82;
+    const centerInside=(outer,inner)=>{const a=outer?.sourceBox||{},b=inner?.sourceBox||{},cx=Number(b.x)+Number(b.w)/2,cy=Number(b.y)+Number(b.h)/2,p=.01;return cx>=Number(a.x)-p&&cx<=Number(a.x)+Number(a.w)+p&&cy>=Number(a.y)-p&&cy<=Number(a.y)+Number(a.h)+p};
+    const readSort=(a,b)=>Math.abs(Number(a.sourceBox.y)-Number(b.sourceBox.y))<Math.max(Number(a.sourceBox.h),Number(b.sourceBox.h))*.5?Number(a.sourceBox.x)-Number(b.sourceBox.x):Number(a.sourceBox.y)-Number(b.sourceBox.y);
+    for(let i=0;i<rows.length;i++){
+      if(drop.has(i))continue;
+      const a=rows[i],an=textNorm(a.text);
+      for(let j=i+1;j<rows.length;j++){
+        if(drop.has(j))continue;
+        const b=rows[j],bn=textNorm(b.text);
+        const sameSpot=boxOverlapFraction(a.sourceBox,b.sourceBox)>=.64||boxOverlapFraction(b.sourceBox,a.sourceBox)>=.64;
+        if(!sameSpot)continue;
+        if(an===bn){
+          const sa=spatialTextScore(a),sb=spatialTextScore(b);drop.add(sa>=sb?j:i);if(drop.has(i))break;continue
+        }
+        if(an.includes(bn)||bn.includes(an)){
+          const longer=an.length>=bn.length?i:j,shorter=longer===i?j:i;
+          const L=rows[longer],S=rows[shorter],la=area(L),sa=area(S),areaRatio=Math.min(la,sa)/Math.max(.000001,Math.max(la,sa));
+          /* Only collapse substring OCR when the boxes describe essentially the same
+             physical object. A whole-line box containing separate caption/value boxes
+             must survive this pass so the composite pass below can prefer the children. */
+          if(areaRatio>=.68&&contains(L,S)&&spatialTextScore(L)>=spatialTextScore(S)-8)drop.add(shorter)
+        }
+      }
+    }
+    for(let i=0;i<rows.length;i++){
+      if(drop.has(i))continue;
+      const parent=rows[i],pn=textNorm(parent.text),pa=area(parent);if(pn.length<4||!(pa>0))continue;
+      const children=rows.map((o,j)=>({o,j})).filter(x=>x.j!==i&&!drop.has(x.j)&&area(x.o)<pa*.82&&(contains(parent,x.o)||centerInside(parent,x.o))).sort((a,b)=>readSort(a.o,b.o));
+      for(let start=0;start<children.length;start++){
+        let joined='';
+        for(let end=start;end<Math.min(children.length,start+4);end++){
+          joined+=textNorm(children[end].o.text);
+          if(end-start<1)continue;
+          if(joined===pn){
+            const childScore=children.slice(start,end+1).reduce((n,x)=>n+spatialTextScore(x.o),0)/(end-start+1);
+            if(childScore>=spatialTextScore(parent)-12){drop.add(i)}
+            break
+          }
+          if(!pn.startsWith(joined))break
+        }
+        if(drop.has(i))break
+      }
+    }
+    return rows.filter((_,i)=>!drop.has(i)).sort(readSort).map(({__order,...o})=>o)
+  }
+
   function likelyCaption(v){
     const s=cleanLine(v),n=textNorm(s);if(!n||s.length>42)return false;
     const digit=(n.match(/[0-9]/g)||[]).length,letters=(n.match(/[A-Z\u3400-\u9FFF]/g)||[]).length;
@@ -279,11 +377,45 @@
     return out;
   }
 
-  function dedupeBarcodes(rows){const s=new Set(),out=[];for(const r of rows||[]){const k=`${r.format||''}|${r.text||''}`;if(!r.text||s.has(k))continue;s.add(k);out.push(r)}return out}
-  async function scanRegionDeep(canvas,labelNo,onProgress){const core=window.LabelWorkbenchBarcodeCore;if(!core?.scanCanvas)return[];const c=trimCanvas(canvas),candidates=[{c,name:`標籤 ${labelNo} 全圖`}],h=c.height*.30;for(let i=0;i<6;i++){const y=Math.min(c.height-h,i*c.height*.14);candidates.push({c:crop(c,0,y,c.width,h),name:`標籤 ${labelNo} 區域 ${i+1}`})}const all=[];for(let i=0;i<candidates.length;i++){onProgress?.(`正在讀取標籤 ${labelNo} 的條碼… ${i+1}/${candidates.length}`);try{all.push(...await core.scanCanvas(candidates[i].c,candidates[i].name))}catch(e){console.warn('[LW interpreter barcode]',e)}}return dedupeBarcodes(all)}
+  function barcodeGeometryScore(r){return(r?.sourceBox?2:0)+(r?.position?1:0)}
+  function barcodeSameSpot(a,b){
+    const A=a?.sourceBox,B=b?.sourceBox;if(!A||!B)return true;
+    if(boxOverlapFraction(A,B)>=.28||boxOverlapFraction(B,A)>=.28)return true;
+    const ax=Number(A.x)+Number(A.w)/2,ay=Number(A.y)+Number(A.h)/2,bx=Number(B.x)+Number(B.w)/2,by=Number(B.y)+Number(B.h)/2;
+    return Math.abs(ax-bx)<Math.max(.025,Math.min(Number(A.w)||0,Number(B.w)||0)*.65)&&Math.abs(ay-by)<Math.max(.025,Math.min(Number(A.h)||0,Number(B.h)||0)*.65)
+  }
+  function dedupeBarcodes(rows){
+    const out=[];
+    for(const r of rows||[]){
+      if(!r?.text)continue;const key=`${r.format||''}|${r.text||''}`,at=out.findIndex(x=>`${x.format||''}|${x.text||''}`===key&&barcodeSameSpot(x,r));
+      if(at<0){out.push(r);continue}
+      if(barcodeGeometryScore(r)>barcodeGeometryScore(out[at]))out[at]=r
+    }
+    return out
+  }
+  function remapBarcodeSourceBox(row,candidate,trimBounds,regionWidth,regionHeight){
+    const b=row?.sourceBox;if(!b)return row;
+    const cw=Number(candidate?.w||candidate?.c?.width)||1,ch=Number(candidate?.h||candidate?.c?.height)||1,ox=Number(trimBounds?.x||0)+Number(candidate?.x||0),oy=Number(trimBounds?.y||0)+Number(candidate?.y||0);
+    const sourceBox={...b,x:clamp01((ox+Number(b.x||0)*cw)/regionWidth),y:clamp01((oy+Number(b.y||0)*ch)/regionHeight),w:clamp01(Number(b.w||0)*cw/regionWidth),h:clamp01(Number(b.h||0)*ch/regionHeight)};
+    return{...row,sourceBox}
+  }
+  async function scanRegionDeep(canvas,labelNo,onProgress){
+    const core=window.LabelWorkbenchBarcodeCore;if(!core?.scanCanvas)return[];
+    const trimBounds=contentBounds(canvas),c=crop(canvas,trimBounds.x,trimBounds.y,trimBounds.w,trimBounds.h),candidates=[{c,x:0,y:0,w:c.width,h:c.height,name:`標籤 ${labelNo} 全圖`}],h=c.height*.30;
+    for(let i=0;i<6;i++){const y=Math.min(c.height-h,i*c.height*.14),part=crop(c,0,y,c.width,h);candidates.push({c:part,x:0,y,w:part.width,h:part.height,name:`標籤 ${labelNo} 區域 ${i+1}`})}
+    const all=[];
+    for(let i=0;i<candidates.length;i++){
+      const candidate=candidates[i];onProgress?.(`正在讀取標籤 ${labelNo} 的條碼… ${i+1}/${candidates.length}`);
+      try{all.push(...(await core.scanCanvas(candidate.c,candidate.name)).map(row=>remapBarcodeSourceBox(row,candidate,trimBounds,canvas.width,canvas.height)))}catch(e){console.warn('[LW interpreter barcode]',e)}
+    }
+    return dedupeBarcodes(all)
+  }
   function fieldVerified(field,barcodes){const v=norm(field.value);if(v.length<2)return null;return barcodes.find(b=>{const t=norm(b.text);return t===v||t.includes(v)||(v.includes(t)&&t.length>=4)})||null}
   function fieldState(field,barcodes){if(fieldVerified(field,barcodes))return'barcode';if(field.repeat>=2&&!field.conflict)return'high';if(field.spatial&&!field.conflict&&field.repeat>=1)return'medium';return'pending'}
   function detectMarks(text){const t=String(text||'').toUpperCase(),out=[];if(/ROHS/.test(t))out.push('RoHS');if(/\bHF\b/.test(t))out.push('HF');if(/\bPB\b/.test(t))out.push('Pb 標誌');return out}
+  function isGraphicMarkText(value){const s=cleanLine(value).toUpperCase().replace(/[®™©]/g,'').trim();return /^(?:ROHS(?:\s+COMPLIANT)?|HF|PB|PB\s*FREE|LEAD\s*FREE)$/.test(s)}
+  function boxOverlapFraction(a,b){if(!a||!b)return 0;const ax1=Number(a.x)||0,ay1=Number(a.y)||0,ax2=ax1+(Number(a.w)||0),ay2=ay1+(Number(a.h)||0),bx1=Number(b.x)||0,by1=Number(b.y)||0,bx2=bx1+(Number(b.w)||0),by2=by1+(Number(b.h)||0),iw=Math.max(0,Math.min(ax2,bx2)-Math.max(ax1,bx1)),ih=Math.max(0,Math.min(ay2,by2)-Math.max(ay1,by1)),area=Math.max(0,(ax2-ax1)*(ay2-ay1));return area>0?(iw*ih)/area:0}
+  function isBarcodeOccludedText(obj,barcodes){const box=obj?.sourceBox;if(!box)return false;return(barcodes||[]).some(b=>b?.sourceBox&&boxOverlapFraction(box,b.sourceBox)>=.58)}
 
   function makeTiles(canvas){const c=enhanceCanvas(canvas,'gray'),out=[],overlap=.10;for(let ry=0;ry<2;ry++)for(let rx=0;rx<2;rx++){const x0=Math.max(0,(rx*.5-overlap)*c.width),y0=Math.max(0,(ry*.5-overlap)*c.height),x1=Math.min(c.width,((rx+1)*.5+overlap)*c.width),y1=Math.min(c.height,((ry+1)*.5+overlap)*c.height);out.push(crop(c,x0,y0,x1-x0,y1-y0))}return out}
 
@@ -306,7 +438,7 @@
     passes.push(await recognize(worker,gray,'6',true));
     passes.push(await recognize(worker,gray,'11',true));
     passes.push(await recognize(worker,bw,'6',true));
-    const textObjects=genericTextObjects(passes,region.width,region.height);
+    const textObjects=dedupeSpatialTextObjects(genericTextObjects(passes,region.width,region.height));
     let fields=mergeGenericFields(aggregateFields(passes),genericFieldsFromTextObjects(textObjects));
     if(needsTileFallback(passes,textObjects,fields)){
       const tiles=makeTiles(region);for(let i=0;i<tiles.length;i++){onProgress?.(`正在補讀細小區域… ${i+1}/${tiles.length}`);passes.push(await recognize(worker,tiles[i],'11',true))}fields=mergeGenericFields(aggregateFields(passes),genericFieldsFromTextObjects(textObjects));
@@ -315,8 +447,14 @@
   }
 
   async function processCanvas(canvas,sourceName,pageNo,worker,labels,onProgress){
-    const best=await chooseOrientation(worker,canvas,onProgress);let bands=detectLabelBands(best.canvas);if(bands.length===1)bands=[{x:0,y:0,w:best.canvas.width,h:best.canvas.height}];onProgress?.(`找到 ${bands.length} 個標籤區域，正在逐張整理…`);
-    for(let i=0;i<bands.length;i++){const b=bands[i],region=crop(best.canvas,b.x,b.y,b.w,b.h),read=await readRegionFields(worker,region,onProgress),barcodes=await scanRegionDeep(region,labels.length+1,onProgress),allText=read.passes.map(p=>p.text).join('\n'),marks=detectMarks(allText);labels.push({sourceName,page:pageNo,index:i+1,rotation:best.deg,fields:read.fields,textObjects:read.textObjects||[],barcodes,marks})}
+    const best=await chooseOrientation(worker,canvas,onProgress);const bands=detectLabelBands(best.canvas);onProgress?.(`找到 ${bands.length} 個標籤區域，正在逐張整理…`);
+    for(let i=0;i<bands.length;i++){
+      const b=bands[i],region=crop(best.canvas,b.x,b.y,b.w,b.h),read=await readRegionFields(worker,region,onProgress),barcodes=await scanRegionDeep(region,labels.length+1,onProgress),allText=read.passes.map(p=>p.text).join('\n'),marks=detectMarks(allText),prefix=`${sourceName}#${pageNo}.${i+1}`;
+      const fields=(read.fields||[]).map((x,j)=>({...x,layoutId:x.layoutId||`${prefix}:field:${j+1}`}));
+      const textObjects=(read.textObjects||[]).filter(x=>!isGraphicMarkText(x?.text)&&!isBarcodeOccludedText(x,barcodes)).map((x,j)=>({...x,layoutId:x.layoutId||`${prefix}:text:${j+1}`}));
+      const barcodeRows=(barcodes||[]).map((x,j)=>({...x,layoutId:x.layoutId||`${prefix}:barcode:${j+1}`}));
+      labels.push({sourceName,page:pageNo,index:i+1,rotation:best.deg,fields,textObjects,barcodes:barcodeRows,marks,sourceRegion:{x:b.x,y:b.y,w:b.w,h:b.h,imageWidth:best.canvas.width,imageHeight:best.canvas.height,normalized:{x:b.x/best.canvas.width,y:b.y/best.canvas.height,w:b.w/best.canvas.width,h:b.h/best.canvas.height}}})
+    }
   }
 
   async function interpretPdf(file,onProgress,sharedWorker){const pdfjs=await loadPdf(),pdf=await pdfjs.getDocument({data:new Uint8Array(await file.arrayBuffer())}).promise,pageLimit=Math.min(pdf.numPages,3),labels=[],own=!sharedWorker,worker=sharedWorker||await createWorker(onProgress);try{for(let p=1;p<=pageLimit;p++){onProgress?.(`正在讀取 ${file.name} 第 ${p}/${pageLimit} 頁…`);const page=await pdf.getPage(p),canvas=await renderPage(page);await processCanvas(canvas,file.name,p,worker,labels,onProgress)}}finally{if(own)try{await worker.terminate()}catch{}}return{pdfPages:pdf.numPages,labels}}
@@ -351,5 +489,5 @@
     return result
   }
 
-  window.LabelWorkbenchInterpreter={BUILD,scoreText,parseFields,spatialFields,aggregateFields,genericTextObjects,genericFieldsFromTextObjects,mergeGenericFields,lineSegments,needsTileFallback,detectLabelBands,rotateCanvas,interpretPdf,interpretImage,interpretFiles,productionText,questionsText,renderInterpretation,renderResult,analyze};
+  window.LabelWorkbenchInterpreter={BUILD,scoreText,parseFields,spatialFields,aggregateFields,genericTextObjects,dedupeSpatialTextObjects,isTinyLineNoise,genericFieldsFromTextObjects,mergeGenericFields,lineSegments,needsTileFallback,detectLabelBands,boxOverlapFraction,isBarcodeOccludedText,barcodeSameSpot,dedupeBarcodes,remapBarcodeSourceBox,scanRegionDeep,rotateCanvas,interpretPdf,interpretImage,interpretFiles,productionText,questionsText,renderInterpretation,renderResult,analyze};
 })();

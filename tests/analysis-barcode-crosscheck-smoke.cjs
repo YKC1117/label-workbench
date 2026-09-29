@@ -30,10 +30,19 @@ assert.strictEqual(label.fields[0].conflict,false);
 assert.deepStrictEqual([...label.fields[0].alternatives],[]);
 assert.strictEqual(label.fields[1].barcodeVerified,true);
 assert.strictEqual(label.fields[2].barcodeVerified,true);
-const corrected={fields:[{code:'1P',name:'PART NO',value:'WRONG',alternatives:[]}],barcodes:[{text:'(1P)RIGHTPART'}]};
+const corrected={
+ textObjects:[
+  {text:'(1P)PART NO : WRONG',sourceBox:{x:.1,y:.1,w:.3,h:.05}},
+  {text:'FREE TEXT 77',sourceBox:{x:.1,y:.2,w:.3,h:.05}}
+ ],
+ fields:[{code:'1P',name:'PART NO',value:'WRONG',alternatives:[]}],
+ barcodes:[{text:'(1P)RIGHTPART'}]
+};
 A.refineLabel(corrected);
 assert.strictEqual(corrected.fields[0].value,'RIGHTPART');
 assert.strictEqual(corrected.fields[0].barcodeVerified,true);
+assert.strictEqual(corrected.textObjects[0].text,'(1P)PART NO : RIGHTPART','barcode-corrected field value must propagate to the positioned BTW text object');
+assert.strictEqual(corrected.textObjects[1].text,'FREE TEXT 77','unrelated generic text object must remain unchanged');
 const conflict={fields:[{code:'1T',name:'LOT NO',value:'OLD',alternatives:[]}],barcodes:[{text:'(1T)ABC'},{text:'(1T)ABD'}]};
 A.refineLabel(conflict);
 assert.strictEqual(conflict.fields[0].barcodeVerified,false);

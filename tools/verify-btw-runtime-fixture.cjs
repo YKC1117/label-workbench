@@ -14,8 +14,11 @@ async function verifyFixture(filePath){
   const sizeText=`${F.formatMm(target.width)} x ${F.formatMm(target.height)} mm`;
   if(!String(parsed.header?.text||'').includes(`<TemplateSize>${sizeText}</TemplateSize>`))throw new Error(`TemplateSize mismatch: ${sizeText}`);
   const map=M.mapContainer(await F.inflateContainer(parsed)),objects=map.objects;
-  if(objects.length!==40)throw new Error(`root object count changed: ${objects.length}/40`);
-  const visible=objects.filter(o=>Number.isFinite(o.xMil)&&Number.isFinite(o.yMil)&&o.xMil<50000&&o.yMil<50000);
+  const expectedRoots=expected.fields.length+expected.barcodes.length,donorRoots=40,OFF=50000;
+  if(objects.length!==donorRoots)throw new Error(`native donor root graph changed: ${objects.length}/${donorRoots}`);
+  const parked=objects.filter(o=>Number(o.xMil)===OFF&&Number(o.yMil)===OFF);
+  if(parked.length!==donorRoots-expectedRoots)throw new Error(`parked donor root count changed: ${parked.length}/${donorRoots-expectedRoots}`);
+  const visible=objects.filter(o=>Number.isFinite(o.xMil)&&Number.isFinite(o.yMil)&&o.xMil>=0&&o.yMil>=0&&o.xMil<OFF&&o.yMil<OFF);
   const visibleText=visible.filter(o=>o.kind==='text');
   const c128=visible.filter(o=>o.kind==='barcode'&&o.barcodeType==='Code 128');
   const dm=visible.filter(o=>o.kind==='barcode'&&o.barcodeType==='Data Matrix');
@@ -44,7 +47,7 @@ async function verifyFixture(filePath){
   for(const token of['FTUSER5','FTWIN10-PC','第二個.pdf','W668GG6TB-06','K5494D9CJ','932437','C.K.B   QA  ACC']){
     if(raw.includes(token))throw new Error(`sanitized donor token reappeared: ${token}`);
   }
-  return{file:path.resolve(filePath),bytes:bytes.length,applicationVersion:parsed.header.applicationVersion,compatibleVersion:parsed.header.compatibleVersion,objectCount:objects.length,visibleText:visibleText.length,visibleCode128:c128.length,visibleDataMatrix:dm.length,barcodes:wantedBarcode};
+  return{file:path.resolve(filePath),bytes:bytes.length,applicationVersion:parsed.header.applicationVersion,compatibleVersion:parsed.header.compatibleVersion,objectCount:objects.length,parkedObjects:parked.length,visibleText:visibleText.length,visibleCode128:c128.length,visibleDataMatrix:dm.length,barcodes:wantedBarcode};
 }
 
 if(require.main===module){

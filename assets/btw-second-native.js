@@ -6,11 +6,11 @@
   'use strict';
   const BUILD='20260918-btw-second-native-110-textobjects';
   const SEED_ID='LW-SECOND-SANITIZED-2022-R2';
-  const OFF=50000;
   const MAX_TEXT=33;
   const MAX_C128=5;
   const MAX_DM=1;
   const DONOR_SIZE={width:100,height:65};
+  const OFF=50000;
   const MAX_SIZE_PAIRS=16;
 
   const safeFile=v=>String(v||'Label').replace(/[\\/:*?"<>|]+/g,'_').replace(/\s+/g,'_').replace(/^_+|_+$/g,'').slice(0,70)||'Label';
@@ -53,9 +53,17 @@
     if(width>=5&&height>=5&&width<=1000&&height<=1000)return{width,height,source:true};
     return{...DONOR_SIZE,source:false}
   }
+  function validSourceBox(box){
+    const x=Number(box?.x),y=Number(box?.y),w=Number(box?.w),h=Number(box?.h);
+    return Number.isFinite(x)&&Number.isFinite(y)&&Number.isFinite(w)&&Number.isFinite(h)&&x>=0&&y>=0&&w>0&&h>0&&x<=1&&y<=1&&x+w<=1.02&&y+h<=1.02
+  }
   function sourceLayout(box,target){
     const L=window.LabelWorkbenchBtwLayout;if(!L?.boxToLayout||!box)return null;
     try{return L.boxToLayout(box,target)}catch{return null}
+  }
+  function sourceFontSize(layout,current){
+    const h=Number(layout?.mm?.h);if(!(h>0))return Number.isFinite(Number(current))?Number(current):null;
+    return Math.round(Math.max(5,Math.min(42,h/0.3527777778*0.72))*10)/10
   }
   function fallbackTextPos(i,count,target){
     const cols=count>17?2:1,rows=Math.max(1,Math.ceil(count/cols)),col=i%cols,row=Math.floor(i/cols),x=.045+col*(cols===2?.49:0),y=.045+row*(.86/rows);
@@ -99,11 +107,20 @@
 
     /* Re-map after size rewrite so all edit offsets are derived from the bytes being edited. */
     before=M.mapContainer(container);donorPool=pool(before.objects);assertPool(donorPool);
-    const edits=new Map();for(const o of before.objects)edits.set(o.index,{index:o.index,xMil:OFF,yMil:OFF});
-    const expectedText=[];
+    if(target.source){
+      const missingText=P.fields.filter(item=>!validSourceBox(item?.sourceBox));
+      const missingBarcode=requestedBarcodeRows(P).filter(item=>!validSourceBox(item?.row?.sourceBox));
+      if(missingText.length||missingBarcode.length)throw new Error(`5C128+1DM 版面座標不完整：文字 ${missingText.length}、條碼 ${missingBarcode.length} 缺少 sourceBox；停止使用預設位置產檔`)
+    }
+    /* Preserve the donor's serialized object graph. Removing raw object records can leave
+       BarTender-internal references/counts inconsistent even when our parser still round-trips.
+       Park every donor object off-canvas, then move only requested objects back onto the label. */
+    const edits=new Map(),activeIndexes=new Set(),expectedText=[];
+    for(const o of before.objects)edits.set(o.index,{index:o.index,xMil:OFF,yMil:OFF});
     P.fields.forEach((field,i)=>{
-      const obj=donorPool.texts[i],layout=sourceLayout(field?.sourceBox,target),pos=layout?.mil?{xMil:layout.mil.x,yMil:layout.mil.y}:fallbackTextPos(i,P.fields.length,target),value=textValue(field);
-      edits.set(obj.index,{index:obj.index,value,...pos});expectedText.push({index:obj.index,value,...pos})
+      const obj=donorPool.texts[i],layout=sourceLayout(field?.sourceBox,target),pos=layout?.mil?{xMil:layout.mil.x,yMil:layout.mil.y}:fallbackTextPos(i,P.fields.length,target),value=textValue(field),fontSize=sourceFontSize(layout,obj.fontSize),edit={index:obj.index,value,...pos};
+      if(fontSize!=null&&obj.fontSizeOffset!=null)edit.fontSize=fontSize;
+      edits.set(obj.index,edit);activeIndexes.add(obj.index);expectedText.push({index:obj.index,value,fontSize:edit.fontSize??obj.fontSize,...pos})
     });
 
     const expectedBarcode=[],used={c128:0,dm:0},barRows=requestedBarcodeRows(P);
@@ -111,34 +128,35 @@
       const list=item.type==='Data Matrix'?donorPool.dm:donorPool.c128,key=item.type==='Data Matrix'?'dm':'c128',obj=list[used[key]++];
       if(!obj)throw new Error(`5C128+1DM donor 缺少 ${item.type} 原生物件`);
       const layout=sourceLayout(item.row?.sourceBox,target),pos=layout?.mil?{xMil:layout.mil.x,yMil:layout.mil.y}:fallbackBarcodePos(i,barRows.length,target),edit=barcodeEdit(obj,item.value,pos);
-      edits.set(obj.index,edit);expectedBarcode.push({index:obj.index,type:item.type,value:item.value,...pos})
+      edits.set(obj.index,edit);activeIndexes.add(obj.index);expectedBarcode.push({index:obj.index,type:item.type,value:item.value,...pos})
     });
 
-    const edited=M.editContainer(container,[...edits.values()]),rebuilt0=await F.rebuild(parsed,edited),rebuilt=target.source?F.replaceTemplateSize(rebuilt0,target.width,target.height):rebuilt0;
+    const edited=M.editContainer(container,[...edits.values()]);
+    const parkedIndexes=before.objects.filter(o=>!activeIndexes.has(o.index)).map(o=>o.index);
+    const rebuilt0=await F.rebuild(parsed,edited),rebuilt=target.source?F.replaceTemplateSize(rebuilt0,target.width,target.height):rebuilt0;
     const check=F.parseStructure(rebuilt),round=await F.inflateContainer(check),after=M.mapContainer(round);
     if(!/^2022\b/.test(check.header?.applicationVersion||'')||!/^2022\b/.test(check.header?.compatibleVersion||''))throw new Error('5C128+1DM BTW 重建後版本驗證失敗');
-    if(after.objects.length!==rootCount)throw new Error(`5C128+1DM BTW root count 改變：${after.objects.length}/${rootCount}`);
+    if(after.objects.length!==rootCount)throw new Error(`5C128+1DM donor root 數改變：${rootCount}→${after.objects.length}`);
+    const parked=after.objects.filter(o=>parkedIndexes.includes(o.index));
+    if(parked.length!==parkedIndexes.length||parked.some(o=>o.xMil!==OFF||o.yMil!==OFF))throw new Error(`5C128+1DM donor 紙外停放驗證失敗：${parked.length}/${parkedIndexes.length}`);
 
     for(const exp of expectedText){
-      const got=after.objects.find(o=>o.index===exp.index);
-      if(!got||String(got.value??'')!==exp.value)throw new Error(`BTW 文字 round-trip 失敗：${exp.value}`);
-      if(!near(got.xMil,exp.xMil)||!near(got.yMil,exp.yMil))throw new Error(`BTW 文字位置 round-trip 失敗：${exp.value}`)
+      const got=after.objects.find(o=>o.kind==='text'&&String(o.value??'')===exp.value&&near(o.xMil,exp.xMil)&&near(o.yMil,exp.yMil));
+      if(!got)throw new Error(`BTW 文字 round-trip 失敗：${exp.value}`);
+      if(exp.fontSize!=null&&got.fontSize!=null&&!near(got.fontSize,exp.fontSize,.11))throw new Error(`BTW 文字字級 round-trip 失敗：${exp.value}`)
     }
     for(const exp of expectedBarcode){
-      const got=after.objects.find(o=>o.index===exp.index);
-      if(!got||got.kind!=='barcode'||got.barcodeType!==exp.type)throw new Error(`BTW ${exp.type} 原生物件 round-trip 失敗`);
-      const preview=String(got.resolvedPreview||got.components?.join('')||'');
-      if(preview!==exp.value)throw new Error(`BTW ${exp.type} 資料 round-trip 失敗：${preview} != ${exp.value}`);
-      if(!near(got.xMil,exp.xMil)||!near(got.yMil,exp.yMil))throw new Error(`BTW ${exp.type} 位置 round-trip 失敗`)
+      const got=after.objects.find(o=>o.kind==='barcode'&&o.barcodeType===exp.type&&String(o.resolvedPreview||o.components?.join('')||'')===exp.value&&near(o.xMil,exp.xMil)&&near(o.yMil,exp.yMil));
+      if(!got)throw new Error(`BTW ${exp.type} 原生物件 round-trip 失敗：${exp.value}`)
     }
     if(target.source){
       const text=check.header?.text||'',wanted=`${F.formatMm(target.width)} x ${F.formatMm(target.height)} mm`;
       if(!text.includes(`<TemplateSize>${wanted}</TemplateSize>`))throw new Error('BTW TemplateSize round-trip 驗證失敗')
     }
 
-    return{name:outputName(label,index),bytes:rebuilt,kind:P.kind,barcodes:{dataMatrix:P.dm.map(barcodeText),code128:P.c128.map(barcodeText)},layout:{target,internalSizeOffsets:sized.offsets,text:expectedText,barcodes:expectedBarcode},header:check.header,seed:SEED_ID}
+    return{name:outputName(label,index),bytes:rebuilt,kind:P.kind,barcodes:{dataMatrix:P.dm.map(barcodeText),code128:P.c128.map(barcodeText)},layout:{target,internalSizeOffsets:sized.offsets,text:expectedText,barcodes:expectedBarcode,parkedDonorRoots:parkedIndexes.length,originalRootCount:rootCount},header:check.header,seed:SEED_ID}
   }
 
-  window.LabelWorkbenchBtwSecondNative={BUILD,SEED_ID,MAX_TEXT,MAX_C128,MAX_DM,plan,canGenerate,pool,generateOne};
+  window.LabelWorkbenchBtwSecondNative={BUILD,SEED_ID,MAX_TEXT,MAX_C128,MAX_DM,OFF,plan,canGenerate,pool,validSourceBox,generateOne};
   console.info('[Label Workbench] sanitized 5C128+1DM native generator',BUILD);
 })();

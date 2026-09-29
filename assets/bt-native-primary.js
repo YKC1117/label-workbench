@@ -56,6 +56,29 @@
   }
 
   let downloading=false;
+  function validPhysicalSize(label){
+    const g=label?.sourceGeometry||{},w=Number(g.widthMm),h=Number(g.heightMm);
+    return w>=5&&w<=1000&&h>=5&&h<=1000
+  }
+  function parsePhysicalSize(value){
+    const m=String(value||'').trim().match(/^\s*(\d+(?:\.\d+)?)\s*(?:x|×|X|\*)\s*(\d+(?:\.\d+)?)\s*(?:mm)?\s*$/i);
+    if(!m)return null;const width=Number(m[1]),height=Number(m[2]);
+    return width>=5&&width<=1000&&height>=5&&height<=1000?{width,height}:null
+  }
+  function withConfirmedPhysicalSizes(result,files){
+    const imageNames=new Set([...(files||[])].filter(f=>f?.type?.startsWith?.('image/')||/\.(jpe?g|png|webp|gif|bmp)$/i.test(f?.name||'')).map(f=>f.name));
+    let changed=false;
+    const labels=(result?.labels||[]).map((label,index)=>{
+      if(validPhysicalSize(label)||!imageNames.has(label?.sourceName))return label;
+      const title=(result?.labels||[]).length>1?'標籤 '+(index+1):'這張標籤';
+      const raw=window.prompt?.(title+'是照片／圖片，無法從像素判斷真實毫米尺寸。\n請輸入標籤實際「寬×高 mm」，例如：100×65');
+      const size=parsePhysicalSize(raw);
+      if(!size)throw new Error('圖片無法可靠判斷實際毫米尺寸；請確認標籤寬 × 高 mm 後再下載 BTW');
+      changed=true;
+      return{...label,sourceGeometry:{...(label.sourceGeometry||{}),widthMm:size.width,heightMm:size.height,physicalSizeKnown:true,physicalSizeSource:'user-confirmed'}}
+    });
+    return changed?{...(result||{}),labels}:result
+  }
   function downloadStatus(message,error=false){
     const host=el('analysisResult');if(!host)return;
     let status=el('btwDownloadStatus');
@@ -72,8 +95,8 @@
     const buttons=[el('analysisBtNative'),el('btNativeDownload')].filter(Boolean);
     buttons.forEach(x=>{x.disabled=true;x.dataset.oldText=x.textContent;x.textContent='正在建立可編輯 .BTW…'});
     try{
-      const api=await ensureProduction();
-      const generated=await api.generate(result,files,msg=>buttons.forEach(x=>x.textContent=msg||'正在建立可編輯 .BTW…'));
+      const api=await ensureProduction(),exportResult=withConfirmedPhysicalSizes(result,files);
+      const generated=await api.generate(exportResult,files,msg=>buttons.forEach(x=>x.textContent=msg||'正在建立可編輯 .BTW…'));
       if(b.latestResult!==result)throw new Error('原稿已變更，請完成新原稿分析後再下載');
       const out=await api.downloadGenerated(generated);
       downloadStatus('已送出 .BTW 下載，請查看瀏覽器下載清單。');
@@ -144,5 +167,5 @@
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 
-  window.LabelWorkbenchBtNativePrimary={BUILD,ensureCopy,ensureFormat,ensureNative,ensureProduction,downloadEditable,decorateAnalysis,decorateBt,refresh};
+  window.LabelWorkbenchBtNativePrimary={BUILD,ensureCopy,ensureFormat,ensureNative,ensureProduction,validPhysicalSize,parsePhysicalSize,withConfirmedPhysicalSizes,downloadEditable,decorateAnalysis,decorateBt,refresh};
 })();

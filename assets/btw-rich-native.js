@@ -166,6 +166,12 @@
     const L=window.LabelWorkbenchBtwLayout;if(!L?.boxToLayout||!box)return null;
     try{return L.boxToLayout(box,target)}catch{return null}
   }
+  function sourceFontSize(layout,current){
+    const h=Number(layout?.mm?.h);
+    if(!(h>0))return Number.isFinite(Number(current))?Number(current):null;
+    const estimated=h/0.3527777778*0.72;
+    return Math.round(Math.max(5,Math.min(42,estimated))*10)/10
+  }
   function fallbackTextPos(i,count,target){
     const cols=count>14?2:1,rows=Math.max(1,Math.ceil(count/cols)),col=i%cols,row=Math.floor(i/cols),x=.055+col*(cols===2?.48:0),y=.055+row*(.86/rows);
     return{xMil:Math.round((x*target.width)/0.0254),yMil:Math.round((y*target.height)/0.0254)}
@@ -187,8 +193,9 @@
     const edits=new Map();for(const o of before.objects)edits.set(o.index,{index:o.index,xMil:OFF,yMil:OFF});
     const expectedText=[];
     plan.fields.forEach((field,i)=>{
-      const obj=texts[i],layout=sourceLayout(field?.sourceBox,target),pos=layout?.mil?{xMil:layout.mil.x,yMil:layout.mil.y}:fallbackTextPos(i,plan.fields.length,target),value=textValue(field);
-      edits.set(obj.index,{index:obj.index,value,...pos});expectedText.push({index:obj.index,value,...pos})
+      const obj=texts[i],layout=sourceLayout(field?.sourceBox,target),pos=layout?.mil?{xMil:layout.mil.x,yMil:layout.mil.y}:fallbackTextPos(i,plan.fields.length,target),value=textValue(field),fontSize=sourceFontSize(layout,obj.fontSize);
+      const edit={index:obj.index,value,...pos};if(fontSize!=null&&obj.fontSizeOffset!=null)edit.fontSize=fontSize;
+      edits.set(obj.index,edit);expectedText.push({index:obj.index,layoutId:field?.layoutId||null,value,fontSize:edit.fontSize??obj.fontSize,...pos,sourceBox:field?.sourceBox||null})
     });
 
     const used=new Set(),expectedBarcode=[],barcodeRows=[...plan.dm.map(b=>({type:'Data Matrix',row:b})),...plan.c128.map(b=>({type:'Code 128',row:b}))];
@@ -208,12 +215,12 @@
       if(oldPairs.length)throw new Error(`BTW 內部仍殘留 ${oldPairs.length} 組舊 donor 尺寸 pair`)
     }
     if(after.objects.length!==before.objects.length)throw new Error(`rich donor root 數改變：${before.objects.length}→${after.objects.length}`);
-    for(const e of expectedText){const o=after.objects.find(x=>x.index===e.index);if(!o||o.value!==e.value||o.xMil!==e.xMil||o.yMil!==e.yMil)throw new Error(`rich Text 驗證失敗：${e.index}`)}
+    for(const e of expectedText){const o=after.objects.find(x=>x.index===e.index);if(!o||o.value!==e.value||o.xMil!==e.xMil||o.yMil!==e.yMil)throw new Error(`rich Text 驗證失敗：${e.index}`);if(e.fontSize!=null&&o.fontSize!=null&&!near(o.fontSize,e.fontSize,.11))throw new Error(`rich Text 字級驗證失敗：${e.index}`)}
     for(const e of expectedBarcode){const o=after.objects.find(x=>x.index===e.index);if(!o||o.components.join('')!==e.value||o.xMil!==e.xMil||o.yMil!==e.yMil)throw new Error(`rich ${e.type} 驗證失敗：${e.index}`)}
     const active=new Set([...expectedText.map(x=>x.index),...expectedBarcode.map(x=>x.index)]),leaks=after.objects.filter(o=>!active.has(o.index)&&(o.xMil!==OFF||o.yMil!==OFF));
     if(leaks.length)throw new Error(`rich donor 清場驗證失敗：${leaks.length} 個物件仍在畫布`);
     return{name:outputName(label,index),bytes:rebuilt,kind:plan.kind,summary:plan.fields.map(textValue).join('\r'),barcodeValue:expectedBarcode[0]?.value||'',barcodes:{dataMatrix:plan.dm.map(barcodeText),code128:plan.c128.map(barcodeText)},layout:{target,donorTarget,fields:expectedText,barcodes:expectedBarcode,sizeMutation:{changed:sizeMutation.changed,count:sizeMutation.offsets.length,from:sizeMutation.from,to:sizeMutation.to}},header:check.header,seed:plan.seedId,seedKey:plan.seedKey,rich:true,editableTextCount:expectedText.length}
   }
 
-  window.LabelWorkbenchBtwRichNative={BUILD,OFF,MAX_TEXT,seeds,selectPlan,canGenerate,fetchSeed,splitOfficialBtw,rebuildOfficialBtw,formatMm,replaceRichTemplateSizePrefix,templateSizeMm,sourceTargetSize,mmToMil,findTemplateSizePairs,replaceTemplateSizePairs,sameMappedObjects,reusableText,generateOne};
+  window.LabelWorkbenchBtwRichNative={BUILD,OFF,MAX_TEXT,seeds,selectPlan,canGenerate,fetchSeed,splitOfficialBtw,rebuildOfficialBtw,formatMm,replaceRichTemplateSizePrefix,templateSizeMm,sourceTargetSize,sourceFontSize,mmToMil,findTemplateSizePairs,replaceTemplateSizePairs,sameMappedObjects,reusableText,generateOne};
 })();
