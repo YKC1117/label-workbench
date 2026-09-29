@@ -5,7 +5,7 @@
  */
 (function(){
   'use strict';
-  const BUILD='20260929-btw-second-native-270-linked-code128';
+  const BUILD='20260929-btw-second-native-280-linked-text-layout';
   const SEED_ID='LW-CONTROLLED-140x38-2022-R2';
   const MAX_TEXT=29;
   const MAX_C128=5;
@@ -42,12 +42,30 @@
     const single=value.replace(/\s/g,'').length===1&&confidence<80&&repeat<2?-14:0;
     return geometry+semantic+repeatScore+confidenceScore+lengthScore+tiny+single
   }
+  function textDedupKey(o){return textValue(o).toUpperCase().replace(/[：]/g,':').replace(/\s+/g,' ').trim()}
+  function boxesNear(a,b){
+    const A=a?.sourceBox||{},B=b?.sourceBox||{};
+    if(!validSourceBox(A)||!validSourceBox(B))return false;
+    const acx=Number(A.x)+Number(A.w)/2,acy=Number(A.y)+Number(A.h)/2,bcx=Number(B.x)+Number(B.w)/2,bcy=Number(B.y)+Number(B.h)/2;
+    const dx=Math.abs(acx-bcx),dy=Math.abs(acy-bcy),wx=Math.max(.018,(Number(A.w)+Number(B.w))*.58),hy=Math.max(.012,(Number(A.h)+Number(B.h))*.78);
+    return dx<=wx&&dy<=hy
+  }
+  function dedupeTextFields(items){
+    const rows=[...(items||[])].filter(o=>textValue(o)),kept=[],omitted=[];
+    for(const row of rows){
+      const key=textDedupKey(row);let match=-1;
+      for(let i=0;i<kept.length;i++)if(textDedupKey(kept[i])===key&&boxesNear(row,kept[i])){match=i;break}
+      if(match<0){kept.push(row);continue}
+      if(textPriority(row)>textPriority(kept[match])){omitted.push(kept[match]);kept[match]=row}else omitted.push(row)
+    }
+    return{fields:kept,omitted}
+  }
   function compactTextFields(items,max=MAX_TEXT){
-    const rows=[...(items||[])].filter(o=>textValue(o));
-    if(rows.length<=max)return{fields:rows,omitted:[],inputCount:rows.length};
+    const raw=[...(items||[])].filter(o=>textValue(o)),dedupe=dedupeTextFields(raw),rows=dedupe.fields;
+    if(rows.length<=max)return{fields:rows,omitted:dedupe.omitted,inputCount:raw.length};
     const ranked=rows.map((o,i)=>({o,i,score:textPriority(o)})).sort((a,b)=>b.score-a.score||a.i-b.i);
-    const keep=ranked.slice(0,max).map(x=>x.o).sort(textReadOrder),kept=new Set(keep),omitted=rows.filter(x=>!kept.has(x));
-    return{fields:keep,omitted,inputCount:rows.length}
+    const keep=ranked.slice(0,max).map(x=>x.o).sort(textReadOrder),kept=new Set(keep),omitted=[...dedupe.omitted,...rows.filter(x=>!kept.has(x))];
+    return{fields:keep,omitted,inputCount:raw.length}
   }
   function plan(label){
     const raw=fields(label),fit=compactTextFields(raw,MAX_TEXT),all=rows(label),dm=all.filter(isDm),c128=all.filter(isC128);
@@ -108,6 +126,17 @@
   }
   function donorNormalizedPos(obj){
     return{x:(Number(obj?.xMil)||0)*0.0254/DONOR_SIZE.width,y:(Number(obj?.yMil)||0)*0.0254/DONOR_SIZE.height}
+  }
+  function linkedTextPos(textObj,barcodeObj,barcodePos,target){
+    if(!textObj||!barcodeObj||!barcodePos)return null;
+    const sx=target.width/DONOR_SIZE.width,sy=target.height/DONOR_SIZE.height;
+    return{xMil:Math.round(barcodePos.xMil+(Number(textObj.xMil)-Number(barcodeObj.xMil))*sx),yMil:Math.round(barcodePos.yMil+(Number(textObj.yMil)-Number(barcodeObj.yMil))*sy)}
+  }
+  function linkedFontSize(obj,target){
+    const base=Number(obj?.fontSize);
+    if(!Number.isFinite(base)||base<=0)return null;
+    const scale=Math.max(.55,Math.min(1.8,target.height/DONOR_SIZE.height));
+    return Math.round(base*scale*10)/10
   }
   function textStyleScore(field,obj){
     const box=field?.sourceBox||{},p=donorNormalizedPos(obj),has=validSourceBox(box);
@@ -285,24 +314,27 @@
     const expectedBarcode=[],barRows=requestedBarcodeRows(P);
     const dmAssignments=assignBarcodePool(P.dm,donorPool.dm).map(x=>({type:'Data Matrix',value:barcodeText(x.row),...x,structure:null}));
     const c128Assignments=assignCode128Pool(P.c128,donorPool.c128).map(x=>({type:'Code 128',value:barcodeText(x.row),...x}));
-    const barcodeAssignments=[...dmAssignments,...c128Assignments];
+    const barcodeAssignments=[...dmAssignments,...c128Assignments].map((item,i)=>{
+      const layout=sourceLayout(item.row?.sourceBox,target),pos=layout?.mil?{xMil:layout.mil.x,yMil:layout.mil.y}:fallbackBarcodePos(i,barRows.length,target);
+      return{...item,pos}
+    });
     const reserved=new Map();
-    for(const item of c128Assignments){
+    for(const item of barcodeAssignments.filter(x=>x.type==='Code 128')){
       for(const ref of item.structure?.refs||[]){
         if(reserved.has(ref.index)&&reserved.get(ref.index).value!==ref.value)throw new Error('Code128 linked datasource 重複要求不同值');
-        reserved.set(ref.index,{...ref,barcodeIndex:item.obj.index})
+        reserved.set(ref.index,{...ref,barcodeIndex:item.obj.index,barcodeObj:item.obj,barcodePos:item.pos})
       }
     }
 
     const remainingFields=[...P.fields],reservedIndexes=new Set(reserved.keys());
     for(const ref of reserved.values()){
       const obj=before.objects.find(o=>o.index===ref.index);if(!obj)throw new Error(`Code128 linked Text 不存在：${ref.ref||ref.index}`);
-      const field=takeMatchingField(remainingFields,ref.value,obj),value=String(ref.value??'');
+      const field=takeMatchingField(remainingFields,ref.value,obj),value=String(ref.value??''),pos=linkedTextPos(obj,ref.barcodeObj,ref.barcodePos,target)||fallbackTextPos(expectedText.length,P.fields.length,target);
       if(field){
-        const layout=sourceLayout(field?.sourceBox,target),pos=layout?.mil?{xMil:layout.mil.x,yMil:layout.mil.y}:fallbackTextPos(expectedText.length,P.fields.length,target),fontSize=sourceFontSize(layout,obj.fontSize,value),edit={index:obj.index,value,...pos};
+        const fontSize=linkedFontSize(obj,target),edit={index:obj.index,value,...pos};
         if(obj.fontNameOffset!=null)edit.fontName='Microsoft JhengHei';
         if(fontSize!=null&&obj.fontSizeOffset!=null)edit.fontSize=fontSize;
-        edits.set(obj.index,edit);activeIndexes.add(obj.index);expectedText.push({index:obj.index,value,fontName:edit.fontName??obj.fontName,fontSize:edit.fontSize??obj.fontSize,linkedBarcode:true,...pos})
+        edits.set(obj.index,edit);activeIndexes.add(obj.index);expectedText.push({index:obj.index,value,fontName:edit.fontName??obj.fontName,fontSize:edit.fontSize??obj.fontSize,linkedBarcode:true,donorRelative:true,...pos})
       }else{
         edits.set(obj.index,{index:obj.index,value,xMil:OFF,yMil:OFF})
       }
@@ -317,11 +349,10 @@
       edits.set(obj.index,edit);activeIndexes.add(obj.index);expectedText.push({index:obj.index,value,fontName:edit.fontName??obj.fontName,fontSize:edit.fontSize??obj.fontSize,styleScore:Math.round(score*1000)/1000,...pos})
     });
 
-    barcodeAssignments.forEach((item,i)=>{
-      const obj=item.obj;
-      if(!obj)throw new Error(`5C128+1DM donor 缺少 ${item.type} 原生物件`);
-      const layout=sourceLayout(item.row?.sourceBox,target),pos=layout?.mil?{xMil:layout.mil.x,yMil:layout.mil.y}:fallbackBarcodePos(i,barRows.length,target),edit=barcodeEdit(obj,item.value,pos,item.structure);
-      edits.set(obj.index,edit);activeIndexes.add(obj.index);expectedBarcode.push({index:obj.index,type:item.type,value:item.structure?.payload??item.value,sourceValue:item.value,linked:!!item.structure,styleScore:Math.round(item.score*1000)/1000,...pos})
+    barcodeAssignments.forEach((item)=>{
+      const obj=item.obj;if(!obj)throw new Error(`5C128+1DM donor 缺少 ${item.type} 原生物件`);
+      const edit=barcodeEdit(obj,item.value,item.pos,item.structure);
+      edits.set(obj.index,edit);activeIndexes.add(obj.index);expectedBarcode.push({index:obj.index,type:item.type,value:item.structure?.payload??item.value,sourceValue:item.value,linked:!!item.structure,styleScore:Math.round(item.score*1000)/1000,...item.pos})
     });
 
     const edited=M.editContainer(container,[...edits.values()]);
@@ -351,6 +382,6 @@
     return{name:outputName(label,index),bytes:rebuilt,kind:P.kind,barcodes:{dataMatrix:P.dm.map(barcodeText),code128:P.c128.map(barcodeText)},layout:{target,internalSizeOffsets:sized.offsets,text:expectedText,barcodes:expectedBarcode,parkedDonorRoots:parkedIndexes.length,parkedAuxiliaryGraphics:aux.parked,originalRootCount:rootCount,textCompaction:{input:P.inputTextCount,written:expectedText.length,omitted:[...P.omittedText,...fit.omitted].map(x=>textValue(x))},linkedCode128:c128Assignments.filter(x=>x.structure).length},header:check.header,seed:SEED_ID}
   }
 
-  window.LabelWorkbenchBtwSecondNative={BUILD,SEED_ID,MAX_TEXT,MAX_C128,MAX_DM,OFF,plan,canGenerate,pool,validSourceBox,textPriority,compactTextFields,textStyleScore,assignTextPool,barcodeStyleScore,code128Structure,assignBarcodePool,assignCode128Pool,takeMatchingField,parkAuxiliaryGraphics,generateOne};
+  window.LabelWorkbenchBtwSecondNative={BUILD,SEED_ID,MAX_TEXT,MAX_C128,MAX_DM,OFF,plan,canGenerate,pool,validSourceBox,textPriority,textDedupKey,boxesNear,dedupeTextFields,compactTextFields,textStyleScore,assignTextPool,barcodeStyleScore,code128Structure,assignBarcodePool,assignCode128Pool,takeMatchingField,linkedTextPos,linkedFontSize,parkAuxiliaryGraphics,generateOne};
   console.info('[Label Workbench] controlled 5C128+1DM native generator',BUILD);
 })();
