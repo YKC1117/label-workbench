@@ -50,6 +50,7 @@ jobs:
           node --check tests/analysis-barcode-crosscheck-smoke.cjs
           node --check tests/second-donor-pool-smoke.cjs
           node --check assets/btw-controlled-donor.js
+          node --check assets/analysis-layout-preview.js
           node --check tests/second-donor-generation-smoke.cjs
           node --check tools/create-btw-runtime-fixture.cjs
           node --check tools/verify-btw-runtime-fixture.cjs
@@ -103,6 +104,8 @@ jobs:
           grep -q "BUILD='20260918-btwn232-seed-retry'" assets/btw-native.js
           grep -q 'btw-rich-native.js' assets/barcode-reader.js
           grep -q 'btw-controlled-donor.js' assets/barcode-reader.js
+          grep -q 'analysis-layout-preview.js' assets/barcode-reader.js
+          grep -q 'LabelWorkbenchLayoutPreview' assets/analysis-core-v2.js
           grep -q 'btw-second-native.js' assets/barcode-reader.js
           grep -q "SEED_ID='LW-CONTROLLED-140x38-2022-R2'" assets/btw-second-native.js
           grep -q "MAX_C128=5" assets/btw-second-native.js
