@@ -88,6 +88,29 @@
     const byWidth=w>0?w/(0.3527777778*Math.max(1,units))*.88:Infinity;
     return Math.round(Math.max(4.5,Math.min(18,byHeight,byWidth))*10)/10
   }
+  function donorNormalizedPos(obj){
+    return{x:(Number(obj?.xMil)||0)*0.0254/DONOR_SIZE.width,y:(Number(obj?.yMil)||0)*0.0254/DONOR_SIZE.height}
+  }
+  function textStyleScore(field,obj){
+    const box=field?.sourceBox||{},p=donorNormalizedPos(obj),has=validSourceBox(box);
+    const spatial=has?(Math.abs(Number(box.x)-p.x)*1.15+Math.abs(Number(box.y)-p.y)*1.5):0;
+    const want=Math.max(1,visualChars(textValue(field))),have=Math.max(1,visualChars(obj?.value||'LW'));
+    const length=Math.abs(Math.log(want/have))*.16;
+    return spatial+length
+  }
+  function assignTextPool(fields,texts){
+    const available=[...(texts||[])],out=[];
+    for(const field of fields||[]){
+      let best=-1,bestScore=Infinity;
+      for(let i=0;i<available.length;i++){
+        const score=textStyleScore(field,available[i]);
+        if(score<bestScore){bestScore=score;best=i}
+      }
+      if(best<0)throw new Error('controlled donor 找不到可用文字物件');
+      out.push({field,obj:available.splice(best,1)[0],score:bestScore})
+    }
+    return out
+  }
   function fallbackTextPos(i,count,target){
     const cols=count>17?2:1,rows=Math.max(1,Math.ceil(count/cols)),col=i%cols,row=Math.floor(i/cols),x=.045+col*(cols===2?.49:0),y=.045+row*(.86/rows);
     return{xMil:mmToMil(x*target.width),yMil:mmToMil(y*target.height)}
@@ -154,10 +177,11 @@
        Park every donor object off-canvas, then move only requested objects back onto the label. */
     const edits=new Map(),activeIndexes=new Set(),expectedText=[];
     for(const o of before.objects)edits.set(o.index,{index:o.index,xMil:OFF,yMil:OFF});
-    P.fields.forEach((field,i)=>{
-      const obj=donorPool.texts[i],layout=sourceLayout(field?.sourceBox,target),pos=layout?.mil?{xMil:layout.mil.x,yMil:layout.mil.y}:fallbackTextPos(i,P.fields.length,target),value=textValue(field),fontSize=sourceFontSize(layout,obj.fontSize,value),edit={index:obj.index,value,...pos};
+    const textAssignments=assignTextPool(P.fields,donorPool.texts);
+    textAssignments.forEach(({field,obj,score},i)=>{
+      const layout=sourceLayout(field?.sourceBox,target),pos=layout?.mil?{xMil:layout.mil.x,yMil:layout.mil.y}:fallbackTextPos(i,P.fields.length,target),value=textValue(field),fontSize=sourceFontSize(layout,obj.fontSize,value),edit={index:obj.index,value,...pos};
       if(fontSize!=null&&obj.fontSizeOffset!=null)edit.fontSize=fontSize;
-      edits.set(obj.index,edit);activeIndexes.add(obj.index);expectedText.push({index:obj.index,value,fontSize:edit.fontSize??obj.fontSize,...pos})
+      edits.set(obj.index,edit);activeIndexes.add(obj.index);expectedText.push({index:obj.index,value,fontSize:edit.fontSize??obj.fontSize,styleScore:Math.round(score*1000)/1000,...pos})
     });
 
     const expectedBarcode=[],used={c128:0,dm:0},barRows=requestedBarcodeRows(P);
@@ -194,6 +218,6 @@
     return{name:outputName(label,index),bytes:rebuilt,kind:P.kind,barcodes:{dataMatrix:P.dm.map(barcodeText),code128:P.c128.map(barcodeText)},layout:{target,internalSizeOffsets:sized.offsets,text:expectedText,barcodes:expectedBarcode,parkedDonorRoots:parkedIndexes.length,parkedAuxiliaryGraphics:aux.parked,originalRootCount:rootCount},header:check.header,seed:SEED_ID}
   }
 
-  window.LabelWorkbenchBtwSecondNative={BUILD,SEED_ID,MAX_TEXT,MAX_C128,MAX_DM,OFF,plan,canGenerate,pool,validSourceBox,parkAuxiliaryGraphics,generateOne};
+  window.LabelWorkbenchBtwSecondNative={BUILD,SEED_ID,MAX_TEXT,MAX_C128,MAX_DM,OFF,plan,canGenerate,pool,validSourceBox,textStyleScore,assignTextPool,parkAuxiliaryGraphics,generateOne};
   console.info('[Label Workbench] controlled 5C128+1DM native generator',BUILD);
 })();
