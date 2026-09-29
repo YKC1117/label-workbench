@@ -177,6 +177,8 @@ jobs:
         run: node tests/second-donor-pool-smoke.cjs
       - name: Sanitized 5C128+1DM native generation round trip
         run: node tests/second-donor-generation-smoke.cjs
+      - name: BTW object serialized size diagnostic
+        run: node tests/btw-object-size-diagnostic.cjs
       - name: Deterministic BarTender runtime acceptance fixture
         run: node tests/runtime-fixture-smoke.cjs
       - name: Manual BarTender Designer edit verifier regression
