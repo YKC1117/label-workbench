@@ -5,7 +5,7 @@
  */
 (function(){
   'use strict';
-  const BUILD='20260929-btw-second-native-220-font-normalized';
+  const BUILD='20260929-btw-second-native-230-geometry-matched-all';
   const SEED_ID='LW-CONTROLLED-140x38-2022-R2';
   const MAX_TEXT=29;
   const MAX_C128=5;
@@ -115,6 +115,24 @@
     const cols=count>17?2:1,rows=Math.max(1,Math.ceil(count/cols)),col=i%cols,row=Math.floor(i/cols),x=.045+col*(cols===2?.49:0),y=.045+row*(.86/rows);
     return{xMil:mmToMil(x*target.width),yMil:mmToMil(y*target.height)}
   }
+  function barcodeStyleScore(row,obj){
+    const box=row?.sourceBox||{},p=donorNormalizedPos(obj),has=validSourceBox(box);
+    if(!has)return 0;
+    const sx=Number(box.x),sy=Number(box.y),cx=sx+Number(box.w||0)/2,cy=sy+Number(box.h||0)/2;
+    return Math.hypot((p.x-cx)*1.0,(p.y-cy)*1.8)
+  }
+  function assignBarcodePool(rows,objects){
+    const available=[...(objects||[])],out=[];
+    for(const row of rows||[]){
+      let best=-1,bestScore=Infinity;
+      for(let i=0;i<available.length;i++){
+        const score=barcodeStyleScore(row,available[i]);if(score<bestScore){bestScore=score;best=i}
+      }
+      if(best<0)throw new Error('controlled donor 找不到可用條碼物件');
+      out.push({row,obj:available.splice(best,1)[0],score:bestScore})
+    }
+    return out
+  }
   function fallbackBarcodePos(i,total,target){
     const rows=Math.max(1,total),x=.55,y=.60+i*(.32/rows);
     return{xMil:mmToMil(x*target.width),yMil:mmToMil(y*target.height)}
@@ -185,12 +203,14 @@
       edits.set(obj.index,edit);activeIndexes.add(obj.index);expectedText.push({index:obj.index,value,fontName:edit.fontName??obj.fontName,fontSize:edit.fontSize??obj.fontSize,styleScore:Math.round(score*1000)/1000,...pos})
     });
 
-    const expectedBarcode=[],used={c128:0,dm:0},barRows=requestedBarcodeRows(P);
-    barRows.forEach((item,i)=>{
-      const list=item.type==='Data Matrix'?donorPool.dm:donorPool.c128,key=item.type==='Data Matrix'?'dm':'c128',obj=list[used[key]++];
+    const expectedBarcode=[],barRows=requestedBarcodeRows(P);
+    const dmAssignments=assignBarcodePool(P.dm,donorPool.dm).map(x=>({type:'Data Matrix',value:barcodeText(x.row),...x}));
+    const c128Assignments=assignBarcodePool(P.c128,donorPool.c128).map(x=>({type:'Code 128',value:barcodeText(x.row),...x}));
+    [...dmAssignments,...c128Assignments].forEach((item,i)=>{
+      const obj=item.obj;
       if(!obj)throw new Error(`5C128+1DM donor 缺少 ${item.type} 原生物件`);
       const layout=sourceLayout(item.row?.sourceBox,target),pos=layout?.mil?{xMil:layout.mil.x,yMil:layout.mil.y}:fallbackBarcodePos(i,barRows.length,target),edit=barcodeEdit(obj,item.value,pos);
-      edits.set(obj.index,edit);activeIndexes.add(obj.index);expectedBarcode.push({index:obj.index,type:item.type,value:item.value,...pos})
+      edits.set(obj.index,edit);activeIndexes.add(obj.index);expectedBarcode.push({index:obj.index,type:item.type,value:item.value,styleScore:Math.round(item.score*1000)/1000,...pos})
     });
 
     const edited=M.editContainer(container,[...edits.values()]);
@@ -220,6 +240,6 @@
     return{name:outputName(label,index),bytes:rebuilt,kind:P.kind,barcodes:{dataMatrix:P.dm.map(barcodeText),code128:P.c128.map(barcodeText)},layout:{target,internalSizeOffsets:sized.offsets,text:expectedText,barcodes:expectedBarcode,parkedDonorRoots:parkedIndexes.length,parkedAuxiliaryGraphics:aux.parked,originalRootCount:rootCount},header:check.header,seed:SEED_ID}
   }
 
-  window.LabelWorkbenchBtwSecondNative={BUILD,SEED_ID,MAX_TEXT,MAX_C128,MAX_DM,OFF,plan,canGenerate,pool,validSourceBox,textStyleScore,assignTextPool,parkAuxiliaryGraphics,generateOne};
+  window.LabelWorkbenchBtwSecondNative={BUILD,SEED_ID,MAX_TEXT,MAX_C128,MAX_DM,OFF,plan,canGenerate,pool,validSourceBox,textStyleScore,assignTextPool,barcodeStyleScore,assignBarcodePool,parkAuxiliaryGraphics,generateOne};
   console.info('[Label Workbench] controlled 5C128+1DM native generator',BUILD);
 })();
