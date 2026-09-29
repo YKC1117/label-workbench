@@ -116,7 +116,7 @@ jobs:
           grep -q "BUILD='20260918-btw-family-native-140-itf14'" assets/btw-family-native.js
           grep -q 'btw-production-core.js' assets/barcode-reader.js
           grep -q "BUILD='20260918-btw-production-core-140-itf14'" assets/btw-production-core.js
-          grep -q "BUILD='20260929-btnp240-controlled-production-deps'" assets/bt-native-primary.js
+          grep -q "BUILD='20260929-btnp250-manual-download-fallback'" assets/bt-native-primary.js
           grep -q "ensureProduction" assets/bt-native-primary.js
           grep -q "await ensureProduction()" assets/bt-native-primary.js
           grep -q '不用另外安裝網站工具' index.html
