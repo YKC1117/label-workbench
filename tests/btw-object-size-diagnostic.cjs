@@ -15,6 +15,8 @@ const round=v=>Number.isFinite(v)?Math.round(v*1000)/1000:null;
   const bytes=new Uint8Array(await D.bytes()),parsed=F.parseStructure(bytes),container=await F.inflateContainer(parsed),objects=M.mapContainer(container).objects;
   fs.mkdirSync('artifacts/btw-diagnostic',{recursive:true});
   parsed.pngs.forEach((p,i)=>fs.writeFileSync('artifacts/btw-diagnostic/donor-preview-'+(i+1)+'.png',Buffer.from(bytes.slice(p.start,p.end))));
+  fs.writeFileSync('artifacts/btw-diagnostic/donor-sanitized.btw',Buffer.from(bytes));
+  fs.writeFileSync('artifacts/btw-diagnostic/donor-container.bin',Buffer.from(container));
   fs.writeFileSync('artifacts/btw-diagnostic/object-map.json',JSON.stringify({header:parsed.header,objects},null,2));
   const selected=[
     ...objects.filter(o=>o.kind==='text'&&/^(?:Text|文字)\s*\d+/i.test(o.name||'')).slice(0,8),
