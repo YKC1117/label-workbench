@@ -52,6 +52,8 @@ jobs:
           node --check tools/verify-btw-runtime-fixture.cjs
           node --check tools/verify-btw-manual-edit.cjs
           node --check tools/run-layout-case.cjs
+          node --check tools/btw-controlled-diff.cjs
+          node --check tests/btw-controlled-diff-smoke.cjs
           node --check tests/runtime-fixture-smoke.cjs
           node --check tests/manual-edit-verifier-smoke.cjs
       - name: PowerShell runtime verifier syntax check
@@ -179,6 +181,8 @@ jobs:
         run: node tests/second-donor-generation-smoke.cjs
       - name: BTW object serialized size diagnostic
         run: node tests/btw-object-size-diagnostic.cjs
+      - name: Controlled BTW binary diff runtime smoke
+        run: node tests/btw-controlled-diff-smoke.cjs
       - name: Upload BTW geometry diagnostic
         uses: actions/upload-artifact@v4
         with:
