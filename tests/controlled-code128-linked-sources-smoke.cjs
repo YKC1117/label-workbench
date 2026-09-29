@@ -40,9 +40,9 @@ const label={sourceName:'linked-code128.png',sourceGeometry:{widthMm:140,heightM
     assert(!o.components.some(x=>String(x).includes('#')),'full merged payload was written into barcode component slot');
   }
   const linkedText=out.layout.text.filter(x=>x.linkedBarcode);
-  assert(linkedText.length===0,'linked datasource Text must stay hidden off-canvas');
+  assert(linkedText.length===14,'standalone OCR linked values should reuse the 14 native linked Text objects');
   for(const v of values){
-    assert(out.layout.text.some(x=>x.value===v),'visible OCR Text value missing after hiding linked datasource: '+v);
+    assert(out.layout.text.some(x=>x.value===v),'visible linked OCR value missing: '+v);
   }
   const dups=[
     {text:'(10D)DATE NO: 2628',confidence:96,repeat:3,sourceBox:{x:.08,y:.40,w:.18,h:.04}},
@@ -53,5 +53,5 @@ const label={sourceName:'linked-code128.png',sourceGeometry:{widthMm:140,heightM
   const dd=S.dedupeTextFields(dups);
   assert(dd.fields.filter(x=>x.text==='(10D)DATE NO: 2628').length===1,'near duplicate text was not removed');
   assert(dd.fields.filter(x=>x.text==='SAME FAR AWAY').length===2,'far-apart legitimate repeated text was incorrectly removed');
-  console.log('PASS: linked Code128 datasources stay hidden while visible OCR text and conservative dedupe remain intact');
+  console.log('PASS: linked Code128 datasources reuse visible value Text objects when OCR provides standalone values');
 })().catch(e=>{console.error(e);process.exit(1)});
