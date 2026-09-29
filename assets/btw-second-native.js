@@ -45,11 +45,12 @@
     !/\.Border$/i.test(String(o.rootPath||''))&&
     o.valueEntry
   )}
-  function pool(objects){return{
-    texts:reusableText(objects),
-    c128:objects.filter(o=>o.kind==='barcode'&&o.barcodeType==='Code 128'&&o.componentEntries?.length),
-    dm:objects.filter(o=>o.kind==='barcode'&&o.barcodeType==='Data Matrix'&&o.componentEntries?.length)
-  }}
+  function pool(objects){
+    const dm=objects.filter(o=>o.kind==='barcode'&&o.barcodeType==='Data Matrix'&&o.componentEntries?.length);
+    const dmIndexes=new Set(dm.map(o=>o.index));
+    const c128=objects.filter(o=>o.kind==='barcode'&&!dmIndexes.has(o.index)&&o.componentEntries?.length);
+    return{texts:reusableText(objects),c128,dm}
+  }
   function assertPool(p){
     if(p.texts.length<MAX_TEXT)throw new Error(`5C128+1DM donor 文字物件不足：${p.texts.length}/${MAX_TEXT}`);
     if(p.c128.length<MAX_C128)throw new Error(`5C128+1DM donor Code 128 物件不足：${p.c128.length}/${MAX_C128}`);
@@ -182,7 +183,7 @@
       if(exp.fontSize!=null&&got.fontSize!=null&&!near(got.fontSize,exp.fontSize,.11))throw new Error(`BTW 文字字級 round-trip 失敗：${exp.value}`)
     }
     for(const exp of expectedBarcode){
-      const got=after.objects.find(o=>o.kind==='barcode'&&o.barcodeType===exp.type&&String(o.resolvedPreview||o.components?.join('')||'')===exp.value&&near(o.xMil,exp.xMil)&&near(o.yMil,exp.yMil));
+      const got=after.objects.find(o=>o.index===exp.index&&o.kind==='barcode'&&String(o.resolvedPreview||o.components?.join('')||'')===exp.value&&near(o.xMil,exp.xMil)&&near(o.yMil,exp.yMil));
       if(!got)throw new Error(`BTW ${exp.type} 原生物件 round-trip 失敗：${exp.value}`)
     }
     if(target.source){
