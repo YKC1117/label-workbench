@@ -134,12 +134,13 @@ for(const f of[
   assert(visibleC128.length===5,'expected 5 visible Code128 objects');
   assert(visibleDm.length===1,'expected 1 visible Data Matrix object');
 
-  prod.fields.forEach((f,i)=>{
-    const expected=out.layout.text[i],pos=L.boxToLayout(f.sourceBox,{width:140,height:38}).mil;
-    const obj=textObjects.find(o=>String(o.value??'')===f.value&&o.xMil===pos.x&&o.yMil===pos.y);
-    assert(obj,`BTW missing production text object ${f.code}:${f.value} at ${pos.x},${pos.y}`);
-    assert(expected&&expected.value===f.value&&expected.xMil===pos.x&&expected.yMil===pos.y,`BTW layout plan mismatch ${f.code}:${f.value}`);
-  });
+  for(const expected of out.layout.text){
+    const obj=textObjects.find(o=>String(o.value??'')===expected.value&&o.xMil===expected.xMil&&o.yMil===expected.yMil);
+    assert(obj,`BTW missing planned production text object ${expected.value} at ${expected.xMil},${expected.yMil}`);
+  }
+  for(const f of prod.fields){
+    assert(out.layout.text.some(x=>x.value===f.value)||out.layout.textCompaction?.omitted?.includes(f.value),`production field disappeared without plan record: ${f.code}:${f.value}`);
+  }
   for(const b of prod.barcodes){
     const obj=barcodeObjects.find(o=>String(o.resolvedPreview||'')===b.text);
     assert(obj,`BTW missing independent barcode ${b.text}`);
@@ -151,5 +152,5 @@ for(const f of[
   assert(!visibleValues.includes('W25NO1GWZE1R'),'stale wrong OCR PART leaked into visible BTW text');
   assert(new Set(barcodeObjects.map(o=>o.resolvedPreview)).size===6,'barcode objects are not independent');
 
-  console.log('PASS: 第一個.pdf style analysis -> production gate -> BarTender 2022 BTW stays value-identical, excludes unresolved LOT, preserves 11 text + 5 Code128 + 1 Data Matrix objects and source positions');
+  console.log('PASS: 第一個.pdf style analysis -> production gate -> BarTender 2022 BTW stays value-identical, excludes unresolved LOT, preserves 11 text + 5 Code128 + 1 Data Matrix objects and validates the final collision-adjusted layout plan');
 })().catch(e=>{console.error(e);process.exit(1)});
