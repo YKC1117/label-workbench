@@ -197,6 +197,8 @@ jobs:
         run: node tests/controlled-donor-text-inventory.cjs
       - name: Clean Text prototype probe
         run: node tests/clean-text-prototype-probe.cjs
+      - name: Clean Text prototype structure
+        run: node tests/clean-text-prototype-structure.cjs
       - name: Controlled donor Code128 geometry inventory
         run: node tests/controlled-donor-code128-inventory.cjs
       - name: Linked Code128 datasource preservation
