@@ -3,7 +3,7 @@ const vm=require('vm');
 
 const c={console,Uint8Array,ArrayBuffer,DataView,TextDecoder,TextEncoder,Blob,Response,DecompressionStream,CompressionStream,atob,btoa,window:null,globalThis:null,document:{readyState:'loading',addEventListener(){},getElementById(){return null}}};
 c.window=c;c.globalThis=c;vm.createContext(c);
-for(const f of['assets/btw-format.js','assets/btw-object-map.js','assets/btw-layout-map.js','assets/btw-second-donor.js','assets/btw-second-native.js'])vm.runInContext(fs.readFileSync(f,'utf8'),c,{filename:f});
+for(const f of['assets/btw-format.js','assets/btw-object-map.js','assets/btw-layout-map.js','assets/btw-controlled-donor.js','assets/btw-second-native.js'])vm.runInContext(fs.readFileSync(f,'utf8'),c,{filename:f});
 
 const textObjects=[
   {text:'客戶代碼',sourceBox:{x:.05,y:.06,w:.15,h:.04}},
@@ -30,6 +30,10 @@ const label={
 (async()=>{
   const S=c.LabelWorkbenchBtwSecondNative,F=c.LabelWorkbenchBtwFormat,M=c.LabelWorkbenchBtwObjectMap,L=c.LabelWorkbenchBtwLayout;
   if(!S.canGenerate(label))throw new Error('generic textObjects label unexpectedly rejected');
+  {
+    const db=new Uint8Array(await c.LabelWorkbenchBtwControlledDonor.bytes()),dp=F.parseStructure(db),dobjs=M.mapContainer(await F.inflateContainer(dp)).objects;
+    console.log('CONTROLLED_BARCODE_INVENTORY '+JSON.stringify(dobjs.filter(o=>o.kind==='barcode').map(o=>({index:o.index,name:o.name,owner:o.owner,root:o.rootPath,type:o.barcodeType,components:o.components,x:o.xMil,y:o.yMil,synthetic:!!o.syntheticFromTag}))));
+  }
   const out=await S.generateOne(label,0);
   const parsed=F.parseStructure(out.bytes);
   if(parsed.header.applicationVersion!=='2022 R2'||parsed.header.compatibleVersion!=='2022 R1')throw new Error('BarTender version changed');
@@ -51,8 +55,8 @@ const label={
     if(o.xMil!==pos.x||o.yMil!==pos.y)throw new Error(`generic text position mismatch: ${t.text}`);
   }
 
-  const c128=visible.find(o=>o.kind==='barcode'&&o.barcodeType==='Code 128'&&o.resolvedPreview==='GENERIC-C128-123');
   const dm=visible.find(o=>o.kind==='barcode'&&o.barcodeType==='Data Matrix'&&o.resolvedPreview==='DM-GENERIC-456');
+  const c128=visible.find(o=>o.kind==='barcode'&&o.index!==dm?.index&&o.resolvedPreview==='GENERIC-C128-123');
   if(!c128||!dm)throw new Error('generic barcode objects missing after BTW round-trip');
 
   console.log('PASS: arbitrary customer textObjects round-trip with requested Text/barcode roots visible while the native donor graph stays intact off-canvas');

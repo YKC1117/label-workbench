@@ -56,7 +56,7 @@ console.log('PASS: BTW Chinese/English names, Text Control values, positions, fo
 console.log('PASS: nearby type owner does not leak to later objects and final object stops before document tail');
 
 container=M.editContainer(container,[
-  {name:'文字 2',value:'LONGER-PART-987654',xMm:25.4,yMil:400,fontSize:14},
+  {name:'文字 2',value:'LONGER-PART-987654',xMm:25.4,yMil:400,fontName:'Microsoft JhengHei',fontSize:14},
   {name:'Text 90',value:'LW-CUSTOMER-FIELD-LONGER',xMil:777,yMil:888},
   {name:'條碼 1',barcodeComponents:['PREFIX-LONG-','CODE128-RAW-987654321']},
   {name:'條碼 2',barcodeValue:'[)>06|DM-NEW-LONG-PAYLOAD|987654321'}
@@ -65,6 +65,7 @@ map=M.mapContainer(container);
 const edited=map.objects.find(o=>o.name==='文字 2'),editedEnglish=map.objects.find(o=>o.name==='Text 90'),after=map.objects.find(o=>o.name==='條碼 1'),afterDm=map.objects.find(o=>o.name==='條碼 2'),last=map.objects.find(o=>o.name==='Barcode 90'),finalText=map.objects.find(o=>o.name==='文字 99');
 if(edited.value!=='LONGER-PART-987654')throw new Error('variable-length text edit failed');
 if(edited.xMil!==1000||edited.yMil!==400)throw new Error(`position edit failed ${edited.xMil}/${edited.yMil}`);
+if(edited.fontName!=='Microsoft JhengHei')throw new Error(`font name edit failed ${edited.fontName}`);
 if(edited.fontSize!==14)throw new Error(`font edit failed ${edited.fontSize}`);
 if(editedEnglish.value!=='LW-CUSTOMER-FIELD-LONGER'||editedEnglish.xMil!==777||editedEnglish.yMil!==888)throw new Error('English Text Control round-trip edit failed');
 if(after.components.join('|')!=='PREFIX-LONG-|CODE128-RAW-987654321')throw new Error(`Code128 payload write failed: ${after.components.join('|')}`);

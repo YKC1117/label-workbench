@@ -60,6 +60,7 @@
     I.renderResult(arr,result);
     window.LabelWorkbenchFinalDisplay?.enforce?.(result);
     window.LabelWorkbenchAnalysisCopy?.decorate?.();
+    window.LabelWorkbenchLayoutPreview?.render?.(result);
 
     latestResult=result;
     latestFiles=arr.slice();

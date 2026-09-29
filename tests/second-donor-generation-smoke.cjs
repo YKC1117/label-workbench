@@ -2,7 +2,7 @@ const fs=require('fs');
 const vm=require('vm');
 
 const c={console,Uint8Array,ArrayBuffer,DataView,TextDecoder,TextEncoder,Blob,Response,DecompressionStream,CompressionStream,atob,btoa,window:null,globalThis:null,document:{readyState:'loading',addEventListener(){},getElementById(){return null}}};c.window=c;c.globalThis=c;vm.createContext(c);
-for(const f of['assets/btw-format.js','assets/btw-object-map.js','assets/btw-layout-map.js','assets/btw-second-donor.js','assets/btw-second-native.js'])vm.runInContext(fs.readFileSync(f,'utf8'),c,{filename:f});
+for(const f of['assets/btw-format.js','assets/btw-object-map.js','assets/btw-layout-map.js','assets/btw-controlled-donor.js','assets/btw-second-native.js'])vm.runInContext(fs.readFileSync(f,'utf8'),c,{filename:f});
 
 const label={
   sourceName:'five-code-one-dm.pdf',
@@ -30,21 +30,40 @@ const label={
   try{await S.generateOne(missingTextGeometry,0)}catch(error){textGeometryRejected=/sourceBox|座標不完整/.test(String(error?.message||error))}
   if(!textGeometryRejected)throw new Error('known-size output must reject missing text sourceBox instead of using fallback coordinates');
   const out=await S.generateOne(label,0);
-  if(out.seed!=='LW-SECOND-SANITIZED-2022-R2')throw new Error(`seed ${out.seed}`);
+  if(out.seed!=='LW-CONTROLLED-140x38-2022-R2')throw new Error(`seed ${out.seed}`);
   const parsed=F.parseStructure(out.bytes);
   if(parsed.header.applicationVersion!=='2022 R2'||parsed.header.compatibleVersion!=='2022 R1')throw new Error('version changed');
   if(!parsed.header.text.includes('<TemplateSize>140 x 38 mm</TemplateSize>'))throw new Error('TemplateSize not rewritten');
   const map=M.mapContainer(await F.inflateContainer(parsed)),objects=map.objects;
+  const renderedContainer=await F.inflateContainer(parsed),rdv=new DataView(renderedContainer.buffer,renderedContainer.byteOffset,renderedContainer.byteLength),auxCoords=[];
+  for(let i=0;i+16<renderedContainer.length;i++){
+    if(renderedContainer[i]!==0xff||renderedContainer[i+1]!==0xff||renderedContainer[i+2]!==0x01||renderedContainer[i+3]!==0x00)continue;
+    const len=renderedContainer[i+4]|(renderedContainer[i+5]<<8);if(len<3||len>80||i+6+len+8>renderedContainer.length)continue;
+    let type='';let ok=true;for(let j=0;j<len;j++){const b=renderedContainer[i+6+j];if(b<0x20||b>0x7e){ok=false;break}type+=String.fromCharCode(b)}
+    if(!ok||!['LineData','CircleData'].includes(type))continue;
+    const at=i+6+len;auxCoords.push({type,x:rdv.getInt32(at,true),y:rdv.getInt32(at+4,true)})
+  }
+  if(auxCoords.length<2||auxCoords.some(x=>x.x!==S.OFF||x.y!==S.OFF))throw new Error('controlled donor auxiliary line/circle graphics were not parked off-canvas');
+  const donorBytes=new Uint8Array(await c.LabelWorkbenchBtwControlledDonor.bytes()),donorParsed=F.parseStructure(donorBytes),donorObjects=M.mapContainer(await F.inflateContainer(donorParsed)).objects;
   const expectedRoots=label.fields.length+label.barcodes.length;
   if(objects.length!==out.layout?.originalRootCount)throw new Error(`donor root graph changed ${objects.length}/${out.layout?.originalRootCount}`);
   if(out.layout?.parkedDonorRoots!==(objects.length-expectedRoots))throw new Error(`parked donor roots ${out.layout?.parkedDonorRoots}`);
   const parked=objects.filter(o=>Number(o.xMil)===S.OFF&&Number(o.yMil)===S.OFF);
   if(parked.length!==out.layout.parkedDonorRoots)throw new Error(`off-canvas donor count ${parked.length}/${out.layout.parkedDonorRoots}`);
+  for(const o of objects.filter(x=>x.kind==='text'&&Number.isFinite(x.textBoxXMil)&&Number.isFinite(x.textBoxYMil))){
+    const before=donorObjects.find(x=>x.index===o.index);if(!before||!Number.isFinite(before.textBoxXMil)||!Number.isFinite(before.textBoxYMil))throw new Error(`missing donor Text Box geometry for index ${o.index}`);
+    if(o.textBoxXMil-o.xMil!==before.textBoxXMil-before.xMil)throw new Error(`Text Box relative X changed at index ${o.index}`);
+    if(o.textBoxYMil-o.yMil!==before.textBoxYMil-before.yMil)throw new Error(`Text Box relative Y changed at index ${o.index}`);
+  }
+  for(const o of parked.filter(x=>x.kind==='text'&&Number.isFinite(x.textBoxXMil)&&Number.isFinite(x.textBoxYMil))){
+    if(o.textBoxXMil<40000||o.textBoxYMil<40000)throw new Error(`parked Text internal Box remained on-label at index ${o.index}: ${o.textBoxXMil}/${o.textBoxYMil}`)
+  }
   const visible=objects.filter(o=>Number.isFinite(o.xMil)&&Number.isFinite(o.yMil)&&o.xMil>=0&&o.yMil>=0&&o.xMil<S.OFF&&o.yMil<S.OFF);
-  const visibleC128=visible.filter(o=>o.kind==='barcode'&&o.barcodeType==='Code 128'),visibleDm=visible.filter(o=>o.kind==='barcode'&&o.barcodeType==='Data Matrix');
+  const visibleDm=visible.filter(o=>o.kind==='barcode'&&o.barcodeType==='Data Matrix');
+  const dmIndexes=new Set(visibleDm.map(o=>o.index)),visibleC128=visible.filter(o=>o.kind==='barcode'&&!dmIndexes.has(o.index)&&o.componentEntries?.length);
   if(visibleC128.length!==5)throw new Error(`visible Code128 ${visibleC128.length}`);
   if(visibleDm.length!==1)throw new Error(`visible DataMatrix ${visibleDm.length}`);
-  const wanted=label.barcodes.map(b=>b.text),actual=[...visibleDm,...visibleC128].map(o=>o.resolvedPreview);
+  const wanted=label.barcodes.map(b=>b.text),actual=[...visibleDm,...visibleC128].map(o=>o.resolvedPreview||o.components?.join('')||'');
   for(const value of wanted)if(!actual.includes(value))throw new Error(`missing independent barcode ${value}; got ${JSON.stringify(actual)}`);
   if(new Set(actual).size!==6)throw new Error('barcode values are not independent');
   for(const f of label.fields){const o=visible.find(x=>x.kind==='text'&&x.value===f.value);if(!o)throw new Error(`missing field ${f.value}`);const pos=L.boxToLayout(f.sourceBox,{width:140,height:38}).mil;if(o.xMil!==pos.x||o.yMil!==pos.y)throw new Error(`field position mismatch ${f.value}`)}

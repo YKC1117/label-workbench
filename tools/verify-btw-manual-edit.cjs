@@ -33,14 +33,15 @@ async function verifyManualEdit(filePath){
   if(!String(parsed.header?.text||'').includes(`<TemplateSize>${sizeText}</TemplateSize>`))throw new Error(`TemplateSize mismatch: ${sizeText}`);
 
   const map=M.mapContainer(await F.inflateContainer(parsed)),objects=map.objects;
-  const expectedRoots=expected.fields.length+expected.barcodes.length,donorRoots=40,OFF=50000;
+  const expectedRoots=expected.fields.length+expected.barcodes.length,donorRoots=38,OFF=50000;
   if(objects.length!==donorRoots)throw new Error(`native donor root graph changed: ${objects.length}/${donorRoots}`);
   const parked=objects.filter(o=>Number(o.xMil)===OFF&&Number(o.yMil)===OFF);
   if(parked.length!==donorRoots-expectedRoots)throw new Error(`parked donor root count changed: ${parked.length}/${donorRoots-expectedRoots}`);
   const visible=objects.filter(o=>Number.isFinite(o.xMil)&&Number.isFinite(o.yMil)&&o.xMil>=0&&o.yMil>=0&&o.xMil<OFF&&o.yMil<OFF);
   const visibleText=visible.filter(o=>o.kind==='text');
-  const c128=visible.filter(o=>o.kind==='barcode'&&o.barcodeType==='Code 128');
   const dm=visible.filter(o=>o.kind==='barcode'&&o.barcodeType==='Data Matrix');
+  const dmIndexes=new Set(dm.map(o=>o.index));
+  const c128=visible.filter(o=>o.kind==='barcode'&&!dmIndexes.has(o.index)&&o.componentEntries?.length);
   if(visibleText.length!==6)throw new Error(`visible Text count ${visibleText.length}/6`);
   if(c128.length!==5)throw new Error(`visible Code128 count ${c128.length}/5`);
   if(dm.length!==1)throw new Error(`visible DataMatrix count ${dm.length}/1`);

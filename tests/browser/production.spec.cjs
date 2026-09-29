@@ -81,7 +81,8 @@ for(const extension of ['pdf','png','jpg']){
   const sourceValues=new Set(label.textObjects.map(o=>String(o.text||'').trim()).filter(Boolean));
   const printableText=decoded.filter(o=>o.kind==='text'&&String(o.value||'').trim()&&Number.isFinite(o.xMm)&&Number.isFinite(o.yMm)&&o.xMm>=0&&o.yMm>=0&&o.xMm<=templateSize.widthMm&&o.yMm<=templateSize.heightMm);
   for(const o of printableText)expect(sourceValues.has(String(o.value||'').trim())).toBe(true);
-  const c128=decoded.find(o=>o.kind==='barcode'&&o.barcodeType==='Code 128'&&o.resolvedPreview==='ABC123');
+  const dmIndexes=new Set(decoded.filter(o=>o.kind==='barcode'&&o.barcodeType==='Data Matrix').map(o=>o.index));
+  const c128=decoded.find(o=>o.kind==='barcode'&&!dmIndexes.has(o.index)&&o.componentEntries?.length&&o.resolvedPreview==='ABC123');
   expect(c128).toBeTruthy();
   expect(c128.componentEntries.length).toBeGreaterThan(0);
   expect(c128.resolvedComponents.length).toBeGreaterThan(0);

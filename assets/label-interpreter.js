@@ -254,13 +254,41 @@
     if(group.length)groups.push(group);
     return groups.map(g=>{const b=unionBox(g);return{text:cleanLine(g.map(x=>x.text).join(' ')),confidence:Math.min(...g.map(x=>Number(x.confidence||0))),...b}}).filter(x=>x.text)
   }
+  function assignmentSegments(line){
+    const words=(line?.words||[]).filter(w=>w?.text),fallback=cleanLine(line?.text);
+    if(!words.length||!/[：:=]/.test(fallback))return[];
+    const left=[],right=[];let split=false;
+    for(const word of words){
+      const raw=cleanLine(word.text),m=raw.match(/[：:=]/);
+      if(!split&&m){
+        const at=m.index,sep=m[0],before=raw.slice(0,at),after=raw.slice(at+sep.length),chars=Math.max(1,raw.length),ratio=Math.max(.08,Math.min(.92,(at+sep.length)/chars)),cut=word.x0+(word.x1-word.x0)*ratio;
+        if(before||sep)left.push({...word,text:(before+sep).trim(),x1:cut,w:Math.max(1,cut-word.x0)});
+        if(after)right.push({...word,text:after.trim(),x0:cut,w:Math.max(1,word.x1-cut)});
+        split=true;continue
+      }
+      (split?right:left).push(word)
+    }
+    if(!split||!left.length||!right.length)return[];
+    const leftText=cleanLine(left.map(x=>x.text).join(' ')),rightText=cleanLine(right.map(x=>x.text).join(' ')),ln=textNorm(leftText),rn=textNorm(rightText);
+    if(!ln||!rn||leftText.length>64||rightText.length>140)return[];
+    const letters=(ln.match(/[A-Z\u3400-\u9FFF]/g)||[]).length,digits=(ln.match(/[0-9]/g)||[]).length;
+    if(letters<1||digits>Math.max(6,letters*2+2))return[];
+    const confidence=Math.min(...[...left,...right].map(x=>Number(x.confidence||line?.confidence||0))),a=unionBox(left),b=unionBox(right);
+    return[
+      {text:leftText,confidence,...a,__semanticSplit:true},
+      {text:rightText,confidence,...b,__semanticSplit:true}
+    ]
+  }
   function genericTextObjects(passes,width,height){
     const candidates=[];
-    for(const pass of (passes||[]).slice(0,3))for(const line of pass?.lines||[])for(const seg of lineSegments(line)){
-      const text=cleanLine(seg.text),key=textNorm(text);if(!key||text.length>180)continue;
-      const bounds=pass.canvas?.__sourceBounds;
-      const sx=bounds?bounds.w/pass.canvas.width:1,sy=bounds?bounds.h/pass.canvas.height:1;
-      candidates.push({text,key,confidence:Number(seg.confidence||0),sourceBox:{x:clamp01(((bounds?.x||0)+seg.x0*sx)/width),y:clamp01(((bounds?.y||0)+seg.y0*sy)/height),w:clamp01(seg.w*sx/width),h:clamp01(seg.h*sy/height)}})
+    for(const pass of (passes||[]).slice(0,3))for(const line of pass?.lines||[]){
+      const segments=[...lineSegments(line),...assignmentSegments(line)];
+      for(const seg of segments){
+        const text=cleanLine(seg.text),key=textNorm(text);if(!key||text.length>180)continue;
+        const bounds=pass.canvas?.__sourceBounds;
+        const sx=bounds?bounds.w/pass.canvas.width:1,sy=bounds?bounds.h/pass.canvas.height:1;
+        candidates.push({text,key,confidence:Number(seg.confidence||0)+(seg.__semanticSplit?1.5:0),semanticSplit:!!seg.__semanticSplit,sourceBox:{x:clamp01(((bounds?.x||0)+seg.x0*sx)/width),y:clamp01(((bounds?.y||0)+seg.y0*sy)/height),w:clamp01(seg.w*sx/width),h:clamp01(seg.h*sy/height)}})
+      }
     }
     const groups=[];
     for(const c of candidates){
@@ -271,7 +299,7 @@
     }
     return groups.map(g=>{
       const rows=g.rows.sort((a,b)=>b.confidence-a.confidence),best=rows[0],confidence=best.confidence,repeat=rows.length;
-      return{text:best.text,sourceBox:{...best.sourceBox,confidence},confidence,repeat,generic:true}
+      return{text:best.text,sourceBox:{...best.sourceBox,confidence},confidence,repeat,generic:true,semanticSplit:rows.some(x=>x.semanticSplit)}
     }).filter(x=>x.repeat>=2||x.confidence>=68).sort((a,b)=>Math.abs(a.sourceBox.y-b.sourceBox.y)<.012?a.sourceBox.x-b.sourceBox.x:a.sourceBox.y-b.sourceBox.y)
   }
   function spatialTextScore(o){return (Number(o?.repeat||0)*18)+(Number(o?.confidence||0))+(Math.min(120,String(o?.text||'').length)*.08)}
@@ -298,11 +326,14 @@
         }
         if(an.includes(bn)||bn.includes(an)){
           const longer=an.length>=bn.length?i:j,shorter=longer===i?j:i;
-          const L=rows[longer],S=rows[shorter],la=area(L),sa=area(S),areaRatio=Math.min(la,sa)/Math.max(.000001,Math.max(la,sa));
-          /* Only collapse substring OCR when the boxes describe essentially the same
-             physical object. A whole-line box containing separate caption/value boxes
-             must survive this pass so the composite pass below can prefer the children. */
-          if(areaRatio>=.68&&contains(L,S)&&spatialTextScore(L)>=spatialTextScore(S)-8)drop.add(shorter)
+          const L=rows[longer],S=rows[shorter],la=area(L),sa=area(S),areaRatio=Math.min(la,sa)/Math.max(.000001,Math.max(la,sa)),lenRatio=Math.min(an.length,bn.length)/Math.max(1,Math.max(an.length,bn.length));
+          const A=L.sourceBox||{},B=S.sourceBox||{},acx=Number(A.x)+Number(A.w)/2,acy=Number(A.y)+Number(A.h)/2,bcx=Number(B.x)+Number(B.w)/2,bcy=Number(B.y)+Number(B.h)/2;
+          const nearCenter=Math.abs(acx-bcx)<Math.max(.018,Math.min(Number(A.w)||0,Number(B.w)||0)*.32)&&Math.abs(acy-bcy)<Math.max(.012,Math.min(Number(A.h)||0,Number(B.h)||0)*.55);
+          /* Collapse OCR variants only when they describe essentially the same physical
+             object. Keep small child boxes so Caption:Value composites can be replaced by
+             the semantic caption/value pair in the composite pass below. */
+          const protectedSemanticChild=!!S.semanticSplit&&!L.semanticSplit;
+          if(!protectedSemanticChild&&(areaRatio>=.68&&contains(L,S)||lenRatio>=.68&&areaRatio>=.50&&nearCenter)&&spatialTextScore(L)>=spatialTextScore(S)-10)drop.add(shorter)
         }
       }
     }
@@ -489,5 +520,5 @@
     return result
   }
 
-  window.LabelWorkbenchInterpreter={BUILD,scoreText,parseFields,spatialFields,aggregateFields,genericTextObjects,dedupeSpatialTextObjects,isTinyLineNoise,genericFieldsFromTextObjects,mergeGenericFields,lineSegments,needsTileFallback,detectLabelBands,boxOverlapFraction,isBarcodeOccludedText,barcodeSameSpot,dedupeBarcodes,remapBarcodeSourceBox,scanRegionDeep,rotateCanvas,interpretPdf,interpretImage,interpretFiles,productionText,questionsText,renderInterpretation,renderResult,analyze};
+  window.LabelWorkbenchInterpreter={BUILD,scoreText,parseFields,spatialFields,aggregateFields,genericTextObjects,dedupeSpatialTextObjects,isTinyLineNoise,genericFieldsFromTextObjects,mergeGenericFields,lineSegments,assignmentSegments,needsTileFallback,detectLabelBands,boxOverlapFraction,isBarcodeOccludedText,barcodeSameSpot,dedupeBarcodes,remapBarcodeSourceBox,scanRegionDeep,rotateCanvas,interpretPdf,interpretImage,interpretFiles,productionText,questionsText,renderInterpretation,renderResult,analyze};
 })();
