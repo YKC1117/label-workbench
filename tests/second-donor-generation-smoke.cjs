@@ -63,6 +63,8 @@ const label={
     if(o.textBoxXMil<40000||o.textBoxYMil<40000)throw new Error(`parked Text internal Box remained on-label at index ${o.index}: ${o.textBoxXMil}/${o.textBoxYMil}`)
   }
   const visible=objects.filter(o=>Number.isFinite(o.xMil)&&Number.isFinite(o.yMil)&&o.xMil>=0&&o.yMil>=0&&o.xMil<S.OFF&&o.yMil<S.OFF);
+  const visibleText=visible.filter(o=>o.kind==='text');
+  if(visibleText.some(o=>o.anchorPoint!==0))throw new Error('visible controlled-donor Text must normalize to Top-Left Anchor 0');
   const visibleDm=visible.filter(o=>o.kind==='barcode'&&o.barcodeType==='Data Matrix');
   const dmIndexes=new Set(visibleDm.map(o=>o.index)),visibleC128=visible.filter(o=>o.kind==='barcode'&&!dmIndexes.has(o.index)&&o.componentEntries?.length);
   if(visibleC128.length!==5)throw new Error(`visible Code128 ${visibleC128.length}`);
@@ -92,11 +94,12 @@ const label={
     ]
   };
   const alt=await S.generateOne(altLabel,1),altParsed=F.parseStructure(alt.bytes),altObjects=M.mapContainer(await F.inflateContainer(altParsed)).objects;
+  if(altObjects.filter(o=>o.kind==='text'&&o.xMil>=0&&o.yMil>=0&&o.xMil<S.OFF&&o.yMil<S.OFF).some(o=>o.anchorPoint!==0))throw new Error('arbitrary-size visible Text Anchor was not normalized to Top-Left');
   if(!altParsed.header.text.includes('<TemplateSize>96 x 54 mm</TemplateSize>'))throw new Error('arbitrary customer TemplateSize was not rewritten to 96x54mm');
   if(altObjects.length!==alt.layout?.originalRootCount)throw new Error('arbitrary-size donor root graph changed');
   const altParked=altObjects.filter(o=>Number(o.xMil)===S.OFF&&Number(o.yMil)===S.OFF);
   if(altParked.length!==alt.layout?.parkedDonorRoots)throw new Error(`arbitrary-size parked donor count ${altParked.length}/${alt.layout?.parkedDonorRoots}`);
   for(const f of altLabel.fields){const o=altObjects.find(x=>x.kind==='text'&&x.value===f.value);if(!o)throw new Error(`alt missing field ${f.value}`);const pos=L.boxToLayout(f.sourceBox,{width:96,height:54}).mil;if(o.xMil!==pos.x||o.yMil!==pos.y)throw new Error(`alt field position mismatch ${f.value}`)}
   for(const b of altLabel.barcodes){const o=altObjects.find(x=>x.kind==='barcode'&&x.resolvedPreview===b.text);if(!o)throw new Error(`alt missing barcode ${b.text}`);const pos=L.boxToLayout(b.sourceBox,{width:96,height:54}).mil;if(o.xMil!==pos.x||o.yMil!==pos.y)throw new Error(`alt barcode position mismatch ${b.text}`)}
-  console.log('PASS: generic 5C128+1DM layout restores normalized source geometry at both 140x38mm and unrelated 96x54mm sizes, rejects missing geometry, while preserving the native donor object graph');
+  console.log('PASS: generic 5C128+1DM layout restores normalized source geometry with Top-Left Text anchors at both 140x38mm and unrelated 96x54mm sizes, rejects missing geometry, while preserving the native donor object graph');
 })().catch(e=>{console.error(e);process.exit(1)});

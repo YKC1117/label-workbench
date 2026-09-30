@@ -129,7 +129,7 @@ for(const f of[
 
 (async()=>{
   const ui=c.LabelWorkbenchBtNativePrimary;
-  assert(ui?.BUILD==='20260930-btnp301-normalize-text-box','unexpected BTW primary build');
+  assert(ui?.BUILD==='20260930-btnp302-top-left-anchor','unexpected BTW primary build');
   for(const raw of ['140*38','140＊38','140x38','140X38','140×38','140 * 38 mm']){
     const size=ui.parsePhysicalSize(raw);
     assert(size?.width===140&&size?.height===38,'physical size syntax rejected: '+raw);

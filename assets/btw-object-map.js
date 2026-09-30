@@ -6,7 +6,7 @@
  */
 (function(){
   'use strict';
-  const BUILD='20260930-btw-object-map-046-text-box-explicit-position';
+  const BUILD='20260930-btw-object-map-047-text-anchor';
   const ROOT='Root.MasterSelectedObject.';
   const FONT_MARKER=new Uint8Array([0x03,0x02,0x01,0x22]);
   const PLACEHOLDER='(???) ???-????';
@@ -65,6 +65,18 @@
     const xOffset=at-20,yOffset=at-16,xMil=readI32(data,xOffset),yMil=readI32(data,yOffset);
     if(Math.abs(xMil)>=1000000||Math.abs(yMil)>=1000000)return null;
     return{xMil,yMil,xOffset,yOffset,markerOffset:at}
+  }
+  /* BarTender Text records serialize the 3x3 reference-point/anchor enum
+     19 bytes after the Root.MasterSelectedObject UTF-16 string. Controlled
+     donor real-machine testing confirmed values 0..8 map to the 3x3 anchor
+     grid; production normalizes active Text objects to Top-Left (0). */
+  function textAnchorInfo(data,root,kind,start,end){
+    if(kind!=='text'||!root)return null;
+    const offset=Number(root.end)+19;
+    if(!Number.isInteger(offset)||offset<start||offset>=end)return null;
+    const value=data[offset];
+    if(!Number.isInteger(value)||value<0||value>8)return null;
+    return{value,offset}
   }
   function kindFor(root,name){
     if(/^(?:文字|Text)\s*\d*/i.test(name))return'text';
@@ -141,8 +153,8 @@
       const root=roots[i],recordStart=Math.max(0,root.offset-20),recordEnd=i+1<roots.length?Math.max(recordStart,roots[i+1].offset-20):Math.max(recordStart,nextTagOffset(tags,root.offset,data.length));
       const strings=entries.filter(e=>e.offset>=root.offset&&e.offset<recordEnd),nameEntry=strings.find((e,j)=>j>0&&e.text&&!String(e.text).startsWith(ROOT))||null,name=String(nameEntry?.text||'');
       let x=null,y=null;if(recordStart+8<=data.length){const a=readI32(data,recordStart),b=readI32(data,recordStart+4);if(Math.abs(a)<1000000&&Math.abs(b)<1000000){x=a;y=b}}
-      const rootPath=String(root.text||''),owner=ownerFor(tags,recordStart),kind=kindFor(rootPath,name),valueEntry=primaryValueEntry(strings,kind,rootPath,nameEntry),font=fontInfo(data,recordStart,recordEnd),textBox=kind==='text'?textBoxPositionInfo(data,strings,recordStart,recordEnd):null,componentEntries=kind==='barcode'?barcodeComponentEntries(strings):[],components=componentEntries.map(x=>x.value),barcodeType=kind==='barcode'?barcodeTypeFor(owner,rootPath,strings):'';
-      objects.push({id:`obj-${i+1}`,index:i,kind,name,owner,rootPath,recordStart,recordEnd,rootOffset:root.offset,xMil:x,yMil:y,xMm:milToMm(x),yMm:milToMm(y),textBoxXMil:textBox?.xMil??null,textBoxYMil:textBox?.yMil??null,textBoxXOffset:textBox?.xOffset??null,textBoxYOffset:textBox?.yOffset??null,textBoxMarkerOffset:textBox?.markerOffset??null,value:valueEntry?.text||'',valueEntry:compactEntry(valueEntry),fontName:font?.name||'',fontNameOffset:font?.nameOffset??null,fontNameBytes:font?.nameBytes??null,fontSize:font?.size??null,fontSizeOffset:font?.sizeOffset??null,components,componentEntries,barcodeType,stringsCount:strings.length});
+      const rootPath=String(root.text||''),owner=ownerFor(tags,recordStart),kind=kindFor(rootPath,name),valueEntry=primaryValueEntry(strings,kind,rootPath,nameEntry),font=fontInfo(data,recordStart,recordEnd),textBox=kind==='text'?textBoxPositionInfo(data,strings,recordStart,recordEnd):null,anchor=kind==='text'?textAnchorInfo(data,root,kind,recordStart,recordEnd):null,componentEntries=kind==='barcode'?barcodeComponentEntries(strings):[],components=componentEntries.map(x=>x.value),barcodeType=kind==='barcode'?barcodeTypeFor(owner,rootPath,strings):'';
+      objects.push({id:`obj-${i+1}`,index:i,kind,name,owner,rootPath,recordStart,recordEnd,rootOffset:root.offset,xMil:x,yMil:y,xMm:milToMm(x),yMm:milToMm(y),textBoxXMil:textBox?.xMil??null,textBoxYMil:textBox?.yMil??null,textBoxXOffset:textBox?.xOffset??null,textBoxYOffset:textBox?.yOffset??null,textBoxMarkerOffset:textBox?.markerOffset??null,anchorPoint:anchor?.value??null,anchorOffset:anchor?.offset??null,value:valueEntry?.text||'',valueEntry:compactEntry(valueEntry),fontName:font?.name||'',fontNameOffset:font?.nameOffset??null,fontNameBytes:font?.nameBytes??null,fontSize:font?.size??null,fontSizeOffset:font?.sizeOffset??null,components,componentEntries,barcodeType,stringsCount:strings.length});
     }
     // Some BarTender barcode records are introduced by a native Bc...Data tag
     // without a new Root.MasterSelectedObject string. Create a synthetic object
@@ -216,6 +228,12 @@
         }
         writeI32(out,obj.recordStart+4,v)
       }
+      if(edit.anchorPoint!=null){
+        const v=Number(edit.anchorPoint);
+        if(obj.kind!=='text'||obj.anchorOffset==null)throw new Error(`${obj.name||obj.id} 尚未定位可安全寫入的 Text Anchor 欄位`);
+        if(!Number.isInteger(v)||v<0||v>8)throw new Error(`${obj.name||obj.id} Text Anchor 必須是 0～8`);
+        out[obj.anchorOffset]=v
+      }
       if(edit.fontName!=null){if(obj.fontNameOffset==null||!obj.fontNameBytes)throw new Error(`${obj.name||obj.id} 尚未定位可安全寫入的字型欄位`);writeFixedUtf16(out,obj.fontNameOffset,obj.fontNameBytes,String(edit.fontName))}
       if(edit.fontSize!=null){if(obj.fontSizeOffset==null)throw new Error(`${obj.name||obj.id} 尚未定位可安全寫入的字級欄位`);writeF32(out,obj.fontSizeOffset,Number(edit.fontSize))}
       if(Object.prototype.hasOwnProperty.call(edit,'value')){
@@ -284,5 +302,5 @@
   function bindAnalysis(){const input=document.getElementById('analysisFiles');if(!input||input.dataset.lwBtwObjectMap)return;input.dataset.lwBtwObjectMap='1';input.addEventListener('change',e=>{analyzeBtwFiles(e.target.files).catch(err=>console.warn('[Label Workbench] BTW object analysis failed',err))})}
   function init(){bindAnalysis();let tries=0;const t=setInterval(()=>{bindAnalysis();if(document.getElementById('analysisFiles')||tries++>80)clearInterval(t)},100)}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
-  window.LabelWorkbenchBtwObjectMap={BUILD,mapContainer,editContainer,stripObjectRecords,decodeBtw,rebuildBtw,milToMm,mmToMil,textBoxPositionInfo,renderDecoded,analyzeBtwFiles};console.info('[Label Workbench] BTW object map',BUILD);
+  window.LabelWorkbenchBtwObjectMap={BUILD,mapContainer,editContainer,stripObjectRecords,decodeBtw,rebuildBtw,milToMm,mmToMil,textBoxPositionInfo,textAnchorInfo,renderDecoded,analyzeBtwFiles};console.info('[Label Workbench] BTW object map',BUILD);
 })();

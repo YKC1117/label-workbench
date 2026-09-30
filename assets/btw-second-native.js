@@ -5,7 +5,7 @@
  */
 (function(){
   'use strict';
-  const BUILD='20260930-btw-second-native-311-normalize-text-box';
+  const BUILD='20260930-btw-second-native-312-top-left-anchor';
   const SEED_ID='LW-CONTROLLED-140x38-2022-R2';
   const MAX_TEXT=29;
   const MAX_C128=5;
@@ -91,6 +91,7 @@
   }
   function assertPool(p){
     if(p.texts.length<MAX_TEXT)throw new Error(`5C128+1DM donor 文字物件不足：${p.texts.length}/${MAX_TEXT}`);
+    if(p.texts.slice(0,MAX_TEXT).some(o=>o.anchorOffset==null))throw new Error('5C128+1DM donor 有文字物件缺少可安全寫入的 Anchor 欄位');
     if(p.c128.length<MAX_C128)throw new Error(`5C128+1DM donor Code 128 物件不足：${p.c128.length}/${MAX_C128}`);
     if(p.dm.length<MAX_DM)throw new Error(`5C128+1DM donor Data Matrix 物件不足：${p.dm.length}/${MAX_DM}`)
   }
@@ -408,20 +409,20 @@
       const obj=before.objects.find(o=>o.index===ref.index);if(!obj)throw new Error(`Code128 linked Text 不存在：${ref.ref||ref.index}`);
       const value=String(ref.value??''),field=takeMatchingField(remainingFields,value,obj);
       if(field){
-        const adjusted=avoidBarcodeCollision(field,sourceBarcodes),layout=sourceLayout(adjusted?.sourceBox,target),pos=layout?.mil?{xMil:layout.mil.x,yMil:layout.mil.y}:linkedTextPos(obj,ref.barcodeObj,ref.barcodePos,target)||fallbackTextPos(expectedText.length,P.fields.length,target),fontSize=sourceFontSize(layout,obj.fontSize,value),edit={index:obj.index,value,...pos,normalizeTextBoxPosition:true};
+        const adjusted=avoidBarcodeCollision(field,sourceBarcodes),layout=sourceLayout(adjusted?.sourceBox,target),pos=layout?.mil?{xMil:layout.mil.x,yMil:layout.mil.y}:linkedTextPos(obj,ref.barcodeObj,ref.barcodePos,target)||fallbackTextPos(expectedText.length,P.fields.length,target),fontSize=sourceFontSize(layout,obj.fontSize,value),edit={index:obj.index,value,...pos,normalizeTextBoxPosition:true,anchorPoint:0};
         if(obj.fontNameOffset!=null)edit.fontName='Microsoft JhengHei';
         if(fontSize!=null&&obj.fontSizeOffset!=null)edit.fontSize=fontSize;
-        edits.set(obj.index,edit);activeIndexes.add(obj.index);expectedText.push({index:obj.index,value,fontName:edit.fontName??obj.fontName,fontSize:edit.fontSize??obj.fontSize,linkedBarcode:true,splitValue:field?.splitRole==='value',...pos})
+        edits.set(obj.index,edit);activeIndexes.add(obj.index);expectedText.push({index:obj.index,value,fontName:edit.fontName??obj.fontName,fontSize:edit.fontSize??obj.fontSize,anchorPoint:0,linkedBarcode:true,splitValue:field?.splitRole==='value',...pos})
       }else edits.set(obj.index,{index:obj.index,value,xMil:OFF,yMil:OFF})
     }
 
     const freeTexts=donorPool.texts.filter(o=>!reservedIndexes.has(o.index)),fit=compactTextFields(remainingFields,freeTexts.length);
     const textAssignments=assignTextPool(fit.fields,freeTexts);
     textAssignments.forEach(({field,obj,score},i)=>{
-      const adjusted=avoidBarcodeCollision(field,sourceBarcodes),layout=sourceLayout(adjusted?.sourceBox,target),pos=layout?.mil?{xMil:layout.mil.x,yMil:layout.mil.y}:fallbackTextPos(i,fit.fields.length,target),value=textValue(adjusted),fontSize=sourceFontSize(layout,obj.fontSize,value),edit={index:obj.index,value,...pos,normalizeTextBoxPosition:true};
+      const adjusted=avoidBarcodeCollision(field,sourceBarcodes),layout=sourceLayout(adjusted?.sourceBox,target),pos=layout?.mil?{xMil:layout.mil.x,yMil:layout.mil.y}:fallbackTextPos(i,fit.fields.length,target),value=textValue(adjusted),fontSize=sourceFontSize(layout,obj.fontSize,value),edit={index:obj.index,value,...pos,normalizeTextBoxPosition:true,anchorPoint:0};
       if(obj.fontNameOffset!=null)edit.fontName='Microsoft JhengHei';
       if(fontSize!=null&&obj.fontSizeOffset!=null)edit.fontSize=fontSize;
-      edits.set(obj.index,edit);activeIndexes.add(obj.index);expectedText.push({index:obj.index,value,fontName:edit.fontName??obj.fontName,fontSize:edit.fontSize??obj.fontSize,styleScore:Math.round(score*1000)/1000,...pos})
+      edits.set(obj.index,edit);activeIndexes.add(obj.index);expectedText.push({index:obj.index,value,fontName:edit.fontName??obj.fontName,fontSize:edit.fontSize??obj.fontSize,anchorPoint:0,styleScore:Math.round(score*1000)/1000,...pos})
     });
 
     barcodeAssignments.forEach((item)=>{
@@ -444,6 +445,7 @@
       if(!got)throw new Error(`BTW 文字 round-trip 失敗：${exp.value}`);
       if(exp.fontName&&got.fontName!==exp.fontName)throw new Error(`BTW 文字字型 round-trip 失敗：${exp.value} / ${got.fontName}`);
       if(exp.fontSize!=null&&got.fontSize!=null&&!near(got.fontSize,exp.fontSize,.11))throw new Error(`BTW 文字字級 round-trip 失敗：${exp.value}`);
+      if(got.anchorPoint!==0)throw new Error(`BTW 文字 Anchor round-trip 失敗：${exp.value} / ${got.anchorPoint}`);
       if(got.textBoxXMil!=null&&got.textBoxYMil!=null&&(got.textBoxXMil!==exp.xMil||got.textBoxYMil!==exp.yMil))throw new Error(`BTW 文字 Text Box 對齊失敗：${exp.value}`)
     }
     for(const exp of expectedBarcode){

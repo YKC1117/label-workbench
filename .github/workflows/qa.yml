@@ -95,13 +95,13 @@ jobs:
           grep -q "BUILD='20260930-v392-text-box-align'" assets/barcode-reader.js
           grep -q "BUILD='20260919-v184-pdf-legacy'" assets/label-interpreter.js
           grep -q "BUILD='20260918-btw-production-gate-110-textobjects'" assets/btw-production-gate.js
-          grep -q "BUILD='20260930-btw-second-native-311-normalize-text-box'" assets/btw-second-native.js
+          grep -q "BUILD='20260930-btw-second-native-312-top-left-anchor'" assets/btw-second-native.js
           grep -q 'analysis-core-v2.js' assets/barcode-reader.js
           grep -q "BUILD='20260918-analysis-core-v2-200'" assets/analysis-core-v2.js
           grep -q 'LabelWorkbenchModuleLoader={BUILD,ready:true}' assets/barcode-reader.js
           grep -q "BUILD='20260918-barcode-crosscheck-108-clear-stale-ocr'" assets/analysis-barcode-crosscheck.js
           grep -q "analysis-barcode-crosscheck.js'" assets/barcode-reader.js
-          grep -q "BUILD='20260930-btw-object-map-046-text-box-explicit-position'" assets/btw-object-map.js
+          grep -q "BUILD='20260930-btw-object-map-047-text-anchor'" assets/btw-object-map.js
           grep -q "BUILD='20260912-btw-caption-adapter-100'" assets/btw-caption-adapter.js
           grep -q "SEED_ID='CEA-2022-R5'" assets/btw-native.js
           grep -q "SEED_FUNCTION='btw-seed'" assets/btw-native.js
@@ -119,7 +119,7 @@ jobs:
           grep -q "BUILD='20260918-btw-family-native-140-itf14'" assets/btw-family-native.js
           grep -q 'btw-production-core.js' assets/barcode-reader.js
           grep -q "BUILD='20260918-btw-production-core-140-itf14'" assets/btw-production-core.js
-          grep -q "BUILD='20260930-btnp301-normalize-text-box'" assets/bt-native-primary.js
+          grep -q "BUILD='20260930-btnp302-top-left-anchor'" assets/bt-native-primary.js
           grep -q "ensureProduction" assets/bt-native-primary.js
           grep -q "await ensureProduction()" assets/bt-native-primary.js
           grep -q '不用另外安裝網站工具' index.html
