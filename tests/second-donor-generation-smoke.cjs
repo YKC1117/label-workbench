@@ -52,8 +52,12 @@ const label={
   if(parked.length!==out.layout.parkedDonorRoots)throw new Error(`off-canvas donor count ${parked.length}/${out.layout.parkedDonorRoots}`);
   for(const o of objects.filter(x=>x.kind==='text'&&Number.isFinite(x.textBoxXMil)&&Number.isFinite(x.textBoxYMil))){
     const before=donorObjects.find(x=>x.index===o.index);if(!before||!Number.isFinite(before.textBoxXMil)||!Number.isFinite(before.textBoxYMil))throw new Error(`missing donor Text Box geometry for index ${o.index}`);
-    if(o.textBoxXMil-o.xMil!==before.textBoxXMil-before.xMil)throw new Error(`Text Box relative X changed at index ${o.index}`);
-    if(o.textBoxYMil-o.yMil!==before.textBoxYMil-before.yMil)throw new Error(`Text Box relative Y changed at index ${o.index}`);
+    if(o.xMil===S.OFF&&o.yMil===S.OFF){
+      if(o.textBoxXMil-o.xMil!==before.textBoxXMil-before.xMil)throw new Error(`parked Text Box relative X changed at index ${o.index}`);
+      if(o.textBoxYMil-o.yMil!==before.textBoxYMil-before.yMil)throw new Error(`parked Text Box relative Y changed at index ${o.index}`);
+    }else{
+      if(o.textBoxXMil!==o.xMil||o.textBoxYMil!==o.yMil)throw new Error(`visible Text Box did not align to source position at index ${o.index}: ${o.textBoxXMil}/${o.textBoxYMil} vs ${o.xMil}/${o.yMil}`);
+    }
   }
   for(const o of parked.filter(x=>x.kind==='text'&&Number.isFinite(x.textBoxXMil)&&Number.isFinite(x.textBoxYMil))){
     if(o.textBoxXMil<40000||o.textBoxYMil<40000)throw new Error(`parked Text internal Box remained on-label at index ${o.index}: ${o.textBoxXMil}/${o.textBoxYMil}`)
