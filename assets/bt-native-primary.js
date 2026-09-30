@@ -5,17 +5,17 @@
 (function(){
   'use strict';
 
-  const BUILD='20260929-btnp300-split-caption-value';
+  const BUILD='20260930-btnp301-normalize-text-box';
   const FORMAT_SRC='assets/btw-format.js?v=20260911-btw011';
   const NATIVE_SRC='assets/btw-native.js?v=20260911-btwn321-safe-base64';
   const PRODUCTION_SRC='assets/btw-production-core.js?v=20260918-btwpc100';
   const COPY_SRC='assets/analysis-copy.js?v=20260911-analysis-copy-100';
   const ADVANCED_PRODUCTION_DEPS=[
     ['assets/btw-layout-map.js?v=20260911-btw-layout-map-100',()=>window.LabelWorkbenchBtwLayout,'BTW layout'],
-    ['assets/btw-object-map.js?v=20260929-btw-object-map-045',()=>window.LabelWorkbenchBtwObjectMap,'BTW object map'],
+    ['assets/btw-object-map.js?v=20260930-btw-object-map-046',()=>window.LabelWorkbenchBtwObjectMap,'BTW object map'],
     ['assets/btw-production-gate.js?v=20260918-btw-production-gate',()=>window.LabelWorkbenchBtwProductionGate,'BTW production gate'],
     ['assets/btw-controlled-donor.js?v=20260929-controlled-donor-100',()=>window.LabelWorkbenchBtwControlledDonor,'BTW controlled donor'],
-    ['assets/btw-second-native.js?v=20260929-second-native-310',()=>window.LabelWorkbenchBtwSecondNative,'BTW controlled native'],
+    ['assets/btw-second-native.js?v=20260930-second-native-311',()=>window.LabelWorkbenchBtwSecondNative,'BTW controlled native'],
     ['assets/btw-rich-native.js?v=20260918-btw-rich-150',()=>window.LabelWorkbenchBtwRichNative,'BTW rich native'],
     ['assets/btw-family-native.js?v=20260918-btw-family-140',()=>window.LabelWorkbenchBtwFamilyNative,'BTW family native']
   ];

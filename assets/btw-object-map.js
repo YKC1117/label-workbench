@@ -6,7 +6,7 @@
  */
 (function(){
   'use strict';
-  const BUILD='20260929-btw-object-map-045-text-box-position';
+  const BUILD='20260930-btw-object-map-046-text-box-explicit-position';
   const ROOT='Root.MasterSelectedObject.';
   const FONT_MARKER=new Uint8Array([0x03,0x02,0x01,0x22]);
   const PLACEHOLDER='(???) ???-????';
@@ -199,14 +199,21 @@
        touching any variable-length UTF-16 string in the serialized container. */
     const replacements=[];
     for(const {edit,obj} of jobs){
+      const normalizeTextBox=edit.normalizeTextBoxPosition===true;
       if(edit.xMil!=null||edit.xMm!=null){
         const v=edit.xMil!=null?Number(edit.xMil):mmToMil(edit.xMm);
-        if(obj.kind==='text'&&obj.textBoxXOffset!=null&&Number.isFinite(obj.textBoxXMil)&&Number.isFinite(obj.xMil))writeI32(out,obj.textBoxXOffset,obj.textBoxXMil+(v-obj.xMil));
+        if(obj.kind==='text'&&obj.textBoxXOffset!=null&&Number.isFinite(obj.textBoxXMil)&&Number.isFinite(obj.xMil)){
+          const boxX=normalizeTextBox?v:obj.textBoxXMil+(v-obj.xMil);
+          writeI32(out,obj.textBoxXOffset,boxX)
+        }
         writeI32(out,obj.recordStart,v)
       }
       if(edit.yMil!=null||edit.yMm!=null){
         const v=edit.yMil!=null?Number(edit.yMil):mmToMil(edit.yMm);
-        if(obj.kind==='text'&&obj.textBoxYOffset!=null&&Number.isFinite(obj.textBoxYMil)&&Number.isFinite(obj.yMil))writeI32(out,obj.textBoxYOffset,obj.textBoxYMil+(v-obj.yMil));
+        if(obj.kind==='text'&&obj.textBoxYOffset!=null&&Number.isFinite(obj.textBoxYMil)&&Number.isFinite(obj.yMil)){
+          const boxY=normalizeTextBox?v:obj.textBoxYMil+(v-obj.yMil);
+          writeI32(out,obj.textBoxYOffset,boxY)
+        }
         writeI32(out,obj.recordStart+4,v)
       }
       if(edit.fontName!=null){if(obj.fontNameOffset==null||!obj.fontNameBytes)throw new Error(`${obj.name||obj.id} 尚未定位可安全寫入的字型欄位`);writeFixedUtf16(out,obj.fontNameOffset,obj.fontNameBytes,String(edit.fontName))}

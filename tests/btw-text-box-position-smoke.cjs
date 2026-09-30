@@ -21,6 +21,11 @@ for(const f of ['assets/btw-format.js','assets/btw-object-map.js','assets/btw-se
   assert(after.textBoxXMil-after.xMil===text.textBoxXMil-text.xMil,'Text Box relative X offset changed');
   assert(after.textBoxYMil-after.yMil===text.textBoxYMil-text.yMil,'Text Box relative Y offset changed');
 
+  const aligned=await M.rebuildBtw(bytes,[{index:text.index,xMil:newX,yMil:newY,normalizeTextBoxPosition:true}]);
+  const ao=aligned.objects.find(o=>o.index===text.index);
+  assert(ao.xMil===newX&&ao.yMil===newY,'normalized primary Text X/Y move failed');
+  assert(ao.textBoxXMil===newX&&ao.textBoxYMil===newY,'normalized Text Box did not align to requested source position');
+
   const parked=await M.rebuildBtw(bytes,[{index:text.index,xMil:50000,yMil:50000}]);
   const po=parked.objects.find(o=>o.index===text.index);
   assert(po.xMil===50000&&po.yMil===50000,'primary Text object was not parked');
@@ -28,5 +33,5 @@ for(const f of ['assets/btw-format.js','assets/btw-object-map.js','assets/btw-se
   assert(po.textBoxXMil-po.xMil===text.textBoxXMil-text.xMil,'parked Text Box relative X offset changed');
   assert(po.textBoxYMil-po.yMil===text.textBoxYMil-text.yMil,'parked Text Box relative Y offset changed');
 
-  console.log('PASS: real donor Text Box Options geometry follows primary X/Y and parks off-canvas consistently');
+  console.log('PASS: real donor Text Box Options preserves legacy relative geometry by default, supports explicit source-position alignment, and parks off-canvas consistently');
 })().catch(e=>{console.error(e);process.exit(1)});
