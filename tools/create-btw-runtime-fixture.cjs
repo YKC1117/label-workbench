@@ -9,7 +9,7 @@ function makeContext(){
 
 function loadRuntime(root){
   const c=makeContext();
-  for(const f of['assets/btw-format.js','assets/btw-object-map.js','assets/btw-layout-map.js','assets/btw-controlled-donor.js','assets/btw-second-native.js']){
+  for(const f of['assets/btw-format.js','assets/btw-object-map.js','assets/btw-layout-map.js','assets/btw-second-donor.js','assets/btw-second-native.js']){
     vm.runInContext(fs.readFileSync(path.join(root,f),'utf8'),c,{filename:f});
   }
   return c;

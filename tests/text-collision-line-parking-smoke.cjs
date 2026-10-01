@@ -2,9 +2,9 @@ const fs=require('fs'),vm=require('vm');
 function assert(c,m){if(!c)throw new Error(m)}
 const c={console,Uint8Array,ArrayBuffer,DataView,TextDecoder,TextEncoder,Blob,Response,DecompressionStream,CompressionStream,atob,btoa,window:null,globalThis:null,document:{readyState:'loading',addEventListener(){},getElementById(){return null}}};
 c.window=c;c.globalThis=c;vm.createContext(c);
-for(const f of['assets/btw-format.js','assets/btw-object-map.js','assets/btw-layout-map.js','assets/btw-controlled-donor.js','assets/btw-second-native.js'])vm.runInContext(fs.readFileSync(f,'utf8'),c,{filename:f});
+for(const f of['assets/btw-format.js','assets/btw-object-map.js','assets/btw-layout-map.js','assets/btw-second-donor.js','assets/btw-second-native.js'])vm.runInContext(fs.readFileSync(f,'utf8'),c,{filename:f});
 (async()=>{
-  const S=c.LabelWorkbenchBtwSecondNative,F=c.LabelWorkbenchBtwFormat,D=c.LabelWorkbenchBtwControlledDonor;
+  const S=c.LabelWorkbenchBtwSecondNative,F=c.LabelWorkbenchBtwFormat,D=c.LabelWorkbenchBtwSecondDonor;
   const full={text:'(16D)DATE: 20260722',confidence:95,sourceBox:{x:.42,y:.36,w:.22,h:.05}};
   const parts=S.splitCaptionValueField(full,['20260722']);
   assert(parts.length===2,'caption+linked value line was not split');

@@ -2,7 +2,7 @@ const fs=require('fs');
 const vm=require('vm');
 
 const c={console,Uint8Array,ArrayBuffer,DataView,TextDecoder,TextEncoder,Blob,Response,DecompressionStream,CompressionStream,atob,btoa,window:null,globalThis:null,document:{readyState:'loading',addEventListener(){},getElementById(){return null}}};c.window=c;c.globalThis=c;vm.createContext(c);
-for(const f of['assets/btw-format.js','assets/btw-object-map.js','assets/btw-layout-map.js','assets/btw-controlled-donor.js','assets/btw-second-native.js'])vm.runInContext(fs.readFileSync(f,'utf8'),c,{filename:f});
+for(const f of['assets/btw-format.js','assets/btw-object-map.js','assets/btw-layout-map.js','assets/btw-second-donor.js','assets/btw-second-native.js'])vm.runInContext(fs.readFileSync(f,'utf8'),c,{filename:f});
 
 const label={
   sourceName:'five-code-one-dm.pdf',
@@ -30,7 +30,7 @@ const label={
   try{await S.generateOne(missingTextGeometry,0)}catch(error){textGeometryRejected=/sourceBox|座標不完整/.test(String(error?.message||error))}
   if(!textGeometryRejected)throw new Error('known-size output must reject missing text sourceBox instead of using fallback coordinates');
   const out=await S.generateOne(label,0);
-  if(out.seed!=='LW-CONTROLLED-140x38-2022-R2')throw new Error(`seed ${out.seed}`);
+  if(out.seed!=='LW-CLEAN-100x65-2022-R2')throw new Error(`seed ${out.seed}`);
   const parsed=F.parseStructure(out.bytes);
   if(parsed.header.applicationVersion!=='2022 R2'||parsed.header.compatibleVersion!=='2022 R1')throw new Error('version changed');
   if(!parsed.header.text.includes('<TemplateSize>140 x 38 mm</TemplateSize>'))throw new Error('TemplateSize not rewritten');
@@ -44,7 +44,7 @@ const label={
     const at=i+6+len;auxCoords.push({type,x:rdv.getInt32(at,true),y:rdv.getInt32(at+4,true)})
   }
   if(auxCoords.length<2||auxCoords.some(x=>x.x!==S.OFF||x.y!==S.OFF))throw new Error('controlled donor auxiliary line/circle/picture graphics were not parked off-canvas');
-  const donorBytes=new Uint8Array(await c.LabelWorkbenchBtwControlledDonor.bytes()),donorParsed=F.parseStructure(donorBytes),donorObjects=M.mapContainer(await F.inflateContainer(donorParsed)).objects;
+  const donorBytes=new Uint8Array(await c.LabelWorkbenchBtwSecondDonor.bytes()),donorParsed=F.parseStructure(donorBytes),donorObjects=M.mapContainer(await F.inflateContainer(donorParsed)).objects;
   const expectedRoots=label.fields.length+label.barcodes.length;
   if(objects.length!==out.layout?.originalRootCount)throw new Error(`donor root graph changed ${objects.length}/${out.layout?.originalRootCount}`);
   if(out.layout?.parkedDonorRoots!==(objects.length-expectedRoots))throw new Error(`parked donor roots ${out.layout?.parkedDonorRoots}`);
@@ -64,11 +64,14 @@ const label={
   }
   const visible=objects.filter(o=>Number.isFinite(o.xMil)&&Number.isFinite(o.yMil)&&o.xMil>=0&&o.yMil>=0&&o.xMil<S.OFF&&o.yMil<S.OFF);
   const visibleText=visible.filter(o=>o.kind==='text');
-  if(visibleText.some(o=>o.anchorPoint!==0))throw new Error('visible controlled-donor Text must normalize to Top-Left Anchor 0');
+  if(visibleText.some(o=>o.anchorPoint!==0||o.horizontalScale!==1000))throw new Error('visible clean-donor Text must normalize to Top-Left Anchor 0 / 100% horizontal scale');
   const visibleDm=visible.filter(o=>o.kind==='barcode'&&o.barcodeType==='Data Matrix');
   const dmIndexes=new Set(visibleDm.map(o=>o.index)),visibleC128=visible.filter(o=>o.kind==='barcode'&&!dmIndexes.has(o.index)&&o.componentEntries?.length);
   if(visibleC128.length!==5)throw new Error(`visible Code128 ${visibleC128.length}`);
+  if(visibleC128.some(o=>o.linkedDataSourceRefs?.length||![333,666,1000].includes(o.xDimension)))throw new Error('clean donor Code128 must be independent and use a legal 300dpi X-dimension');
   if(visibleDm.length!==1)throw new Error(`visible DataMatrix ${visibleDm.length}`);
+  if(!(visibleDm[0].xDimension>=333&&visibleDm[0].xDimension<=6667))throw new Error('Data Matrix X-dimension was not sized from sourceBox');
+  if(out.layout?.parkedRootlessText?.length!==2)throw new Error('clean donor rootless placeholder Text was not parked');
   const wanted=label.barcodes.map(b=>b.text),actual=[...visibleDm,...visibleC128].map(o=>o.resolvedPreview||o.components?.join('')||'');
   for(const value of wanted)if(!actual.includes(value))throw new Error(`missing independent barcode ${value}; got ${JSON.stringify(actual)}`);
   if(new Set(actual).size!==6)throw new Error('barcode values are not independent');

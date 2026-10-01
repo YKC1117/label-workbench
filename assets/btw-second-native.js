@@ -5,12 +5,12 @@
  */
 (function(){
   'use strict';
-  const BUILD='20260930-btw-second-native-312-top-left-anchor';
-  const SEED_ID='LW-CONTROLLED-140x38-2022-R2';
+  const BUILD='20261001-btw-second-native-313-clean-donor-sizing';
+  const SEED_ID='LW-CLEAN-100x65-2022-R2';
   const MAX_TEXT=29;
   const MAX_C128=5;
   const MAX_DM=1;
-  const DONOR_SIZE={width:140,height:38};
+  const DONOR_SIZE={width:100,height:65};
   const OFF=50000;
   const MAX_SIZE_PAIRS=16;
 
@@ -91,9 +91,11 @@
   }
   function assertPool(p){
     if(p.texts.length<MAX_TEXT)throw new Error(`5C128+1DM donor 文字物件不足：${p.texts.length}/${MAX_TEXT}`);
-    if(p.texts.slice(0,MAX_TEXT).some(o=>o.anchorOffset==null))throw new Error('5C128+1DM donor 有文字物件缺少可安全寫入的 Anchor 欄位');
+    if(p.texts.slice(0,MAX_TEXT).some(o=>o.anchorOffset==null||o.horizontalScaleOffset==null))throw new Error('5C128+1DM clean donor 有文字物件缺少 Anchor／水平比例欄位');
     if(p.c128.length<MAX_C128)throw new Error(`5C128+1DM donor Code 128 物件不足：${p.c128.length}/${MAX_C128}`);
-    if(p.dm.length<MAX_DM)throw new Error(`5C128+1DM donor Data Matrix 物件不足：${p.dm.length}/${MAX_DM}`)
+    if(p.c128.slice(0,MAX_C128).some(o=>o.xDimensionOffset==null||o.componentEntries?.length!==1||o.linkedDataSourceRefs?.length))throw new Error('5C128+1DM clean donor Code128 不是獨立 datasource／缺少 X-dimension');
+    if(p.dm.length<MAX_DM)throw new Error(`5C128+1DM donor Data Matrix 物件不足：${p.dm.length}/${MAX_DM}`);
+    if(p.dm.slice(0,MAX_DM).some(o=>o.xDimensionOffset==null||o.componentEntries?.length!==1))throw new Error('5C128+1DM clean donor Data Matrix 缺少獨立 datasource／X-dimension')
   }
   function targetSize(label){
     const g=label?.sourceGeometry||{},width=Number(g.widthMm),height=Number(g.heightMm);
@@ -107,6 +109,30 @@
   function sourceLayout(box,target){
     const L=window.LabelWorkbenchBtwLayout;if(!L?.boxToLayout||!box)return null;
     try{return L.boxToLayout(box,target)}catch{return null}
+  }
+  function chooseDiscrete(values,budget,fallback){
+    const sorted=[...values].sort((a,b)=>a-b);let pick=sorted[0]??fallback;
+    for(const v of sorted)if(v<=budget)pick=v;
+    return Number.isFinite(pick)?pick:fallback
+  }
+  function code128ModuleEstimate(value){
+    const chars=[...String(value??'')].length;
+    return Math.max(68,11*(chars+2)+13+20)
+  }
+  function chooseCode128XDimension(row,target){
+    if(!validSourceBox(row?.sourceBox))return 666;
+    const widthMm=Number(row.sourceBox.w)*Number(target.width),modules=code128ModuleEstimate(barcodeText(row));
+    return chooseDiscrete([333,666,1000],widthMm/0.0254*100/modules,666)
+  }
+  const DM_CAPACITY=[[10,3],[12,5],[14,8],[16,12],[18,18],[20,22],[22,30],[24,36],[26,44],[32,62],[36,86],[40,114],[44,144],[48,174],[52,204],[64,280],[72,368],[80,456],[88,576],[96,696],[104,816],[120,1050],[132,1304],[144,1558]];
+  function dataMatrixModules(value){
+    const bytes=new TextEncoder().encode(String(value??'')).length;
+    return (DM_CAPACITY.find(x=>bytes<=x[1])||DM_CAPACITY[DM_CAPACITY.length-1])[0]
+  }
+  function chooseDataMatrixXDimension(row,target){
+    if(!validSourceBox(row?.sourceBox))return 1333;
+    const sideMm=Math.min(Number(row.sourceBox.w)*Number(target.width),Number(row.sourceBox.h)*Number(target.height)),modules=dataMatrixModules(barcodeText(row)),budget=sideMm/0.0254*100/modules,dots=Math.max(1,Math.min(20,Math.round(budget/(100000/300))));
+    return Math.round(dots*100000/300)
   }
   function visualChars(value){
     let units=0;
@@ -337,6 +363,19 @@
     }
     return null
   }
+  function parkRootlessTextObjects(container,map){
+    const F=window.LabelWorkbenchBtwFormat,data=container instanceof Uint8Array?new Uint8Array(container):new Uint8Array(container),dv=new DataView(data.buffer,data.byteOffset,data.byteLength),entries=F.scanUtf16Strings(data,{minLength:0,maxLength:10000,includeEmpty:true}),mapped=new Set((map?.objects||[]).map(o=>String(o.name||''))),wanted=new Set(['文字 34','文字 35']),parked=[];
+    for(const entry of entries){
+      const name=String(entry.text||'');if(!wanted.has(name)||mapped.has(name))continue;
+      const mainOffset=Number(entry.offset)-85;if(mainOffset<0||mainOffset+8>data.length)continue;
+      const x=dv.getInt32(mainOffset,true),y=dv.getInt32(mainOffset+4,true);if(Math.abs(x)>=1000000||Math.abs(y)>=1000000)continue;
+      const box=entries.find(e=>e.offset>entry.offset&&e.offset<entry.offset+2400&&String(e.text||'')==='Box Options');if(!box||box.offset-20<0)continue;
+      const boxOffset=box.offset-20,bx=dv.getInt32(boxOffset,true),by=dv.getInt32(boxOffset+4,true);if(Math.abs(bx)>=1000000||Math.abs(by)>=1000000)continue;
+      dv.setInt32(mainOffset,OFF,true);dv.setInt32(mainOffset+4,OFF,true);dv.setInt32(boxOffset,OFF,true);dv.setInt32(boxOffset+4,OFF,true);
+      parked.push({name,mainOffset,boxOffset,from:{x,y,bx,by}})
+    }
+    return{container:data,parked}
+  }
   function parkAuxiliaryGraphics(container){
     const data=container instanceof Uint8Array?new Uint8Array(container):new Uint8Array(container),dv=new DataView(data.buffer,data.byteOffset,data.byteLength),parked=[];
     for(let i=0;i+16<data.length;i++){
@@ -366,13 +405,13 @@
 
   async function generateOne(label,index=0){
     const P=plan(label);if(!P)throw new Error('此標籤超出 5C128+1DM native donor 可安全建立範圍');
-    const D=window.LabelWorkbenchBtwControlledDonor,F=window.LabelWorkbenchBtwFormat,M=window.LabelWorkbenchBtwObjectMap;
-    if(!D?.bytes||!F?.parseStructure||!F?.inflateContainer||!F?.rebuild||!F?.replaceTemplateSize||!M?.mapContainer||!M?.editContainer)throw new Error('controlled 5C128+1DM BTW 元件尚未載入');
+    const D=window.LabelWorkbenchBtwSecondDonor,F=window.LabelWorkbenchBtwFormat,M=window.LabelWorkbenchBtwObjectMap;
+    if(!D?.bytes||!F?.parseStructure||!F?.inflateContainer||!F?.rebuild||!F?.replaceTemplateSize||!M?.mapContainer||!M?.editContainer)throw new Error('clean 5C128+1DM BTW 元件尚未載入');
 
     const seed=new Uint8Array(await D.bytes()),parsed=F.parseStructure(seed);
     if(parsed.header?.applicationVersion!=='2022 R2'||parsed.header?.compatibleVersion!=='2022 R1')throw new Error('5C128+1DM donor 版本不是 BarTender 2022 R2 / 2022 R1 相容');
     let container=await F.inflateContainer(parsed),before=M.mapContainer(container),donorPool=pool(before.objects);assertPool(donorPool);
-    const rootCount=before.objects.length,target=targetSize(label),sized=rewriteInternalSize(container,target),aux=parkAuxiliaryGraphics(sized.container);container=aux.container;
+    const rootCount=before.objects.length,target=targetSize(label),sized=rewriteInternalSize(container,target),aux=parkAuxiliaryGraphics(sized.container),rootless=parkRootlessTextObjects(aux.container,before);container=rootless.container;
 
     /* Re-map after fixed-width size/auxiliary rewrites so all edit offsets are derived from the bytes being edited. */
     before=M.mapContainer(container);donorPool=pool(before.objects);assertPool(donorPool);
@@ -409,26 +448,27 @@
       const obj=before.objects.find(o=>o.index===ref.index);if(!obj)throw new Error(`Code128 linked Text 不存在：${ref.ref||ref.index}`);
       const value=String(ref.value??''),field=takeMatchingField(remainingFields,value,obj);
       if(field){
-        const adjusted=avoidBarcodeCollision(field,sourceBarcodes),layout=sourceLayout(adjusted?.sourceBox,target),pos=layout?.mil?{xMil:layout.mil.x,yMil:layout.mil.y}:linkedTextPos(obj,ref.barcodeObj,ref.barcodePos,target)||fallbackTextPos(expectedText.length,P.fields.length,target),fontSize=sourceFontSize(layout,obj.fontSize,value),edit={index:obj.index,value,...pos,normalizeTextBoxPosition:true,anchorPoint:0};
+        const adjusted=avoidBarcodeCollision(field,sourceBarcodes),layout=sourceLayout(adjusted?.sourceBox,target),pos=layout?.mil?{xMil:layout.mil.x,yMil:layout.mil.y}:linkedTextPos(obj,ref.barcodeObj,ref.barcodePos,target)||fallbackTextPos(expectedText.length,P.fields.length,target),fontSize=sourceFontSize(layout,obj.fontSize,value),edit={index:obj.index,value,...pos,normalizeTextBoxPosition:true,anchorPoint:0,horizontalScale:1000};
         if(obj.fontNameOffset!=null)edit.fontName='Microsoft JhengHei';
         if(fontSize!=null&&obj.fontSizeOffset!=null)edit.fontSize=fontSize;
-        edits.set(obj.index,edit);activeIndexes.add(obj.index);expectedText.push({index:obj.index,value,fontName:edit.fontName??obj.fontName,fontSize:edit.fontSize??obj.fontSize,anchorPoint:0,linkedBarcode:true,splitValue:field?.splitRole==='value',...pos})
+        edits.set(obj.index,edit);activeIndexes.add(obj.index);expectedText.push({index:obj.index,value,fontName:edit.fontName??obj.fontName,fontSize:edit.fontSize??obj.fontSize,anchorPoint:0,horizontalScale:1000,linkedBarcode:true,splitValue:field?.splitRole==='value',...pos})
       }else edits.set(obj.index,{index:obj.index,value,xMil:OFF,yMil:OFF})
     }
 
     const freeTexts=donorPool.texts.filter(o=>!reservedIndexes.has(o.index)),fit=compactTextFields(remainingFields,freeTexts.length);
     const textAssignments=assignTextPool(fit.fields,freeTexts);
     textAssignments.forEach(({field,obj,score},i)=>{
-      const adjusted=avoidBarcodeCollision(field,sourceBarcodes),layout=sourceLayout(adjusted?.sourceBox,target),pos=layout?.mil?{xMil:layout.mil.x,yMil:layout.mil.y}:fallbackTextPos(i,fit.fields.length,target),value=textValue(adjusted),fontSize=sourceFontSize(layout,obj.fontSize,value),edit={index:obj.index,value,...pos,normalizeTextBoxPosition:true,anchorPoint:0};
+      const adjusted=avoidBarcodeCollision(field,sourceBarcodes),layout=sourceLayout(adjusted?.sourceBox,target),pos=layout?.mil?{xMil:layout.mil.x,yMil:layout.mil.y}:fallbackTextPos(i,fit.fields.length,target),value=textValue(adjusted),fontSize=sourceFontSize(layout,obj.fontSize,value),edit={index:obj.index,value,...pos,normalizeTextBoxPosition:true,anchorPoint:0,horizontalScale:1000};
       if(obj.fontNameOffset!=null)edit.fontName='Microsoft JhengHei';
       if(fontSize!=null&&obj.fontSizeOffset!=null)edit.fontSize=fontSize;
-      edits.set(obj.index,edit);activeIndexes.add(obj.index);expectedText.push({index:obj.index,value,fontName:edit.fontName??obj.fontName,fontSize:edit.fontSize??obj.fontSize,anchorPoint:0,styleScore:Math.round(score*1000)/1000,...pos})
+      edits.set(obj.index,edit);activeIndexes.add(obj.index);expectedText.push({index:obj.index,value,fontName:edit.fontName??obj.fontName,fontSize:edit.fontSize??obj.fontSize,anchorPoint:0,horizontalScale:1000,styleScore:Math.round(score*1000)/1000,...pos})
     });
 
     barcodeAssignments.forEach((item)=>{
       const obj=item.obj;if(!obj)throw new Error(`5C128+1DM donor 缺少 ${item.type} 原生物件`);
-      const edit=barcodeEdit(obj,item.value,item.pos,item.structure);
-      edits.set(obj.index,edit);activeIndexes.add(obj.index);expectedBarcode.push({index:obj.index,type:item.type,value:item.structure?.payload??item.value,sourceValue:item.value,linked:!!item.structure,styleScore:Math.round(item.score*1000)/1000,...item.pos})
+      const xDimension=item.type==='Data Matrix'?chooseDataMatrixXDimension(item.row,target):chooseCode128XDimension(item.row,target),edit=barcodeEdit(obj,item.value,item.pos,item.structure);
+      edit.xDimension=xDimension;
+      edits.set(obj.index,edit);activeIndexes.add(obj.index);expectedBarcode.push({index:obj.index,type:item.type,value:item.structure?.payload??item.value,sourceValue:item.value,linked:!!item.structure,xDimension,styleScore:Math.round(item.score*1000)/1000,...item.pos})
     });
 
     const edited=M.editContainer(container,[...edits.values()]);
@@ -446,20 +486,22 @@
       if(exp.fontName&&got.fontName!==exp.fontName)throw new Error(`BTW 文字字型 round-trip 失敗：${exp.value} / ${got.fontName}`);
       if(exp.fontSize!=null&&got.fontSize!=null&&!near(got.fontSize,exp.fontSize,.11))throw new Error(`BTW 文字字級 round-trip 失敗：${exp.value}`);
       if(got.anchorPoint!==0)throw new Error(`BTW 文字 Anchor round-trip 失敗：${exp.value} / ${got.anchorPoint}`);
+      if(got.horizontalScale!==1000)throw new Error(`BTW 文字水平比例 round-trip 失敗：${exp.value} / ${got.horizontalScale}`);
       if(got.textBoxXMil!=null&&got.textBoxYMil!=null&&(got.textBoxXMil!==exp.xMil||got.textBoxYMil!==exp.yMil))throw new Error(`BTW 文字 Text Box 對齊失敗：${exp.value}`)
     }
     for(const exp of expectedBarcode){
       const got=after.objects.find(o=>o.index===exp.index&&o.kind==='barcode'&&String(o.resolvedPreview||o.components?.join('')||'')===exp.value&&near(o.xMil,exp.xMil)&&near(o.yMil,exp.yMil));
-      if(!got)throw new Error(`BTW ${exp.type} 原生物件 round-trip 失敗：${exp.value}`)
+      if(!got)throw new Error(`BTW ${exp.type} 原生物件 round-trip 失敗：${exp.value}`);
+      if(got.xDimension!==exp.xDimension)throw new Error(`BTW ${exp.type} X-dimension round-trip 失敗：${exp.value} / ${got.xDimension} != ${exp.xDimension}`)
     }
     if(target.source){
       const text=check.header?.text||'',wanted=`${F.formatMm(target.width)} x ${F.formatMm(target.height)} mm`;
       if(!text.includes(`<TemplateSize>${wanted}</TemplateSize>`))throw new Error('BTW TemplateSize round-trip 驗證失敗')
     }
 
-    return{name:outputName(label,index),bytes:rebuilt,kind:P.kind,barcodes:{dataMatrix:P.dm.map(barcodeText),code128:P.c128.map(barcodeText)},layout:{target,internalSizeOffsets:sized.offsets,text:expectedText,barcodes:expectedBarcode,parkedDonorRoots:parkedIndexes.length,parkedAuxiliaryGraphics:aux.parked,originalRootCount:rootCount,textCompaction:{input:P.inputTextCount,written:expectedText.length,omitted:[...P.omittedText,...split.omitted,...fit.omitted].map(x=>textValue(x)),captionValueSplits:split.splitCount},linkedCode128:c128Assignments.filter(x=>x.structure).length},header:check.header,seed:SEED_ID}
+    return{name:outputName(label,index),bytes:rebuilt,kind:P.kind,barcodes:{dataMatrix:P.dm.map(barcodeText),code128:P.c128.map(barcodeText)},layout:{target,internalSizeOffsets:sized.offsets,text:expectedText,barcodes:expectedBarcode,parkedDonorRoots:parkedIndexes.length,parkedAuxiliaryGraphics:aux.parked,parkedRootlessText:rootless.parked,originalRootCount:rootCount,textCompaction:{input:P.inputTextCount,written:expectedText.length,omitted:[...P.omittedText,...split.omitted,...fit.omitted].map(x=>textValue(x)),captionValueSplits:split.splitCount},linkedCode128:c128Assignments.filter(x=>x.structure).length},header:check.header,seed:SEED_ID}
   }
 
-  window.LabelWorkbenchBtwSecondNative={BUILD,SEED_ID,MAX_TEXT,MAX_C128,MAX_DM,OFF,plan,canGenerate,pool,validSourceBox,textPriority,textDedupKey,boxesNear,dedupeTextFields,compactTextFields,textStyleScore,assignTextPool,barcodeStyleScore,code128Structure,assignBarcodePool,assignCode128Pool,takeMatchingField,linkedTextPos,linkedFontSize,captionPrefixForLinkedValue,splitCaptionValueField,splitLinkedVisibleFields,boxesOverlap,paddedBarcodeBox,overlapsAnyBarcode,avoidBarcodeCollision,lineEndpointOffsets,parkAuxiliaryGraphics,generateOne};
+  window.LabelWorkbenchBtwSecondNative={BUILD,SEED_ID,MAX_TEXT,MAX_C128,MAX_DM,OFF,plan,canGenerate,pool,validSourceBox,textPriority,textDedupKey,boxesNear,dedupeTextFields,compactTextFields,textStyleScore,assignTextPool,barcodeStyleScore,code128Structure,assignBarcodePool,assignCode128Pool,takeMatchingField,linkedTextPos,linkedFontSize,captionPrefixForLinkedValue,splitCaptionValueField,splitLinkedVisibleFields,boxesOverlap,paddedBarcodeBox,overlapsAnyBarcode,avoidBarcodeCollision,code128ModuleEstimate,chooseCode128XDimension,dataMatrixModules,chooseDataMatrixXDimension,lineEndpointOffsets,parkRootlessTextObjects,parkAuxiliaryGraphics,generateOne};
   console.info('[Label Workbench] controlled 5C128+1DM native generator',BUILD);
 })();

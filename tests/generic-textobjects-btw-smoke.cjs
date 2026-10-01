@@ -3,7 +3,7 @@ const vm=require('vm');
 
 const c={console,Uint8Array,ArrayBuffer,DataView,TextDecoder,TextEncoder,Blob,Response,DecompressionStream,CompressionStream,atob,btoa,window:null,globalThis:null,document:{readyState:'loading',addEventListener(){},getElementById(){return null}}};
 c.window=c;c.globalThis=c;vm.createContext(c);
-for(const f of['assets/btw-format.js','assets/btw-object-map.js','assets/btw-layout-map.js','assets/btw-controlled-donor.js','assets/btw-second-native.js'])vm.runInContext(fs.readFileSync(f,'utf8'),c,{filename:f});
+for(const f of['assets/btw-format.js','assets/btw-object-map.js','assets/btw-layout-map.js','assets/btw-second-donor.js','assets/btw-second-native.js'])vm.runInContext(fs.readFileSync(f,'utf8'),c,{filename:f});
 
 const textObjects=[
   {text:'客戶代碼',sourceBox:{x:.05,y:.06,w:.15,h:.04}},
@@ -31,8 +31,8 @@ const label={
   const S=c.LabelWorkbenchBtwSecondNative,F=c.LabelWorkbenchBtwFormat,M=c.LabelWorkbenchBtwObjectMap,L=c.LabelWorkbenchBtwLayout;
   if(!S.canGenerate(label))throw new Error('generic textObjects label unexpectedly rejected');
   {
-    const db=new Uint8Array(await c.LabelWorkbenchBtwControlledDonor.bytes()),dp=F.parseStructure(db),dobjs=M.mapContainer(await F.inflateContainer(dp)).objects;
-    console.log('CONTROLLED_BARCODE_INVENTORY '+JSON.stringify(dobjs.filter(o=>o.kind==='barcode').map(o=>({index:o.index,name:o.name,owner:o.owner,root:o.rootPath,type:o.barcodeType,components:o.components,x:o.xMil,y:o.yMil,synthetic:!!o.syntheticFromTag}))));
+    const db=new Uint8Array(await c.LabelWorkbenchBtwSecondDonor.bytes()),dp=F.parseStructure(db),dobjs=M.mapContainer(await F.inflateContainer(dp)).objects;
+    console.log('CLEAN_BARCODE_INVENTORY '+JSON.stringify(dobjs.filter(o=>o.kind==='barcode').map(o=>({index:o.index,name:o.name,owner:o.owner,root:o.rootPath,type:o.barcodeType,components:o.components,x:o.xMil,y:o.yMil,synthetic:!!o.syntheticFromTag}))));
   }
   const out=await S.generateOne(label,0);
   const parsed=F.parseStructure(out.bytes);

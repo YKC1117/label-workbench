@@ -83,7 +83,7 @@ for(const f of[
   'assets/btw-format.js',
   'assets/btw-object-map.js',
   'assets/btw-layout-map.js',
-  'assets/btw-controlled-donor.js',
+  'assets/btw-second-donor.js',
   'assets/btw-second-native.js'
 ]) vm.runInContext(fs.readFileSync(f,'utf8'),c,{filename:f});
 
@@ -117,7 +117,7 @@ for(const f of[
   assert(second.canGenerate(prod),'production label unexpectedly exceeds 5C128+1DM donor capacity');
 
   const out=await second.generateOne(prod,0);
-  assert(out.seed==='LW-CONTROLLED-140x38-2022-R2','wrong production donor');
+  assert(out.seed==='LW-CLEAN-100x65-2022-R2','wrong production donor');
   const parsed=F.parseStructure(out.bytes);
   assert(parsed.header.applicationVersion==='2022 R2'&&parsed.header.compatibleVersion==='2022 R1','BarTender 2022 header changed');
   assert(parsed.header.text.includes('<TemplateSize>140 x 38 mm</TemplateSize>'),'140 x 38 mm TemplateSize missing');
