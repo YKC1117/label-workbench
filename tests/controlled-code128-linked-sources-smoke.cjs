@@ -21,7 +21,7 @@ const label={sourceName:'clean-code128.png',sourceGeometry:{widthMm:140,heightMm
   const parsed=F.parseStructure(out.bytes),mapped=M.mapContainer(await F.inflateContainer(parsed)),visible=mapped.objects.filter(o=>o.xMil>=0&&o.yMil>=0&&o.xMil<S.OFF&&o.yMil<S.OFF);
   const dm=visible.filter(o=>o.kind==='barcode'&&o.barcodeType==='Data Matrix'),dmIds=new Set(dm.map(o=>o.index)),c128=visible.filter(o=>o.kind==='barcode'&&!dmIds.has(o.index)&&o.componentEntries?.length);
   assert(c128.length===5&&dm.length===1,'clean donor barcode count mismatch');
-  for(const o of c128){assert(o.componentEntries.length===1,'Code128 datasource is not independent');assert(!o.linkedDataSourceRefs?.length,'Code128 unexpectedly depends on Text datasource');assert([333,666,1000].includes(o.xDimension),'Code128 X-dimension invalid: '+o.xDimension)}
+  for(const o of c128){assert(o.componentEntries.length>=1,'Code128 has no writable datasource slot');assert(!o.linkedDataSourceRefs?.length,'Code128 unexpectedly depends on Text datasource');assert(String(o.components?.[0]||'').trim(),'Code128 primary datasource is empty');assert((o.components||[]).slice(1).every(v=>!String(v||'').trim()),'Code128 secondary datasource slots were not cleared');assert([333,666,1000].includes(o.xDimension),'Code128 X-dimension invalid: '+o.xDimension)}
   for(const b of barcodes)assert(visible.some(x=>x.kind==='barcode'&&x.resolvedPreview===b.text),'missing clean native barcode '+b.text);
   assert(out.layout?.parkedRootlessText?.length===2,'rootless donor placeholders were not parked');
   console.log('PASS: production Code128 uses independent native datasources with sourceBox-driven X-dimension and no linked Text dependency');

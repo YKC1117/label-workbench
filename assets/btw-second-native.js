@@ -93,7 +93,7 @@
     if(p.texts.length<MAX_TEXT)throw new Error(`5C128+1DM donor 文字物件不足：${p.texts.length}/${MAX_TEXT}`);
     if(p.texts.slice(0,MAX_TEXT).some(o=>o.anchorOffset==null||o.horizontalScaleOffset==null))throw new Error('5C128+1DM clean donor 有文字物件缺少 Anchor／水平比例欄位');
     if(p.c128.length<MAX_C128)throw new Error(`5C128+1DM donor Code 128 物件不足：${p.c128.length}/${MAX_C128}`);
-    if(p.c128.slice(0,MAX_C128).some(o=>o.xDimensionOffset==null||o.componentEntries?.length!==1||o.linkedDataSourceRefs?.length))throw new Error('5C128+1DM clean donor Code128 不是獨立 datasource／缺少 X-dimension');
+    if(p.c128.slice(0,MAX_C128).some(o=>o.xDimensionOffset==null||!o.componentEntries?.length||o.linkedDataSourceRefs?.length))throw new Error('5C128+1DM clean donor Code128 缺少獨立可寫 datasource／X-dimension');
     if(p.dm.length<MAX_DM)throw new Error(`5C128+1DM donor Data Matrix 物件不足：${p.dm.length}/${MAX_DM}`);
     if(p.dm.slice(0,MAX_DM).some(o=>o.xDimensionOffset==null||o.componentEntries?.length!==1))throw new Error('5C128+1DM clean donor Data Matrix 缺少獨立 datasource／X-dimension')
   }
