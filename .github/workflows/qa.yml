@@ -233,6 +233,7 @@ jobs:
           cp assets/btw-object-map.js artifacts/runtime-acceptance/assets/
           cp assets/btw-layout-map.js artifacts/runtime-acceptance/assets/
           cp assets/btw-controlled-donor.js artifacts/runtime-acceptance/assets/
+          cp assets/btw-second-donor.js artifacts/runtime-acceptance/assets/
           cp assets/btw-second-native.js artifacts/runtime-acceptance/assets/
           (
             cd artifacts/runtime-acceptance
@@ -247,6 +248,7 @@ jobs:
           test -s artifacts/runtime-acceptance/tools/verify-btw-runtime-fixture.cjs
           test -s artifacts/runtime-acceptance/tools/verify-btw-manual-edit.cjs
           test -s artifacts/runtime-acceptance/assets/btw-controlled-donor.js
+          test -s artifacts/runtime-acceptance/assets/btw-second-donor.js
           test -s artifacts/runtime-acceptance/SHA256SUMS.txt
       - name: Upload BarTender runtime acceptance artifact
         uses: actions/upload-artifact@v4
