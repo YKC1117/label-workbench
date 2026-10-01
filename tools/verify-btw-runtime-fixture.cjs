@@ -14,7 +14,7 @@ async function verifyFixture(filePath){
   const sizeText=`${F.formatMm(target.width)} x ${F.formatMm(target.height)} mm`;
   if(!String(parsed.header?.text||'').includes(`<TemplateSize>${sizeText}</TemplateSize>`))throw new Error(`TemplateSize mismatch: ${sizeText}`);
   const map=M.mapContainer(await F.inflateContainer(parsed)),objects=map.objects;
-  const expectedRoots=expected.fields.length+expected.barcodes.length,donorRoots=38,OFF=50000;
+  const expectedRoots=expected.fields.length+expected.barcodes.length,donorRoots=40,OFF=50000;
   if(objects.length!==donorRoots)throw new Error(`native donor root graph changed: ${objects.length}/${donorRoots}`);
   const parked=objects.filter(o=>Number(o.xMil)===OFF&&Number(o.yMil)===OFF);
   if(parked.length!==donorRoots-expectedRoots)throw new Error(`parked donor root count changed: ${parked.length}/${donorRoots-expectedRoots}`);
@@ -22,7 +22,7 @@ async function verifyFixture(filePath){
   const visibleText=visible.filter(o=>o.kind==='text');
   const dm=visible.filter(o=>o.kind==='barcode'&&o.barcodeType==='Data Matrix');
   const dmIndexes=new Set(dm.map(o=>o.index));
-  /* Four controlled Code128 roots lose the parser's cosmetic type label after
+  /* Four clean-donor Code128 roots lose the parser's cosmetic type label after
      sanitization, but retain their native writable barcode records and payloads.
      Runtime acceptance must validate the six independent native barcode objects,
      not require the reverse-engineered type label to survive. */
