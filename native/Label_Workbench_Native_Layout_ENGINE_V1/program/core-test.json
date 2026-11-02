@@ -1,0 +1,38 @@
+{
+  "exportDpi": 600,
+  "objects": [
+    {
+      "type": "text",
+      "slot": "文字 1",
+      "value": "LWB POC",
+      "xMm": 2.5,
+      "yMm": 2.5,
+      "fontSizePt": 8
+    },
+    {
+      "type": "code128",
+      "slot": "條碼 1",
+      "value": "LWB-C128-001",
+      "xMm": 2.5,
+      "yMm": 8,
+      "widthMm": 32,
+      "heightMm": 4.5
+    },
+    {
+      "type": "datamatrix",
+      "slot": "條碼 3",
+      "value": "LWB-DM-001",
+      "xMm": 116,
+      "yMm": 2,
+      "widthMm": 12,
+      "heightMm": 12
+    }
+  ],
+  "componentScanSeconds": 30,
+  "componentStrategy": "use bundled proven-code128.btc once; try to hide HumanReadable via SetXML; empirically size Code128/DataMatrix by XDimension raster response; no Width COM dependency; size before position; no mass scan",
+  "sizeToleranceMm": 0.85,
+  "provenCode128Sha256": "0B1E2481BCDE6E5CF1D084599F822DC3027AB19215530B7776296B40A59899F2",
+  "positionToleranceMm": 0.2,
+  "heightToleranceMm": 0.1,
+  "toleranceMeaning": "Diagnostic only: width +/-0.85 mm; height +/-0.10 mm; reopen actual-state repeatability +/-0.02 mm. Not user/product acceptance."
+}

@@ -1,0 +1,118 @@
+PASS: parsed 14 PowerShell scripts only.
+PASS: validated 4 JSON files.
+PASS: C# COM helpers compile.
+PASS: installed-api.json schema is valid; 861 members loaded.
+PASS: real BarTender 2022 TypeLib evidence exposes IBtFormat.InsertComponent(BSTR, R8, R8) -> BOOL.
+[2026-10-01 18:42:40] Scan component 1: false.btc
+[2026-10-01 18:42:40] Scan component 2: throw.btc
+[2026-10-01 18:42:40] Scan component 3: dirty.btc
+[2026-10-01 18:42:40] Scan component 4: wrong.btc
+[2026-10-01 18:42:40] Scan component 5: multi.btc
+[2026-10-01 18:42:40] Scan component 6: empty.btc
+[2026-10-01 18:42:40] Scan component 1: false.btc
+PASS: review regression: flat arrays, reflection collection transport, dirty sources, partial insertion rollback, isolated single-pass scan, BMP canvas/ink, ignored SetXML rejection. MOCK ONLY.
+[2026-10-01 18:42:40] check exact installed TypeLib contracts
+[2026-10-01 18:42:40] one-pass component discovery in an isolated empty document
+[2026-10-01 18:42:40] Scan component 1: clean.btc
+[2026-10-01 18:42:40] independent capability test: text
+[2026-10-01 18:42:40] independent capability test: code128
+[2026-10-01 18:42:40] record XDimension response and canvas/ink separately: code128
+[2026-10-01 18:42:41] independent capability test: datamatrix
+[2026-10-01 18:42:41] record XDimension response and canvas/ink separately: datamatrix
+[2026-10-01 18:42:41] save one diagnostic file, close, release, then reopen
+[2026-10-01 18:42:41] reopen verification: 文字 1
+[2026-10-01 18:42:41] reopen verification: 條碼 7
+[2026-10-01 18:42:41] reopen verification: 條碼 3
+[2026-10-01 18:42:41] reopened embedded-payload challenge: 條碼 7
+[2026-10-01 18:42:41] reopened embedded-payload challenge: 條碼 3
+[2026-10-01 18:42:41] check exact installed TypeLib contracts
+[2026-10-01 18:42:41] one-pass component discovery in an isolated empty document
+[2026-10-01 18:42:41] Scan component 1: clean.btc
+[2026-10-01 18:42:41] independent capability test: text
+[2026-10-01 18:42:41] independent capability test: code128
+[2026-10-01 18:42:41] record XDimension response and canvas/ink separately: code128
+[2026-10-01 18:42:41] independent capability test: datamatrix
+[2026-10-01 18:42:41] record XDimension response and canvas/ink separately: datamatrix
+[2026-10-01 18:42:41] save one diagnostic file, close, release, then reopen
+[2026-10-01 18:42:41] reopen verification: 文字 1
+[2026-10-01 18:42:41] reopen verification: 條碼 7
+[2026-10-01 18:42:41] reopen verification: 條碼 3
+[2026-10-01 18:42:41] reopened embedded-payload challenge: 條碼 3
+[2026-10-01 18:42:41] check exact installed TypeLib contracts
+[2026-10-01 18:42:41] one-pass component discovery in an isolated empty document
+[2026-10-01 18:42:41] Scan component 1: clean.btc
+[2026-10-01 18:42:41] independent capability test: text
+[2026-10-01 18:42:41] independent capability test: code128
+[2026-10-01 18:42:41] record XDimension response and canvas/ink separately: code128
+[2026-10-01 18:42:41] independent capability test: datamatrix
+[2026-10-01 18:42:41] record XDimension response and canvas/ink separately: datamatrix
+[2026-10-01 18:42:41] save one diagnostic file, close, release, then reopen
+[2026-10-01 18:42:41] reopen verification: 文字 1
+[2026-10-01 18:42:41] reopen verification: 條碼 7
+[2026-10-01 18:42:41] reopen verification: 條碼 3
+[2026-10-01 18:42:41] reopened embedded-payload challenge: 條碼 3
+[2026-10-01 18:42:41] check exact installed TypeLib contracts
+[2026-10-01 18:42:41] one-pass component discovery in an isolated empty document
+[2026-10-01 18:42:41] Scan component 1: clean.btc
+[2026-10-01 18:42:41] independent capability test: text
+[2026-10-01 18:42:41] independent capability test: code128
+[2026-10-01 18:42:41] record XDimension response and canvas/ink separately: code128
+[2026-10-01 18:42:41] independent capability test: datamatrix
+[2026-10-01 18:42:41] record XDimension response and canvas/ink separately: datamatrix
+[2026-10-01 18:42:41] save one diagnostic file, close, release, then reopen
+[2026-10-01 18:42:41] reopen verification: 文字 1
+[2026-10-01 18:42:41] reopen verification: 條碼 7
+[2026-10-01 18:42:41] reopen verification: 條碼 3
+[2026-10-01 18:42:41] reopened embedded-payload challenge: 條碼 3
+[2026-10-01 18:42:41] check exact installed TypeLib contracts
+[2026-10-01 18:42:41] one-pass component discovery in an isolated empty document
+[2026-10-01 18:42:41] Scan component 1: clean.btc
+[2026-10-01 18:42:41] independent capability test: text
+[2026-10-01 18:42:41] independent capability test: code128
+[2026-10-01 18:42:41] record XDimension response and canvas/ink separately: code128
+[2026-10-01 18:42:41] independent capability test: datamatrix
+[2026-10-01 18:42:41] record XDimension response and canvas/ink separately: datamatrix
+[2026-10-01 18:42:41] save one diagnostic file, close, release, then reopen
+[2026-10-01 18:42:41] reopen verification: 文字 1
+[2026-10-01 18:42:41] reopen verification: 條碼 7
+[2026-10-01 18:42:41] reopen verification: 條碼 3
+[2026-10-01 18:42:41] reopened embedded-payload challenge: 條碼 3
+[2026-10-01 18:42:41] check exact installed TypeLib contracts
+[2026-10-01 18:42:42] one-pass component discovery in an isolated empty document
+[2026-10-01 18:42:42] Scan component 1: clean.btc
+[2026-10-01 18:42:42] independent capability test: text
+[2026-10-01 18:42:42] independent capability test: code128
+[2026-10-01 18:42:42] record XDimension response and canvas/ink separately: code128
+[2026-10-01 18:42:42] independent capability test: datamatrix
+[2026-10-01 18:42:42] record XDimension response and canvas/ink separately: datamatrix
+[2026-10-01 18:42:42] save one diagnostic file, close, release, then reopen
+[2026-10-01 18:42:42] reopen verification: 文字 1
+[2026-10-01 18:42:42] reopen verification: 條碼 7
+[2026-10-01 18:42:42] reopen verification: 條碼 3
+[2026-10-01 18:42:42] reopened embedded-payload challenge: 條碼 3
+[2026-10-01 18:42:42] check exact installed TypeLib contracts
+[2026-10-01 18:42:42] one-pass component discovery in an isolated empty document
+[2026-10-01 18:42:42] Scan component 1: clean.btc
+[2026-10-01 18:42:42] independent capability test: text
+[2026-10-01 18:42:42] independent capability test: code128
+[2026-10-01 18:42:42] record XDimension response and canvas/ink separately: code128
+[2026-10-01 18:42:42] independent capability test: datamatrix
+[2026-10-01 18:42:42] record XDimension response and canvas/ink separately: datamatrix
+[2026-10-01 18:42:42] save one diagnostic file, close, release, then reopen
+[2026-10-01 18:42:42] reopen verification: 文字 1
+[2026-10-01 18:42:42] reopen verification: 條碼 7
+[2026-10-01 18:42:42] reopen verification: 條碼 3
+[2026-10-01 18:42:42] reopened embedded-payload challenge: 條碼 3
+[2026-10-01 18:42:42] check exact installed TypeLib contracts
+[2026-10-01 18:42:42] one-pass component discovery in an isolated empty document
+[2026-10-01 18:42:42] Scan component 1: dirty.btc
+[2026-10-01 18:42:42] independent capability test: text
+[2026-10-01 18:42:42] independent capability test: code128
+[2026-10-01 18:42:42] independent capability test: datamatrix
+[2026-10-01 18:42:42] record XDimension response and canvas/ink separately: datamatrix
+[2026-10-01 18:42:42] save one diagnostic file, close, release, then reopen
+[2026-10-01 18:42:42] reopen verification: 文字 1
+[2026-10-01 18:42:42] reopen verification: 條碼 3
+[2026-10-01 18:42:42] reopened embedded-payload challenge: 條碼 3
+PASS: full mock save/close/new-instance reopen; payload/root/source/geometry/XDimension/type corruption rejected; missing Code128 still tests DataMatrix. BarTender NOT RUN.
+SELF_CHECK PASS: preflight completed without opening BarTender.

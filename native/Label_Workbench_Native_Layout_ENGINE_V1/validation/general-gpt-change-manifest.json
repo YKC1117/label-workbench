@@ -1,0 +1,14 @@
+{
+  "baseline": "Label_Workbench_Native_Layout_ENGINE_V1_FINAL.zip",
+  "added": [
+    "GENERAL_GPT_FINAL_REVIEW.md",
+    "READ_ME_FIRST.txt",
+    "validation/general-gpt-cross-review.json"
+  ],
+  "removed": [],
+  "changed": [
+    "START_HERE.md",
+    "program/SELF_CHECK_NATIVE.ps1",
+    "program/Test-NativePersistence.ps1"
+  ]
+}

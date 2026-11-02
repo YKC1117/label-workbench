@@ -40,7 +40,7 @@ for(const f of['assets/analysis-confidence-guard.js','assets/btw-production-gate
 
 (async()=>{
   const P=c.LabelWorkbenchBtwProductionCore;
-  assert(P?.BUILD==='20260918-btw-production-core-140-itf14','unexpected production core build');
+  assert(P?.BUILD==='20261102-layout-rc2','unexpected production core build');
 
   const result={labels:[{sourceName:'第一個.pdf',fields:[
     {code:'1P',name:'PART NO',value:'W25NO1GWZEIR',barcodeVerified:true,alternatives:[],conflict:false},

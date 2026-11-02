@@ -1,0 +1,13 @@
+{
+  "schema": "lwb-native-layout-v1",
+  "widthMm": 140,
+  "heightMm": 38,
+  "objects": [
+    {"id":"TEXT_001","type":"text","value":"PART NO : W25N01GWZE","xMm":2.5,"yMm":2.5,"fontSizePt":8,"fontName":"Arial"},
+    {"id":"TEXT_002","type":"text","value":"LOT : 001234","xMm":2.5,"yMm":18,"fontSizePt":7,"fontName":"Arial"},
+    {"id":"C128_001","type":"code128","value":"W25N01GWZE","xMm":2.5,"yMm":8,"widthMm":32,"heightMm":4.5},
+    {"id":"C128_002","type":"code128","value":"0012345678","xMm":2.5,"yMm":23,"widthMm":40,"heightMm":4.5},
+    {"id":"DM_001","type":"datamatrix","value":"DM_PAYLOAD_A","xMm":116,"yMm":2,"sizeMm":12},
+    {"id":"DM_002","type":"datamatrix","value":"DM_PAYLOAD_B","xMm":116,"yMm":19,"sizeMm":10}
+  ]
+}

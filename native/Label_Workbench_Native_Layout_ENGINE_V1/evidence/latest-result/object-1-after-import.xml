@@ -1,0 +1,17 @@
+﻿<Text Name="文字 1" Width="1.850 in" ConditionalPrintType="Always" Position.X="0.179 in" Position.Y="0.237 in" ReferencePoint="BottomLeft">
+    <Tabs/>
+    <Font PointSize="6.000" FontName="Arial" Height="-120" Weight="700" CharacterSet="16909056">
+        <Underline/>
+        <Strikethrough/>
+        <Foreground Mode="Solid" Color="00000000">
+            <Color RGB="00000000"/>
+        </Foreground>
+    </Font>
+    <AutoFit MinAdjustment="0.00" MaxAdjustment="0.00"/>
+    <DataSources>
+        <EmbeddedDataSource ID="{6E1B676D-8F75-4730-9296-8F59D6DFC18A}" SubStringListStringID="4294967295" CharSet="136" CultureID="-3" InputCultureID="1028">
+            <Value>LWB POC</Value>
+        </EmbeddedDataSource>
+    </DataSources>
+</Text>
+

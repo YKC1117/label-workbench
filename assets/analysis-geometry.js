@@ -5,7 +5,7 @@
  */
 (function(){
   'use strict';
-  const BUILD='20260921-analysis-geometry-120-corrected-label-region';
+  const BUILD='20261102-layout-rc2';
   const PDF_SRC='https://cdn.jsdelivr.net/npm/pdfjs-dist@6.3.289/build/pdf.min.mjs';
   const TESS_SRC='https://cdn.jsdelivr.net/npm/tesseract.js@7.0.0/dist/tesseract.min.js';
   const TESS_WORKER='https://cdn.jsdelivr.net/npm/tesseract.js@7.0.0/dist/worker.min.js';
@@ -86,8 +86,8 @@
     for(const barcode of existing||[]){
       const text=String(barcode?.text??barcode?.value??''),key=norm(text);if(!key)continue;
       let hitIndex=-1;
-      for(let i=0;i<(scanned||[]).length;i++){if(used.has(i))continue;const s=scanned[i];if(norm(s?.text)!==key)continue;hitIndex=i;if(s.position)break}
-      if(hitIndex<0)continue;used.add(hitIndex);const hit=scanned[hitIndex],box=positionToBox(hit.position,width,height);if(box)out.push({barcode,sourceBox:box,scanned:hit})
+      for(let i=0;i<(scanned||[]).length;i++){if(used.has(i))continue;const s=scanned[i];if(norm(s?.text)!==key)continue;hitIndex=i;if(validSourceBox(s.sourceBox)||s.position)break}
+      if(hitIndex<0)continue;used.add(hitIndex);const hit=scanned[hitIndex],box=validSourceBox(hit.sourceBox)?hit.sourceBox:positionToBox(hit.position,width,height);if(box)out.push({barcode,sourceBox:box,scanned:hit})
     }
     return out
   }

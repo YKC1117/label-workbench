@@ -1,0 +1,177 @@
+{
+  "schema": "lwb-one-shot-v4-static-validation-v1",
+  "timestampUtc": "2026-10-02T04:04:04.915223+00:00",
+  "environment": "Linux container; no Windows PowerShell 5.1 or BarTender available",
+  "jsonFilesParsed": 20,
+  "xmlFilesParsed": 14,
+  "powershellDelimiterSanity": {
+    "Test-ReviewPersistence.ps1": {
+      "ok": true,
+      "counts": {
+        "{": 17,
+        "}": 17,
+        "(": 30,
+        ")": 30,
+        "[": 9,
+        "]": 9
+      }
+    },
+    "Run.ps1": {
+      "ok": true,
+      "counts": {
+        "{": 156,
+        "}": 156,
+        "(": 265,
+        ")": 265,
+        "[": 150,
+        "]": 150
+      }
+    },
+    "SELF_CHECK.ps1": {
+      "ok": true,
+      "counts": {
+        "{": 31,
+        "}": 31,
+        "(": 57,
+        ")": 57,
+        "[": 13,
+        "]": 13
+      }
+    },
+    "Test-Layout.ps1": {
+      "ok": true,
+      "counts": {
+        "{": 10,
+        "}": 10,
+        "(": 23,
+        ")": 23,
+        "[": 20,
+        "]": 20
+      }
+    },
+    "Launch-Core.ps1": {
+      "ok": true,
+      "counts": {
+        "{": 22,
+        "}": 22,
+        "(": 46,
+        ")": 46,
+        "[": 8,
+        "]": 8
+      }
+    },
+    "Test-ComTransport.ps1": {
+      "ok": true,
+      "counts": {
+        "{": 4,
+        "}": 4,
+        "(": 32,
+        ")": 32,
+        "[": 10,
+        "]": 10
+      }
+    },
+    "Watchdog.ps1": {
+      "ok": true,
+      "counts": {
+        "{": 12,
+        "}": 12,
+        "(": 28,
+        ")": 28,
+        "[": 18,
+        "]": 18
+      }
+    },
+    "Test-XmlCore.ps1": {
+      "ok": true,
+      "counts": {
+        "{": 19,
+        "}": 19,
+        "(": 107,
+        ")": 107,
+        "[": 17,
+        "]": 17
+      }
+    },
+    "Test-Core.ps1": {
+      "ok": true,
+      "counts": {
+        "{": 10,
+        "}": 10,
+        "(": 19,
+        ")": 19,
+        "[": 6,
+        "]": 6
+      }
+    },
+    "Com.psm1": {
+      "ok": true,
+      "counts": {
+        "{": 9,
+        "}": 9,
+        "(": 20,
+        ")": 20,
+        "[": 22,
+        "]": 22
+      }
+    },
+    "XmlCore.psm1": {
+      "ok": true,
+      "counts": {
+        "{": 422,
+        "}": 422,
+        "(": 728,
+        ")": 728,
+        "[": 368,
+        "]": 368
+      }
+    },
+    "Core.psm1": {
+      "ok": true,
+      "counts": {
+        "{": 90,
+        "}": 90,
+        "(": 148,
+        ")": 148,
+        "[": 83,
+        "]": 83
+      }
+    },
+    "Diagnostics.psm1": {
+      "ok": true,
+      "counts": {
+        "{": 21,
+        "}": 21,
+        "(": 18,
+        ")": 18,
+        "[": 14,
+        "]": 14
+      }
+    },
+    "Layout.psm1": {
+      "ok": true,
+      "counts": {
+        "{": 37,
+        "}": 37,
+        "(": 51,
+        ")": 51,
+        "[": 37,
+        "]": 37
+      }
+    }
+  },
+  "runtimeWidthDependencyRemoved": true,
+  "v4MarkersPresent": true,
+  "preservedV3EvidenceFiles": 28,
+  "addedEvidence": [
+    "evidence/latest-real-v3-return.zip",
+    "evidence/latest-real-v3-report.json"
+  ],
+  "notRun": [
+    "Windows PowerShell 5.1 parser/execution",
+    "C# compiler regression in this container",
+    "BarTender 2022 COM real execution",
+    "Code128 HumanReadable Visibility=None SetXML readback",
+    "Code128 bounded XDimension raster sizing and SaveAs/Reopen"
+  ]
+}

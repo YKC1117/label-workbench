@@ -1,0 +1,26 @@
+﻿<BarCode-Code-128 Name="條碼 1" Width="1.850 in" Height="0.150 in" Rotation.Center.Y="4" ConditionalPrintType="Always" Position.X="0.179 in" Position.Y="0.237 in" AutoSizeMinimumXDimension="-0.010" AutoSizeMaximumXDimension="-0.010" Color="00000000" ThermalOutput="UniGDI" EncodingCodePage="USASCII">
+    <DataSources><EmbeddedDataSource ID="{A7B9ABB4-C370-468E-A01E-BAD48C74D2A1}" SubStringListStringID="4294967295" CharSet="0" CultureID="-3" InputCultureID="1033">
+            <Value>LWB-C128-001</Value>
+        </EmbeddedDataSource></DataSources>
+    <XDimension Index="2" Mils="10.000" Millimeters="0.250" Density="9.090" />
+    <Color RGB="00000000" />
+    <HumanReadable Visibility="None">
+        <BarCodeTextData ReadingOrder="LTR" ParagraphWidthMinimumSizeToBarCodeMode="0.788 in">
+            <Tabs />
+            <Font PointSize="12.000" FontName="微軟正黑體" Height="-240" Weight="400" CharacterSet="16909056">
+                <Underline />
+                <Strikethrough />
+                <Foreground Mode="Solid" Color="00000000">
+                    <Color RGB="00000000" />
+                </Foreground>
+            </Font>
+            <AutoFit MinAdjustment="0.00" MaxAdjustment="0.00" />
+        </BarCodeTextData>
+        <Transforms>
+            <EmbeddedDataSource ID="{3B06B54D-3628-415F-9876-0ABC93700956}" SubStringListStringID="4294967295" CultureID="-3" InputCultureID="1028">
+                <Value>文字範例</Value>
+            </EmbeddedDataSource>
+        </Transforms>
+    </HumanReadable>
+</BarCode-Code-128>
+

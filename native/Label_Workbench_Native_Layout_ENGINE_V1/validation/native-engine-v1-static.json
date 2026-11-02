@@ -1,0 +1,78 @@
+{
+  "schema": "lwb-native-engine-v1-static-review",
+  "status": "STATIC_REVIEW_COMPLETE_WINDOWS_NATIVE_ENGINE_NOT_RUN",
+  "originalEvidenceFiles": 30,
+  "originalEvidenceChanged": [],
+  "newEvidenceFiles": [
+    "latest-v4-final-real-result.zip",
+    "latest-v4-final-report.json",
+    "latest-v4-final-RUN_SUMMARY.txt"
+  ],
+  "latestV4Status": "REVIEW_DIAGNOSTICS_COMPLETE_NOT_PRODUCT_ACCEPTANCE",
+  "latestV4CoreSaveReopen": "READBACK_CHECKS_COMPLETE",
+  "latestV4Facts": {
+    "text": {
+      "payload": "EFFECTIVE_AND_SOURCE_READBACK_OK",
+      "geometry": "TARGET_GEOMETRY_WITHIN_TOLERANCE",
+      "persistence": "SAVE_CLOSE_REOPEN_READBACK_OK_SYMBOL_BOUNDS_UNVERIFIED",
+      "size": "NOT_APPLICABLE",
+      "reopenEditable": null
+    },
+    "code128": {
+      "payload": "EFFECTIVE_AND_SOURCE_READBACK_OK",
+      "geometry": "TARGET_GEOMETRY_WITHIN_TOLERANCE",
+      "persistence": "SAVE_CLOSE_REOPEN_READBACK_OK_SYMBOL_BOUNDS_UNVERIFIED",
+      "size": "CODE128_DIAGNOSTICS_RECORDED_NOT_ACCEPTANCE",
+      "reopenEditable": "SECOND_PAYLOAD_AND_ACTIVE_OBJECT_ISOLATION_OK"
+    },
+    "datamatrix": {
+      "payload": "EFFECTIVE_AND_SOURCE_READBACK_OK",
+      "geometry": "TARGET_GEOMETRY_WITHIN_TOLERANCE",
+      "persistence": "SAVE_CLOSE_REOPEN_READBACK_OK_SYMBOL_BOUNDS_UNVERIFIED",
+      "size": "DATAMATRIX_EMPIRICAL_XDIMENSION_CAPABILITY_COMPLETE",
+      "reopenEditable": "SECOND_PAYLOAD_AND_ACTIVE_OBJECT_ISOLATION_OK"
+    }
+  },
+  "historicalStandardDataMatrixComponentPaths": [
+    "C:\\Program Files\\Seagull\\BarTender 2022\\Barcodes\\Common Bar Codes\\Data Matrix.btc"
+  ],
+  "typeLibApiChecks": {
+    "Formats.Add": true,
+    "DesignObjects.Create": true,
+    "Format.InsertComponent": true,
+    "Objects.ExportDataSourceValuesToXML": true,
+    "Objects.ImportDataSourceValuesFromXML": true,
+    "DesignObject.GetXML": true,
+    "DesignObject.SetXML": true,
+    "DesignObject.ExportToFile": true
+  },
+  "provenCode128Sha256": "0B1E2481BCDE6E5CF1D084599F822DC3027AB19215530B7776296B40A59899F2",
+  "jsonParsed": 26,
+  "jsonFailures": [],
+  "xmlParsed": 14,
+  "xmlFailures": [],
+  "staticChecks": {
+    "no_designobject_width_setter": true,
+    "formats_add_route_present": true,
+    "text_create_type5_route_present": true,
+    "code128_bundled_component_present": true,
+    "datamatrix_exact_component_present": true,
+    "nearest_printable_policy_present": true,
+    "save_reopen_verification_present": true
+  },
+  "notRun": [
+    "Windows PowerShell 5.1 parser for new NativeLayoutEngine files",
+    "SELF_CHECK_NATIVE.ps1",
+    "Test-NativeLayoutEngine.ps1",
+    "C# compile in target Windows environment",
+    "BarTender Formats.Add blank-document route",
+    "DesignObjects.Create(5) fresh Text route",
+    "standard Data Matrix.btc insertion on new blank document",
+    "multi-object native generation SaveAs/reopen"
+  ],
+  "notes": [
+    "Static review is not a BarTender PASS.",
+    "V4 FINAL real evidence is preserved separately and is not reclassified."
+  ],
+  "manifest": "validation/native-engine-v1-manifest.json (snapshot excludes the manifest file itself by construction)"
+}

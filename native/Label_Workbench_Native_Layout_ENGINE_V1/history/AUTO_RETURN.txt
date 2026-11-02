@@ -1,0 +1,5 @@
+After CORE_TEST.cmd finishes, upload this one file:
+
+program\RETURN_TO_CHATGPT.zip
+
+It is created automatically even when the BarTender core test is blocked. Explorer will select it for you.

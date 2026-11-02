@@ -1,0 +1,562 @@
+--- original/program/README.md
++++ final/program/README.md
+@@ -1,19 +1,9 @@
+-# 17c 深度複查診斷包
++# V4 Final Review
+ 
+-唯一入口：CORE_TEST.cmd。用途、限制、技術結論見上層 START_HERE.md 與 TECHNICAL_REVIEW.md。
++唯一實機入口：CORE_TEST.cmd → Launch-Core.ps1 → SELF_CHECK.ps1 → Run.ps1 -CoreTest → XmlCore.psm1。
++SELF_CHECK 做 runtime parser/JSON/C# helper/import 檢查，**不執行 developer regression**。
++Core.psm1、RUN_POC.cmd、SAVE_PROBE.cmd 是歷史入口，不屬本輪路徑。
+ 
+-此入口執行 Launch-Core.ps1 → SELF_CHECK.ps1 → Run.ps1 -CoreTest → XmlCore.psm1。
+-Core.psm1、RUN_POC.cmd、SAVE_PROBE.cmd 等保留作歷史來源，不是本次入口，不要改跑它們。
+-
+-SELF_CHECK 不啟動 BarTender；只做 parser/JSON/C# 編譯/TypeLib 證據及 mock regression。
+-Test-ReviewPersistence 模擬新 instance 重開，不能取代真實 BarTender SaveAs/Close/Open。
+-RasterEvidence.cs 只量畫布及黑色像素範圍，沒有 barcode decoder，不可當條碼本體尺寸驗收。
+-
+-程式將原本「第一關失敗就停止」改成獨立結果記錄。當 Code128 沒找到時，仍保留 Text/Data Matrix 的可用證據。
+-输出 diagnostic.btw 是診斷副本；不宣稱是完整轉檔成果。返回 RETURN_TO_CHATGPT.zip 即可。
+-## 本次最終交叉補強
+-
+-- clean Code128 component：HumanReadable=None 才是 IDEAL；visible/unknown 為 FALLBACK。FALLBACK 不阻止 payload/SaveAs/reopen，但 sizing 直接 `SKIPPED_CAPTION`。
+-- BMP：記錄 requested/header DPI；DPI mismatch 時 physical-mm/slope 不可信且禁止最佳 Index 選擇。
+-- 這兩項的 mock regression 已寫入 `Test-XmlCore.ps1`；是否真的 PASS 必須由有 PowerShell 的環境執行 SELF_CHECK。本封裝環境沒有 PowerShell/C# compiler，因此本輪對這些測試標記 NOT RUN。
+-
++本次環境無 PowerShell/C# compiler，所有 PowerShell regression 與 compile 均 NOT RUN。
++開發端具備 PowerShell 時可在各自新 process 執行 Test-XmlCore.ps1、Test-ReviewPersistence.ps1、Test-ComTransport.ps1、Test-Layout.ps1；這些是 mock，不是 BarTender。
++本輪不要求使用者分次執行這些測試；下一次實機單次收集項目見上層 TECHNICAL_REVIEW.md。
+--- original/program/ReviewFixtures.cs
++++ final/program/ReviewFixtures.cs
+@@ -8,7 +8,9 @@
+   public string Name {get;set;} public int Type {get;set;} public double X {get;set;} public double Y {get;set;}
+   public double Width {get;set;} public double Height {get;set;} public double FontSize {get;set;} public double RotationAngle {get;set;} public bool DoNotPrint {get;set;}
+   public bool IgnoreIndex, Dirty, EmptyTransforms, AlwaysDpiMismatch;
+-  public int MismatchDpiIndex=-1;
++  public int MismatchDpiIndex=-1, ThrowIndex=-1, CaptionIndex=-1, BadDpiExportCall=-1, ExportCalls;
++  public bool OmitHumanReadable, DuplicateHumanReadable, IgnoreHumanReadable, DirtyOnHide;
++
+   public string HumanReadableVisibility="None";
+   public string Payload="old", Root="BarCode-Code-128"; public int Index=2;
+   public string Value {get{return Payload;}}
+@@ -21,11 +23,23 @@
+    xd.SetAttribute("Mils",mils.ToString("0.000",System.Globalization.CultureInfo.InvariantCulture));
+    xd.SetAttribute("Millimeters",(mils*0.0254).ToString("0.000",System.Globalization.CultureInfo.InvariantCulture));
+    if(Dirty || EmptyTransforms){XmlElement t=x.CreateElement("Transforms");x.SelectSingleNode("//EmbeddedDataSource").AppendChild(t);if(Dirty)t.AppendChild(x.CreateElement("DataEntryTransform"));}
++   if(OmitHumanReadable)x.DocumentElement.RemoveChild(x.SelectSingleNode("//HumanReadable"));
++   else if(DuplicateHumanReadable)x.DocumentElement.AppendChild(x.SelectSingleNode("//HumanReadable").CloneNode(true));
+    return x.OuterXml;
+   }
+-  public void SetXML(string s){XmlDocument x=new XmlDocument();x.LoadXml(s);if(!IgnoreIndex)Index=Int32.Parse(((XmlElement)x.SelectSingleNode("//XDimension")).GetAttribute("Index"));XmlElement hr=(XmlElement)x.SelectSingleNode("//HumanReadable");if(hr!=null && hr.HasAttribute("Visibility"))HumanReadableVisibility=hr.GetAttribute("Visibility");}
++  public void SetXML(string s){
++   XmlDocument x=new XmlDocument();x.LoadXml(s);
++   int target=Int32.Parse(((XmlElement)x.SelectSingleNode("//XDimension")).GetAttribute("Index"));
++   if(!IgnoreIndex)Index=target;
++   XmlElement hr=(XmlElement)x.SelectSingleNode("//HumanReadable");
++   if(hr!=null && hr.HasAttribute("Visibility") && !IgnoreHumanReadable)HumanReadableVisibility=hr.GetAttribute("Visibility");
++   Dirty=x.SelectSingleNode("//DataSources//DataEntryTransform")!=null;
++   if(DirtyOnHide && hr!=null && hr.GetAttribute("Visibility")=="None")Dirty=true;
++   if(target==CaptionIndex)HumanReadableVisibility="Visible";
++   if(target==ThrowIndex)throw new InvalidOperationException("Injected failure after Index write");
++  }
+   public void ExportToFile(string path,string type,int color,int dpi,int save){
+-   double headerDpi=(AlwaysDpiMismatch || Index==MismatchDpiIndex)?300.0:dpi;
++   ExportCalls++;double headerDpi=(AlwaysDpiMismatch || Index==MismatchDpiIndex || ExportCalls==BadDpiExportCall)?300.0:dpi;
+    Bmp.WriteWithDpi(path,100*(Index+1),80,10,10,100*(Index+1)-20,60,false,headerDpi,headerDpi);
+   }
+  }
+@@ -45,11 +59,12 @@
+  public class Document {
+   public int MeasurementUnits {get;set;}
+   public Objects Objects {get;set;}
+-  public int Saves,Closes;public bool BadCleanup;public string Printer {get{return "Fixture printer";}}
++  public int Saves,Closes;public bool BadCleanup, FailInsert;public string Printer {get{return "Fixture printer";}}
+   public static Dictionary<string,Document> Saved=new Dictionary<string,Document>();
+   public Document Clone(){Document d=new Document();foreach(Obj o in Objects.Data){Obj n=new Obj();n.Name=o.Name;n.Type=o.Type;n.X=o.X;n.Y=o.Y;n.Width=o.Width;n.Height=o.Height;n.FontSize=o.FontSize;n.RotationAngle=o.RotationAngle;n.DoNotPrint=o.DoNotPrint;n.Root=o.Root;n.Index=o.Index;n.Payload=o.Payload;n.Dirty=o.Dirty;n.EmptyTransforms=o.EmptyTransforms;n.HumanReadableVisibility=o.HumanReadableVisibility;n.AlwaysDpiMismatch=o.AlwaysDpiMismatch;n.MismatchDpiIndex=o.MismatchDpiIndex;d.Objects.Data.Add(n);}return d;}
+   public Document(){Objects=new Objects();}
+   public bool InsertComponent(string path,double x,double y){
++   if(FailInsert)return false;
+    string f=Path.GetFileName(path);Obj o=new Obj();o.Name="條碼 7";o.Type=4;Objects.Data.Add(o);
+    if(f.Contains("dirty"))o.Dirty=true;
+    if(f.Contains("wrong"))o.Root="BarCode-Code39-FullAscii";
+@@ -65,7 +80,7 @@
+  }
+  public class Formats {
+   public Document Last;public bool BadCleanup;public int Adds;public string Corrupt;
+-  public Document Open(string path,bool close,string printer){Document d=Document.Saved[path].Clone();Obj o=d.Objects.Find("條碼 7");if(o!=null){if(Corrupt=="payload")o.Payload="CORRUPT";if(Corrupt=="root")o.Root="BarCode-Code39-FullAscii";if(Corrupt=="source")o.Dirty=true;if(Corrupt=="geometry")o.X+=1;if(Corrupt=="xdim")o.Index+=1;if(Corrupt=="type")o.Type=5;}return d;}
++  public Document Open(string path,bool close,string printer){Document d=Document.Saved[path].Clone();Obj o=d.Objects.Find("條碼 7");if(o!=null){if(Corrupt=="payload")o.Payload="CORRUPT";if(Corrupt=="root")o.Root="BarCode-Code39-FullAscii";if(Corrupt=="source")o.Dirty=true;if(Corrupt=="geometry")o.X+=1;if(Corrupt=="xdim")o.Index+=1;if(Corrupt=="type")o.Type=5;if(Corrupt=="caption")o.HumanReadableVisibility="Visible";if(Corrupt=="height")o.Height+=1;}return d;}
+   public Document Add(){Adds++;Last=new Document();Last.BadCleanup=BadCleanup;return Last;}
+  }
+  public static class Bmp {
+--- original/program/Run.ps1
++++ final/program/Run.ps1
+@@ -26,7 +26,7 @@
+ if ([string]::IsNullOrWhiteSpace($ResultRoot)) { $ResultRoot = Join-Path $BaseDirectory 'results' }
+ $runDir = Join-Path ([IO.Path]::GetFullPath($ResultRoot)) ((Get-Date -Format 'yyyyMMdd-HHmmss') + '-' + [guid]::NewGuid().ToString('N').Substring(0,8))
+ [void][IO.Directory]::CreateDirectory($runDir)
+-$report = [ordered]@{schema='lwb-bt-automation-report-v1';scriptRevision='one-shot-21-code128-layout-width' ;baseDirectory=$BaseDirectory;status='NOT_RUN';visualAcceptance='NOT_RUN';stage='preflight';utc=[DateTime]::UtcNow.ToString('o');os=[Environment]::OSVersion.VersionString;powerShell=$PSVersionTable.PSVersion.ToString();processBits=([IntPtr]::Size*8);template=$null;output=$null;unsupported=@();objects=@();error=$null}
++$report = [ordered]@{schema='lwb-bt-automation-report-v1';scriptRevision='one-shot-v4-final-review-20261005' ;baseDirectory=$BaseDirectory;status='NOT_RUN';visualAcceptance='NOT_RUN';stage='preflight';utc=[DateTime]::UtcNow.ToString('o');os=[Environment]::OSVersion.VersionString;powerShell=$PSVersionTable.PSVersion.ToString();processBits=([IntPtr]::Size*8);template=$null;output=$null;unsupported=@();objects=@();error=$null}
+ $app=$null; $format=$null; $opened=$null; $objects=$null; $page=$null; $exitCode=1
+ $watchdog=$null
+ $ownsBt=$false
+@@ -295,13 +295,15 @@
+                 $geometryText=if($t.geometry -is [System.Collections.IDictionary]){[string]$t.geometry.status}else{[string]$t.geometry};$summary+=('TEST '+[string]$t.type+' | object='+[string]$t.objectName+' | payload='+[string]$t.payload+' | geometry='+$geometryText+' | persistence='+[string]$t.persistence)
+                 if($t.size -is [System.Collections.IDictionary]){
+                     $line=('  SIZE='+[string]$t.size.status)
+-                    if($null -ne $t.size.directObjectSize){$line+=(' | direct='+[string]$t.size.directObjectSize.status)}
+-                    if($null -ne $t.size.finalDirectObjectSize){$line+=(' | finalDirect='+[string]$t.size.finalDirectObjectSize.status)}
+-                    if($null -ne $t.size.xdimensionProbe){$line+=(' | xdim='+[string]$t.size.xdimensionProbe.status)}
+-                    if($null -ne $t.size.xdimensionExperiment){$line+=(' | xdimExperiment='+[string]$t.size.xdimensionExperiment.status)}
+-                    if($null -ne $t.size.documentedHeight){$line+=(' | height='+[string]$t.size.documentedHeight.status)}
+-                    if($null -ne $t.size.xdimensionExperiment -and $null -ne $t.size.xdimensionExperiment.inkTargetErrorMm){$line+=(' | inkErrorMm='+[string]$t.size.xdimensionExperiment.inkTargetErrorMm)}
+-                    if($null -ne $t.size.finalRaster){$line+=(' | rasterTrust='+[string]$t.size.finalRaster.physicalMmTrust)}
++                    if($t.size.Contains('directObjectSize') -and $null -ne $t.size.directObjectSize){$line+=(' | direct='+[string]$t.size.directObjectSize.status)}
++                    if($t.size.Contains('finalDirectObjectSize') -and $null -ne $t.size.finalDirectObjectSize){$line+=(' | finalDirect='+[string]$t.size.finalDirectObjectSize.status)}
++                    if($t.size.Contains('xdimensionProbe') -and $null -ne $t.size.xdimensionProbe){$line+=(' | xdim='+[string]$t.size.xdimensionProbe.status)}
++                    if($t.size.Contains('xdimensionExperiment') -and $null -ne $t.size.xdimensionExperiment){$line+=(' | xdimExperiment='+[string]$t.size.xdimensionExperiment.status)}
++                    if($t.size.Contains('documentedHeight') -and $null -ne $t.size.documentedHeight){$line+=(' | height='+[string]$t.size.documentedHeight.status)}
++                    if($t.size.Contains('xdimensionExperiment') -and $null -ne $t.size.xdimensionExperiment -and $t.size.xdimensionExperiment.Contains('inkTargetErrorMm') -and $null -ne $t.size.xdimensionExperiment.inkTargetErrorMm){$line+=(' | inkErrorMm='+[string]$t.size.xdimensionExperiment.inkTargetErrorMm)}
++                    if($t.size.Contains('finalRaster') -and $null -ne $t.size.finalRaster){$line+=(' | rasterTrust='+[string]$t.size.finalRaster.physicalMmTrust)}
++                    if($t.size.Contains('layoutWidthStatus')){$line+=(' | width='+[string]$t.size.layoutWidthStatus)}
++                    if($t.size.Contains('finalHeight')){$line+=(' | finalHeight='+[string]$t.size.finalHeight.status)}
+                     $summary+=$line
+                 }
+                 elseif($null -ne $t.size){$summary+=('  SIZE='+[string]$t.size)}
+--- original/program/Test-ReviewPersistence.ps1
++++ final/program/Test-ReviewPersistence.ps1
+@@ -1,35 +1,36 @@
+-$ErrorActionPreference='Stop'
+-Set-StrictMode -Version 2
+-Import-Module (Join-Path $PSScriptRoot 'XmlCore.psm1') -Force
+-if(-not('LwbReviewFixture.Obj' -as [type])){Add-Type -Path (Join-Path $PSScriptRoot 'ReviewFixtures.cs')}
+-$m=Get-Module XmlCore
+-& $m {
+- param($base)
+- $script:FixtureApi=Get-Content -LiteralPath (Join-Path (Split-Path $base -Parent) 'evidence/installed-api.json') -Raw | ConvertFrom-Json
+- function Get-RegisteredBarTenderLibraryMembers {param($runDir) return $script:FixtureApi}
+- function Get-BarTenderComponentCandidates {param($kind,$runDir) return ([pscustomobject]@{path=$script:Candidate;score=300;length=1})}
+- foreach($corrupt in @('none','payload','root','source','geometry','xdim','type','no-component')){
+-  $dir=Join-Path ([IO.Path]::GetTempPath()) ('lwb-persist-'+[guid]::NewGuid().ToString('N'))
+-  [void][IO.Directory]::CreateDirectory($dir)
+-  try{
+-   $script:Candidate=Join-Path $dir 'clean.btc';if($corrupt -eq 'no-component'){$script:Candidate=Join-Path $dir 'dirty.btc'}
+-   Set-Content -LiteralPath $script:Candidate -Value 'fixture'
+-   $source=Join-Path $dir 'source.btw';Set-Content -LiteralPath $source -Value 'fixture not BTW'
+-   $doc=New-Object LwbReviewFixture.Document
+-   $t=New-Object LwbReviewFixture.Obj;$t.Name='文字 1';$t.Type=5;$t.Root='Text';$doc.Objects.Data.Add($t)
+-   $dm=New-Object LwbReviewFixture.Obj;$dm.Name='條碼 3';$dm.Type=4;$dm.Root='BarCode-DataMatrix';$doc.Objects.Data.Add($dm)
+-   $formats=New-Object LwbReviewFixture.Formats;$formats.Corrupt=$corrupt
+-   $report=[ordered]@{status='NOT_RUN';stage='';output=$null}
+-   Invoke-CoreTest $doc $formats $report $dir $base $source (Get-FileHash -LiteralPath $source).Hash
+-   if($report.core.tests.Count -ne 3){throw 'Must retain three independent test records.'}
+-   $ct=$report.core.tests[1]
+-   if($corrupt -eq 'none'){
+-    if($report.core.saveReopen -ne 'READBACK_CHECKS_COMPLETE' -or $ct.reopenEditable -ne 'SECOND_PAYLOAD_AND_ACTIVE_OBJECT_ISOLATION_OK'){throw 'Healthy mock persistence/editability failed.'}
+-   }elseif($corrupt -eq 'no-component'){
+-    if($report.core.tests[2].persistence -notlike 'SAVE_CLOSE_REOPEN*'){throw 'Missing Code128 must not suppress independent DataMatrix persistence test.'}
+-   }elseif($ct.persistence -ne 'FAILED' -or $report.core.saveReopen -ne 'ONE_OR_MORE_CHECKS_FAILED'){throw ('Corrupt reopen accepted: '+$corrupt)}
+-   if($report.core.fullLayoutAccepted -or $report.core.symbolBounds -ne 'NOT_VERIFIED' -or $null -ne $report.output){throw 'Diagnostic must never claim complete product or symbol bounds.'}
+-  }finally{Remove-Item -LiteralPath $dir -Recurse -Force}
+- }
+- 'PASS: full mock save/close/new-instance reopen; payload/root/source/geometry/XDimension/type corruption rejected; missing Code128 still tests DataMatrix. BarTender NOT RUN.'
+-} $PSScriptRoot
++$ErrorActionPreference='Stop'
++Set-StrictMode -Version 2
++Import-Module (Join-Path $PSScriptRoot 'XmlCore.psm1') -Force
++if(-not('LwbReviewFixture.Obj' -as [type])){Add-Type -Path (Join-Path $PSScriptRoot 'ReviewFixtures.cs')}
++$m=Get-Module XmlCore
++& $m {
++ param($base)
++ $script:FixtureApi=Get-Content -LiteralPath (Join-Path (Split-Path $base -Parent) 'evidence/installed-api.json') -Raw | ConvertFrom-Json
++ function Get-RegisteredBarTenderLibraryMembers {param($runDir) return ([ordered]@{members=@($script:FixtureApi.members);path='fixture';source='MOCK'})}
++ function Get-BarTenderComponentCandidates {param($kind,$runDir) return ([pscustomobject]@{path=$script:Candidate;score=300;length=1})}
++ foreach($corrupt in @('none','payload','root','source','geometry','xdim','type','caption','height','no-component')){
++  $dir=Join-Path ([IO.Path]::GetTempPath()) ('lwb-persist-'+[guid]::NewGuid().ToString('N'))
++  [void][IO.Directory]::CreateDirectory($dir)
++  try{
++   $script:Candidate=Join-Path $dir 'clean.btc';if($corrupt -eq 'no-component'){$script:Candidate=Join-Path $dir 'dirty.btc'}
++   Set-Content -LiteralPath $script:Candidate -Value 'fixture'
++   $source=Join-Path $dir 'source.btw';Set-Content -LiteralPath $source -Value 'fixture not BTW'
++   $doc=New-Object LwbReviewFixture.Document
++   if($corrupt -eq 'no-component'){$doc.FailInsert=$true}
++   $t=New-Object LwbReviewFixture.Obj;$t.Name='文字 1';$t.Type=5;$t.Root='Text';$doc.Objects.Data.Add($t)
++   $dm=New-Object LwbReviewFixture.Obj;$dm.Name='條碼 3';$dm.Type=4;$dm.Root='BarCode-DataMatrix';$doc.Objects.Data.Add($dm)
++   $formats=New-Object LwbReviewFixture.Formats;$formats.Corrupt=$corrupt
++   $report=[ordered]@{status='NOT_RUN';stage='';output=$null}
++   Invoke-CoreTest $doc $formats $report $dir $base $source (Get-FileHash -LiteralPath $source).Hash
++   if($report.core.tests.Count -ne 3){throw 'Must retain three independent test records.'}
++   $ct=$report.core.tests[1]
++   if($corrupt -eq 'none'){
++    if($report.core.saveReopen -ne 'READBACK_CHECKS_COMPLETE' -or $ct.reopenEditable -ne 'SECOND_PAYLOAD_AND_ACTIVE_OBJECT_ISOLATION_OK'){throw 'Healthy mock persistence/editability failed.'}
++   }elseif($corrupt -eq 'no-component'){
++    if($report.core.tests[2].persistence -notlike 'SAVE_CLOSE_REOPEN*'){throw 'Missing Code128 must not suppress independent DataMatrix persistence test.'}
++   }elseif($ct.persistence -ne 'FAILED' -or $report.core.saveReopen -ne 'ONE_OR_MORE_CHECKS_FAILED'){throw ('Corrupt reopen accepted: '+$corrupt)}
++   if($report.core.fullLayoutAccepted -or $report.core.symbolBounds -ne 'NOT_VERIFIED' -or -not(Test-Path -LiteralPath $report.output)){throw 'Diagnostic must never claim complete product or symbol bounds.'}
++  }finally{Remove-Item -LiteralPath $dir -Recurse -Force}
++ }
++ 'PASS: full mock save/close/new-instance reopen; payload/root/source/geometry/XDimension/type corruption rejected; missing Code128 still tests DataMatrix. BarTender NOT RUN.'
++} $PSScriptRoot
+--- original/program/Test-XmlCore.ps1
++++ final/program/Test-XmlCore.ps1
+@@ -78,7 +78,7 @@
+  Check ($r.status -eq 'INDEX_AND_RASTER_RESPONDED_SYMBOL_SIZE_UNVERIFIED' -and $r.finalRaster.symbolBounds -eq 'NOT_VERIFIED_NO_DECODER') 'Responding raster is still not symbol acceptance'
+  $obj.HumanReadableVisibility='Visible';$obj.Index=2
+  $rVisible=Measure-XDimensionExperiment $obj $request (Join-Path $dir 'visible-code128-layout') 600
+- Check ($rVisible.execution -ceq 'RUN' -and $rVisible.measurementBasis -ceq 'RASTER_TOTAL_INK_WIDTH_WITH_HUMAN_READABLE_PRESENT_LAYOUT_ONLY') 'Visible Code128 still yields explicitly layout-only raster sizing evidence'
++ Check ($rVisible.execution -ceq 'NOT_RUN' -and $rVisible.status -ceq 'SKIPPED_CAPTION' -and $null -eq $rVisible.inkTargetErrorMm -and $obj.Index -eq 2) 'Visible Code128 never participates in width selection'
+  $obj.HumanReadableVisibility='None'
+  # Valid but mismatched BMP DPI invalidates physical-mm evidence before any Index selection.
+  $obj.Index=2;$obj.AlwaysDpiMismatch=$true;$obj.MismatchDpiIndex=-1
+@@ -91,7 +91,31 @@
+  $rMid=Measure-XDimensionExperiment $obj $request (Join-Path $dir 'dpi-mid-probe') 600
+  Check ($rMid.status -ceq 'RASTER_DPI_UNTRUSTED_DURING_PROBE' -and $rMid.slopeTrust -ceq 'UNTRUSTED_DPI_MISMATCH' -and $rMid.bestSelection -ceq 'SUPPRESSED_DPI_INCONSISTENT' -and $rMid.finalX.index -eq 2 -and $rMid.samples.Count -ge 3 -and $rMid.samples[2].raster.physicalMmTrust -ceq 'UNTRUSTED' -and $null -eq $rMid.inkTargetErrorMm) 'Mid-probe DPI inconsistency suppresses best-Index selection and mm error'
+  $obj.MismatchDpiIndex=-1
++ # Final-review fault injection. These tests execute real module functions through the fixture bridge.
++ foreach($mode in @('missing','duplicate','empty','ignored','dirty')){
++  $h=New-Object LwbReviewFixture.Obj;$h.Name='h';$h.Payload=$request.value;$h.HumanReadableVisibility='Visible'
++  if($mode -eq 'missing'){$h.OmitHumanReadable=$true}
++  if($mode -eq 'duplicate'){$h.DuplicateHumanReadable=$true}
++  if($mode -eq 'empty'){$h.HumanReadableVisibility=''}
++  if($mode -eq 'ignored'){$h.IgnoreHumanReadable=$true}
++  if($mode -eq 'dirty'){$h.DirtyOnHide=$true}
++  $hr=Try-HideCode128HumanReadable $h $request (Join-Path $dir ('human-'+$mode))
++  if($mode -in @('missing','duplicate')){Check ($hr.finalVisibility -ceq 'UNKNOWN' -and $hr.restored) 'Unknown is never hidden'}
++  elseif($mode -eq 'empty'){Check ($hr.status -ceq 'HIDDEN_BY_SETXML') 'Empty requires a successful write/readback'}
++  else{Check ($hr.status -ceq 'NOT_APPLIED_RESTORED' -and $hr.restored -and -not $h.Dirty) 'Rejected/corrupt hide restores complete baseline'}
++ }
++ foreach($mode in @('exception','caption','final-dpi')){
++  $o=New-Object LwbReviewFixture.Obj;$o.Name='failure';$o.Payload=$request.value
++  if($mode -eq 'exception'){$o.ThrowIndex=1}
++  if($mode -eq 'caption'){$o.CaptionIndex=3}
++  if($mode -eq 'final-dpi'){$o.BadDpiExportCall=6}
++  $failure=Measure-XDimensionExperiment $o $request (Join-Path $dir ('failure-'+$mode)) 600
++  Check ($o.Index -eq 2 -and $o.HumanReadableVisibility -ceq 'None' -and $failure.restored -and $null -eq $failure.inkTargetErrorMm) 'Fault must restore baseline and suppress width acceptance'
++ }
++ $noOp=New-Object LwbReviewFixture.Obj;$noOp.Name='no-op';$noOp.Payload=$request.value;$noOp.IgnoreIndex=$true
++ $nr=Measure-XDimensionExperiment $noOp $request (Join-Path $dir 'no-op-final') 600
++ Check ($null -eq $nr.inkTargetErrorMm -and $nr.restored) 'No-op cannot accidentally accept baseline width'
+  Save-CoreJson $r (Join-Path $dir 'measurement.json')
+- 'PASS: review regression: flat arrays, reflection collection transport, dirty sources, direct Code128 HumanReadable hide, visible-caption layout-only sizing, BMP canvas/ink, DPI trust/mismatch/mid-probe rejection, ignored SetXML rejection. MOCK ONLY.'
++ 'PASS: review regression: flat arrays, reflection collection transport, dirty sources, direct Code128 HumanReadable hide, visible-caption sizing rejection, BMP canvas/ink, DPI trust/mismatch/mid-probe rejection, ignored SetXML rejection. MOCK ONLY.'
+ } $dir $PSScriptRoot
+ } finally {Remove-Item -LiteralPath $dir -Recurse -Force}
+--- original/program/XmlCore.psm1
++++ final/program/XmlCore.psm1
+@@ -400,7 +400,7 @@
+     $index=[int]$n.GetAttribute('Index')
+     $mils=Parse-InvariantDouble $n.GetAttribute('Mils') 'Mils'
+     $mm=Parse-InvariantDouble $n.GetAttribute('Millimeters') 'Millimeters'
+-    if ($index -lt 0 -or $mils -le 0 -or $mm -le 0 -or [double]::IsInfinity($mils) -or [double]::IsNaN($mils) -or [math]::Abs($mm-$mils*0.0254) -gt 0.011) {throw 'Inconsistent XDimension units.'}
++    if ($index -lt 0 -or [double]::IsNaN($mm) -or [double]::IsInfinity($mm) -or $mils -le 0 -or $mm -le 0 -or [double]::IsInfinity($mils) -or [double]::IsNaN($mils) -or [math]::Abs($mm-$mils*0.0254) -gt 0.011) {throw 'Inconsistent XDimension units.'}
+     return [ordered]@{index=$index;mils=$mils;millimeters=$mm;indexMeaning='UNVERIFIED_ENUM_INDEX_NOT_DOTS'}
+ }
+ function Export-ObjectMeasurement($obj,[string]$path,[int]$dpi) {
+@@ -438,21 +438,24 @@
+     return $e
+ }
+ function Measure-XDimensionExperiment($obj,$request,[string]$prefix,[int]$dpi) {
+-    $result=[ordered]@{status='NOT_RUN';execution='NOT_RUN';targetWidthMm=$request.widthMm;targetHeightMm=$request.heightMm;indexSemantics='UNVERIFIED';symbolSize='NOT_VERIFIED';humanReadableVisibility='UNKNOWN';measurementBasis='NOT_RUN';physicalMmTrust='NOT_RUN';slopeTrust='NOT_RUN';bestSelection='NOT_RUN';samples=@();finalX=$null;finalRaster=$null;error=$null}
++    $result=[ordered]@{status='NOT_RUN';execution='NOT_RUN';targetWidthMm=$request.widthMm;targetHeightMm=$request.heightMm;indexSemantics='UNVERIFIED';symbolSize='NOT_VERIFIED';humanReadableVisibility='UNKNOWN';measurementBasis='NOT_RUN';physicalMmTrust='NOT_RUN';slopeTrust='NOT_RUN';bestSelection='NOT_RUN';samples=@();finalX=$null;finalRaster=$null;inkTargetErrorMm=$null;restored=$false;error=$null}
+     $original=[string](Invoke-ComMethod $obj 'GetXML' @($true,$true))
+     $xml=Read-SafeObjectXml $original
++    Assert-BarcodePayloadState $obj $xml $request
++    $original | Set-Content -LiteralPath ($prefix+'-baseline.xml') -Encoding UTF8
+     $initial=Get-XDimensionInfo $xml
+     $visibility=Get-HumanReadableVisibility $xml
+     $result.humanReadableVisibility=$visibility
+-    if ($visibility -cne 'None' -and $request.type -cne 'code128') {
+-        $result.status='SKIPPED_CAPTION';$result.execution='NOT_RUN';$result.finalX=$initial;return $result
+-    }
+-    $result.measurementBasis=if($visibility -ceq 'None'){'RASTER_INK_WIDTH_NO_HUMAN_READABLE'}else{'RASTER_TOTAL_INK_WIDTH_WITH_HUMAN_READABLE_PRESENT_LAYOUT_ONLY'}
+-    $m=Export-ObjectMeasurement $obj ($prefix+'-baseline.bmp') $dpi
++    if ($visibility -cne 'None') {
++        $result.status='SKIPPED_CAPTION';$result.execution='NOT_RUN';$result.bestSelection='SUPPRESSED_CAPTION';$result.finalX=$initial;$result.restored=$true;return $result
++    }
++    $result.measurementBasis='RASTER_INK_WIDTH_NO_HUMAN_READABLE'
++    try{$m=Export-ObjectMeasurement $obj ($prefix+'-baseline.bmp') $dpi}
++    catch{$result.status='BASELINE_RASTER_UNAVAILABLE';$result.error=$_.Exception.Message;$result.finalX=$initial;$result.restored=$true;return $result}
+     $result.physicalMmTrust=$m.physicalMmTrust
+     $result.samples+=,[ordered]@{requestedIndex=$initial.index;readback=$initial;raster=$m;write='NONE'}
+     if($m.physicalMmTrust -cne 'TRUSTED'){
+-        $result.status='RASTER_DPI_UNTRUSTED';$result.execution='NOT_RUN';$result.slopeTrust='UNTRUSTED_DPI_MISMATCH';$result.bestSelection='SUPPRESSED_DPI_MISMATCH';$result.finalX=$initial;$result.finalRaster=$m;return $result
++        $result.status='RASTER_DPI_UNTRUSTED';$result.execution='NOT_RUN';$result.slopeTrust='UNTRUSTED_DPI_MISMATCH';$result.bestSelection='SUPPRESSED_DPI_MISMATCH';$result.finalX=$initial;$result.finalRaster=$m;$result.restored=$true;return $result
+     }
+     $result.execution='RUN'
+     $best=[ordered]@{x=$initial;raster=$m;error=(Get-InkError $m $request);xml=$original}
+@@ -477,6 +480,8 @@
+             [void](Get-LiteralBarcodeState $read $root)
+             Assert-SingleEmbeddedDataSource $read ([string]$request.value) ([string]$request.slot)
+             if ([string](Read-Property $obj 'Value') -cne $request.value) {throw 'Payload changed during XDimension experiment.'}
++            if((Get-HumanReadableVisibility $read) -cne 'None'){throw 'Caption appeared during XDimension experiment.'}
++            if((Get-XmlStateKey ($read.SelectSingleNode('/*/*[local-name()="DataSources"]'))) -cne (Get-XmlStateKey ($xml.SelectSingleNode('/*/*[local-name()="DataSources"]')))){throw 'DataSources changed during XDimension experiment.'}
+             $x=Get-XDimensionInfo $read
+             $r=Export-ObjectMeasurement $obj ($prefix+'-index-'+$index+'.bmp') $dpi
+             $result.samples+=,[ordered]@{requestedIndex=$index;readback=$x;raster=$r;write='INDEX_ONLY_EXPERIMENT'}
+@@ -501,20 +506,65 @@
+         }
+     } catch {$result.status='EXPERIMENT_ERROR';$result.error=$_.Exception.Message}
+     finally {
+-        # Restore one observed trusted state, not reconstructed dot attributes; verify restoration.
++        # Only a completely successful bounded experiment may retain the best sample.
++        if($result.status -cne 'INDEX_AND_RASTER_RESPONDED_SYMBOL_SIZE_UNVERIFIED'){
++            $best=[ordered]@{x=$initial;raster=$m;error=(Get-InkError $m $request);xml=$original}
++            if($result.bestSelection -notlike 'SUPPRESSED*'){$result.bestSelection='SUPPRESSED_EXPERIMENT_FAILED'}
++        }
++        try {
+         [void](Invoke-ComMethod $obj 'SetXML' @([string]$best.xml))
+         $finalText=[string](Invoke-ComMethod $obj 'GetXML' @($true,$true))
+         $finalText | Set-Content -LiteralPath ($prefix+'-final.xml') -Encoding UTF8
+-        $final=Get-XDimensionInfo (Read-SafeObjectXml $finalText)
++        $finalXml=Read-SafeObjectXml $finalText
++        Assert-BarcodePayloadState $obj $finalXml $request
++        if((Get-XmlStateKey $finalXml) -cne (Get-XmlStateKey (Read-SafeObjectXml ([string]$best.xml)))){throw 'Selected XML state did not restore completely.'}
++        $final=Get-XDimensionInfo $finalXml
+         if($final.index -ne $best.x.index -or [math]::Abs($final.mils-$best.x.mils) -gt 0.02){throw 'XDimension state restoration failed.'}
+         if([string](Read-Property $obj 'Value') -cne $request.value){throw 'Payload restoration failed.'}
+         $result.finalX=$final;$result.finalRaster=Export-ObjectMeasurement $obj ($prefix+'-final.bmp') $dpi
+-        if($result.finalRaster.physicalMmTrust -cne 'TRUSTED'){$result.physicalMmTrust='UNTRUSTED_FINAL';$result.slopeTrust='UNTRUSTED_DPI_MISMATCH'}
+-    }
+-    if($result.status -like 'RASTER_DPI_UNTRUSTED*'){$result['inkTargetErrorMm']=$null}
++        Assert-TrustedPhysicalMeasurement $result.finalRaster
++        foreach($k in @('inkWidthPx','inkHeightPx')){if([math]::Abs($result.finalRaster[$k]-$best.raster[$k]) -gt 1){throw 'Selected raster not repeatable.'}}
++        $result.restored=$true
++        } catch {
++            $result.status='FINAL_VERIFICATION_FAILED';$result.error=$_.Exception.Message
++            $result.bestSelection='SUPPRESSED_FINAL_VERIFICATION';$result.finalRaster=$null
++            Restore-BarcodeSnapshot $obj $original $request $prefix
++            $result.finalX=$initial;$result.restored=$true
++        }
++    }
++    if($result.status -cne 'INDEX_AND_RASTER_RESPONDED_SYMBOL_SIZE_UNVERIFIED'){$result['inkTargetErrorMm']=$null}
+     elseif($null -ne $result.finalRaster -and $result.finalRaster.physicalMmTrust -ceq 'TRUSTED'){$result['inkTargetErrorMm']=Get-InkError $result.finalRaster $request}
+     else{$result['inkTargetErrorMm']=$null}
+     return $result
++}
++function Get-XmlStateKey($node) {
++    if ($node -is [System.Xml.XmlDocument]) { return Get-XmlStateKey $node.DocumentElement }
++    if ($node -is [System.Xml.XmlElement]) {
++        $parts=@('E', $node.NamespaceURI, $node.LocalName)
++        foreach($a in @($node.Attributes | Sort-Object NamespaceURI,LocalName)) {
++            $parts+=@('A',$a.NamespaceURI,$a.LocalName,$a.Value)
++        }
++        foreach($child in @($node.ChildNodes)) {
++            if($child -is [System.Xml.XmlWhitespace]){continue}
++            $parts+=,(Get-XmlStateKey $child)
++        }
++        return (($parts | ForEach-Object { [string]$_.Length+':'+$_ }) -join '')
++    }
++    return ([string]$node.NodeType+':'+[string]$node.Value)
++}
++function Assert-BarcodePayloadState($obj,$xml,$request) {
++    $root=if($request.type -eq 'code128'){'BarCode-Code-128'}else{'BarCode-DataMatrix'}
++    [void](Get-LiteralBarcodeState $xml $root)
++    Assert-SingleEmbeddedDataSource $xml ([string]$request.value) ([string]$request.slot)
++    if([string](Read-Property $obj 'Value') -cne [string]$request.value){throw 'Effective payload mismatch.'}
++}
++function Restore-BarcodeSnapshot($obj,[string]$original,$request,[string]$prefix) {
++    [void](Invoke-ComMethod $obj 'SetXML' @($original))
++    $text=[string](Invoke-ComMethod $obj 'GetXML' @($true,$true))
++    $text | Set-Content -LiteralPath ($prefix+'-rollback-readback.xml') -Encoding UTF8
++    $back=Read-SafeObjectXml $text
++    Assert-BarcodePayloadState $obj $back $request
++    if((Get-XmlStateKey $back) -cne (Get-XmlStateKey (Read-SafeObjectXml $original))){throw 'Full XML rollback readback differs from baseline.'}
+ }
+ function Try-HideCode128HumanReadable($obj,$request,[string]$prefix) {
+     $r=[ordered]@{status='NOT_RUN';beforeVisibility='UNKNOWN';finalVisibility='UNKNOWN';restored=$false;error=$null}
+@@ -522,10 +572,13 @@
+     $xml=Read-SafeObjectXml $original
+     [void](Get-LiteralBarcodeState $xml 'BarCode-Code-128')
+     Assert-SingleEmbeddedDataSource $xml ([string]$request.value) ([string]$request.slot)
++    Assert-BarcodePayloadState $obj $xml $request
++    $original | Set-Content -LiteralPath ($prefix+'-baseline.xml') -Encoding UTF8
+     $r.beforeVisibility=Get-HumanReadableVisibility $xml
+     if($r.beforeVisibility -ceq 'None'){$r.status='ALREADY_HIDDEN';$r.finalVisibility='None';$r.restored=$true;return $r}
+-    $node=$xml.SelectSingleNode('/*/*[local-name()="HumanReadable"]')
+-    if($null -eq $node){$r.status='NO_HUMAN_READABLE_NODE';$r.finalVisibility='None';$r.restored=$true;return $r}
++    $nodes=@($xml.SelectNodes('/*/*[local-name()="HumanReadable"]'))
++    if($nodes.Count -ne 1){$r.status='MISSING_OR_AMBIGUOUS_HUMAN_READABLE';$r.finalVisibility='UNKNOWN';$r.restored=$true;return $r}
++    $node=$nodes[0]
+     try{
+         $node.SetAttribute('Visibility','None')
+         $xml.OuterXml | Set-Content -LiteralPath ($prefix+'-hide-request.xml') -Encoding UTF8
+@@ -535,13 +588,14 @@
+         [void](Get-LiteralBarcodeState $read 'BarCode-Code-128')
+         Assert-SingleEmbeddedDataSource $read ([string]$request.value) ([string]$request.slot)
+         if([string](Read-Property $obj 'Value') -cne [string]$request.value){throw 'Payload changed while hiding HumanReadable.'}
++        if((Get-XmlStateKey ($read.SelectSingleNode('/*/*[local-name()="DataSources"]'))) -cne (Get-XmlStateKey ($xml.SelectSingleNode('/*/*[local-name()="DataSources"]')))){throw 'DataSources changed while hiding HumanReadable.'}
+         $r.finalVisibility=Get-HumanReadableVisibility $read
+         if($r.finalVisibility -ceq 'None'){$r.status='HIDDEN_BY_SETXML';$r.restored=$true;return $r}
+         throw 'HumanReadable Visibility=None was not accepted on readback.'
+     }catch{
+         $r.error=$_.Exception.Message
+         try{
+-            [void](Invoke-ComMethod $obj 'SetXML' @($original))
++            Restore-BarcodeSnapshot $obj $original $request $prefix
+             $back=Read-SafeObjectXml ([string](Invoke-ComMethod $obj 'GetXML' @($true,$true)))
+             $r.finalVisibility=Get-HumanReadableVisibility $back
+             if([string](Read-Property $obj 'Value') -cne [string]$request.value){throw 'Payload changed during HumanReadable rollback.'}
+@@ -551,7 +605,7 @@
+     }
+ }
+ function Test-Code128Height($obj,$request,[double]$toleranceMm) {
+-    $r=[ordered]@{status='NOT_RUN';property='Height';requestedMm=[double]$request.heightMm;beforeMm=$null;readbackMm=$null;errorMm=$null;withinTolerance=$false;error=$null}
++    $r=[ordered]@{status='NOT_RUN';property='Height';toleranceMm=$toleranceMm;requestedMm=[double]$request.heightMm;beforeMm=$null;readbackMm=$null;errorMm=$null;withinTolerance=$false;error=$null}
+     try{
+         $r.beforeMm=[double](Read-Property $obj 'Height')
+         Write-Property $obj 'Height' ([double]$request.heightMm)
+@@ -589,7 +643,7 @@
+ function Probe-XDimensionResponse($obj,$request,[string]$prefix,[int]$dpi,[bool]$rasterAvailable) {
+     # Capability probe only. Never infer printer dots, never calculate a best Index,
+     # and always restore the exact original XML before returning.
+-    $r=[ordered]@{status='NOT_RUN';execution='NOT_RUN';indexSemantics='UNVERIFIED_ENUM_INDEX_NOT_DOTS';baseline=$null;probe=$null;restored=$false;error=$null}
++    $r=[ordered]@{status='NOT_RUN';execution='NOT_RUN';indexSemantics='UNVERIFIED_ENUM_INDEX_NOT_DOTS';baseline=$null;probe=$null;inkTargetErrorMm=$null;restored=$false;error=$null}
+     $original=[string](Invoke-ComMethod $obj 'GetXML' @($true,$true))
+     $xml=Read-SafeObjectXml $original
+     $root=if($request.type -eq 'code128'){'BarCode-Code-128'}else{'BarCode-DataMatrix'}
+@@ -597,6 +651,8 @@
+     $initial=Get-XDimensionInfo $xml
+     $base=[ordered]@{xDimension=$initial;raster=$null}
+     if($rasterAvailable){try{$base.raster=Export-ObjectMeasurement $obj ($prefix+'-baseline.bmp') $dpi}catch{$base['rasterError']=$_.Exception.Message}}
++    Assert-BarcodePayloadState $obj $xml $request
++    $original | Set-Content -LiteralPath ($prefix+'-baseline.xml') -Encoding UTF8
+     $r.baseline=$base
+     $targetIndex=$initial.index+1
+     if($targetIndex -gt 255){$targetIndex=$initial.index-1}
+@@ -607,7 +663,8 @@
+         $write.OuterXml | Set-Content -LiteralPath ($prefix+'-request.xml') -Encoding UTF8
+         [void](Invoke-ComMethod $obj 'SetXML' @($write.OuterXml))
+         $readText=[string](Invoke-ComMethod $obj 'GetXML' @($true,$true));$readText | Set-Content -LiteralPath ($prefix+'-readback.xml') -Encoding UTF8
+-        $read=Read-SafeObjectXml $readText;[void](Get-LiteralBarcodeState $read $root);Assert-SingleEmbeddedDataSource $read ([string]$request.value) ([string]$request.slot)
++        $read=Read-SafeObjectXml $readText;Assert-BarcodePayloadState $obj $read $request
++        if((Get-XmlStateKey ($read.SelectSingleNode('/*/*[local-name()="DataSources"]'))) -cne (Get-XmlStateKey ($xml.SelectSingleNode('/*/*[local-name()="DataSources"]')))){throw 'DataSources changed during readback-only probe.'}
+         $x=Get-XDimensionInfo $read
+         $probe=[ordered]@{requestedIndex=$targetIndex;readback=$x;raster=$null}
+         if($rasterAvailable){try{$probe.raster=Export-ObjectMeasurement $obj ($prefix+'-probe.bmp') $dpi}catch{$probe['rasterError']=$_.Exception.Message}}
+@@ -618,7 +675,7 @@
+     }catch{$r.status='EXPERIMENT_ERROR';$r.error=$_.Exception.Message}
+     finally{
+         try{
+-            [void](Invoke-ComMethod $obj 'SetXML' @($original))
++            Restore-BarcodeSnapshot $obj $original $request $prefix
+             $finalText=[string](Invoke-ComMethod $obj 'GetXML' @($true,$true));$final=Read-SafeObjectXml $finalText;$fx=Get-XDimensionInfo $final
+             if($fx.index -ne $initial.index -or [math]::Abs($fx.mils-$initial.mils) -gt 0.02){throw 'Exact XDimension baseline restoration failed.'}
+             if([string](Read-Property $obj 'Value') -cne [string]$request.value){throw 'Payload changed during XDimension capability probe.'}
+@@ -718,15 +775,21 @@
+                 if($request.type -eq 'code128'){
+                     Set-CoreStage $report $runDir 'Code128 hide HumanReadable if supported, then bounded empirical XDimension layout sizing'
+                     $human=Try-HideCode128HumanReadable $obj $request ($prefix+'-human-readable')
+-                    $height=Test-Code128Height $obj $request ([double]$config.sizeToleranceMm)
++                    if(-not $human.restored){throw ('HumanReadable rollback failed; isolate Code128: '+$human.error)}
++                    $height=Test-Code128Height $obj $request ([double]$config.heightToleranceMm)
+                     if($null -ne $height.readbackMm){$expected['Height']=[double]$height.readbackMm}
+                     if($rasterAvailable){
+                         $xdim=Measure-XDimensionExperiment $obj $request ($prefix+'-xdim-fit') $dpi
++                        if($xdim.status -eq 'SKIPPED_CAPTION'){
++                            $human['xdimensionReadbackOnly']=Probe-XDimensionResponse $obj $request ($prefix+'-xdim-caption-readback') $dpi $false
++                            if(-not $human.xdimensionReadbackOnly.restored){throw 'Caption fallback XDimension rollback failed.'}
++                        }
+                     }else{
+                         $xdim=Probe-XDimensionResponse $obj $request ($prefix+'-xdim') $dpi $false
+                     }
+                     # Reapply documented 1D barcode Height after any SetXML XDimension experiment.
+-                    $heightFinal=Test-Code128Height $obj $request ([double]$config.sizeToleranceMm)
++                    if($xdim.Contains('restored') -and -not $xdim.restored -and $xdim.status -eq 'RESTORE_FAILED'){throw 'XDimension rollback failed; isolate Code128.'}
++                    $heightFinal=Test-Code128Height $obj $request ([double]$config.heightToleranceMm)
+                     if($null -ne $heightFinal.readbackMm){$expected['Height']=[double]$heightFinal.readbackMm}
+                     $finalXml=Read-SafeObjectXml ([string](Invoke-ComMethod $obj 'GetXML' @($true,$true)))
+                     $finalX=Get-XDimensionInfo $finalXml
+@@ -734,10 +797,10 @@
+                     $finalRaster=$null
+                     if($rasterAvailable){try{$finalRaster=Export-ObjectMeasurement $obj ($prefix+'-final-size.bmp') $dpi}catch{$test.errors+=('Final raster: '+$_.Exception.Message)}}
+                     $widthStatus='NOT_RUN'
+-                    if($rasterAvailable -and $null -ne $xdim.inkTargetErrorMm){$widthStatus=if([double]$xdim.inkTargetErrorMm -le [double]$config.sizeToleranceMm){'LAYOUT_INK_WIDTH_WITHIN_TOLERANCE'}else{'NEAREST_TRUSTED_LAYOUT_INK_WIDTH_OUTSIDE_TOLERANCE'}}
++                    if($rasterAvailable -and $finalVisibility -ceq 'None' -and $null -ne $finalRaster -and $finalRaster.physicalMmTrust -ceq 'TRUSTED' -and $null -ne $xdim.inkTargetErrorMm){$widthStatus=if((Get-InkError $finalRaster $request) -le [double]$config.sizeToleranceMm){'LAYOUT_INK_WIDTH_WITHIN_TOLERANCE'}else{'NEAREST_TRUSTED_LAYOUT_INK_WIDTH_OUTSIDE_TOLERANCE'}}
+                     elseif($rasterAvailable){$widthStatus='LAYOUT_WIDTH_NOT_ESTABLISHED'}
+                     else{$widthStatus='RASTER_UNAVAILABLE'}
+-                    $size=[ordered]@{status='CODE128_HEIGHT_AND_EMPIRICAL_XDIMENSION_LAYOUT_COMPLETE';documentedHeight=$height;humanReadableControl=$human;xdimensionExperiment=$xdim;finalHeight=$heightFinal;finalXDimension=$finalX;finalHumanReadableVisibility=$finalVisibility;finalRaster=$finalRaster;targetMm=[ordered]@{width=[double]$request.widthMm;height=[double]$request.heightMm};layoutWidthStatus=$widthStatus;widthMeaning='RASTER_INK_LAYOUT_WIDTH_APPROX_ONLY_NOT_DECODER_SYMBOL_BOUND';symbolBounds='NOT_VERIFIED_NO_DECODER';physicalPrint='NOT_RUN'}
++                    $size=[ordered]@{status='CODE128_DIAGNOSTICS_RECORDED_NOT_ACCEPTANCE';documentedHeight=$height;humanReadableControl=$human;xdimensionExperiment=$xdim;finalHeight=$heightFinal;finalXDimension=$finalX;finalHumanReadableVisibility=$finalVisibility;finalRaster=$finalRaster;targetMm=[ordered]@{width=[double]$request.widthMm;height=[double]$request.heightMm};layoutWidthStatus=$widthStatus;widthMeaning='RASTER_INK_LAYOUT_WIDTH_APPROX_ONLY_NOT_DECODER_SYMBOL_BOUND';symbolBounds='NOT_VERIFIED_NO_DECODER';physicalPrint='NOT_RUN'}
+                     $test.size=$size
+                 }elseif($request.type -eq 'datamatrix'){
+                     if($rasterAvailable){
+@@ -762,6 +825,23 @@
+                     $e=$geometry.properties[$key]
+                     if($null -ne $e.readback){$expected[$key]=[double]$e.readback}
+                 }
++                if($request.type -eq 'code128'){
++                    $snapshot=[string](Invoke-ComMethod $obj 'GetXML' @($true,$true))
++                    $snapshot | Set-Content -LiteralPath ($prefix+'-presave.xml') -Encoding UTF8
++                    $sx=Read-SafeObjectXml $snapshot;Assert-BarcodePayloadState $obj $sx $request
++                    $size.finalXDimension=Get-XDimensionInfo $sx
++                    $size['presaveXDimensionXmlKey']=Get-XmlStateKey ($sx.SelectSingleNode('/*/*[local-name()="XDimension"]'))
++                    $size['presaveDataSourcesXmlKey']=Get-XmlStateKey ($sx.SelectSingleNode('/*/*[local-name()="DataSources"]'))
++                    $size.finalHumanReadableVisibility=Get-HumanReadableVisibility $sx
++                    $size.finalRaster=$null
++                    if($rasterAvailable){try{$size.finalRaster=Export-ObjectMeasurement $obj ($prefix+'-presave.bmp') $dpi}catch{$test.errors+=('Presave raster: '+$_.Exception.Message)}}
++                    $size.layoutWidthStatus='LAYOUT_WIDTH_NOT_ESTABLISHED'
++                    $size['finalInkTargetErrorMm']=$null
++                    if($size.finalHumanReadableVisibility -ceq 'None' -and $null -ne $size.finalRaster -and $size.finalRaster.physicalMmTrust -ceq 'TRUSTED' -and $null -ne $xdim.inkTargetErrorMm -and $xdim.status -ceq 'INDEX_AND_RASTER_RESPONDED_SYMBOL_SIZE_UNVERIFIED'){
++                        $size.finalInkTargetErrorMm=Get-InkError $size.finalRaster $request
++                        $size.layoutWidthStatus=if($size.finalInkTargetErrorMm -le [double]$config.sizeToleranceMm){'LAYOUT_INK_WIDTH_WITHIN_TOLERANCE'}else{'NEAREST_TRUSTED_LAYOUT_INK_WIDTH_OUTSIDE_TOLERANCE'}
++                    }
++                }
+                 $checks+=,[ordered]@{request=$request;test=$test;name=$name;root=$root;type=$expectedType;expected=$expected;size=$size;prefix=$prefix}
+             }catch{$test.errors+=$_.Exception.Message}
+             finally{Release-XmlCom $obj;Save-CoreJson $report.core $checkpoint}
+@@ -783,6 +863,7 @@
+         $savedHash=(Get-FileHash -LiteralPath $candidate).Hash
+         $document=Invoke-ComMethod $formats 'Open' @($candidate,$false,'')
+         Write-Property $document 'MeasurementUnits' 3
++        if([int](Read-Property $document 'MeasurementUnits') -ne 3){throw 'Reopen units are not millimeters.'}
+         $objects=Read-Property $document 'Objects'
+         Assert-NameSetEqual $savedNames @(Get-ObjectNames $objects)
+         $reopenFailed=$false
+@@ -807,6 +888,10 @@
+                     $x=Get-XDimensionInfo $xml;$baseline=$check.size.finalXDimension
+                     if($x.index -ne $baseline.index -or [math]::Abs($x.mils-$baseline.mils) -gt 0.02 -or [math]::Abs($x.millimeters-$baseline.millimeters) -gt 0.011){throw 'Reopen final XDimension mismatch.'}
+                 }
++                if($check.request.type -eq 'code128' -and $null -ne $check.size){
++                    if((Get-XmlStateKey ($xml.SelectSingleNode('/*/*[local-name()="XDimension"]'))) -cne $check.size.presaveXDimensionXmlKey){throw 'Reopen XDimension XML changed.'}
++                    if((Get-XmlStateKey ($xml.SelectSingleNode('/*/*[local-name()="DataSources"]'))) -cne $check.size.presaveDataSourcesXmlKey){throw 'Reopen DataSources XML changed.'}
++                }
+                 if($check.request.type -eq 'code128' -and $null -ne $check.size -and $null -ne $check.size.humanReadableControl -and $check.size.humanReadableControl.status -in @('HIDDEN_BY_SETXML','ALREADY_HIDDEN')){
+                     if((Get-HumanReadableVisibility $xml) -cne 'None'){throw 'Reopen HumanReadable visibility mismatch.'}
+                 }
+@@ -826,18 +911,22 @@
+         }
+         # Reopen editability + isolation challenge. Do not save these temporary challenge values.
+         foreach($check in @($checks | Where-Object {$_.root -and $_.test.persistence -ne 'FAILED'})){
+-            $obj=Find-ExactObject $objects $check.name
++            $obj=$null
+             try{
++                $obj=Find-ExactObject $objects $check.name
+                 Set-CoreStage $report $runDir ('reopened embedded-payload challenge: '+$check.name)
+                 Set-LiteralPayload $objects $obj '009LWB-REOPEN' $check.root ($check.prefix+'-reopen-challenge')
+                 foreach($other in @($checks | Where-Object {$_.name -cne $check.name})){
+                     $peer=Find-ExactObject $objects $other.name
+                     try{if([string](Read-Property $peer 'Value') -cne $other.request.value){throw 'Reopen challenge changed another active object.'}}finally{Release-XmlCom $peer}
+                 }
+-                Set-LiteralPayload $objects $obj ([string]$check.request.value) $check.root ($check.prefix+'-reopen-restore')
+                 $check.test['reopenEditable']='SECOND_PAYLOAD_AND_ACTIVE_OBJECT_ISOLATION_OK'
+-            }catch{$reopenFailed=$true;$check.test['reopenEditable']='FAILED';$check.test.errors+=$_.Exception.Message;break}
+-            finally{Release-XmlCom $obj;Save-CoreJson $report.core $checkpoint}
++            }catch{$reopenFailed=$true;$check.test['reopenEditable']='FAILED';$check.test.errors+=$_.Exception.Message}
++            finally{
++                try{if($null -ne $obj){Set-LiteralPayload $objects $obj ([string]$check.request.value) $check.root ($check.prefix+'-reopen-finally-restore')}}
++                catch{$reopenFailed=$true;$check.test['reopenEditable']='FAILED';$check.test.errors+=('Challenge rollback: '+$_.Exception.Message)}
++                Release-XmlCom $obj;Save-CoreJson $report.core $checkpoint
++            }
+         }
+         Release-XmlCom $objects;$objects=$null
+         [void](Invoke-ComMethod $document 'Close' @(1));Release-XmlCom $document;$document=$null
+--- original/program/core-test.json
++++ final/program/core-test.json
+@@ -32,5 +32,7 @@
+   "componentStrategy": "use bundled proven-code128.btc once; try to hide HumanReadable via SetXML; empirically size Code128/DataMatrix by XDimension raster response; no Width COM dependency; size before position; no mass scan",
+   "sizeToleranceMm": 0.85,
+   "provenCode128Sha256": "0B1E2481BCDE6E5CF1D084599F822DC3027AB19215530B7776296B40A59899F2",
+-  "positionToleranceMm": 0.2
++  "positionToleranceMm": 0.2,
++  "heightToleranceMm": 0.1,
++  "toleranceMeaning": "Diagnostic only: width +/-0.85 mm; height +/-0.10 mm; reopen actual-state repeatability +/-0.02 mm. Not user/product acceptance."
+ }

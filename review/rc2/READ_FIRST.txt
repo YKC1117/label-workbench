@@ -1,0 +1,8 @@
+Label Workbench RC2 ｜ 工程審查版，現在不用做實機測試。
+先看 RC2_GATE_REVIEW.md 與 REGRESSION.txt。repo/ 是完整網站，native/ 是完整 Windows 工具。
+
+日後集中驗證一次（Windows PowerShell 5.1、Node.js 18+、BarTender 2022、Chrome 或 Edge）
+1. 在 repo/ 啟動本機靜態網站，例如有 Python 時執行 py -m http.server 8080 --bind 127.0.0.1，開啟 http://127.0.0.1:8080。準備不同客戶的 JPG、PNG、PDF，包含不同長寬比、裁切留白、旋轉、文字與混合碼制，並備妥每張標籤的實際寬高。
+2. 各案在快速分析核對辨識結果，按正式的「下載可編輯 .BTW」，必要時確認紙張尺寸。然後點「匯出 RC2 驗證資料」下載該次成品的 .review.json。將網站 BTW 和 JSON 存到同一案例資料夾。非 controlled donor 路徑應記未涵蓋。
+3. 關閉 Designer，啟動 native 內 program/REVIEW_SOURCE_LAYOUT.cmd，逐案選該次 JSON。每案完成立刻將 program/NATIVE_BUILD_RESULT.zip 複製至該案資料夾，避免下一案覆蓋固定別名。確認 runtime、native-visual-evidence、render-comparison 版本為 20261102-layout-rc2；用 Get-FileHash 比較下載 BTW 與 JSON sha256、evidence 前後 SHA。若未成功，保留輸出及錯誤，該案無法驗收。
+4. 逐案核對原稿與整頁 BMP，檢視 placementX/Y、原始 dx/dy/dw/dh 及各項 policy。檢查漏件、旋轉、字體、條碼 caption、相對位置及尺寸。用 Designer 開啟網站下載的原檔，修改文字與條碼後另存再開並掃讀。一次彙整三案 PASS / FAIL / NOT RUN 與證據。程式的包絡量測通過仍須完成這一步。

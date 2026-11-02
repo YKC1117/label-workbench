@@ -1,0 +1,68 @@
+請做 Label Workbench Native Layout Engine V1 的「施工後深度複查」，先不要叫使用者測。
+
+附件：Label_Workbench_Native_Layout_ENGINE_V1.zip
+
+目的：
+把 V4 FINAL 已實機證明的 Text / Code128 / DataMatrix Automation 能力，轉成「normalized layout JSON -> 新空白 BarTender BTW」通用生成核心。
+
+不要：
+- GitHub / commit / push / PR / deploy
+- OCR / 網站 UI
+- BTW binary reverse engineering
+- 重做 V4 FINAL 已 PASS 的既有 BTW POC
+- 叫使用者跑多輪小測試
+
+先完整讀：
+START_HERE.md
+TECHNICAL_REVIEW.md
+PRODUCTIZATION_REVIEW.md
+ANALYZER_CONTRACT.md
+program/NativeLayoutEngine.psm1
+program/Build-NativeLayout.ps1
+program/SELF_CHECK_NATIVE.ps1
+program/Test-NativeLayoutEngine.ps1
+program/native-layout.multi.sample.json
+evidence/latest-v4-final-real-result.zip
+validation/native-engine-v1-static.json
+
+新架構重點：
+1. Formats.Add() 建立空白 BarTender 文件，不再依賴 prepared customer BTW。
+2. Text 使用 DesignObjects.Create(5)，但 runtime 必須 readback Type=5、root=Text、single EmbeddedDataSource 才接受。
+3. Code128 使用已真機證實的 bundled proven-code128.btc。
+4. DataMatrix 僅解析標準 Common Bar Codes\Data Matrix.btc，InsertComponent 後驗證 root=BarCode-DataMatrix、single Embedded、無 transforms。
+5. built-in Code128 HumanReadable 固定 None；圖片上的條碼文字由獨立 Text 物件表示。
+6. barcode 寬度採 nearest trusted XDimension raster size；不使用 DesignObject.Width、不假設 Index+1=printer dots。
+7. SaveAs -> Close/release -> Reopen 後驗 payload、geometry、font/height、XDimension、HumanReadable、raster repeatability。
+
+請特別深查：
+- Windows PowerShell 5.1 parser 與語意。
+- OrderedDictionary / PSCustomObject / scalar-array 自動展開。
+- [ref]$objects collection refresh 在 Create/Insert 後是否可靠。
+- 是否有 pipeline output 污染 function return。
+- Formats.Add() 的 COM object lifecycle、Close/Quit。
+- DesignObjects.Create(5) 的 enum numeric 依據與 safe runtime verification 是否足夠；若有更可靠且不猜 API的方法可修。
+- Repeated InsertComponent 同一 Code128 component 2 次、DataMatrix 2 次時，name-delta / stale RCW / object count 是否可靠。
+- standard Data Matrix.btc path discovery 是否過度假設；只能用 existing real evidence / installed API / exact file discovery，不要 mass scan 798 個元件。
+- PageSetup / printer 綁定：barcode XDimension quantization 與 generation printer 的關係是否在 report/contract 足夠清楚。
+- geometry tolerance、SaveAs/reopen check 是否會誤判。
+- 任何 failure 是否 fail closed，不產出看似成功 BTW。
+
+離線可以執行就跑：
+- PowerShell parser
+- Test-NativeLayoutEngine.ps1
+- C# compile
+- JSON/XML validation
+- ZIP integrity
+- mock regression（不要冒充 BarTender）
+
+若找到 bug，直接集中修完，只產生 ONE 個最終 ZIP。
+不要先叫使用者測目前 V1。
+
+最後回報：
+A. 原 V1 是否值得實機測
+B. 找到/修正哪些實際問題
+C. 修改檔案
+D. 離線驗證結果
+E. 下一次若值得測，一次測試要收哪些證據（使用者只做一次）
+F. 仍 NOT RUN
+G. 唯一最終 ZIP

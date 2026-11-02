@@ -1,0 +1,68 @@
+{
+  "handoff": "one-shot-v2-direct-proven-component",
+  "date": "2026-10-02",
+  "basis": {
+    "latestRealReturnZipSha256": "a40085c2b970b6259e446cdf3d76ff54c4a7c6e3e5684f9f5e6a6828afb77bf9",
+    "provenCode128BtcSha256": "0b1e2481bcde6e5cf1d084599f822dc3027ab19215530b7776296b40a59899f2",
+    "originalTemplateSha256": "4cf9fdad67cb27aa79aa57ff2bff5912463608d8f509067112eb940bdee49612",
+    "realFinding": {
+      "component": "Code 128.btc",
+      "nativeRoot": "BarCode-Code-128",
+      "dataSources": 1,
+      "sourceKind": "EmbeddedDataSource",
+      "sourceTransforms": 0,
+      "challengePayloadRoundtrip": true,
+      "targetPayloadRoundtrip": true,
+      "massScanAttemptsInPriorRun": 541,
+      "subsequentFailedInsertAttempts": 540,
+      "failureAfterMassScan": "RPC server unavailable 0x800706BA"
+    }
+  },
+  "changes": {
+    "massComponentComScanRemoved": true,
+    "bundledPriorRealComponentReverifiedOnce": true,
+    "objectsCollectionRefreshedAfterInsertion": true,
+    "directWidthHeightCapabilityAdded": true,
+    "sizeToleranceMm": 0.85,
+    "xDimensionStrategy": "one adjacent Index write/readback/restore only; no dot-count or slope/best-index inference",
+    "persistence": "SaveAs -> Close -> Reopen -> payload/source/geometry/final-XDimension/raster-state readback; re-edit challenge"
+  },
+  "offlineChecks": {
+    "jsonParsed": {
+      "status": "PASS",
+      "count": 18
+    },
+    "xmlParsed": {
+      "status": "PASS",
+      "count": 14
+    },
+    "powershellStructuralDelimiterCheck": {
+      "status": "PASS",
+      "count": 14,
+      "note": "not a PowerShell parser"
+    },
+    "csharpStructuralDelimiterCheck": {
+      "status": "PASS",
+      "count": 4,
+      "note": "not a C# compiler"
+    },
+    "originalEvidenceByteForByteUnchanged": {
+      "status": "PASS",
+      "fileCount": 26
+    },
+    "provenComponentMatchesUserReturnedComponent": {
+      "status": "PASS",
+      "sha256": "0b1e2481bcde6e5cf1d084599f822dc3027ab19215530b7776296b40a59899f2"
+    }
+  },
+  "notRunHere": [
+    "Windows PowerShell 5.1 parser after V2 edits",
+    "C# compiler after V2 edits",
+    "BarTender 2022 COM V2",
+    "Code128 Width 32 mm real readback",
+    "Data Matrix Width/Height 12x12 mm real readback",
+    "XDimension adjacent-index real readback",
+    "SaveAs/Close/Reopen V2",
+    "visual/print/scanner acceptance"
+  ]
+}

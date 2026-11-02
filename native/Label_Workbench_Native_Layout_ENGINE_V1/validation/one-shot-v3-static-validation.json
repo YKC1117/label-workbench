@@ -1,0 +1,24 @@
+{
+  "schema": "lwb-one-shot-v3-static-validation-v1",
+  "environment": "Debian container; no Windows PowerShell or BarTender available",
+  "jsonParsed": 18,
+  "xmlParsed": 14,
+  "powershellFilesDelimiterChecked": 14,
+  "csharpFilesDelimiterChecked": 4,
+  "originalEvidenceEntriesHashUnchanged": 17,
+  "addedEvidence": "latest-one-shot-v2-real-result.zip",
+  "checks": {
+    "fatalGeometryGateRemoved": true,
+    "sizeBeforePosition": true,
+    "measurementUnitsReadback": true,
+    "code128HeightOnlyRuntime": true,
+    "dataMatrixEmpiricalXDimensionRuntime": true
+  },
+  "notRun": [
+    "Windows PowerShell 5.1 parser after V3 edits",
+    "PowerShell regression after V3 edits",
+    "C# compiler after V3 edits",
+    "BarTender 2022 COM V3"
+  ],
+  "issues": []
+}

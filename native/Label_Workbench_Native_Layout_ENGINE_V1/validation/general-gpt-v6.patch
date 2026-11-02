@@ -1,0 +1,432 @@
+--- /mnt/data/lw_v5_codex_final/Label_Workbench_Native_Layout_ENGINE_V1/program/Build-NativeLayout.ps1	2026-10-06 16:12:42.000000000 +0000
++++ program/Build-NativeLayout.ps1	2026-10-06 08:27:24.285839195 +0000
+@@ -1,89 +1,147 @@
+-﻿[CmdletBinding()]
+-param([string]$LayoutPath='',[string]$BaseDirectory='',[string]$ResultRoot='',[switch]$OpenResults)
+-Set-StrictMode -Version 2
+-$ErrorActionPreference='Stop'
+-if([string]::IsNullOrWhiteSpace($BaseDirectory)){$BaseDirectory=[IO.Path]::GetDirectoryName($MyInvocation.MyCommand.Path)}
+-$BaseDirectory=[IO.Path]::GetFullPath($BaseDirectory)
+-if([string]::IsNullOrWhiteSpace($ResultRoot)){$ResultRoot=Join-Path $BaseDirectory 'native-results'}
+-$runDir=Join-Path ([IO.Path]::GetFullPath($ResultRoot)) ((Get-Date -Format 'yyyyMMdd-HHmmss')+'-'+[guid]::NewGuid().ToString('N'))
+-[void][IO.Directory]::CreateDirectory($runDir)
+-$reportPath=Join-Path $runDir 'native-build-report.json'
+-$package=Join-Path $BaseDirectory 'NATIVE_BUILD_RESULT.zip'
+-$latest=Join-Path $BaseDirectory 'LATEST_NATIVE_OUTPUT.btw'
+-$latestReport=Join-Path $BaseDirectory 'LATEST_NATIVE_REPORT.json'
+-$app=$null;$formats=$null;$ownsBt=$false;$exitCode=1;$report=$null;$watchdog=$null
+-$runtime=[ordered]@{revision='native-engine-font-v5-com-partial-20261006';os=[Environment]::OSVersion.VersionString;powerShell=$PSVersionTable.PSVersion.ToString();processBits=[IntPtr]::Size*8;barTender=[ordered]@{};cleanupErrors=@();status='STARTED'}
+-function Release-RunnerCom($target){if($null -ne $target -and [Runtime.InteropServices.Marshal]::IsComObject($target)){[void][Runtime.InteropServices.Marshal]::ReleaseComObject($target)}}
+-try{
+-    # Remove only fixed generated latest aliases; historical per-run results are retained.
+-    foreach($p in @($package,$latest,$latestReport)){if(Test-Path -LiteralPath $p){Remove-Item -LiteralPath $p -Force}}
+-    if([Environment]::OSVersion.Platform -ne [PlatformID]::Win32NT){throw 'Windows + installed BarTender required. NOT RUN.'}
+-    if([string]::IsNullOrWhiteSpace($LayoutPath)){
+-        Add-Type -AssemblyName System.Windows.Forms
+-        $picker=New-Object System.Windows.Forms.OpenFileDialog
+-        try{$picker.Filter='Native layout (*.json)|*.json';$picker.Title='Select native-layout.multi.sample.json or normalized layout';if($picker.ShowDialog() -eq 'OK'){$LayoutPath=$picker.FileName}}finally{$picker.Dispose()}
+-    }
+-    if([string]::IsNullOrWhiteSpace($LayoutPath) -or -not(Test-Path -LiteralPath $LayoutPath -PathType Leaf)){throw 'No valid layout JSON selected.'}
+-    Copy-Item -LiteralPath $LayoutPath -Destination (Join-Path $runDir 'input-layout.json')
+-    & (Join-Path $BaseDirectory 'SELF_CHECK_NATIVE.ps1') -EvidenceDirectory $runDir *> (Join-Path $runDir 'PREFLIGHT_LOG.txt')
+-    Import-Module (Join-Path $BaseDirectory 'Com.psm1') -Force
+-    Import-Module (Join-Path $BaseDirectory 'NativeLayoutEngine.psm1') -Force
+-    $layout=Get-Content -LiteralPath (Join-Path $runDir 'input-layout.json') -Raw -Encoding UTF8|ConvertFrom-Json
+-    $plan=Test-NativeLayoutInput $layout
+-    $runtime['objectCount']=$plan.objects.Count
+-    $existing=@(Get-Process -Name BarTend -ErrorAction SilentlyContinue|Select-Object -ExpandProperty Id)
+-    $app=New-Object -ComObject BarTender.Application
+-    $pidBt=[int](Com\Read-Property $app 'ProcessID');$bt=Get-Process -Id $pidBt -ErrorAction Stop
+-    if($pidBt -in $existing -or $bt.ProcessName -ine 'BarTend'){throw 'BarTender process is pre-existing or unidentified; refusing to modify or Quit it.'}
+-    $ownsBt=$true
+-    foreach($key in @('FullVersion','Version','Edition','BuildNumber')){try{$runtime.barTender[$key]=[string](Com\Read-Property $app $key)}catch{$runtime.barTender[$key]='UNAVAILABLE'}}
+-    $runtime.barTender['ProcessID']=$pidBt
+-    'COM process acquired'|Set-Content -LiteralPath (Join-Path $runDir 'LIVE_STAGE.txt') -Encoding UTF8
+-    $psExe=Join-Path $env:SystemRoot 'System32/WindowsPowerShell/v1.0/powershell.exe'
+-    $wdArgs='-NoProfile -ExecutionPolicy Bypass -File "'+(Join-Path $BaseDirectory 'Watchdog.ps1')+'" -MainPid '+$PID+' -BarTenderPid '+$pidBt+' -RunDir "'+$runDir+'" -BaseDirectory "'+$BaseDirectory+'" -StallSeconds 120 -MaxSeconds 600 -BarTenderStartTicks '+[string]$bt.StartTime.ToUniversalTime().Ticks+' -MainStartTicks '+[string](Get-Process -Id $PID).StartTime.ToUniversalTime().Ticks+' -ReturnZipName NATIVE_BUILD_RESULT.zip'
+-    $watchdog=Start-Process -FilePath $psExe -ArgumentList $wdArgs -PassThru -WindowStyle Hidden -ErrorAction Stop
+-    $runtime['watchdog']='120-second stall / 600-second owned-run maximum; activation itself precedes watchdog'
+-    Com\Write-Property $app 'Visible' $false
+-    $formats=Com\Read-Property $app 'Formats'
+-    $report=Invoke-NativeLayoutBuild $formats $layout $runDir $BaseDirectory
+-    $exitCode=0
+-}catch{
+-    $_.Exception.ToString()|Set-Content -LiteralPath (Join-Path $runDir 'NATIVE_BUILD_ERROR.txt') -Encoding UTF8
+-    Write-Host $_.Exception.Message -ForegroundColor Red
+-}finally{
+-    try{Release-RunnerCom $formats}catch{$runtime.cleanupErrors+=$_.Exception.Message;$exitCode=1}
+-    if($null -ne $app){
+-        if($ownsBt){try{[void](Com\Invoke-ComMethod $app 'Quit' @(1))}catch{$runtime.cleanupErrors+=$_.Exception.Message;$exitCode=1}}
+-        try{Release-RunnerCom $app}catch{$runtime.cleanupErrors+=$_.Exception.Message;$exitCode=1}
+-    }
+-    'done'|Set-Content -LiteralPath (Join-Path $runDir 'WATCHDOG_DONE.txt') -Encoding ASCII
+-    if($null -ne $watchdog){try{if(-not $watchdog.HasExited){$watchdog.Kill()}}catch{}}
+-    try{
+-        if($exitCode -eq 0 -and $null -ne $report -and $report.reopen -ceq 'PASS'){
+-            Copy-Item -LiteralPath $report.output -Destination $latest
+-            Copy-Item -LiteralPath $reportPath -Destination $latestReport
+-            $runtime.status='VERIFIED_CANDIDATE_NOT_PRODUCT_ACCEPTANCE'
+-        }else{
+-            $runtime.status='FAILED_OR_BLOCKED'
+-            foreach($name in @('candidate.unverified.btw','native-output.btw')){
+-                $f=Join-Path $runDir $name
+-                if(Test-Path -LiteralPath $f){Move-Item -LiteralPath $f -Destination ($f+'.FAILED_UNVERIFIED') -Force}
+-            }
+-        }
+-        $runtime|ConvertTo-Json -Depth 12|Set-Content -LiteralPath (Join-Path $runDir 'runtime.json') -Encoding UTF8
+-        Compress-Archive -Path (Join-Path $runDir '*') -DestinationPath $package -CompressionLevel Optimal -Force
+-    }catch{
+-        $exitCode=1
+-        foreach($p in @($latest,$latestReport)){if(Test-Path -LiteralPath $p){Remove-Item -LiteralPath $p -Force}}
+-        $publicationError=$_.Exception.Message
+-        $runtime.status='PUBLICATION_FAILED';$runtime.cleanupErrors+=$publicationError
+-        try{
+-            $f=Join-Path $runDir 'native-output.btw';if(Test-Path -LiteralPath $f){Move-Item -LiteralPath $f -Destination ($f+'.PUBLICATION_FAILED') -Force}
+-            $runtime|ConvertTo-Json -Depth 12|Set-Content -LiteralPath (Join-Path $runDir 'runtime.json') -Encoding UTF8
+-        }catch{}
+-        Write-Host ('Output/package publication failed: '+$publicationError) -ForegroundColor Red
+-    }
+-    if($OpenResults){try{Invoke-Item -LiteralPath $runDir}catch{}}
+-}
+-Write-Host ('Result: '+$package+'; exit='+$exitCode)
+-exit $exitCode
++﻿[CmdletBinding()]
++param([string]$LayoutPath='',[string]$BaseDirectory='',[string]$ResultRoot='',[switch]$OpenResults,[switch]$CaptureVisualEvidence)
++Set-StrictMode -Version 2
++$ErrorActionPreference='Stop'
++if([string]::IsNullOrWhiteSpace($BaseDirectory)){$BaseDirectory=[IO.Path]::GetDirectoryName($MyInvocation.MyCommand.Path)}
++$BaseDirectory=[IO.Path]::GetFullPath($BaseDirectory)
++if([string]::IsNullOrWhiteSpace($ResultRoot)){$ResultRoot=Join-Path $BaseDirectory 'native-results'}
++$runDir=Join-Path ([IO.Path]::GetFullPath($ResultRoot)) ((Get-Date -Format 'yyyyMMdd-HHmmss')+'-'+[guid]::NewGuid().ToString('N'))
++[void][IO.Directory]::CreateDirectory($runDir)
++$reportPath=Join-Path $runDir 'native-build-report.json'
++$package=Join-Path $BaseDirectory 'NATIVE_BUILD_RESULT.zip'
++$latest=Join-Path $BaseDirectory 'LATEST_NATIVE_OUTPUT.btw'
++$latestReport=Join-Path $BaseDirectory 'LATEST_NATIVE_REPORT.json'
++$app=$null;$formats=$null;$ownsBt=$false;$exitCode=1;$report=$null;$watchdog=$null
++$runtime=[ordered]@{revision='native-engine-v5-core-plus-v6-visual-evidence-20261006';os=[Environment]::OSVersion.VersionString;powerShell=$PSVersionTable.PSVersion.ToString();processBits=[IntPtr]::Size*8;barTender=[ordered]@{};cleanupErrors=@();status='STARTED'}
++function Release-RunnerCom($target){if($null -ne $target -and [Runtime.InteropServices.Marshal]::IsComObject($target)){[void][Runtime.InteropServices.Marshal]::ReleaseComObject($target)}}
++function Get-RunnerRasterEvidence([string]$path,[int]$requestedDpi) {
++    if(-not('LabelWorkbench.RasterEvidence' -as [type])){Add-Type -Path (Join-Path $BaseDirectory 'RasterEvidence.cs') -ErrorAction Stop}
++    $r=[LabelWorkbench.RasterEvidence]::Read($path)
++    $tol=[math]::Max(1.0,[double]$requestedDpi*0.01)
++    $valid=($r.HeaderDpiX -gt 0 -and $r.HeaderDpiY -gt 0 -and -not [double]::IsNaN($r.HeaderDpiX) -and -not [double]::IsNaN($r.HeaderDpiY) -and -not [double]::IsInfinity($r.HeaderDpiX) -and -not [double]::IsInfinity($r.HeaderDpiY))
++    $trust=($valid -and [math]::Abs($r.HeaderDpiX-$requestedDpi) -le $tol -and [math]::Abs($r.HeaderDpiY-$requestedDpi) -le $tol)
++    return [ordered]@{requestedDpi=$requestedDpi;headerDpiX=$r.HeaderDpiX;headerDpiY=$r.HeaderDpiY;dpiTrust=if($trust){'TRUSTED_HEADER_MATCH'}else{'UNTRUSTED'};canvasWidthPx=$r.CanvasWidth;canvasHeightPx=$r.CanvasHeight;inkLeftPx=$r.Left;inkTopPx=$r.Top;inkWidthPx=$r.InkWidth;inkHeightPx=$r.InkHeight;darkPixels=$r.DarkPixels;canvasWidthMm=if($trust){$r.CanvasWidth*25.4/$requestedDpi}else{$null};canvasHeightMm=if($trust){$r.CanvasHeight*25.4/$requestedDpi}else{$null};inkWidthMm=if($trust){$r.InkWidth*25.4/$requestedDpi}else{$null};inkHeightMm=if($trust){$r.InkHeight*25.4/$requestedDpi}else{$null};sha256=(Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash}
++}
++function Capture-RunnerVisualEvidence($formats,$report,$plan,[string]$runDir,[string]$baseDirectory) {
++    if($null -eq $report -or $report.reopen -cne 'PASS' -or [string]::IsNullOrWhiteSpace([string]$report.output) -or -not(Test-Path -LiteralPath $report.output)){throw 'Visual evidence requires a verified native output.'}
++    $candidateHashBefore=(Get-FileHash -LiteralPath $report.output -Algorithm SHA256).Hash
++    $ev=[ordered]@{schema='lwb-native-visual-evidence-v1';status='STARTED';coordinateClaim='EVIDENCE_ONLY_NOT_IMAGE_TOP_LEFT_CERTIFIED';requestedDpi=600;candidateSha256Before=$candidateHashBefore;candidateSha256After=$null;page=[ordered]@{widthMm=[double]$plan.widthMm;heightMm=[double]$plan.heightMm};formatPreview=$null;objects=@();notes=@('BarTender X/Y are anchor coordinates, not automatically image top-left coordinates.','ReferencePoint is captured from object XML; an absent attribute is recorded as absent, not guessed.','Raster evidence is diagnostic only and does not change the V5 native build core.')}
++    $doc=$null;$objs=$null;$failure=$null
++    try{
++        $doc=Com\Invoke-ComMethod $formats 'Open' @([string]$report.output,$false,'')
++        Com\Write-Property $doc 'MeasurementUnits' 3
++        $preview=Join-Path $runDir 'native-format-preview.bmp'
++        if(Test-Path -LiteralPath $preview){Remove-Item -LiteralPath $preview -Force}
++        [void](Com\Invoke-ComMethod $doc 'ExportToFile' @($preview,'BMP',[int]0,[int]600,[int]2))
++        if(-not(Test-Path -LiteralPath $preview) -or (Get-Item -LiteralPath $preview).Length -le 0){throw 'Format preview export produced no BMP.'}
++        $ev.formatPreview=Get-RunnerRasterEvidence $preview 600
++        if($ev.formatPreview.dpiTrust -cne 'TRUSTED_HEADER_MATCH'){throw 'Format preview DPI is untrusted.'}
++        $objs=Com\Read-Property $doc 'Objects'
++        foreach($entry in @($report.objects)){
++            $obj=$null
++            try{
++                $obj=Com\Invoke-ComMethod $objs 'Find' @([string]$entry.physicalName)
++                if($null -eq $obj){throw ('Visual evidence object missing: '+$entry.id)}
++                $xmlText=[string](Com\Invoke-ComMethod $obj 'GetXML' @($true,$true))
++                $xml=New-Object System.Xml.XmlDocument;$xml.PreserveWhitespace=$true;$xml.LoadXml($xmlText)
++                $hasRef=$xml.DocumentElement.HasAttribute('ReferencePoint')
++                $objBmp=Join-Path $runDir ('visual-'+$entry.id+'.bmp')
++                if(Test-Path -LiteralPath $objBmp){Remove-Item -LiteralPath $objBmp -Force}
++                [void](Com\Invoke-ComMethod $obj 'ExportToFile' @($objBmp,'BMP',[int]0,[int]600,[int]2))
++                if(-not(Test-Path -LiteralPath $objBmp) -or (Get-Item -LiteralPath $objBmp).Length -le 0){throw ('Object preview export produced no BMP: '+$entry.id)}
++                $rr=Get-RunnerRasterEvidence $objBmp 600
++                if($rr.dpiTrust -cne 'TRUSTED_HEADER_MATCH'){throw ('Object preview DPI is untrusted: '+$entry.id)}
++                $ev.objects+=,[ordered]@{id=[string]$entry.id;type=[string]$entry.type;physicalName=[string]$entry.physicalName;nativeType=[int](Com\Read-Property $obj 'Type');xMm=[double](Com\Read-Property $obj 'X');yMm=[double](Com\Read-Property $obj 'Y');rotationDeg=[double](Com\Read-Property $obj 'RotationAngle');referencePointPresent=[bool]$hasRef;referencePoint=if($hasRef){[string]$xml.DocumentElement.GetAttribute('ReferencePoint')}else{$null};xmlRoot=[string]$xml.DocumentElement.LocalName;raster=$rr}
++            }finally{Release-RunnerCom $obj}
++        }
++        if(@($ev.objects).Count -ne @($report.objects).Count){throw 'Visual evidence object count mismatch.'}
++    }catch{$failure=$_.Exception.ToString()}
++    finally{
++        Release-RunnerCom $objs
++        if($null -ne $doc){try{[void](Com\Invoke-ComMethod $doc 'Close' @(1))}catch{if($null -eq $failure){$failure=$_.Exception.ToString()}};Release-RunnerCom $doc}
++    }
++    try{
++        if(-not(Test-Path -LiteralPath $report.output)){throw 'Verified candidate disappeared during visual evidence capture.'}
++        $ev.candidateSha256After=(Get-FileHash -LiteralPath $report.output -Algorithm SHA256).Hash
++        if($ev.candidateSha256After -cne $candidateHashBefore){throw 'Visual evidence capture changed the verified BTW file.'}
++    }catch{if($null -eq $failure){$failure=$_.Exception.ToString()}else{$failure+=' | hash-check: '+$_.Exception.ToString()}}
++    if($null -ne $failure){$ev.status='FAIL';$ev['error']=$failure}else{$ev.status='PASS'}
++    $ev|ConvertTo-Json -Depth 16|Set-Content -LiteralPath (Join-Path $runDir 'native-visual-evidence.json') -Encoding UTF8
++    if($null -ne $failure){throw $failure}
++    return $ev
++}
++
++try{
++    # Remove only fixed generated latest aliases; historical per-run results are retained.
++    foreach($p in @($package,$latest,$latestReport)){if(Test-Path -LiteralPath $p){Remove-Item -LiteralPath $p -Force}}
++    if([Environment]::OSVersion.Platform -ne [PlatformID]::Win32NT){throw 'Windows + installed BarTender required. NOT RUN.'}
++    if([string]::IsNullOrWhiteSpace($LayoutPath)){
++        Add-Type -AssemblyName System.Windows.Forms
++        $picker=New-Object System.Windows.Forms.OpenFileDialog
++        try{$picker.Filter='Native layout (*.json)|*.json';$picker.Title='Select native-layout.multi.sample.json or normalized layout';if($picker.ShowDialog() -eq 'OK'){$LayoutPath=$picker.FileName}}finally{$picker.Dispose()}
++    }
++    if([string]::IsNullOrWhiteSpace($LayoutPath) -or -not(Test-Path -LiteralPath $LayoutPath -PathType Leaf)){throw 'No valid layout JSON selected.'}
++    Copy-Item -LiteralPath $LayoutPath -Destination (Join-Path $runDir 'input-layout.json')
++    & (Join-Path $BaseDirectory 'SELF_CHECK_NATIVE.ps1') -EvidenceDirectory $runDir *> (Join-Path $runDir 'PREFLIGHT_LOG.txt')
++    Import-Module (Join-Path $BaseDirectory 'Com.psm1') -Force
++    Import-Module (Join-Path $BaseDirectory 'NativeLayoutEngine.psm1') -Force
++    $layout=Get-Content -LiteralPath (Join-Path $runDir 'input-layout.json') -Raw -Encoding UTF8|ConvertFrom-Json
++    $plan=Test-NativeLayoutInput $layout
++    $runtime['objectCount']=$plan.objects.Count
++    $existing=@(Get-Process -Name BarTend -ErrorAction SilentlyContinue|Select-Object -ExpandProperty Id)
++    $app=New-Object -ComObject BarTender.Application
++    $pidBt=[int](Com\Read-Property $app 'ProcessID');$bt=Get-Process -Id $pidBt -ErrorAction Stop
++    if($pidBt -in $existing -or $bt.ProcessName -ine 'BarTend'){throw 'BarTender process is pre-existing or unidentified; refusing to modify or Quit it.'}
++    $ownsBt=$true
++    foreach($key in @('FullVersion','Version','Edition','BuildNumber')){try{$runtime.barTender[$key]=[string](Com\Read-Property $app $key)}catch{$runtime.barTender[$key]='UNAVAILABLE'}}
++    $runtime.barTender['ProcessID']=$pidBt
++    'COM process acquired'|Set-Content -LiteralPath (Join-Path $runDir 'LIVE_STAGE.txt') -Encoding UTF8
++    $psExe=Join-Path $env:SystemRoot 'System32/WindowsPowerShell/v1.0/powershell.exe'
++    $wdArgs='-NoProfile -ExecutionPolicy Bypass -File "'+(Join-Path $BaseDirectory 'Watchdog.ps1')+'" -MainPid '+$PID+' -BarTenderPid '+$pidBt+' -RunDir "'+$runDir+'" -BaseDirectory "'+$BaseDirectory+'" -StallSeconds 120 -MaxSeconds 600 -BarTenderStartTicks '+[string]$bt.StartTime.ToUniversalTime().Ticks+' -MainStartTicks '+[string](Get-Process -Id $PID).StartTime.ToUniversalTime().Ticks+' -ReturnZipName NATIVE_BUILD_RESULT.zip'
++    $watchdog=Start-Process -FilePath $psExe -ArgumentList $wdArgs -PassThru -WindowStyle Hidden -ErrorAction Stop
++    $runtime['watchdog']='120-second stall / 600-second owned-run maximum; activation itself precedes watchdog'
++    Com\Write-Property $app 'Visible' $false
++    $formats=Com\Read-Property $app 'Formats'
++    $report=Invoke-NativeLayoutBuild $formats $layout $runDir $BaseDirectory
++    if($CaptureVisualEvidence){$runtime['visualEvidence']=Capture-RunnerVisualEvidence $formats $report $plan $runDir $BaseDirectory}
++    $exitCode=0
++}catch{
++    $_.Exception.ToString()|Set-Content -LiteralPath (Join-Path $runDir 'NATIVE_BUILD_ERROR.txt') -Encoding UTF8
++    Write-Host $_.Exception.Message -ForegroundColor Red
++}finally{
++    try{Release-RunnerCom $formats}catch{$runtime.cleanupErrors+=$_.Exception.Message;$exitCode=1}
++    if($null -ne $app){
++        if($ownsBt){try{[void](Com\Invoke-ComMethod $app 'Quit' @(1))}catch{$runtime.cleanupErrors+=$_.Exception.Message;$exitCode=1}}
++        try{Release-RunnerCom $app}catch{$runtime.cleanupErrors+=$_.Exception.Message;$exitCode=1}
++    }
++    'done'|Set-Content -LiteralPath (Join-Path $runDir 'WATCHDOG_DONE.txt') -Encoding ASCII
++    if($null -ne $watchdog){try{if(-not $watchdog.HasExited){$watchdog.Kill()}}catch{}}
++    try{
++        if($exitCode -eq 0 -and $null -ne $report -and $report.reopen -ceq 'PASS'){
++            Copy-Item -LiteralPath $report.output -Destination $latest
++            Copy-Item -LiteralPath $reportPath -Destination $latestReport
++            $runtime.status='VERIFIED_CANDIDATE_NOT_PRODUCT_ACCEPTANCE'
++        }else{
++            $runtime.status='FAILED_OR_BLOCKED'
++            foreach($name in @('candidate.unverified.btw','native-output.btw')){
++                $f=Join-Path $runDir $name
++                if(Test-Path -LiteralPath $f){Move-Item -LiteralPath $f -Destination ($f+'.FAILED_UNVERIFIED') -Force}
++            }
++        }
++        $runtime|ConvertTo-Json -Depth 12|Set-Content -LiteralPath (Join-Path $runDir 'runtime.json') -Encoding UTF8
++        Compress-Archive -Path (Join-Path $runDir '*') -DestinationPath $package -CompressionLevel Optimal -Force
++    }catch{
++        $exitCode=1
++        foreach($p in @($latest,$latestReport)){if(Test-Path -LiteralPath $p){Remove-Item -LiteralPath $p -Force}}
++        $publicationError=$_.Exception.Message
++        $runtime.status='PUBLICATION_FAILED';$runtime.cleanupErrors+=$publicationError
++        try{
++            $f=Join-Path $runDir 'native-output.btw';if(Test-Path -LiteralPath $f){Move-Item -LiteralPath $f -Destination ($f+'.PUBLICATION_FAILED') -Force}
++            $runtime|ConvertTo-Json -Depth 12|Set-Content -LiteralPath (Join-Path $runDir 'runtime.json') -Encoding UTF8
++        }catch{}
++        Write-Host ('Output/package publication failed: '+$publicationError) -ForegroundColor Red
++    }
++    if($OpenResults){try{Invoke-Item -LiteralPath $runDir}catch{}}
++}
++Write-Host ('Result: '+$package+'; exit='+$exitCode)
++exit $exitCode
+--- /mnt/data/lw_v5_codex_final/Label_Workbench_Native_Layout_ENGINE_V1/program/ONE_SHOT_NATIVE_TEST.cmd	2026-10-06 16:12:42.000000000 +0000
++++ program/ONE_SHOT_NATIVE_TEST.cmd	2026-10-06 08:26:18.517549180 +0000
+@@ -1,18 +1,18 @@
+-@echo off
+-setlocal
+-cd /d "%~dp0"
+-echo ============================================================
+-echo Label Workbench Native Layout - ONE SHOT WINDOWS TEST
+-echo Fixed input: native-layout.multi.sample.json
+-echo Preflight must pass before BarTender is opened.
+-echo ============================================================
+-powershell.exe -STA -NoProfile -ExecutionPolicy Bypass -File "%~dp0Build-NativeLayout.ps1" -BaseDirectory "%~dp0." -LayoutPath "%~dp0native-layout.multi.sample.json"
+-set "RC=%ERRORLEVEL%"
+-if "%RC%"=="0" (
+- echo VERIFIED CANDIDATE: LATEST_NATIVE_OUTPUT.btw
+-) else (
+- echo FAILED/BLOCKED. Do not use previous output.
+-)
+-if exist "%~dp0NATIVE_BUILD_RESULT.zip" echo Return NATIVE_BUILD_RESULT.zip
+-pause
+-exit /b %RC%
++@echo off
++setlocal
++cd /d "%~dp0"
++echo ============================================================
++echo Label Workbench Native Layout - ONE SHOT WINDOWS TEST
++echo Fixed input: native-layout.multi.sample.json
++echo Preflight must pass before BarTender is opened.
++echo ============================================================
++powershell.exe -STA -NoProfile -ExecutionPolicy Bypass -File "%~dp0Build-NativeLayout.ps1" -BaseDirectory "%~dp0." -LayoutPath "%~dp0native-layout.multi.sample.json" -CaptureVisualEvidence
++set "RC=%ERRORLEVEL%"
++if "%RC%"=="0" (
++ echo VERIFIED CANDIDATE: LATEST_NATIVE_OUTPUT.btw
++) else (
++ echo FAILED/BLOCKED. Do not use previous output.
++)
++if exist "%~dp0NATIVE_BUILD_RESULT.zip" echo Return NATIVE_BUILD_RESULT.zip
++pause
++exit /b %RC%
+--- /mnt/data/lw_v5_codex_final/Label_Workbench_Native_Layout_ENGINE_V1/program/SELF_CHECK_NATIVE.ps1	2026-10-06 16:12:42.000000000 +0000
++++ program/SELF_CHECK_NATIVE.ps1	2026-10-06 08:26:18.517608790 +0000
+@@ -1,44 +1,45 @@
+-﻿param([string]$EvidenceDirectory='')
+-$ErrorActionPreference='Stop'
+-Set-StrictMode -Version 2
+-$root=$PSScriptRoot
+-$runtime=@('Build-NativeLayout.ps1','NativeLayoutEngine.psm1','Com.psm1','Watchdog.ps1','SELF_CHECK_NATIVE.ps1','Test-NativeLayoutEngine.ps1','Test-NativePersistence.ps1','Test-NativeFontFallback.ps1')
+-foreach($name in $runtime){$path=Join-Path $root $name;if(-not(Test-Path -LiteralPath $path -PathType Leaf)){throw ('Missing native runtime file: '+$name)};$tokens=$null;$errors=$null;[void][Management.Automation.Language.Parser]::ParseFile($path,[ref]$tokens,[ref]$errors);if(@($errors).Count){throw (($errors|ForEach-Object{$name+': '+$_.Message}) -join ' | ')}}
+-Write-Host ('PASS: parsed '+$runtime.Count+' native runtime PowerShell files.') -ForegroundColor Green
+-$sample=Join-Path $root 'native-layout.sample.json';$multi=Join-Path $root 'native-layout.multi.sample.json';foreach($j in @($sample,$multi)){if(-not(Test-Path -LiteralPath $j)){throw ('Missing native layout sample: '+$j)};[void](Get-Content -LiteralPath $j -Raw -Encoding UTF8|ConvertFrom-Json)}
+-Write-Host 'PASS: native layout sample JSON files parse.' -ForegroundColor Green
+-if(-not('LabelWorkbench.ComBridge' -as [type])){Add-Type -Path (Join-Path $root 'ComBridge.cs') -ErrorAction Stop}
+-Write-Host 'PASS: ComBridge compiles.' -ForegroundColor Green
+-if(-not('LabelWorkbench.RasterEvidence' -as [type])){Add-Type -Path (Join-Path $root 'RasterEvidence.cs') -ErrorAction Stop}
+-Write-Host 'PASS: RasterEvidence compiles.' -ForegroundColor Green
+-$evidence=Join-Path (Split-Path -Parent $root) 'evidence\installed-api.json';$api=Get-Content -LiteralPath $evidence -Raw -Encoding UTF8|ConvertFrom-Json
+-function Require([string]$type,[string]$name,[string]$invoke,[int[]]$params,[int]$returnType){$m=@($api.members|Where-Object{$_.TypeName -ceq $type -and $_.Name -ceq $name -and $_.InvokeKind -ceq $invoke});if($m.Count -ne 1){throw ('Missing/ambiguous API: '+$type+'.'+$name+' '+$invoke)};if($m[0].ReturnVariantType -ne $returnType){throw ('API return signature changed: '+$type+'.'+$name)};if((@($m[0].ParameterVariantTypes)-join ',') -cne (@($params)-join ',')){throw ('API parameter signature changed: '+$type+'.'+$name)}}
+-Require 'IBtFormats' 'Add' 'INVOKE_FUNC' @() 26
+-Require 'IBtDesignObjects' 'Create' 'INVOKE_FUNC' @(29) 26
+-Require 'IBtFormat' 'InsertComponent' 'INVOKE_FUNC' @(8,5,5) 11
+-Require 'IBtDesignObjects' 'ExportDataSourceValuesToXML' 'INVOKE_FUNC' @() 8
+-Require 'IBtDesignObjects' 'ImportDataSourceValuesFromXML' 'INVOKE_FUNC' @(8) 11
+-Require 'IBtDesignObject' 'GetXML' 'INVOKE_FUNC' @(11,11) 8
+-Require 'IBtDesignObject' 'SetXML' 'INVOKE_FUNC' @(8) 24
+-Require 'IBtDesignObject' 'FontName' 'INVOKE_PROPERTYGET' @() 8
+-Require 'IBtDesignObject' 'FontName' 'INVOKE_PROPERTYPUT' @(8) 24
+-Require 'IBtDesignObject' 'FontSize' 'INVOKE_PROPERTYGET' @() 5
+-Require 'IBtDesignObject' 'FontSize' 'INVOKE_PROPERTYPUT' @(5) 24
+-Require 'IBtDesignObject' 'ExportToFile' 'INVOKE_FUNC' @(8,8,29,29,29) 24
+-Write-Host 'PASS: packaged real-machine TypeLib evidence covers blank format, text creation, component insertion, XML payload and raster APIs.' -ForegroundColor Green
+-$proven=Join-Path $root 'proven-code128.btc';$sha='0B1E2481BCDE6E5CF1D084599F822DC3027AB19215530B7776296B40A59899F2';if((Get-FileHash -LiteralPath $proven -Algorithm SHA256).Hash -cne $sha){throw 'proven-code128.btc hash mismatch.'}
+-Write-Host 'PASS: proven Code128 component hash matches real Windows evidence.' -ForegroundColor Green
+-Import-Module (Join-Path $root 'NativeLayoutEngine.psm1') -Force
+-$layout=Get-Content -LiteralPath $sample -Raw -Encoding UTF8|ConvertFrom-Json;$plan=Test-NativeLayoutInput $layout
+-if($plan.objects.Count -ne 3){throw 'Native layout sample contract regression.'}
+-$multiPlan=Test-NativeLayoutInput (Get-Content -LiteralPath $multi -Raw -Encoding UTF8|ConvertFrom-Json)
+-if($multiPlan.objects.Count -ne 6){throw 'Multi-object sample contract regression.'}
+-& (Join-Path $root 'Test-NativeLayoutEngine.ps1')
+-$mockResultPath=''
+-if($EvidenceDirectory){$mockResultPath=Join-Path $EvidenceDirectory 'native-mock-results.json'}
+-$fontResultPath=''
+-if($EvidenceDirectory){$fontResultPath=Join-Path $EvidenceDirectory 'native-font-results.json'}
+-& (Join-Path $root 'Test-NativeFontFallback.ps1') -ResultPath $fontResultPath
+-& (Join-Path $root 'Test-NativePersistence.ps1') -ResultPath $mockResultPath
+-Remove-Module NativeLayoutEngine -Force -ErrorAction SilentlyContinue
+-Write-Host 'SELF_CHECK_NATIVE PASS: parser/input regression/C# helpers/23 font cases/14 native multi-object mocks passed; BarTender has not been opened yet.' -ForegroundColor Green
++﻿param([string]$EvidenceDirectory='')
++$ErrorActionPreference='Stop'
++Set-StrictMode -Version 2
++$root=$PSScriptRoot
++$runtime=@('Build-NativeLayout.ps1','NativeLayoutEngine.psm1','Com.psm1','Watchdog.ps1','SELF_CHECK_NATIVE.ps1','Test-NativeLayoutEngine.ps1','Test-NativePersistence.ps1','Test-NativeFontFallback.ps1')
++foreach($name in $runtime){$path=Join-Path $root $name;if(-not(Test-Path -LiteralPath $path -PathType Leaf)){throw ('Missing native runtime file: '+$name)};$tokens=$null;$errors=$null;[void][Management.Automation.Language.Parser]::ParseFile($path,[ref]$tokens,[ref]$errors);if(@($errors).Count){throw (($errors|ForEach-Object{$name+': '+$_.Message}) -join ' | ')}}
++Write-Host ('PASS: parsed '+$runtime.Count+' native runtime PowerShell files.') -ForegroundColor Green
++$sample=Join-Path $root 'native-layout.sample.json';$multi=Join-Path $root 'native-layout.multi.sample.json';foreach($j in @($sample,$multi)){if(-not(Test-Path -LiteralPath $j)){throw ('Missing native layout sample: '+$j)};[void](Get-Content -LiteralPath $j -Raw -Encoding UTF8|ConvertFrom-Json)}
++Write-Host 'PASS: native layout sample JSON files parse.' -ForegroundColor Green
++if(-not('LabelWorkbench.ComBridge' -as [type])){Add-Type -Path (Join-Path $root 'ComBridge.cs') -ErrorAction Stop}
++Write-Host 'PASS: ComBridge compiles.' -ForegroundColor Green
++if(-not('LabelWorkbench.RasterEvidence' -as [type])){Add-Type -Path (Join-Path $root 'RasterEvidence.cs') -ErrorAction Stop}
++Write-Host 'PASS: RasterEvidence compiles.' -ForegroundColor Green
++$evidence=Join-Path (Split-Path -Parent $root) 'evidence\installed-api.json';$api=Get-Content -LiteralPath $evidence -Raw -Encoding UTF8|ConvertFrom-Json
++function Require([string]$type,[string]$name,[string]$invoke,[int[]]$params,[int]$returnType){$m=@($api.members|Where-Object{$_.TypeName -ceq $type -and $_.Name -ceq $name -and $_.InvokeKind -ceq $invoke});if($m.Count -ne 1){throw ('Missing/ambiguous API: '+$type+'.'+$name+' '+$invoke)};if($m[0].ReturnVariantType -ne $returnType){throw ('API return signature changed: '+$type+'.'+$name)};if((@($m[0].ParameterVariantTypes)-join ',') -cne (@($params)-join ',')){throw ('API parameter signature changed: '+$type+'.'+$name)}}
++Require 'IBtFormats' 'Add' 'INVOKE_FUNC' @() 26
++Require 'IBtDesignObjects' 'Create' 'INVOKE_FUNC' @(29) 26
++Require 'IBtFormat' 'InsertComponent' 'INVOKE_FUNC' @(8,5,5) 11
++Require 'IBtDesignObjects' 'ExportDataSourceValuesToXML' 'INVOKE_FUNC' @() 8
++Require 'IBtDesignObjects' 'ImportDataSourceValuesFromXML' 'INVOKE_FUNC' @(8) 11
++Require 'IBtDesignObject' 'GetXML' 'INVOKE_FUNC' @(11,11) 8
++Require 'IBtDesignObject' 'SetXML' 'INVOKE_FUNC' @(8) 24
++Require 'IBtDesignObject' 'FontName' 'INVOKE_PROPERTYGET' @() 8
++Require 'IBtDesignObject' 'FontName' 'INVOKE_PROPERTYPUT' @(8) 24
++Require 'IBtDesignObject' 'FontSize' 'INVOKE_PROPERTYGET' @() 5
++Require 'IBtDesignObject' 'FontSize' 'INVOKE_PROPERTYPUT' @(5) 24
++Require 'IBtFormat' 'ExportToFile' 'INVOKE_FUNC' @(8,8,29,29,29) 24
++Require 'IBtDesignObject' 'ExportToFile' 'INVOKE_FUNC' @(8,8,29,29,29) 24
++Write-Host 'PASS: packaged real-machine TypeLib evidence covers blank format, text creation, component insertion, XML payload and raster APIs.' -ForegroundColor Green
++$proven=Join-Path $root 'proven-code128.btc';$sha='0B1E2481BCDE6E5CF1D084599F822DC3027AB19215530B7776296B40A59899F2';if((Get-FileHash -LiteralPath $proven -Algorithm SHA256).Hash -cne $sha){throw 'proven-code128.btc hash mismatch.'}
++Write-Host 'PASS: proven Code128 component hash matches real Windows evidence.' -ForegroundColor Green
++Import-Module (Join-Path $root 'NativeLayoutEngine.psm1') -Force
++$layout=Get-Content -LiteralPath $sample -Raw -Encoding UTF8|ConvertFrom-Json;$plan=Test-NativeLayoutInput $layout
++if($plan.objects.Count -ne 3){throw 'Native layout sample contract regression.'}
++$multiPlan=Test-NativeLayoutInput (Get-Content -LiteralPath $multi -Raw -Encoding UTF8|ConvertFrom-Json)
++if($multiPlan.objects.Count -ne 6){throw 'Multi-object sample contract regression.'}
++& (Join-Path $root 'Test-NativeLayoutEngine.ps1')
++$mockResultPath=''
++if($EvidenceDirectory){$mockResultPath=Join-Path $EvidenceDirectory 'native-mock-results.json'}
++$fontResultPath=''
++if($EvidenceDirectory){$fontResultPath=Join-Path $EvidenceDirectory 'native-font-results.json'}
++& (Join-Path $root 'Test-NativeFontFallback.ps1') -ResultPath $fontResultPath
++& (Join-Path $root 'Test-NativePersistence.ps1') -ResultPath $mockResultPath
++Remove-Module NativeLayoutEngine -Force -ErrorAction SilentlyContinue
++Write-Host 'SELF_CHECK_NATIVE PASS: parser/input regression/C# helpers/23 font cases/14 native multi-object mocks passed; BarTender has not been opened yet.' -ForegroundColor Green
+--- /mnt/data/lw_v5_codex_final/Label_Workbench_Native_Layout_ENGINE_V1/program/SOURCES.md	2026-10-06 16:12:42.000000000 +0000
++++ program/SOURCES.md	2026-10-06 08:27:24.286006547 +0000
+@@ -66,3 +66,15 @@
+   https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_return
+ 
+ 線上可讀的 ExportToFile/Value 頁有較早版號，因此不能單靠它们宣稱 2022 實作；本包同時使用使用者 2022 R2 TypeLib 的相符簽章。
++
++
++## V6 visual / coordinate evidence sources
++
++- Seagull Scientific — DesignObject.X: https://help.seagullscientific.com/11.4/en/Subsystems/ActiveX/Content/X_Property.htm
++  - X is the coordinate of the object anchor in the document measurement units.
++- Seagull Scientific — Understanding Origin Points and Anchors: https://help.seagullscientific.com/2019/en/Content/Understanding_Reference_Points.htm
++  - Object X/Y place the anchor relative to the origin; Top Left is the documented default, but V6 records an absent XML ReferencePoint as absent rather than assuming it for product acceptance.
++- Seagull Scientific — Format.ExportToFile: https://help.seagullscientific.com/11.5/en/Subsystems/ActiveX/Content/ExportToFile_Method.htm
++  - Exports the document template to an image file at a requested resolution.
++- Seagull Scientific — DesignObject.ExportToFile: https://help.seagullscientific.com/2016/en/Subsystems/ActiveX/Content/ExportToFile_Method_%28DesignObject%29.htm
++  - Exports an individual design object to an image file.
+--- /mnt/data/lw_v5_codex_final/Label_Workbench_Native_Layout_ENGINE_V1/READ_ME_V5_FIRST.txt	2026-10-06 16:12:42.000000000 +0000
++++ READ_ME_V5_FIRST.txt	2026-10-06 08:26:18.517770043 +0000
+@@ -1,19 +1,22 @@
+-﻿Label Workbench Native Layout — V5
+-
+-目前先不要反覆實機測試。
+-
+-V5 在 Codex V4 FINAL 上再補一個 COM FontName 失敗後的隱藏部分修改防護：
+-如果 COM 可讀狀態已改變、但 GetXML 尚未反映，會先完整回滾 baseline 並驗證，才允許 XML fallback。
+-另增加第 23 個 Font regression：com-hidden-partial。
+-
+-未來真正做單次 Windows + BarTender 2022 驗證時，只執行：
+-
+-program\ONE_SHOT_NATIVE_TEST.cmd
+-
+-這個入口固定使用 native-layout.multi.sample.json，不需要手動選檔。
+-它會先執行 parser / C# helper / input regression / 23 Font cases / 14 multi-object mocks；全部通過後才啟動 BarTender。
+-
+-成功或失敗都回傳：
+-program\NATIVE_BUILD_RESULT.zip
+-
+-目前仍 NOT RUN：Windows PowerShell 5.1 原生 parser、C# 真正編譯、23+14 regressions、BarTender 2022 Runtime、實體列印/掃碼。
++﻿Label Workbench Native Layout — V5
++
++目前先不要反覆實機測試。
++
++V5 在 Codex V4 FINAL 上再補一個 COM FontName 失敗後的隱藏部分修改防護：
++如果 COM 可讀狀態已改變、但 GetXML 尚未反映，會先完整回滾 baseline 並驗證，才允許 XML fallback。
++另增加第 23 個 Font regression：com-hidden-partial。
++
++未來真正做單次 Windows + BarTender 2022 驗證時，只執行：
++
++program\ONE_SHOT_NATIVE_TEST.cmd
++
++這個入口固定使用 native-layout.multi.sample.json，不需要手動選檔。
++它會先執行 parser / C# helper / input regression / 23 Font cases / 14 multi-object mocks；全部通過後才啟動 BarTender。
++
++成功或失敗都回傳：
++program\NATIVE_BUILD_RESULT.zip
++
++目前仍 NOT RUN：Windows PowerShell 5.1 原生 parser、C# 真正編譯、23+14 regressions、BarTender 2022 Runtime、實體列印/掃碼。
++
++
++V6 diagnostic note: ONE_SHOT_NATIVE_TEST.cmd now captures full-format and per-object visual/anchor evidence after the unchanged V5 core passes. See GENERAL_GPT_V6_VISUAL_EVIDENCE_REVIEW.md.

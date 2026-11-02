@@ -1,0 +1,28 @@
+{
+  "coreUnchanged": {
+    "program/NativeLayoutEngine.psm1": true,
+    "program/NativeReviewFixtures.cs": true,
+    "program/Test-NativePersistence.ps1": true,
+    "program/Test-NativeFontFallback.ps1": true,
+    "program/proven-code128.btc": true
+  },
+  "jsonCount": 41,
+  "xmlCount": 14,
+  "nestedZipCount": 7,
+  "v6StaticChecks": {
+    "captureSwitch": true,
+    "oneShotCapture": true,
+    "formatExportTypelibGate": true,
+    "formatPreview": true,
+    "perObjectPreview": true,
+    "referencePointCapture": true,
+    "candidateHashGuard": true,
+    "evidenceOnlyClaim": true,
+    "v5CoreCallStillPresent": true,
+    "captureAfterCore": true,
+    "captureBeforeExitSuccess": true,
+    "v5BuildNoCapture": true
+  },
+  "formatExportTypeLibEvidence": "PASS",
+  "v5RegressionDefinitions": "23 font + 14 multi-object retained"
+}

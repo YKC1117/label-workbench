@@ -1,0 +1,15 @@
+PASS analysis-geometry-smoke
+PASS btw-layout-map-smoke
+PASS text-collision-line-parking-smoke
+PASS controlled-donor-code128-inventory
+PASS controlled-donor-text-inventory
+PASS layout-restoration-smoke
+PASS analysis-core-v2-smoke
+PASS second-donor-generation-smoke
+PASS btw-production-core-smoke
+PASS rc2-parity
+PASS: absolute placement, displacement and size residuals, wrong page scale, duplicate bitmap
+PASS authoritative scanCanvas sourceBox; non-semantic OCR preserved even at barcode collision (production readback)
+PASS 140x38, 96x54, 45x55 mm: Text + Code128 + Data Matrix; exact website blob equals embedded artifact
+PASS diagnostic-only size difference; comparable X/Y displacement blocking; missing comparability does not pass
+NOT RUN Windows PowerShell 5.1, BarTender 2022, real customer end-to-end acceptance

@@ -1,0 +1,135 @@
+{
+  "sourceZipSha256": "6ca9cee8689db947bcd975f456c2e77ad6be4b5901f5df1098971c140c589c96",
+  "originalEvidenceFilesUnchanged": 26,
+  "windowsPowerShell51": "NOT_RUN",
+  "barTenderCOM": "NOT_RUN",
+  "powerShell7Parser": "PASS - 14 files",
+  "jsonConfig": "PASS - 4 configs",
+  "csharp5Syntax": "PASS - 4 sources",
+  "reviewMocks": "PASS",
+  "persistenceMocks": "PASS - 8 scenarios",
+  "symbolBounds": "NOT_VERIFIED",
+  "actualPrinterAndScanner": "NOT_RUN",
+  "changes": [
+    {
+      "path": "OFFLINE_REVIEW_17C.txt",
+      "change": "modified",
+      "sha256": "2d76386df6a6ce43f766ae55b5544f965f79c5a122b1ea0fb4eecf97d1420dfe",
+      "originalSha256": "262e125dc623033c55b13d922fb9152c3ccbcb4b7d5db0cd784478bf3530f997"
+    },
+    {
+      "path": "RUN_ONCE.txt",
+      "change": "modified",
+      "sha256": "5ce78895a50baeb97be4cf2824fc049dfab801e6ae2a3e97b78436af7e71a7ce",
+      "originalSha256": "321a16777426731ab01a37fc3bfbdc46a9f570adfdee5df783cddf55f6183c7e"
+    },
+    {
+      "path": "START_HERE.md",
+      "change": "modified",
+      "sha256": "fff433566ae9070af98c9fd15cc036294bccd3ff1c39d3c1d233a4c9a9b6f6b1",
+      "originalSha256": "417e5076df146518d465571edd3b430d9d40c416baf6887eafbbb8191a427e49"
+    },
+    {
+      "path": "TECHNICAL_REVIEW.md",
+      "change": "added",
+      "sha256": "583ab098a04d52aed5a008fe1db77adec22710a213389dafcd78c3a1789d474d",
+      "originalSha256": null
+    },
+    {
+      "path": "program/CORE_TEST.cmd",
+      "change": "modified",
+      "sha256": "89a455e9546375e25f238821aeb99633f75863f8d5c3f9b724779333cec1563e",
+      "originalSha256": "ebdcc64498a171967af490953fc2f6a0ca129e83351466944557d570bb84e283"
+    },
+    {
+      "path": "program/Launch-Core.ps1",
+      "change": "added",
+      "sha256": "f4f18c53401c99573958956b393bf3b51705a74068381b4332c55a282024ff79",
+      "originalSha256": null
+    },
+    {
+      "path": "program/README.md",
+      "change": "modified",
+      "sha256": "27ce07be9f8aac39c206fb0c39015a9507ae7aa26419d3a2555d3a6a1a074dd2",
+      "originalSha256": "14b2e14755d75b28811938375fa7d89782aaf235ad0cb51f0c26e41d1c659a8d"
+    },
+    {
+      "path": "program/RasterEvidence.cs",
+      "change": "added",
+      "sha256": "044b833e85eb567272fb41c8ea2e0dda77ad8227e0fb131bf055408a5ce561b1",
+      "originalSha256": null
+    },
+    {
+      "path": "program/ReviewFixtures.cs",
+      "change": "added",
+      "sha256": "b2a8a4b2fe28e78d7aa1100f1e9a399a48460cdcb6c943915ea16ef5c8ead258",
+      "originalSha256": null
+    },
+    {
+      "path": "program/Run.ps1",
+      "change": "modified",
+      "sha256": "387883818e1167b886427d0b1c8d390685ad6af58c3f6d4ff08241375ed7538c",
+      "originalSha256": "90c4a4bf7a0e17f7fd4aaaebbe0cab290952402a632d362e081e546bf8903ad4"
+    },
+    {
+      "path": "program/SELF_CHECK.ps1",
+      "change": "modified",
+      "sha256": "57d103f4ab9f26c27b4285e7f291c5160073972542982ffe81d03b6111cdf152",
+      "originalSha256": "8ad2d7f07e9f3c3b43818ccea3cb801fcf2105c5110ccd0afa8ae6ae48425b83"
+    },
+    {
+      "path": "program/SOURCES.md",
+      "change": "modified",
+      "sha256": "ef12c36bf96522c14807e97340c8d96604e998d589979421f9e2b862a1110533",
+      "originalSha256": "d85097d07d2a6d9188049f34a06e16c37ecc3940c3491b94ef32aef23d57d506"
+    },
+    {
+      "path": "program/Test-ReviewPersistence.ps1",
+      "change": "added",
+      "sha256": "9b32a0440ac298a873374694871ca9f2b41cda8e2a0869dbfd63537c33f7f571",
+      "originalSha256": null
+    },
+    {
+      "path": "program/Test-XmlCore.ps1",
+      "change": "modified",
+      "sha256": "5a897e2fde422a47009d6af8efa0eb6203c405b64a1a9dde8668b24b4e4f555c",
+      "originalSha256": "b07e68ae787af4cd35b4d2d3320589943e8667b8d308f34e4190ace95c938721"
+    },
+    {
+      "path": "program/Watchdog.ps1",
+      "change": "modified",
+      "sha256": "6d098537b0221070142bbcceeccce55928dc9c45c45ce760b5bac8c6222ec262",
+      "originalSha256": "d15fc35b0e1073d376ae9d709b365c7db7564efebed25d6d3acc61f36f964a94"
+    },
+    {
+      "path": "program/XmlCore.psm1",
+      "change": "modified",
+      "sha256": "ae7e1b8793ecd76f0e948ae1f643016dfed013dbc48742f2dbd8b829bc0cabf4",
+      "originalSha256": "7944aa315d87c1d7620068832fd0b60ee8979cc154090bda4eafdf75de922ee4"
+    },
+    {
+      "path": "program/core-test.json",
+      "change": "modified",
+      "sha256": "6860c76ccb7b135c4da7d7aaea53870a2a9c92d1763593d205f203bf83a5f4ac",
+      "originalSha256": "0f6ab29c5077b6ab85534f62177d8d1c2c1c3216ee39372a08abdd9fdd3e2351"
+    },
+    {
+      "path": "validation/csharp5-language.log",
+      "change": "added",
+      "sha256": "7b6a0ae71d49f37f6dad171968c3f79653862945610d3997641990a7f139cfa4",
+      "originalSha256": null
+    },
+    {
+      "path": "validation/powershell7-self-check.log",
+      "change": "added",
+      "sha256": "fcab11d9e8890720e080735df95335ee1a22edea03e768090680d0f5e40dea75",
+      "originalSha256": null
+    },
+    {
+      "path": "validation/powershell7-transport.log",
+      "change": "added",
+      "sha256": "e532414bd0a5d62832507c21272249d7253cf6d8fc2df39651b31c09a823229a",
+      "originalSha256": null
+    }
+  ]
+}

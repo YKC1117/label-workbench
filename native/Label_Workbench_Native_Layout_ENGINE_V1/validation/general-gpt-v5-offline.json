@@ -1,0 +1,172 @@
+{
+  "date": "2026-10-06",
+  "baseline": "Label_Workbench_Native_Layout_ENGINE_V1_CODEX_V4_FINAL",
+  "revision": "GENERAL_GPT_V5_COM_ONLY_PARTIAL_GUARD",
+  "checks": [
+    {
+      "name": "Recursive JSON/XML/nested ZIP integrity",
+      "status": "PASS",
+      "detail": {
+        "json": 63,
+        "xml": 155,
+        "zip": 7,
+        "errors": []
+      }
+    },
+    {
+      "name": "Original evidence byte-identical",
+      "status": "PASS",
+      "detail": {
+        "files": 33,
+        "changed": []
+      }
+    },
+    {
+      "name": "Proven Code128 SHA256",
+      "status": "PASS",
+      "detail": "0B1E2481BCDE6E5CF1D084599F822DC3027AB19215530B7776296B40A59899F2"
+    },
+    {
+      "name": "PowerShell lexical delimiters",
+      "status": "PASS",
+      "detail": {
+        "files": 20,
+        "bad": [],
+        "nativeParser": "NOT RUN"
+      }
+    },
+    {
+      "name": "C# lexical delimiters",
+      "status": "PASS",
+      "detail": {
+        "files": 5,
+        "bad": [],
+        "compile": "NOT RUN"
+      }
+    },
+    {
+      "name": "Non-ASCII PowerShell UTF-8 BOM",
+      "status": "PASS",
+      "detail": []
+    },
+    {
+      "name": "V5 targeted guards",
+      "status": "PASS",
+      "detail": {
+        "full-state post-COM verification": true,
+        "restore before XML fallback": true,
+        "hidden COM-only fixture": true,
+        "23-case suite": true,
+        "hidden partial two XML calls": true,
+        "hidden partial restore required": true,
+        "self-check 23+14": true,
+        "runtime revision bumped": true,
+        "preflight before BarTender": true
+      }
+    },
+    {
+      "name": "23 unique font scenarios",
+      "status": "PASS",
+      "detail": [
+        "already-matched",
+        "com-success",
+        "xml-success",
+        "com-noop",
+        "com-partial",
+        "com-hidden-partial",
+        "missing-font",
+        "duplicate-font",
+        "missing-attribute",
+        "xml-noop",
+        "xml-partial",
+        "xml-position",
+        "xml-name",
+        "xml-id",
+        "xml-payload",
+        "xml-source",
+        "xml-source-attribute",
+        "xml-fontsize",
+        "xml-font-readback",
+        "xml-other-node",
+        "xml-fit-bounds",
+        "rollback-failure",
+        "geometry-font-reset"
+      ]
+    },
+    {
+      "name": "14 multi-object scenarios retained",
+      "status": "PASS",
+      "detail": [
+        "none",
+        "wrong-create",
+        "duplicate-name",
+        "duplicate-source",
+        "partial-insert",
+        "peer-payload",
+        "noop-index",
+        "bad-dpi",
+        "reopen-type",
+        "reopen-payload",
+        "reopen-nan",
+        "reopen-printer",
+        "reopen-margin",
+        "reopen-dpi"
+      ]
+    },
+    {
+      "name": "One-shot launcher",
+      "status": "PASS",
+      "detail": {
+        "fixed sample": true,
+        "STA PS5 path": true,
+        "returns zip": true,
+        "preserves exit": true
+      }
+    },
+    {
+      "name": "No stale generated outputs",
+      "status": "PASS",
+      "detail": []
+    },
+    {
+      "name": "V4 safety guards retained",
+      "status": "PASS",
+      "detail": {
+        "strict existing direct FontName": true,
+        "pre-mutation baseline": true,
+        "full rollback verification": true,
+        "post-geometry font guard": true,
+        "presave font guard": true
+      }
+    },
+    {
+      "name": "Change scope",
+      "status": "PASS",
+      "detail": {
+        "changed": [
+          "program/Build-NativeLayout.ps1",
+          "program/NativeLayoutEngine.psm1",
+          "program/NativeReviewFixtures.cs",
+          "program/SELF_CHECK_NATIVE.ps1",
+          "program/Test-NativeFontFallback.ps1"
+        ],
+        "new": [
+          "GENERAL_GPT_V5_REVIEW.md",
+          "READ_ME_V5_FIRST.txt",
+          "program/ONE_SHOT_NATIVE_TEST.cmd"
+        ],
+        "deleted": []
+      }
+    }
+  ],
+  "notRun": [
+    "PowerShell native parser",
+    "C# compile",
+    "23 font regressions",
+    "14 multi-object regressions",
+    "Windows PowerShell 5.1 / RCW",
+    "BarTender 2022 runtime",
+    "physical print/scan"
+  ],
+  "readiness": "REVIEW_COMPLETE_RUNTIME_NOT_RUN"
+}

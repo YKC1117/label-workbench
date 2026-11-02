@@ -1,0 +1,1105 @@
+﻿{
+    "schema":  "lwb-bt-automation-report-v1",
+    "scriptRevision":  "blockers-13",
+    "baseDirectory":  "C:\\Users\\FTUSER5\\Desktop\\Label_Workbench_BarTender_POC_blockers13\\BarTender_Automation_POC\\program",
+    "status":  "FAILED_OR_BLOCKED",
+    "visualAcceptance":  "NOT_RUN",
+    "stage":  "normalise payload and apply geometry: 條碼 1",
+    "utc":  "2026-10-01T08:51:06.9577133Z",
+    "os":  "Microsoft Windows NT 10.0.26100.0",
+    "powerShell":  "5.1.26100.9444",
+    "processBits":  64,
+    "template":  "C:\\Users\\FTUSER5\\Desktop\\客戶\\第一個.btw",
+    "output":  null,
+    "unsupported":  [
+
+                    ],
+    "objects":  [
+                    {
+                        "index":  1,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "條碼 1",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "4",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+
+                                       }
+                    },
+                    {
+                        "index":  2,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "文字 1",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "5",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+
+                                       }
+                    },
+                    {
+                        "index":  3,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "條碼 2",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "4",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+
+                                       }
+                    },
+                    {
+                        "index":  4,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "文字 2",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "5",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+
+                                       }
+                    },
+                    {
+                        "index":  5,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "文字 3",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "5",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+
+                                       }
+                    },
+                    {
+                        "index":  6,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "文字 4",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "5",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+
+                                       }
+                    },
+                    {
+                        "index":  7,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "文字 5",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "5",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+
+                                       }
+                    },
+                    {
+                        "index":  8,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "條碼 3",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "4",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+
+                                       }
+                    },
+                    {
+                        "index":  9,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "文字 6",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "5",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+
+                                       }
+                    },
+                    {
+                        "index":  10,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "文字 7",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "5",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+
+                                       }
+                    },
+                    {
+                        "index":  11,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "文字 8",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "5",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+
+                                       }
+                    },
+                    {
+                        "index":  12,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "文字 9",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "5",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+
+                                       }
+                    },
+                    {
+                        "index":  13,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "文字 10",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "5",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+
+                                       }
+                    },
+                    {
+                        "index":  14,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "文字 11",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "5",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+
+                                       }
+                    },
+                    {
+                        "index":  15,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "文字 12",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "5",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+
+                                       }
+                    },
+                    {
+                        "index":  16,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "文字 13",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "5",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+
+                                       }
+                    },
+                    {
+                        "index":  17,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "文字 14",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "5",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+
+                                       }
+                    },
+                    {
+                        "index":  18,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "文字 15",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "5",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+
+                                       }
+                    },
+                    {
+                        "index":  19,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "文字 16",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "5",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+
+                                       }
+                    },
+                    {
+                        "index":  20,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "條碼 4",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "4",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+
+                                       }
+                    },
+                    {
+                        "index":  21,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "文字 17",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "5",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+
+                                       }
+                    },
+                    {
+                        "index":  22,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "文字 18",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "5",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+
+                                       }
+                    },
+                    {
+                        "index":  23,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "文字 19",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "5",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+
+                                       }
+                    },
+                    {
+                        "index":  24,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "文字 20",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "5",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+
+                                       }
+                    },
+                    {
+                        "index":  25,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "文字 21",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "5",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+
+                                       }
+                    },
+                    {
+                        "index":  26,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "文字 22",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "5",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+
+                                       }
+                    },
+                    {
+                        "index":  27,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "文字 23",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "5",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+
+                                       }
+                    },
+                    {
+                        "index":  28,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "文字 24",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "5",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+
+                                       }
+                    },
+                    {
+                        "index":  29,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "條碼 5",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "4",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+
+                                       }
+                    },
+                    {
+                        "index":  30,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "文字 25",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "5",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+
+                                       }
+                    },
+                    {
+                        "index":  31,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "文字 26",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "5",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+
+                                       }
+                    },
+                    {
+                        "index":  32,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "文字 27",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "5",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+
+                                       }
+                    },
+                    {
+                        "index":  33,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "文字 28",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "5",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+
+                                       }
+                    },
+                    {
+                        "index":  34,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "文字 29",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "5",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+
+                                       }
+                    },
+                    {
+                        "index":  35,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "條碼 6",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "4",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+
+                                       }
+                    },
+                    {
+                        "index":  36,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "文字 30",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "5",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+
+                                       }
+                    },
+                    {
+                        "index":  37,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "文字 31",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "5",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+
+                                       }
+                    },
+                    {
+                        "index":  38,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "文字 32",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "5",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+
+                                       }
+                    },
+                    {
+                        "index":  39,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "線條 1",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "2",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+
+                                       }
+                    },
+                    {
+                        "index":  40,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "橢圓 1",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "8",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+
+                                       }
+                    },
+                    {
+                        "index":  41,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "文字 33",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "5",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+
+                                       }
+                    }
+                ],
+    "error":  "System.Management.Automation.RuntimeException: 條碼 1: no verified generic DesignObject property could switch a fresh barcode from its default symbology to BarCode-Code-128. See object-2-symbology-probe.json.",
+    "diagnosticWarnings":  [
+                               "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\"",
+                               "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\"",
+                               "Object 1 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 2 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 3 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 4 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 5 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 6 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 7 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 8 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 9 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 10 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 11 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 12 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 13 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 14 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 15 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 16 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 17 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 18 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 19 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 20 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 21 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 22 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 23 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 24 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 25 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 26 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 27 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 28 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 29 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 30 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 31 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 32 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 33 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 34 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 35 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 36 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 37 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 38 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 39 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 40 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 41 has incomplete diagnostic metadata; see objects in report."
+                           ],
+    "applicationMembers":  {
+                               "available":  false,
+                               "members":  [
+
+                                           ],
+                               "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                           },
+    "barTender":  {
+                      "FullVersion":  {
+                                          "available":  true,
+                                          "value":  "2022 R2",
+                                          "error":  null
+                                      },
+                      "Version":  {
+                                      "available":  true,
+                                      "value":  "11.3",
+                                      "error":  null
+                                  },
+                      "Edition":  {
+                                      "available":  true,
+                                      "value":  "Automation",
+                                      "error":  null
+                                  },
+                      "BuildNumber":  {
+                                          "available":  true,
+                                          "value":  "184527",
+                                          "error":  null
+                                      },
+                      "ProcessID":  {
+                                        "available":  true,
+                                        "value":  "13236",
+                                        "error":  null
+                                    }
+                  },
+    "templateSha256":  "4CF9FDAD67CB27AA79AA57FF2BFF5912463608D8F509067112EB940BDEE49612",
+    "openArgumentTypes":  [
+                              "System.String",
+                              "System.Boolean",
+                              "System.String"
+                          ],
+    "formatMembers":  {
+                          "available":  false,
+                          "members":  [
+
+                                      ],
+                          "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                      },
+    "core":  {
+                 "route":  "ImportDataSourceValuesToXML + Create(4) fresh barcode + donor-derived generic GetProperty/SetProperty symbology switch + native SetXML XDimension + ExportToFile bounds",
+                 "tests":  [
+                               {
+                                   "slot":  "文字 1",
+                                   "payload":  "READBACK_OK",
+                                   "sourceIndependence":  "NOT_REQUIRED",
+                                   "xDimension":  "NOT_REQUIRED",
+                                   "size":  "NOT_REQUIRED_FOR_BLOCKER_TEST",
+                                   "actualAfterImport":  "LWB POC",
+                                   "sourceStateAfterImport":  {
+                                                                  "count":  1,
+                                                                  "kinds":  [
+                                                                                "EmbeddedDataSource"
+                                                                            ],
+                                                                  "objectValueCount":  0,
+                                                                  "embeddedCount":  1
+                                                              },
+                                   "activeObjectName":  "文字 1"
+                               },
+                               {
+                                   "slot":  "條碼 1",
+                                   "payload":  "NOT_RUN",
+                                   "sourceIndependence":  "NOT_RUN",
+                                   "xDimension":  "NOT_RUN",
+                                   "size":  "NOT_RUN",
+                                   "actualAfterImport":  "LWB-C128-001W25N01GWZEIR#6612D7800ZZ",
+                                   "sourceStateAfterImport":  {
+                                                                  "count":  4,
+                                                                  "kinds":  [
+                                                                                "EmbeddedDataSource",
+                                                                                "ObjectValueDataSource",
+                                                                                "EmbeddedDataSource",
+                                                                                "ObjectValueDataSource"
+                                                                            ],
+                                                                  "objectValueCount":  2,
+                                                                  "embeddedCount":  2
+                                                              }
+                               }
+                           ],
+                 "verified":  [
+
+                              ],
+                 "blocking":  [
+
+                              ],
+                 "fullLayoutAccepted":  false,
+                 "legacySetXmlFinding":  "Existing-object SetXML preserves extra ObjectValueDataSource nodes. blockers-12 also proved SetXML cannot change a fresh barcode symbology/root; blockers-13 probes generic GetProperty/SetProperty with the donor value instead of guessing an identifier.",
+                 "importReturn":  true
+             }
+}

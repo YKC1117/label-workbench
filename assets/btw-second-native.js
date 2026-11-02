@@ -5,7 +5,7 @@
  */
 (function(){
   'use strict';
-  const BUILD='20261001-btw-second-native-313-clean-donor-sizing';
+  const BUILD='20261102-layout-rc2';
   const SEED_ID='LW-CLEAN-100x65-2022-R2';
   const MAX_TEXT=29;
   const MAX_C128=5;
@@ -403,18 +403,7 @@
   }
   function requestedBarcodeRows(p){return[...p.dm.map(row=>({type:'Data Matrix',row,value:barcodeText(row)})),...p.c128.map(row=>({type:'Code 128',row,value:barcodeText(row)}))]}
 
-  async function generateOne(label,index=0){
-    const P=plan(label);if(!P)throw new Error('此標籤超出 5C128+1DM native donor 可安全建立範圍');
-    const D=window.LabelWorkbenchBtwSecondDonor,F=window.LabelWorkbenchBtwFormat,M=window.LabelWorkbenchBtwObjectMap;
-    if(!D?.bytes||!F?.parseStructure||!F?.inflateContainer||!F?.rebuild||!F?.replaceTemplateSize||!M?.mapContainer||!M?.editContainer)throw new Error('clean 5C128+1DM BTW 元件尚未載入');
-
-    const seed=new Uint8Array(await D.bytes()),parsed=F.parseStructure(seed);
-    if(parsed.header?.applicationVersion!=='2022 R2'||parsed.header?.compatibleVersion!=='2022 R1')throw new Error('5C128+1DM donor 版本不是 BarTender 2022 R2 / 2022 R1 相容');
-    let container=await F.inflateContainer(parsed),before=M.mapContainer(container),donorPool=pool(before.objects);assertPool(donorPool);
-    const rootCount=before.objects.length,target=targetSize(label),sized=rewriteInternalSize(container,target),aux=parkAuxiliaryGraphics(sized.container),rootless=parkRootlessTextObjects(aux.container,before);container=rootless.container;
-
-    /* Re-map after fixed-width size/auxiliary rewrites so all edit offsets are derived from the bytes being edited. */
-    before=M.mapContainer(container);donorPool=pool(before.objects);assertPool(donorPool);
+  function planDonorEdits(P,before,donorPool,target){
     if(target.source){
       const missingText=P.fields.filter(item=>!validSourceBox(item?.sourceBox));
       const missingBarcode=requestedBarcodeRows(P).filter(item=>!validSourceBox(item?.row?.sourceBox));
@@ -448,29 +437,55 @@
       const obj=before.objects.find(o=>o.index===ref.index);if(!obj)throw new Error(`Code128 linked Text 不存在：${ref.ref||ref.index}`);
       const value=String(ref.value??''),field=takeMatchingField(remainingFields,value,obj);
       if(field){
-        const adjusted=avoidBarcodeCollision(field,sourceBarcodes),layout=sourceLayout(adjusted?.sourceBox,target),pos=layout?.mil?{xMil:layout.mil.x,yMil:layout.mil.y}:linkedTextPos(obj,ref.barcodeObj,ref.barcodePos,target)||fallbackTextPos(expectedText.length,P.fields.length,target),fontSize=sourceFontSize(layout,obj.fontSize,value),edit={index:obj.index,value,...pos,normalizeTextBoxPosition:true,anchorPoint:0,horizontalScale:1000};
+        const adjusted=validSourceBox(field.sourceBox)&&!field.semanticSplit?field:avoidBarcodeCollision(field,sourceBarcodes),layout=sourceLayout(adjusted?.sourceBox,target),pos=layout?.mil?{xMil:layout.mil.x,yMil:layout.mil.y}:linkedTextPos(obj,ref.barcodeObj,ref.barcodePos,target)||fallbackTextPos(expectedText.length,P.fields.length,target),fontSize=sourceFontSize(layout,obj.fontSize,value),edit={index:obj.index,value,...pos,normalizeTextBoxPosition:true,anchorPoint:0,horizontalScale:1000};
         if(obj.fontNameOffset!=null)edit.fontName='Microsoft JhengHei';
         if(fontSize!=null&&obj.fontSizeOffset!=null)edit.fontSize=fontSize;
-        edits.set(obj.index,edit);activeIndexes.add(obj.index);expectedText.push({index:obj.index,value,fontName:edit.fontName??obj.fontName,fontSize:edit.fontSize??obj.fontSize,anchorPoint:0,horizontalScale:1000,linkedBarcode:true,splitValue:field?.splitRole==='value',...pos})
+        edits.set(obj.index,edit);activeIndexes.add(obj.index);expectedText.push({sourceBox:field.sourceBox,placementBox:adjusted.sourceBox,index:obj.index,value,fontName:edit.fontName??obj.fontName,fontSize:edit.fontSize??obj.fontSize,anchorPoint:0,horizontalScale:1000,linkedBarcode:true,splitValue:field?.splitRole==='value',...pos})
       }else edits.set(obj.index,{index:obj.index,value,xMil:OFF,yMil:OFF})
     }
 
     const freeTexts=donorPool.texts.filter(o=>!reservedIndexes.has(o.index)),fit=compactTextFields(remainingFields,freeTexts.length);
     const textAssignments=assignTextPool(fit.fields,freeTexts);
     textAssignments.forEach(({field,obj,score},i)=>{
-      const adjusted=avoidBarcodeCollision(field,sourceBarcodes),layout=sourceLayout(adjusted?.sourceBox,target),pos=layout?.mil?{xMil:layout.mil.x,yMil:layout.mil.y}:fallbackTextPos(i,fit.fields.length,target),value=textValue(adjusted),fontSize=sourceFontSize(layout,obj.fontSize,value),edit={index:obj.index,value,...pos,normalizeTextBoxPosition:true,anchorPoint:0,horizontalScale:1000};
+      const adjusted=validSourceBox(field.sourceBox)&&!field.semanticSplit?field:avoidBarcodeCollision(field,sourceBarcodes),layout=sourceLayout(adjusted?.sourceBox,target),pos=layout?.mil?{xMil:layout.mil.x,yMil:layout.mil.y}:fallbackTextPos(i,fit.fields.length,target),value=textValue(adjusted),fontSize=sourceFontSize(layout,obj.fontSize,value),edit={index:obj.index,value,...pos,normalizeTextBoxPosition:true,anchorPoint:0,horizontalScale:1000};
       if(obj.fontNameOffset!=null)edit.fontName='Microsoft JhengHei';
       if(fontSize!=null&&obj.fontSizeOffset!=null)edit.fontSize=fontSize;
-      edits.set(obj.index,edit);activeIndexes.add(obj.index);expectedText.push({index:obj.index,value,fontName:edit.fontName??obj.fontName,fontSize:edit.fontSize??obj.fontSize,anchorPoint:0,horizontalScale:1000,styleScore:Math.round(score*1000)/1000,...pos})
+      edits.set(obj.index,edit);activeIndexes.add(obj.index);expectedText.push({sourceBox:field.sourceBox,placementBox:adjusted.sourceBox,index:obj.index,value,fontName:edit.fontName??obj.fontName,fontSize:edit.fontSize??obj.fontSize,anchorPoint:0,horizontalScale:1000,styleScore:Math.round(score*1000)/1000,...pos})
     });
 
     barcodeAssignments.forEach((item)=>{
       const obj=item.obj;if(!obj)throw new Error(`5C128+1DM donor 缺少 ${item.type} 原生物件`);
       const xDimension=item.type==='Data Matrix'?chooseDataMatrixXDimension(item.row,target):chooseCode128XDimension(item.row,target),edit=barcodeEdit(obj,item.value,item.pos,item.structure);
       edit.xDimension=xDimension;
-      edits.set(obj.index,edit);activeIndexes.add(obj.index);expectedBarcode.push({index:obj.index,type:item.type,value:item.structure?.payload??item.value,sourceValue:item.value,linked:!!item.structure,xDimension,styleScore:Math.round(item.score*1000)/1000,...item.pos})
+      edits.set(obj.index,edit);activeIndexes.add(obj.index);expectedBarcode.push({sourceBox:item.row.sourceBox,placementBox:item.row.sourceBox,index:obj.index,type:item.type,value:item.structure?.payload??item.value,sourceValue:item.value,linked:!!item.structure,xDimension,styleScore:Math.round(item.score*1000)/1000,...item.pos})
     });
 
+    const objects=[...expectedText,...expectedBarcode].map(row=>{
+      const donor=before.objects.find(o=>o.index===row.index);
+      return {id:'OBJ_'+row.index,donorIndex:row.index,physicalName:donor.name,
+        type:row.type==='Data Matrix'?'datamatrix':row.type==='Code 128'?'code128':'text',
+        value:row.value,sourceBox:row.sourceBox??null,placementBox:row.placementBox??null,
+        xMm:row.xMil*.0254,yMm:row.yMil*.0254,rotationDeg:null,rotationMode:'inherit-donor',
+        fontName:row.fontName??null,fontSizePt:row.fontSize??null,
+        xDimensionHundredthMil:row.xDimension??null,barcodeHeightMode:row.type?'inherit-donor':null};
+    });
+    const request={revision:BUILD,widthMm:target.width,heightMm:target.height,physicalSizeKnown:target.source,objects};
+    return {edits,activeIndexes,expectedText,expectedBarcode,split,fit,c128Assignments,request};
+  }
+
+  async function generateOne(label,index=0){
+    const P=plan(label);if(!P)throw new Error('此標籤超出 5C128+1DM native donor 可安全建立範圍');
+    const D=window.LabelWorkbenchBtwSecondDonor,F=window.LabelWorkbenchBtwFormat,M=window.LabelWorkbenchBtwObjectMap;
+    if(!D?.bytes||!F?.parseStructure||!F?.inflateContainer||!F?.rebuild||!F?.replaceTemplateSize||!M?.mapContainer||!M?.editContainer)throw new Error('clean 5C128+1DM BTW 元件尚未載入');
+
+    const seed=new Uint8Array(await D.bytes()),parsed=F.parseStructure(seed);
+    if(parsed.header?.applicationVersion!=='2022 R2'||parsed.header?.compatibleVersion!=='2022 R1')throw new Error('5C128+1DM donor 版本不是 BarTender 2022 R2 / 2022 R1 相容');
+    let container=await F.inflateContainer(parsed),before=M.mapContainer(container),donorPool=pool(before.objects);assertPool(donorPool);
+    const rootCount=before.objects.length,target=targetSize(label),sized=rewriteInternalSize(container,target),aux=parkAuxiliaryGraphics(sized.container),rootless=parkRootlessTextObjects(aux.container,before);container=rootless.container;
+
+    /* Re-map after fixed-width size/auxiliary rewrites so all edit offsets are derived from the bytes being edited. */
+    before=M.mapContainer(container);donorPool=pool(before.objects);assertPool(donorPool);
+    const {edits,activeIndexes,expectedText,expectedBarcode,split,fit,c128Assignments,request}=planDonorEdits(P,before,donorPool,target);
     const edited=M.editContainer(container,[...edits.values()]);
     const parkedIndexes=before.objects.filter(o=>!activeIndexes.has(o.index)).map(o=>o.index);
     const rebuilt0=await F.rebuild(parsed,edited),rebuilt=target.source?F.replaceTemplateSize(rebuilt0,target.width,target.height):rebuilt0;
@@ -499,9 +514,9 @@
       if(!text.includes(`<TemplateSize>${wanted}</TemplateSize>`))throw new Error('BTW TemplateSize round-trip 驗證失敗')
     }
 
-    return{name:outputName(label,index),bytes:rebuilt,kind:P.kind,barcodes:{dataMatrix:P.dm.map(barcodeText),code128:P.c128.map(barcodeText)},layout:{target,internalSizeOffsets:sized.offsets,text:expectedText,barcodes:expectedBarcode,parkedDonorRoots:parkedIndexes.length,parkedAuxiliaryGraphics:aux.parked,parkedRootlessText:rootless.parked,originalRootCount:rootCount,textCompaction:{input:P.inputTextCount,written:expectedText.length,omitted:[...P.omittedText,...split.omitted,...fit.omitted].map(x=>textValue(x)),captionValueSplits:split.splitCount},linkedCode128:c128Assignments.filter(x=>x.structure).length},header:check.header,seed:SEED_ID}
+    return{request,name:outputName(label,index),bytes:rebuilt,kind:P.kind,barcodes:{dataMatrix:P.dm.map(barcodeText),code128:P.c128.map(barcodeText)},layout:{target,internalSizeOffsets:sized.offsets,text:expectedText,barcodes:expectedBarcode,parkedDonorRoots:parkedIndexes.length,parkedAuxiliaryGraphics:aux.parked,parkedRootlessText:rootless.parked,originalRootCount:rootCount,textCompaction:{input:P.inputTextCount,written:expectedText.length,omitted:[...P.omittedText,...split.omitted,...fit.omitted].map(x=>textValue(x)),captionValueSplits:split.splitCount},linkedCode128:c128Assignments.filter(x=>x.structure).length},header:check.header,seed:SEED_ID}
   }
 
-  window.LabelWorkbenchBtwSecondNative={BUILD,SEED_ID,MAX_TEXT,MAX_C128,MAX_DM,OFF,plan,canGenerate,pool,validSourceBox,textPriority,textDedupKey,boxesNear,dedupeTextFields,compactTextFields,textStyleScore,assignTextPool,barcodeStyleScore,code128Structure,assignBarcodePool,assignCode128Pool,takeMatchingField,linkedTextPos,linkedFontSize,captionPrefixForLinkedValue,splitCaptionValueField,splitLinkedVisibleFields,boxesOverlap,paddedBarcodeBox,overlapsAnyBarcode,avoidBarcodeCollision,code128ModuleEstimate,chooseCode128XDimension,dataMatrixModules,chooseDataMatrixXDimension,lineEndpointOffsets,parkRootlessTextObjects,parkAuxiliaryGraphics,generateOne};
+  window.LabelWorkbenchBtwSecondNative={BUILD,SEED_ID,MAX_TEXT,MAX_C128,MAX_DM,OFF,planDonorEdits,plan,canGenerate,pool,validSourceBox,textPriority,textDedupKey,boxesNear,dedupeTextFields,compactTextFields,textStyleScore,assignTextPool,barcodeStyleScore,code128Structure,assignBarcodePool,assignCode128Pool,takeMatchingField,linkedTextPos,linkedFontSize,captionPrefixForLinkedValue,splitCaptionValueField,splitLinkedVisibleFields,boxesOverlap,paddedBarcodeBox,overlapsAnyBarcode,avoidBarcodeCollision,code128ModuleEstimate,chooseCode128XDimension,dataMatrixModules,chooseDataMatrixXDimension,lineEndpointOffsets,parkRootlessTextObjects,parkAuxiliaryGraphics,generateOne};
   console.info('[Label Workbench] controlled 5C128+1DM native generator',BUILD);
 })();
