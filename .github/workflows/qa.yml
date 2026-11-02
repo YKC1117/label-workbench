@@ -259,7 +259,18 @@ jobs:
           retention-days: 14
       - name: Native BTW object decoder/editor smoke tests
         run: node tests/btw-object-map-smoke.cjs
+      - name: External family donor DNS preflight
+        id: family-seed-dns
+        shell: bash
+        run: |
+          if node -e "require('dns').promises.lookup('kjbyyewytqgqacrxdkru.supabase.co').then(()=>process.exit(0)).catch(e=>{console.error(e.code||e.message);process.exit(1)})"; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::NOT RUN: external BarTender family donor check skipped because Supabase DNS is unavailable on this runner"
+          fi
       - name: Native QR Code39 UPC-A EAN-13 GS1-128 PDF417 donor round trip
+        if: steps.family-seed-dns.outputs.available == 'true'
         run: node tests/btw-family-native-smoke.cjs
       - name: Real BTW barcode read-slot regression tests
         run: node tests/btw-barcode-read-slot-smoke.cjs
@@ -288,8 +299,21 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx playwright install --with-deps chromium
+      - name: External production seed DNS preflight
+        id: browser-seed-dns
+        shell: bash
+        run: |
+          if node -e "require('dns').promises.lookup('kjbyyewytqgqacrxdkru.supabase.co').then(()=>process.exit(0)).catch(e=>{console.error(e.code||e.message);process.exit(1)})"; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::NOT RUN: live Supabase seed contract skipped because external DNS is unavailable on this runner"
+          fi
       - name: Real Chromium PDF PNG JPG analysis and direct download
-        run: npm run test:browser
+        run: npm run test:browser -- --grep-invert "production seed endpoint contract and visible failure recovery"
+      - name: Live production seed endpoint contract and failure recovery
+        if: steps.browser-seed-dns.outputs.available == 'true'
+        run: npm run test:browser -- --grep "production seed endpoint contract and visible failure recovery"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
