@@ -88,6 +88,7 @@ try{
     Import-Module (Join-Path $BaseDirectory 'Com.psm1') -Force
     Import-Module (Join-Path $BaseDirectory 'NativeLayoutEngine.psm1') -Force
     $layout=Get-Content -LiteralPath (Join-Path $runDir 'input-layout.json') -Raw -Encoding UTF8|ConvertFrom-Json
+    if($layout.schema -ceq 'renderer-probe-v1' -and -not $CaptureVisualEvidence){throw 'Prototype requires full-page capture.'}
     $production=($layout.schema -ceq 'lwb-production-review-v2')
     if($production){
         if(-not $CaptureVisualEvidence -or $layout.revision -cne $runtime.revision -or $layout.layout.revision -cne $runtime.revision){throw 'RC2 evidence revision mismatch.'}
@@ -124,7 +125,8 @@ try{
     $formats=Com\Read-Property $app 'Formats'
     if(-not $production){$report=Invoke-NativeLayoutBuild $formats $layout $runDir $BaseDirectory}
     if($CaptureVisualEvidence){$runtime['visualEvidence']=Capture-RunnerVisualEvidence $formats $report $plan $runDir $BaseDirectory
-        & $nodePath (Join-Path $BaseDirectory 'compare-render.cjs') $runDir (Join-Path $runDir 'input-layout.json')
+        $checker=if($layout.schema -ceq 'renderer-probe-v1'){'probe-render.cjs'}else{'compare-render.cjs'}
+        & $nodePath (Join-Path $BaseDirectory $checker) $runDir (Join-Path $runDir 'input-layout.json')
         if($LASTEXITCODE -ne 0){throw 'Render comparison unresolved or outside tolerance. See render-comparison.json.'}
     }
     if($production){$report|ConvertTo-Json -Depth 16|Set-Content -LiteralPath $reportPath -Encoding UTF8}
