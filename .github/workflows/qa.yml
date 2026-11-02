@@ -85,7 +85,7 @@ jobs:
       - name: Current wiring sanity check
         run: |
           grep -q 'assets/analysis-entry.js?v=20260919-v148' index.html
-          grep -q 'assets/barcode-reader.js?v=20261001-v393' index.html
+          grep -q 'assets/barcode-reader.js?v=20261102-layout-rc2' index.html
           grep -q '標籤製作工作台 · v1.9.61' index.html
           grep -q 'id="buildMeta"' index.html
           grep -q 'assets/analysis-race-guard.js?v=20260914-v139' index.html
@@ -93,12 +93,12 @@ jobs:
           grep -q "dataset.priorityBound='true'" assets/analysis-entry.js
           grep -q "BUILD='20260918-view-guard-145-index-owned-version'" assets/view-state-guard.js
           ! grep -q "marker.innerHTML='標籤製作工作台" assets/view-state-guard.js
-          grep -q "BUILD='20261001-v393-clean-donor-sizing'" assets/barcode-reader.js
+          grep -q "BUILD='20261102-layout-rc2'" assets/barcode-reader.js
           grep -q "BUILD='20260919-v184-pdf-legacy'" assets/label-interpreter.js
           grep -q "BUILD='20260918-btw-production-gate-110-textobjects'" assets/btw-production-gate.js
-          grep -q "BUILD='20261001-btw-second-native-313-clean-donor-sizing'" assets/btw-second-native.js
+          grep -q "BUILD='20261102-layout-rc2'" assets/btw-second-native.js
           grep -q 'analysis-core-v2.js' assets/barcode-reader.js
-          grep -q "BUILD='20260918-analysis-core-v2-200'" assets/analysis-core-v2.js
+          grep -q "BUILD='20261102-layout-rc2'" assets/analysis-core-v2.js
           grep -q 'LabelWorkbenchModuleLoader={BUILD,ready:true}' assets/barcode-reader.js
           grep -q "BUILD='20260918-barcode-crosscheck-108-clear-stale-ocr'" assets/analysis-barcode-crosscheck.js
           grep -q "analysis-barcode-crosscheck.js'" assets/barcode-reader.js
@@ -120,7 +120,7 @@ jobs:
           grep -q 'btw-family-native.js' assets/barcode-reader.js
           grep -q "BUILD='20260918-btw-family-native-140-itf14'" assets/btw-family-native.js
           grep -q 'btw-production-core.js' assets/barcode-reader.js
-          grep -q "BUILD='20260918-btw-production-core-140-itf14'" assets/btw-production-core.js
+          grep -q "BUILD='20261102-layout-rc2'" assets/btw-production-core.js
           grep -q "BUILD='20261001-btnp303-clean-donor-sizing'" assets/bt-native-primary.js
           grep -q "ensureProduction" assets/bt-native-primary.js
           grep -q "await ensureProduction()" assets/bt-native-primary.js
