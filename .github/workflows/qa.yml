@@ -267,7 +267,7 @@ jobs:
             echo "available=true" >> "$GITHUB_OUTPUT"
           else
             echo "available=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::NOT RUN: external BarTender family donor check skipped because Supabase DNS is unavailable on this runner"
+            echo "::notice::NOT RUN: external BarTender donor checks skipped because Supabase DNS is unavailable on this runner"
           fi
       - name: Native QR Code39 UPC-A EAN-13 GS1-128 PDF417 donor round trip
         if: steps.family-seed-dns.outputs.available == 'true'
@@ -275,12 +275,16 @@ jobs:
       - name: Real BTW barcode read-slot regression tests
         run: node tests/btw-barcode-read-slot-smoke.cjs
       - name: Independent BTW field-caption adapter smoke tests
+        if: steps.family-seed-dns.outputs.available == 'true'
         run: node tests/btw-caption-adapter-smoke.cjs
       - name: CEA seed native object map diagnostic
+        if: steps.family-seed-dns.outputs.available == 'true'
         run: node tests/cea-object-map-diagnostic.cjs
       - name: Native editable BTW generation smoke tests
+        if: steps.family-seed-dns.outputs.available == 'true'
         run: node tests/btw-native-smoke.cjs
       - name: Production rich native BTW generation smoke tests
+        if: steps.family-seed-dns.outputs.available == 'true'
         run: node tests/btw-rich-native-smoke.cjs
       - name: Mock DOM one-click wiring (not browser acceptance)
         run: node tests/browser-btw-flow-smoke.cjs
