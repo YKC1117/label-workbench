@@ -1,0 +1,84 @@
+{
+  "label": {
+    "sourceGeometry": {
+      "widthMm": 100,
+      "heightMm": 50
+    },
+    "textObjects": [
+      {
+        "text": "LOT A",
+        "sourceBox": {
+          "x": 0.04,
+          "y": 0.06,
+          "w": 0.18,
+          "h": 0.08
+        }
+      },
+      {
+        "text": "SAMPLE",
+        "sourceBox": {
+          "x": 0.04,
+          "y": 0.28,
+          "w": 0.34,
+          "h": 0.16
+        }
+      }
+    ],
+    "barcodes": [
+      {
+        "text": "AB12",
+        "sourceBox": {
+          "x": 0.04,
+          "y": 0.62,
+          "w": 0.20065999999999998,
+          "h": 0.18
+        },
+        "format": "Code 128"
+      },
+      {
+        "text": "ABC",
+        "sourceBox": {
+          "x": 0.7,
+          "y": 0.3,
+          "w": 0.034,
+          "h": 0.068
+        },
+        "format": "Data Matrix"
+      }
+    ]
+  },
+  "styles": [
+    {
+      "type": "text",
+      "fontName": "Arial",
+      "fontSizePt": 9,
+      "alignment": "left",
+      "rotationDeg": 0,
+      "referencePoint": "TopLeft"
+    },
+    {
+      "type": "text",
+      "fontName": "Arial",
+      "fontSizePt": 18,
+      "alignment": "left",
+      "rotationDeg": 0,
+      "referencePoint": "TopLeft"
+    },
+    {
+      "type": "code128",
+      "moduleIndex": 2,
+      "moduleMm": 0.254,
+      "humanReadable": "none",
+      "rotationDeg": 0,
+      "referencePoint": "TopLeft"
+    },
+    {
+      "type": "datamatrix",
+      "moduleIndex": 3,
+      "moduleMm": 0.338582,
+      "humanReadable": "none",
+      "rotationDeg": 0,
+      "referencePoint": "TopLeft"
+    }
+  ]
+}
