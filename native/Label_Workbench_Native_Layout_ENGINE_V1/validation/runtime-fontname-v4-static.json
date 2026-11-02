@@ -1,0 +1,102 @@
+{
+  "schema": "runtime-fontname-v4-static-v1",
+  "status": "PASS",
+  "checks": {
+    "jsonParse": {
+      "count": 34,
+      "bad": [],
+      "status": "PASS"
+    },
+    "xmlParse": {
+      "count": 14,
+      "bad": [],
+      "status": "PASS"
+    },
+    "nestedZipIntegrity": {
+      "count": 7,
+      "bad": [],
+      "status": "PASS"
+    },
+    "targetedSourceAssertions": {
+      "status": "PASS",
+      "assertions": {
+        "fontHelperExists": true,
+        "skipAlreadyMatched": true,
+        "comPreferred": true,
+        "xmlFallback": true,
+        "payloadSourceGuard": true,
+        "rollbackOnFallbackFailure": true,
+        "fontSizeStillComTarget": true,
+        "mockRejectsFontPut": true,
+        "mockExercisesAlternateFont": true,
+        "deepComDiagnostics": true
+      }
+    },
+    "realEvidenceFontFallbackShape": {
+      "status": "PASS",
+      "fontName": "Arial",
+      "sourceId": "{6E1B676D-8F75-4730-9296-8F59D6DFC18A}",
+      "payload": "(1P) PART NO :"
+    },
+    "delimiterBalance": {
+      "program/NativeLayoutEngine.psm1": {
+        "braces": [
+          388,
+          388
+        ],
+        "parens": [
+          829,
+          829
+        ],
+        "status": "PASS"
+      },
+      "program/Test-NativePersistence.ps1": {
+        "braces": [
+          47,
+          47
+        ],
+        "parens": [
+          95,
+          95
+        ],
+        "status": "PASS"
+      },
+      "program/NativeReviewFixtures.cs": {
+        "braces": [
+          60,
+          60
+        ],
+        "parens": [
+          211,
+          211
+        ],
+        "status": "PASS"
+      },
+      "program/ComBridge.cs": {
+        "braces": [
+          16,
+          16
+        ],
+        "parens": [
+          44,
+          44
+        ],
+        "status": "PASS"
+      }
+    }
+  },
+  "notRun": [
+    "Windows PowerShell 5.1 parser",
+    "Add-Type C# compile",
+    "14 mock execution",
+    "BarTender 2022 COM runtime",
+    "Save/Close/Reopen visual acceptance"
+  ],
+  "changedFiles": {
+    "program/NativeLayoutEngine.psm1": "D43C442B6BE219C4E794A243DF7F0CF496FDF5D21CF4512A534DF68DD47B3C7D",
+    "program/NativeReviewFixtures.cs": "05D66FB016F883A2C7DADCE1669D041F8BAE9854F2B32DBD369BD39E31A2A0A1",
+    "program/Test-NativePersistence.ps1": "A710AF555DCD6479F3B991F344FF638F0BA501FBED27A609076651DC2076CDD6",
+    "program/ComBridge.cs": "2EF4808FFDD2097D64161671165FEEB7FBD2030E929BD0AD8A03423DA186CEA4",
+    "RUNTIME_FIX_FONTNAME_V4.md": "088A4C8EB0EB2006C8600F1BF37563F09392D98AD7F1A8A3C21059F791BB1331"
+  }
+}

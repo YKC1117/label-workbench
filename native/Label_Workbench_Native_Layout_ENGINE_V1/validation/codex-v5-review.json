@@ -1,0 +1,166 @@
+{
+  "date": "2026-10-06",
+  "basis": "Label_Workbench_Native_Layout_ENGINE_V1_GENERAL_GPT_V5_REVIEW_CANDIDATE(1).zip",
+  "checks": [
+    {
+      "name": "Supplied V5 SHA256",
+      "status": "PASS",
+      "detail": "Matches user handoff"
+    },
+    {
+      "name": "Input ZIP CRC",
+      "status": "PASS",
+      "detail": "Full extraction"
+    },
+    {
+      "name": "Recursive JSON/XML/nested ZIP",
+      "status": "PASS",
+      "detail": {
+        "json": 65,
+        "xml": 155,
+        "nestedZip": 7
+      }
+    },
+    {
+      "name": "Evidence byte-identical to Codex V4",
+      "status": "PASS",
+      "detail": 33
+    },
+    {
+      "name": "Proven Code128 SHA256",
+      "status": "PASS",
+      "detail": "Unchanged"
+    },
+    {
+      "name": "PowerShell lexical sanity ONLY",
+      "status": "PASS",
+      "detail": {
+        "files": 20,
+        "nativeParser": "NOT RUN"
+      }
+    },
+    {
+      "name": "C# lexical sanity ONLY",
+      "status": "PASS",
+      "detail": {
+        "files": 5,
+        "compile": "NOT RUN"
+      }
+    },
+    {
+      "name": "Non-ASCII PowerShell BOM",
+      "status": "PASS",
+      "detail": "Windows PS5.1 decoding"
+    },
+    {
+      "name": "23 font cases retain all V4 22",
+      "status": "PASS",
+      "detail": [
+        "already-matched",
+        "com-success",
+        "xml-success",
+        "com-noop",
+        "com-partial",
+        "com-hidden-partial",
+        "missing-font",
+        "duplicate-font",
+        "missing-attribute",
+        "xml-noop",
+        "xml-partial",
+        "xml-position",
+        "xml-name",
+        "xml-id",
+        "xml-payload",
+        "xml-source",
+        "xml-source-attribute",
+        "xml-fontsize",
+        "xml-font-readback",
+        "xml-other-node",
+        "xml-fit-bounds",
+        "rollback-failure",
+        "geometry-font-reset"
+      ]
+    },
+    {
+      "name": "14 multi-object suite unchanged",
+      "status": "PASS",
+      "detail": [
+        "none",
+        "wrong-create",
+        "duplicate-name",
+        "duplicate-source",
+        "partial-insert",
+        "peer-payload",
+        "noop-index",
+        "bad-dpi",
+        "reopen-type",
+        "reopen-payload",
+        "reopen-nan",
+        "reopen-printer",
+        "reopen-margin",
+        "reopen-dpi"
+      ]
+    },
+    {
+      "name": "Hidden partial fault modifies COM field only",
+      "status": "PASS",
+      "detail": "Throws immediately afterwards; no XML mutation in new branch"
+    },
+    {
+      "name": "Full baseline guard before fallback",
+      "status": "PASS",
+      "detail": "Guard delegates to unchanged full COM/XML/payload/identity/geometry assertion"
+    },
+    {
+      "name": "Only targeted engine branch changed",
+      "status": "PASS",
+      "detail": "No scope, font size, XML acceptance, rollback, barcode or persistence drift"
+    },
+    {
+      "name": "Hidden partial test requires two XML calls and one restore",
+      "status": "PASS",
+      "detail": "Behavioural assertions exist; NOT RUN"
+    },
+    {
+      "name": "One-shot fixed sample/no file picker",
+      "status": "PASS",
+      "detail": "Absolute quoted paths; exit code preserved"
+    },
+    {
+      "name": "Preflight before BarTender activation",
+      "status": "PASS",
+      "detail": "Existing terminating-error propagation retained"
+    },
+    {
+      "name": "Fresh production module after mocks",
+      "status": "PASS",
+      "detail": "No mock script-scope override reused by production"
+    },
+    {
+      "name": "No stale generated outputs in input",
+      "status": "PASS",
+      "detail": "Historical evidence archives preserved"
+    }
+  ],
+  "runtimeCodeChangesByThisReview": [],
+  "tools": {
+    "pwsh": null,
+    "powershell": null,
+    "dotnet": null,
+    "csc": null,
+    "mcs": null,
+    "mono": null
+  },
+  "notRun": [
+    "PowerShell native parser",
+    "C# compiler",
+    "input regression",
+    "23 font regressions",
+    "14 multi-object regressions",
+    "Windows PowerShell 5.1",
+    "BarTender 2022 runtime / SaveAs-Close-Reopen",
+    "print/scan"
+  ],
+  "reviewConclusion": "NO_NEW_CONCRETE_CODE_DEFECT_FOUND_IN_V5_DELTA",
+  "readiness": "EXECUTABLE_VERIFICATION_PENDING"
+}

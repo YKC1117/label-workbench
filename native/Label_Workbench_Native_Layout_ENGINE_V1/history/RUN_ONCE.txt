@@ -1,0 +1,5 @@
+完整解壓到新資料夾 → 雙擊 program\CORE_TEST.cmd。
+第一個動作一定是選擇 POC 原始 BTW；選好後才會跑 SELF_CHECK，通過後才啟動 BarTender。
+程式只操作原始 BTW 的工作副本，不會覆寫原檔。
+完成後只回傳 program\RETURN_TO_CHATGPT.zip。
+不用建模板、不用改程式、不用逐項測試。

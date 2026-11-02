@@ -5,7 +5,7 @@
 (function(){
   'use strict';
 
-  const BUILD='20260918-analysis-core-v2-200';
+  const BUILD='20261102-layout-rc2';
   let generation=0;
   let latestResult=null;
   let latestFiles=[];
@@ -30,6 +30,7 @@
   async function run(files){
     const arr=[...(files||[])].filter(Boolean);
     const my=++generation;
+    window.LabelWorkbenchNativeReview?.render(null);
     if(!arr.length)throw new Error('沒有收到檔案');
     if(!arr.every(mediaFile))throw new Error('Analysis Core v2 僅處理 PDF／圖片');
 
@@ -78,7 +79,7 @@
 
   window.LabelWorkbenchAnalysisCoreV2={
     BUILD,run,mediaFile,
-    invalidate(){generation++;latestResult=null;latestFiles=[]},
+    invalidate(){window.LabelWorkbenchNativeReview?.render(null);generation++;latestResult=null;latestFiles=[]},
     get latestResult(){return latestResult},
     get latestFiles(){return latestFiles.slice()},
     get generation(){return generation}

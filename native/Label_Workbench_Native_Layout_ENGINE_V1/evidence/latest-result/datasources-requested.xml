@@ -1,0 +1,292 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<Command>
+   <DataMerge>
+      <Object Name="份數 1" Type="2048">
+         <SubString Position="0">
+            <Value Encoding="base64">MQA=</Value>
+         </SubString>
+      </Object>
+      <Object Name="序號 1" Type="4096">
+         <SubString Position="0">
+            <Value Encoding="base64">MQA=</Value>
+         </SubString>
+      </Object>
+      <Object Name="背景圖 1" Type="16">
+         <SubString Position="0">
+            <Value Encoding="base64">h2VXW8R7i08=</Value>
+         </SubString>
+      </Object>
+      <Object Name="條碼 1" Type="1">
+         <SubString Position="0">
+            <Value Encoding="base64">TABXAEIALQBDADEAMgA4AC0AMAAwADEA</Value>
+         </SubString>
+         <SubString Position="1">
+            <Value Encoding="base64"></Value>
+         </SubString>
+         <SubString Position="2">
+            <Value Encoding="base64"></Value>
+         </SubString>
+         <SubString Position="3">
+            <Value Encoding="base64"></Value>
+         </SubString>
+      </Object>
+      <Object Name="文字 1" Type="2">
+         <SubString Position="0">
+            <Value Encoding="base64">TABXAEIAIABQAE8AQwA=</Value>
+         </SubString>
+      </Object>
+      <Object Name="條碼 2" Type="1">
+         <SubString Position="0">
+            <Value Encoding="base64">MwAwAFAA</Value>
+         </SubString>
+         <SubString Position="1">
+            <Value Encoding="base64">VAA=</Value>
+         </SubString>
+         <SubString Position="2">
+            <Value Encoding="base64">MwAxAFAA</Value>
+         </SubString>
+         <SubString Position="3">
+            <Value Encoding="base64">RAA=</Value>
+         </SubString>
+         <SubString Position="4">
+            <Value Encoding="base64">UQA=</Value>
+         </SubString>
+         <SubString Position="5">
+            <Value Encoding="base64">NAAwADAAMAA=</Value>
+         </SubString>
+      </Object>
+      <Object Name="文字 2" Type="2">
+         <SubString Position="0">
+            <Value Encoding="base64">KAAzADAAUAApAFMASABBAFAARQA6AA==</Value>
+         </SubString>
+      </Object>
+      <Object Name="文字 3" Type="2">
+         <SubString Position="0">
+            <Value Encoding="base64">VwAyADUATgAwADEARwBXAFoARQBJAFIA</Value>
+         </SubString>
+      </Object>
+      <Object Name="文字 4" Type="2">
+         <SubString Position="0">
+            <Value Encoding="base64">KAAxAFQAKQAgAFAAQQBSAFQAIABOAE8AIAA6AA==</Value>
+         </SubString>
+      </Object>
+      <Object Name="文字 5" Type="2">
+         <SubString Position="0">
+            <Value Encoding="base64">NgA2ADEAMgBEADcAOAAwADAAWgBaAA==</Value>
+         </SubString>
+      </Object>
+      <Object Name="條碼 3" Type="1">
+         <SubString Position="0">
+            <Value Encoding="base64">TABXAEIALQBEAE0ALQAwADAAMQA=</Value>
+         </SubString>
+      </Object>
+      <Object Name="文字 6" Type="2">
+         <SubString Position="0">
+            <Value Encoding="base64">KAAzADEAUAApAEcAUAA6AA==</Value>
+         </SubString>
+      </Object>
+      <Object Name="文字 7" Type="2">
+         <SubString Position="0">
+            <Value Encoding="base64">KABRACkAUQBUAFkAOgA=</Value>
+         </SubString>
+      </Object>
+      <Object Name="文字 8" Type="2">
+         <SubString Position="0">
+            <Value Encoding="base64">VAA=</Value>
+         </SubString>
+      </Object>
+      <Object Name="文字 9" Type="2">
+         <SubString Position="0">
+            <Value Encoding="base64">RAA=</Value>
+         </SubString>
+      </Object>
+      <Object Name="文字 10" Type="2">
+         <SubString Position="0">
+            <Value Encoding="base64">NAAwADAAMAA=</Value>
+         </SubString>
+      </Object>
+      <Object Name="文字 11" Type="2">
+         <SubString Position="0">
+            <Value Encoding="base64">KAAxADAARAApAEQAQQBUAEUAIABOAE8AOgA=</Value>
+         </SubString>
+      </Object>
+      <Object Name="文字 12" Type="2">
+         <SubString Position="0">
+            <Value Encoding="base64">MgA2ADIAOAA=</Value>
+         </SubString>
+      </Object>
+      <Object Name="文字 13" Type="2">
+         <SubString Position="0">
+            <Value Encoding="base64">KAAyADEATAApAEEAUwBTAFkAOgA=</Value>
+         </SubString>
+      </Object>
+      <Object Name="文字 14" Type="2">
+         <SubString Position="0">
+            <Value Encoding="base64">RwA=</Value>
+         </SubString>
+      </Object>
+      <Object Name="文字 15" Type="2">
+         <SubString Position="0">
+            <Value Encoding="base64">KAAxADYARAApAEQAQQBUAEUAOgA=</Value>
+         </SubString>
+      </Object>
+      <Object Name="文字 16" Type="2">
+         <SubString Position="0">
+            <Value Encoding="base64">MgAwADIANgAwADcAMgAyAA==</Value>
+         </SubString>
+      </Object>
+      <Object Name="條碼 4" Type="1">
+         <SubString Position="0">
+            <Value Encoding="base64">MQAwAEQA</Value>
+         </SubString>
+         <SubString Position="1">
+            <Value Encoding="base64">MgA2ADIAOAA=</Value>
+         </SubString>
+         <SubString Position="2">
+            <Value Encoding="base64">MgAxAEwA</Value>
+         </SubString>
+         <SubString Position="3">
+            <Value Encoding="base64">RwA=</Value>
+         </SubString>
+         <SubString Position="4">
+            <Value Encoding="base64">MQA2AEQA</Value>
+         </SubString>
+         <SubString Position="5">
+            <Value Encoding="base64">MgAwADIANgAwADcAMgAyAA==</Value>
+         </SubString>
+      </Object>
+      <Object Name="文字 17" Type="2">
+         <SubString Position="0">
+            <Value Encoding="base64">KAAzADEAVAApAE0ATABPAFQAIABOAE8AOgA=</Value>
+         </SubString>
+      </Object>
+      <Object Name="文字 18" Type="2">
+         <SubString Position="0">
+            <Value Encoding="base64">NgA2ADEAMgBEADcAOAAwADAA</Value>
+         </SubString>
+      </Object>
+      <Object Name="文字 19" Type="2">
+         <SubString Position="0">
+            <Value Encoding="base64">KAAzADMAUAApAEIASQBOADoA</Value>
+         </SubString>
+      </Object>
+      <Object Name="文字 20" Type="2">
+         <SubString Position="0">
+            <Value Encoding="base64">MQA=</Value>
+         </SubString>
+      </Object>
+      <Object Name="文字 21" Type="2">
+         <SubString Position="0">
+            <Value Encoding="base64">KAAyADMATAApAE0AQwA6AA==</Value>
+         </SubString>
+      </Object>
+      <Object Name="文字 22" Type="2">
+         <SubString Position="0">
+            <Value Encoding="base64">RwA=</Value>
+         </SubString>
+      </Object>
+      <Object Name="文字 23" Type="2">
+         <SubString Position="0">
+            <Value Encoding="base64">KAAyADQATAApAFYAQwA6AA==</Value>
+         </SubString>
+      </Object>
+      <Object Name="文字 24" Type="2">
+         <SubString Position="0">
+            <Value Encoding="base64">UABTAA==</Value>
+         </SubString>
+      </Object>
+      <Object Name="條碼 5" Type="1">
+         <SubString Position="0">
+            <Value Encoding="base64">MwAxAFQA</Value>
+         </SubString>
+         <SubString Position="1">
+            <Value Encoding="base64">NgA2ADEAMgBEADcAOAAwADAA</Value>
+         </SubString>
+         <SubString Position="2">
+            <Value Encoding="base64">MwAzAFAA</Value>
+         </SubString>
+         <SubString Position="3">
+            <Value Encoding="base64">MQA=</Value>
+         </SubString>
+         <SubString Position="4">
+            <Value Encoding="base64">MgAzAEwA</Value>
+         </SubString>
+         <SubString Position="5">
+            <Value Encoding="base64">RwA=</Value>
+         </SubString>
+         <SubString Position="6">
+            <Value Encoding="base64">MgA0AEwA</Value>
+         </SubString>
+         <SubString Position="7">
+            <Value Encoding="base64">UABTAA==</Value>
+         </SubString>
+      </Object>
+      <Object Name="文字 25" Type="2">
+         <SubString Position="0">
+            <Value Encoding="base64">KAAxAFkAKQBQADEAOgA=</Value>
+         </SubString>
+      </Object>
+      <Object Name="文字 26" Type="2">
+         <SubString Position="0">
+            <Value Encoding="base64">KwAwADkAMABQAEkAMwBLADAAXwBQAFMA</Value>
+         </SubString>
+      </Object>
+      <Object Name="文字 27" Type="2">
+         <SubString Position="0">
+            <Value Encoding="base64">KAAyAFkAKQBQADIAOgA=</Value>
+         </SubString>
+      </Object>
+      <Object Name="文字 28" Type="2">
+         <SubString Position="0">
+            <Value Encoding="base64">KAA0AFkAKQBEADoA</Value>
+         </SubString>
+      </Object>
+      <Object Name="文字 29" Type="2">
+         <SubString Position="0">
+            <Value Encoding="base64">TgAyAA==</Value>
+         </SubString>
+      </Object>
+      <Object Name="條碼 6" Type="1">
+         <SubString Position="0">
+            <Value Encoding="base64">MQBZAA==</Value>
+         </SubString>
+         <SubString Position="1">
+            <Value Encoding="base64">KwAwADkAMABQAEkAMwBLADAAXwBQAFMA</Value>
+         </SubString>
+         <SubString Position="2">
+            <Value Encoding="base64">MgBZAA==</Value>
+         </SubString>
+         <SubString Position="3">
+            <Value Encoding="base64">NABZAA==</Value>
+         </SubString>
+         <SubString Position="4">
+            <Value Encoding="base64">TgAyAA==</Value>
+         </SubString>
+      </Object>
+      <Object Name="文字 30" Type="2">
+         <SubString Position="0">
+            <Value Encoding="base64">UgBvAEgAUwANAA==</Value>
+         </SubString>
+         <SubString Position="1">
+            <Value Encoding="base64">QwBPAE0AUABMAEkAQQBOAFQA</Value>
+         </SubString>
+      </Object>
+      <Object Name="文字 31" Type="2">
+         <SubString Position="0">
+            <Value Encoding="base64">SABGAA==</Value>
+         </SubString>
+      </Object>
+      <Object Name="文字 32" Type="2">
+         <SubString Position="0">
+            <Value Encoding="base64">UABiAA==</Value>
+         </SubString>
+      </Object>
+      <Object Name="文字 33" Type="2">
+         <SubString Position="0">
+            <Value Encoding="base64">IAAgACAAIAAgACAAIAAgACAAIAAgACAAMQAyADAAOAAyADQADQBDAC4ASwAuACAAIAAgAFEAQQAg
+ACAAQQBDAEMA</Value>
+         </SubString>
+      </Object>
+   </DataMerge>
+</Command>
+

@@ -79,7 +79,7 @@ for(const f of[
 
 (async()=>{
   const core=window.LabelWorkbenchAnalysisCoreV2;
-  assert(core?.BUILD==='20260918-analysis-core-v2-200','unexpected deterministic core build');
+  assert(core?.BUILD==='20261102-layout-rc2','unexpected deterministic core build');
 
   const file={name:'第一個.pdf',type:'application/pdf'};
   const result=await core.run([file]);

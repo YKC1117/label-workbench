@@ -1,0 +1,20 @@
+Label Workbench Native Layout ENGINE V1 - V3 review request
+Date: 2026-10-05
+
+DO NOT ask the user to run this package yet.
+DO NOT touch GitHub.
+DO NOT change the product architecture unless a concrete defect requires it.
+
+Observed real Windows PowerShell 5.1 failures:
+1) V1 preflight: NativeReviewFixtures.cs failed because System.Xml assembly was not explicitly referenced.
+2) V2 preflight: command-not-found for Read-Property during Test-NativePersistence / native mock execution.
+
+V3 changes made by general GPT:
+- NativeLayoutEngine.psm1 now defines Read-Property / Write-Property / Invoke-ComMethod directly in NativeLayoutEngine module script scope, backed by LabelWorkbench.ComBridge. This removes reliance on nested-module command resolution under Windows PowerShell 5.1.
+- Test-NativePersistence.ps1 now installs the mock Read-Property / Write-Property overrides as script-scoped functions inside the NativeLayoutEngine module session state.
+- Added explicit Get-Command assertions for Read-Property, Write-Property and Invoke-ComMethod before the 14 mock scenarios run.
+- Retained the V2 System.Xml explicit reference fix.
+
+Please deep-review specifically for Windows PowerShell 5.1 module/session-state semantics and the 14 native multi-object mock path. If a concrete defect is found, fix it in the package. Do not claim Windows/BarTender PASS unless actually run.
+
+Only after code review is clean should the user be asked for ONE Windows + BarTender 2022 test using program\\BUILD_NATIVE.cmd and program\\native-layout.multi.sample.json.

@@ -1,0 +1,70 @@
+{
+  "handoff": "final-general-gpt-cross-review",
+  "sourceZip": "Label_Workbench_BarTender_Deep_Review(1).zip",
+  "sourceZipSha256": "d4b3703b7a5d0ca33ab28de5d539a0a4bc3a193f1eb3dbc08b7a5e44cef57135",
+  "originalEvidenceFilesUnchanged": 26,
+  "validationThisRound": "validation/final-handoff-validation.json",
+  "powerShellParser": "NOT_RUN - runtime unavailable",
+  "powerShellRegression": "NOT_RUN - runtime unavailable",
+  "csharpCompile": "NOT_RUN - compiler unavailable",
+  "windowsPowerShell51": "NOT_RUN",
+  "barTenderCOM": "NOT_RUN",
+  "symbolBounds": "NOT_VERIFIED",
+  "actualPrinterAndScanner": "NOT_RUN",
+  "changes": [
+    {
+      "path": "FINAL_HANDOFF.md",
+      "change": "added",
+      "sha256": "ee4b50903aece29ac8152422a56db780a7e5c5a1f875cd649be939544c54c333",
+      "originalSha256": null
+    },
+    {
+      "path": "START_HERE.md",
+      "change": "modified",
+      "sha256": "b1e39706b0f68cb0828b64e4dbfb26880b346f26c91453467ae63cef602c10a2",
+      "originalSha256": "fff433566ae9070af98c9fd15cc036294bccd3ff1c39d3c1d233a4c9a9b6f6b1"
+    },
+    {
+      "path": "TECHNICAL_REVIEW.md",
+      "change": "modified",
+      "sha256": "454777ccf99a3240620ea2475ac954eb637e40d05a1772b000d0652abe59b26d",
+      "originalSha256": "583ab098a04d52aed5a008fe1db77adec22710a213389dafcd78c3a1789d474d"
+    },
+    {
+      "path": "program/README.md",
+      "change": "modified",
+      "sha256": "028d94a83c1cbf41c19ff053971add6ad42cac4155a2a48932b6df4ae53218ad",
+      "originalSha256": "27ce07be9f8aac39c206fb0c39015a9507ae7aa26419d3a2555d3a6a1a074dd2"
+    },
+    {
+      "path": "program/ReviewFixtures.cs",
+      "change": "modified",
+      "sha256": "35c9c02311a0e48b161d7ab7798a26efa60b1ea45cfab61014e0833265748afb",
+      "originalSha256": "b2a8a4b2fe28e78d7aa1100f1e9a399a48460cdcb6c943915ea16ef5c8ead258"
+    },
+    {
+      "path": "program/Test-XmlCore.ps1",
+      "change": "modified",
+      "sha256": "3adaa6a8cf5006070429fc48144efecc9a70d7715f415529552299e08ace4ff6",
+      "originalSha256": "5a897e2fde422a47009d6af8efa0eb6203c405b64a1a9dde8668b24b4e4f555c"
+    },
+    {
+      "path": "program/XmlCore.psm1",
+      "change": "modified",
+      "sha256": "dbc1949f83e2e1a667be696a7de803c171a5726d5cd044e643d81670869fe009",
+      "originalSha256": "ae7e1b8793ecd76f0e948ae1f643016dfed013dbc48742f2dbd8b829bc0cabf4"
+    },
+    {
+      "path": "validation/change-manifest-deep-review-original.json",
+      "change": "added",
+      "sha256": "a6b8bd7eca6cf69764bf1a3c65676976a78d29a7175648f40aa473d3e811c41c",
+      "originalSha256": null
+    },
+    {
+      "path": "validation/final-handoff-validation.json",
+      "change": "added",
+      "sha256": "8fc7f07c008826be308629fb2e8e5daa2bdb2b69ff463cc83a72a6db6dbfc514",
+      "originalSha256": null
+    }
+  ]
+}

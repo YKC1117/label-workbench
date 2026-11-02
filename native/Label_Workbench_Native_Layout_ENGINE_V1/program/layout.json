@@ -1,0 +1,34 @@
+{
+  "widthMm": 140,
+  "heightMm": 38,
+  "objects": [
+    {
+      "type": "text",
+      "slot": "TEXT_01",
+      "value": "(1P)PART NO : W25N01GWZE",
+      "xMm": 2.5,
+      "yMm": 2.5,
+      "widthMm": 38,
+      "heightMm": 3,
+      "fontSizePt": 5
+    },
+    {
+      "type": "code128",
+      "slot": "C128_01",
+      "value": "W25N01GWZE",
+      "xMm": 2.5,
+      "yMm": 5.5,
+      "widthMm": 32,
+      "heightMm": 4
+    },
+    {
+      "type": "datamatrix",
+      "slot": "DM_01",
+      "value": "DM_PAYLOAD",
+      "xMm": 116,
+      "yMm": 2,
+      "widthMm": 12,
+      "heightMm": 12
+    }
+  ]
+}

@@ -1,0 +1,147 @@
+--- /mnt/data/lw_v4_work/Label_Workbench_Native_Layout_ENGINE_V1/program/NativeLayoutEngine.psm1	2026-10-06 00:04:10.000000000 +0000
++++ /mnt/data/lw_v5_work/program/NativeLayoutEngine.psm1	2026-10-06 07:20:39.062390971 +0000
+@@ -516,10 +516,18 @@
+         # state; if different, restore and verify the original before fallback.
+         $postCom=[string](Invoke-ComMethod $obj 'GetXML' @($true,$true))
+         if($prefix){$postCom|Set-Content -LiteralPath ($prefix+'-after-com-failure.xml') -Encoding UTF8}
+-        if((Get-NativeXmlKey (Read-NativeXml $postCom)) -cne (Get-NativeXmlKey $baseline)){
++        # Do not use XML equality alone to decide whether the failed COM setter
++        # was atomic. A COM-only partial mutation may leave GetXML unchanged.
++        # Verify the complete pre-call state; if any COM/XML/geometry/identity
++        # readback differs, restore the full baseline and verify it before the
++        # XML fallback is allowed to run.
++        $baselineIntact=$true
++        try{[void](Assert-NativeFontState $obj $baseline $baselineCom $baselineCom.fontName)}
++        catch{$baselineIntact=$false;$result['postComStateError']=$_.Exception.ToString()}
++        if(-not $baselineIntact){
+             Restore-NativeFontBaseline $obj $baselineText $baselineCom $(if($prefix){$prefix+'-com'}else{''})
+             $result.rollback='COM_BASELINE_RESTORED'
+-        }else{[void](Assert-NativeFontState $obj $baseline $baselineCom $baselineCom.fontName)}
++        }
+         # Mutation flag was set BEFORE the call, so partial SetXML exceptions
+         # also reach the outer rollback. Always use the pre-COM snapshot.
+         [void](Invoke-ComMethod $obj 'SetXML' @($request.OuterXml))
+--- /mnt/data/lw_v4_work/Label_Workbench_Native_Layout_ENGINE_V1/program/NativeReviewFixtures.cs	2026-10-06 00:01:04.000000000 +0000
++++ /mnt/data/lw_v5_work/program/NativeReviewFixtures.cs	2026-10-06 07:20:39.062668080 +0000
+@@ -94,6 +94,7 @@
+    if(Mode=="com-success"){fontName=value;((XmlElement)xml.SelectSingleNode("/*/Font")).SetAttribute("FontName",value);return;}
+    if(Mode=="com-noop")return;
+    if(Mode=="com-partial"){X=999;fontName="PARTIAL";}
++   if(Mode=="com-hidden-partial"){fontName="PARTIAL";}
+    throw new InvalidOperationException("FontProbe COM setter rejected");
+   }}
+   public string Value {get{return xml.SelectSingleNode("/*/DataSources/EmbeddedDataSource/Value").InnerText;}}
+--- /mnt/data/lw_v4_work/Label_Workbench_Native_Layout_ENGINE_V1/program/Test-NativeFontFallback.ps1	2026-10-06 00:02:38.000000000 +0000
++++ /mnt/data/lw_v5_work/program/Test-NativeFontFallback.ps1	2026-10-06 07:20:39.062845823 +0000
+@@ -24,7 +24,7 @@
+    'xml-other-node'='Font write changed protected XML outside FontName.';'xml-fit-bounds'='Font write changed protected XML outside FontName.'
+    'rollback-failure'='ROLLBACK_FAILED';'geometry-font-reset'='FontName changed after final geometry writes.'
+   }
+-  foreach($mode in @('already-matched','com-success','xml-success','com-noop','com-partial','missing-font','duplicate-font','missing-attribute','xml-noop','xml-partial','xml-position','xml-name','xml-id','xml-payload','xml-source','xml-source-attribute','xml-fontsize','xml-font-readback','xml-other-node','xml-fit-bounds','rollback-failure','geometry-font-reset')){
++  foreach($mode in @('already-matched','com-success','xml-success','com-noop','com-partial','com-hidden-partial','missing-font','duplicate-font','missing-attribute','xml-noop','xml-partial','xml-position','xml-name','xml-id','xml-payload','xml-source','xml-source-attribute','xml-fontsize','xml-font-readback','xml-other-node','xml-fit-bounds','rollback-failure','geometry-font-reset')){
+    $case=[ordered]@{scenario=$mode;status='STARTED';actualError=$null;expectedError=$null;comCalls=0;xmlCalls=0;restoreCalls=0}
+    [void]$cases.Add($case)
+    $dir=Join-Path ([IO.Path]::GetTempPath()) ('native-font-'+[guid]::NewGuid().ToString('N'))
+@@ -65,9 +65,9 @@
+      $expectedMode=if($mode -eq 'already-matched'){'ALREADY_MATCHED'}elseif($mode -eq 'com-success'){'COM_SET'}else{'XML_FONT_ATTRIBUTE_FALLBACK'}
+      if($result.writeMode -cne $expectedMode -or $obj.FontName -cne $target){throw 'Font result/mode incorrect.'}
+      $expectedCom=if($mode -eq 'already-matched'){0}else{1}
+-     $expectedXml=if($mode -in @('already-matched','com-success')){0}elseif($mode -eq 'com-partial'){2}else{1}
++     $expectedXml=if($mode -in @('already-matched','com-success')){0}elseif($mode -in @('com-partial','com-hidden-partial')){2}else{1}
+      if($obj.FontNameSetCalls -ne $expectedCom -or $obj.SetXmlCalls -ne $expectedXml){throw 'Font route call counts incorrect.'}
+-     if($mode -eq 'com-partial' -and $obj.RestoreCalls -ne 1){throw 'Partial COM mutation was not restored before fallback.'}
++     if($mode -in @('com-partial','com-hidden-partial') -and $obj.RestoreCalls -ne 1){throw 'Partial COM mutation was not restored before fallback.'}
+      $expected=Read-NativeXml $xml.OuterXml;(Get-NativeTextFontNode $expected).SetAttribute('FontName',$target)
+      if((Get-NativeXmlKey (Read-NativeXml ($obj.GetXML($true,$true)))) -cne (Get-NativeXmlKey $expected)){throw 'Font changed unrelated XML.'}
+     }
+@@ -86,5 +86,5 @@
+ }catch{$status='FAIL';$suiteError=$_.Exception.ToString();throw}
+ finally{
+  Remove-Module -ModuleInfo $m -Force -ErrorAction SilentlyContinue
+- if($ResultPath){[ordered]@{schema='native-font-results-v1';status=$status;error=$suiteError;expectedScenarios=22;completed=@($cases.ToArray()|Where-Object{$_.status -eq 'PASS'}).Count;scenarios=@($cases.ToArray())}|ConvertTo-Json -Depth 8|Set-Content -LiteralPath $ResultPath -Encoding UTF8}
++ if($ResultPath){[ordered]@{schema='native-font-results-v1';status=$status;error=$suiteError;expectedScenarios=23;completed=@($cases.ToArray()|Where-Object{$_.status -eq 'PASS'}).Count;scenarios=@($cases.ToArray())}|ConvertTo-Json -Depth 8|Set-Content -LiteralPath $ResultPath -Encoding UTF8}
+ }
+--- /mnt/data/lw_v4_work/Label_Workbench_Native_Layout_ENGINE_V1/program/SELF_CHECK_NATIVE.ps1	2026-10-06 02:18:40.000000000 +0000
++++ /mnt/data/lw_v5_work/program/SELF_CHECK_NATIVE.ps1	2026-10-06 07:20:39.062936817 +0000
+@@ -41,4 +41,4 @@
+ & (Join-Path $root 'Test-NativeFontFallback.ps1') -ResultPath $fontResultPath
+ & (Join-Path $root 'Test-NativePersistence.ps1') -ResultPath $mockResultPath
+ Remove-Module NativeLayoutEngine -Force -ErrorAction SilentlyContinue
+-Write-Host 'SELF_CHECK_NATIVE PASS: parser/input regression/C# helpers/22 font cases/14 native multi-object mocks passed; BarTender has not been opened yet.' -ForegroundColor Green
++Write-Host 'SELF_CHECK_NATIVE PASS: parser/input regression/C# helpers/23 font cases/14 native multi-object mocks passed; BarTender has not been opened yet.' -ForegroundColor Green
+--- /mnt/data/lw_v4_work/Label_Workbench_Native_Layout_ENGINE_V1/program/Build-NativeLayout.ps1	2026-10-06 02:18:40.000000000 +0000
++++ /mnt/data/lw_v5_work/program/Build-NativeLayout.ps1	2026-10-06 07:20:39.063058977 +0000
+@@ -12,7 +12,7 @@
+ $latest=Join-Path $BaseDirectory 'LATEST_NATIVE_OUTPUT.btw'
+ $latestReport=Join-Path $BaseDirectory 'LATEST_NATIVE_REPORT.json'
+ $app=$null;$formats=$null;$ownsBt=$false;$exitCode=1;$report=$null;$watchdog=$null
+-$runtime=[ordered]@{revision='native-engine-font-final-20261006';os=[Environment]::OSVersion.VersionString;powerShell=$PSVersionTable.PSVersion.ToString();processBits=[IntPtr]::Size*8;barTender=[ordered]@{};cleanupErrors=@();status='STARTED'}
++$runtime=[ordered]@{revision='native-engine-font-v5-com-partial-20261006';os=[Environment]::OSVersion.VersionString;powerShell=$PSVersionTable.PSVersion.ToString();processBits=[IntPtr]::Size*8;barTender=[ordered]@{};cleanupErrors=@();status='STARTED'}
+ function Release-RunnerCom($target){if($null -ne $target -and [Runtime.InteropServices.Marshal]::IsComObject($target)){[void][Runtime.InteropServices.Marshal]::ReleaseComObject($target)}}
+ try{
+     # Remove only fixed generated latest aliases; historical per-run results are retained.
+--- /dev/null	2026-10-06 07:13:18.626322129 +0000
++++ /mnt/data/lw_v5_work/program/ONE_SHOT_NATIVE_TEST.cmd	2026-10-06 07:23:29.218929475 +0000
+@@ -0,0 +1,18 @@
++@echo off
++setlocal
++cd /d "%~dp0"
++echo ============================================================
++echo Label Workbench Native Layout - ONE SHOT WINDOWS TEST
++echo Fixed input: native-layout.multi.sample.json
++echo Preflight must pass before BarTender is opened.
++echo ============================================================
++powershell.exe -STA -NoProfile -ExecutionPolicy Bypass -File "%~dp0Build-NativeLayout.ps1" -BaseDirectory "%~dp0." -LayoutPath "%~dp0native-layout.multi.sample.json"
++set "RC=%ERRORLEVEL%"
++if "%RC%"=="0" (
++ echo VERIFIED CANDIDATE: LATEST_NATIVE_OUTPUT.btw
++) else (
++ echo FAILED/BLOCKED. Do not use previous output.
++)
++if exist "%~dp0NATIVE_BUILD_RESULT.zip" echo Return NATIVE_BUILD_RESULT.zip
++pause
++exit /b %RC%
+--- /dev/null	2026-10-06 07:13:18.626322129 +0000
++++ /mnt/data/lw_v5_work/GENERAL_GPT_V5_REVIEW.md	2026-10-06 07:20:39.063162871 +0000
+@@ -0,0 +1,19 @@
++﻿# GENERAL GPT V5 — COM-only partial FontName rollback hardening
++
++Date: 2026-10-06
++
++## Purpose
++
++V4 correctly snapshots before FontName mutation and verifies rollback, but after a failed COM setter it used XML equality as the first branch. A COM setter can theoretically mutate COM-visible state without changing GetXML. In that case V4 would abort the transaction instead of restoring baseline and then attempting the guarded XML fallback.
++
++## Changes
++
++- `NativeLayoutEngine.psm1`: after any failed COM FontName path, validate the complete baseline using `Assert-NativeFontState` (object identity/type, COM FontName, X/Y/Rotation/FontSize, XML FontName, payload and canonical XML). If any field differs, restore and verify the complete pre-call baseline before XML fallback.
++- `NativeReviewFixtures.cs`: add `com-hidden-partial`, which changes COM FontName state only, leaves XML unchanged, then throws.
++- `Test-NativeFontFallback.ps1`: add the 23rd font regression and require one restore plus one XML fallback for `com-hidden-partial`.
++- `SELF_CHECK_NATIVE.ps1`: report 23 font cases.
++- `Build-NativeLayout.ps1`: bump runtime revision.
++
++## Scope
++
++This hardening does not loosen XML acceptance, change FontSize routing, alter barcode sizing, or touch existing evidence/components. Windows PowerShell 5.1 and real BarTender runtime remain required for final executable verification.
+--- /dev/null	2026-10-06 07:13:18.626322129 +0000
++++ /mnt/data/lw_v5_work/READ_ME_V5_FIRST.txt	2026-10-06 07:23:29.218993089 +0000
+@@ -0,0 +1,19 @@
++﻿Label Workbench Native Layout — V5
++
++目前先不要反覆實機測試。
++
++V5 在 Codex V4 FINAL 上再補一個 COM FontName 失敗後的隱藏部分修改防護：
++如果 COM 可讀狀態已改變、但 GetXML 尚未反映，會先完整回滾 baseline 並驗證，才允許 XML fallback。
++另增加第 23 個 Font regression：com-hidden-partial。
++
++未來真正做單次 Windows + BarTender 2022 驗證時，只執行：
++
++program\ONE_SHOT_NATIVE_TEST.cmd
++
++這個入口固定使用 native-layout.multi.sample.json，不需要手動選檔。
++它會先執行 parser / C# helper / input regression / 23 Font cases / 14 multi-object mocks；全部通過後才啟動 BarTender。
++
++成功或失敗都回傳：
++program\NATIVE_BUILD_RESULT.zip
++
++目前仍 NOT RUN：Windows PowerShell 5.1 原生 parser、C# 真正編譯、23+14 regressions、BarTender 2022 Runtime、實體列印/掃碼。

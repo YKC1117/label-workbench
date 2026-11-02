@@ -5,7 +5,7 @@
 (function(){
   'use strict';
 
-  const BUILD='20260918-btw-production-core-140-itf14';
+  const BUILD='20261102-layout-rc2';
   const JSZIP_SRC='https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js';
   let zipPromise=null;
 
@@ -85,6 +85,7 @@
     const {outputs,labels,files,routes,prepared}=generated;
     if(outputs.length===1){
       saveBlob(new Blob([outputs[0].bytes],{type:'application/octet-stream'}),outputs[0].name);
+      window.LabelWorkbenchNativeReview?.render(outputs);
       return{
         ok:true,type:'btw',count:1,outputs,routes,
         pendingTotal:prepared.report.pendingTotal,
@@ -104,6 +105,7 @@
     const blob=await zip.generateAsync({type:'blob',compression:'DEFLATE'});
     const base=safeFile(String(labels[0]?.sourceName||files?.[0]?.name||'Label').replace(/\.[^.]+$/,''));
     saveBlob(blob,`BT_Editable_${base}.zip`);
+    window.LabelWorkbenchNativeReview?.render(outputs);
     return{
       ok:true,type:'zip',count:outputs.length,outputs,routes,
       pendingTotal:prepared.report.pendingTotal,

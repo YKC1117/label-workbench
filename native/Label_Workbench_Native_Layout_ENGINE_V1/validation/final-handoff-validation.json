@@ -1,0 +1,148 @@
+{
+  "validationScope": "THIS_HANDOFF_ONLY_AFTER_TWO_CROSS_REVIEW_FIXES",
+  "sourceZip": "Label_Workbench_BarTender_Deep_Review(1).zip",
+  "sourceZipSha256": "d4b3703b7a5d0ca33ab28de5d539a0a4bc3a193f1eb3dbc08b7a5e44cef57135",
+  "environment": {
+    "platform": "Linux-6.18.44-x86_64-with-glibc2.41",
+    "os": "Debian GNU/Linux 13.3",
+    "commands": {
+      "pwsh": null,
+      "powershell": null,
+      "dotnet": null,
+      "csc": null,
+      "mcs": null
+    }
+  },
+  "executed": {
+    "jsonParseExcludingThisOutput": {
+      "status": "PASS",
+      "files": 14,
+      "errors": []
+    },
+    "evidenceXmlParse": {
+      "status": "PASS",
+      "files": 14,
+      "errors": []
+    },
+    "evidenceByteCompareToSuppliedZip": {
+      "status": "PASS",
+      "files": 26,
+      "changed": [],
+      "extra": [],
+      "missing": []
+    },
+    "requiredSourceAndRegressionMarkers": {
+      "status": "PASS",
+      "checks": {
+        "component_scan_records_human_readable": true,
+        "ideal_fallback_logic": true,
+        "caption_sizing_skip": true,
+        "dpi_requested_and_header": true,
+        "untrusted_mm_not_calculated": true,
+        "mid_probe_suppresses_best": true,
+        "ideal_regression_present": true,
+        "fallback_regression_present": true,
+        "dpi_regressions_present": true,
+        "fixture_human_readable_control": true,
+        "fixture_dpi_control": true
+      }
+    },
+    "powerShellDelimiterStaticCheck": {
+      "status": "PASS",
+      "note": "Gross delimiter check only; NOT a PowerShell parser.",
+      "files": [
+        {
+          "path": "Test-ComTransport.ps1",
+          "balanced": true
+        },
+        {
+          "path": "Core.psm1",
+          "balanced": true
+        },
+        {
+          "path": "XmlCore.psm1",
+          "balanced": true
+        },
+        {
+          "path": "Run.ps1",
+          "balanced": true
+        },
+        {
+          "path": "Test-ReviewPersistence.ps1",
+          "balanced": true
+        },
+        {
+          "path": "Diagnostics.psm1",
+          "balanced": true
+        },
+        {
+          "path": "Test-Layout.ps1",
+          "balanced": true
+        },
+        {
+          "path": "Com.psm1",
+          "balanced": true
+        },
+        {
+          "path": "Watchdog.ps1",
+          "balanced": true
+        },
+        {
+          "path": "SELF_CHECK.ps1",
+          "balanced": true
+        },
+        {
+          "path": "Layout.psm1",
+          "balanced": true
+        },
+        {
+          "path": "Test-Core.ps1",
+          "balanced": true
+        },
+        {
+          "path": "Launch-Core.ps1",
+          "balanced": true
+        },
+        {
+          "path": "Test-XmlCore.ps1",
+          "balanced": true
+        }
+      ]
+    },
+    "csharpDelimiterStaticCheck": {
+      "status": "PASS",
+      "note": "Gross delimiter check only; NOT C# compilation.",
+      "files": [
+        {
+          "path": "RasterEvidence.cs",
+          "balanced": true
+        },
+        {
+          "path": "ComMetadata.cs",
+          "balanced": true
+        },
+        {
+          "path": "ComBridge.cs",
+          "balanced": true
+        },
+        {
+          "path": "ReviewFixtures.cs",
+          "balanced": true
+        }
+      ]
+    }
+  },
+  "notRun": {
+    "powerShellParser": "NOT_RUN - pwsh/powershell unavailable",
+    "powerShellRegression": "NOT_RUN - PowerShell runtime unavailable",
+    "csharpCompile": "NOT_RUN - dotnet/csc/mcs unavailable",
+    "windowsPowerShell51": "NOT_RUN",
+    "barTenderCOM": "NOT_RUN",
+    "realBtcComponentScan": "NOT_RUN",
+    "code12832mm": "NOT_RUN",
+    "dataMatrix12x12mm": "NOT_RUN",
+    "saveCloseReopenBarTender": "NOT_RUN",
+    "designerVisualPrintScan": "NOT_RUN"
+  },
+  "historicalValidationLogs": "PRESERVED_BUT_NOT_COUNTED_AS_THIS_ROUND_PASS"
+}

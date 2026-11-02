@@ -1,0 +1,4 @@
+V3 STATUS
+- Exact V2 failure addressed: Read-Property module scope on Windows PowerShell 5.1.
+- NOT USER-TEST-READY by declaration; requires one more deep code review before asking user to run.
+- BarTender 2022: NOT RUN in this environment.

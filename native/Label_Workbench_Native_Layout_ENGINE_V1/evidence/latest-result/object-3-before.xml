@@ -1,0 +1,28 @@
+﻿<BarCode-DataMatrix Name="條碼 3" Width="1.850 in" Height="0.533 in" ConditionalPrintType="Always" Position.X="4.668 in" Position.Y="0.131 in" AutoSizeMinimumXDimension="-0.010" AutoSizeMaximumXDimension="-0.010" Color="00000000" ThermalOutput="UniGDI" EncodingCodePage="ISO8859-1">
+    <DataSources>
+        <EmbeddedDataSource ID="{E31B5391-64FD-4B47-B5FB-8D15FBA6C0D4}" SubStringListStringID="4294967295" CharSet="0" CultureID="-3" InputCultureID="1033">
+            <Value>[]&gt;061PW25N01GWZEIG2PUBG048HG0 AI1T6612D7800ZZQ400010D262821LG30PT31PD16D2026072231T6612D780032PG33P123LG24LPS1Y+090CI3L0_PS2Y3YN4YN21BPS32630S04374</Value>
+        </EmbeddedDataSource>
+    </DataSources>
+    <XDimension Index="3" Mils="13.330" Millimeters="0.340"/>
+    <Color RGB="00000000"/>
+    <HumanReadable Visibility="None">
+        <BarCodeTextData ReadingOrder="LTR" ParagraphWidthMinimumSizeToBarCodeMode="0.788 in">
+            <Tabs/>
+            <Font PointSize="12.000" FontName="微軟正黑體" Height="-240" Weight="400" CharacterSet="16909056">
+                <Underline/>
+                <Strikethrough/>
+                <Foreground Mode="Solid" Color="00000000">
+                    <Color RGB="00000000"/>
+                </Foreground>
+            </Font>
+            <AutoFit MinAdjustment="0.00" MaxAdjustment="0.00"/>
+        </BarCodeTextData>
+        <Transforms>
+            <EmbeddedDataSource ID="{30A9624D-7578-44CC-830B-25B53F82DEB6}" SubStringListStringID="4294967295" CultureID="-3" InputCultureID="1028">
+                <Value>文字範例</Value>
+            </EmbeddedDataSource>
+        </Transforms>
+    </HumanReadable>
+</BarCode-DataMatrix>
+

@@ -1,0 +1,21 @@
+{
+  "scope": "launcher correction after user observed auto-ZIP before BTW picker",
+  "checks": {
+    "picker_before_self_check": true,
+    "picker_before_run": true,
+    "explicit_template_path_to_run": true,
+    "selection_sha256_logged": true,
+    "core_test_uses_sta": true,
+    "return_zip_on_launch_failure": true,
+    "selected_template_in_failure_zip": true
+  },
+  "jsonFilesParsed": 15,
+  "xmlEvidenceParsed": 14,
+  "evidenceFilesSha256MatchedOriginal": 26,
+  "windowsPowerShell51": "NOT_RUN",
+  "realBarTender2022COM": "NOT_RUN",
+  "notes": [
+    "No core BarTender logic changed except report revision string.",
+    "Picker now runs before SELF_CHECK and before BarTender activation."
+  ]
+}

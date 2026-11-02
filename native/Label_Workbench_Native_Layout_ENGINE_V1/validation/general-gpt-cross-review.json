@@ -1,0 +1,103 @@
+{
+  "status": "PASS",
+  "scope": "static/cross-review only",
+  "executedInThisEnvironment": [
+    "JSON parsing",
+    "XML parsing",
+    "nested ZIP integrity",
+    "multi-object contract checks",
+    "mock declaration/wiring checks",
+    "publication/coordinate/encoding static guards"
+  ],
+  "notRun": [
+    "native PowerShell parser",
+    "C# Add-Type compile",
+    "Test-NativeLayoutEngine runtime",
+    "Test-NativePersistence 14-mock runtime",
+    "Windows PowerShell 5.1",
+    "BarTender 2022 COM fresh multi-object build/reopen/re-edit",
+    "visual anchor/decoder/print/scan acceptance"
+  ],
+  "checks": [
+    {
+      "name": "all JSON parse",
+      "status": "PASS",
+      "detail": "32 files"
+    },
+    {
+      "name": "all XML parse",
+      "status": "PASS",
+      "detail": "14 files"
+    },
+    {
+      "name": "all nested ZIP integrity",
+      "status": "PASS",
+      "detail": "7 files"
+    },
+    {
+      "name": "multi sample has six unique objects",
+      "status": "PASS",
+      "detail": "TEXT_001, TEXT_002, C128_001, C128_002, DM_001, DM_002"
+    },
+    {
+      "name": "multi sample is 2 Text + 2 Code128 + 2 DataMatrix",
+      "status": "PASS",
+      "detail": "['text', 'text', 'code128', 'code128', 'datamatrix', 'datamatrix']"
+    },
+    {
+      "name": "14 mock scenarios declared",
+      "status": "PASS",
+      "detail": "none, wrong-create, duplicate-name, duplicate-source, partial-insert, peer-payload, noop-index, bad-dpi, reopen-type, reopen-payload, reopen-nan, reopen-printer, reopen-margin, reopen-dpi"
+    },
+    {
+      "name": "Data Matrix mock resolver is module script-scoped",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "failed mock rejects unquarantined candidate",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "SELF_CHECK executes input regression",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "SELF_CHECK executes 14 persistence mocks",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "preflight runs before BarTender COM",
+      "status": "PASS",
+      "detail": "offsets 2398 < 2946"
+    },
+    {
+      "name": "candidate publication occurs only after reopen path exists",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "no literal generic barcode Width assignment",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "coordinate semantics stay explicitly uncertified top-left",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "BottomLeft ReferencePoint evidence retained",
+      "status": "PASS",
+      "detail": ""
+    },
+    {
+      "name": "non-ASCII PowerShell files have UTF-8 BOM",
+      "status": "PASS",
+      "detail": "[]"
+    }
+  ]
+}

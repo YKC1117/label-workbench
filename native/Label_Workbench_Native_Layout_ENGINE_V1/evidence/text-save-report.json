@@ -1,0 +1,2676 @@
+﻿{
+    "schema":  "lwb-bt-automation-report-v1",
+    "scriptRevision":  "save-probe-5",
+    "baseDirectory":  "C:\\Users\\FTUSER5\\Desktop\\BarTender_Automation_POC\\BarTender_Automation_POC",
+    "status":  "TEXT_GEOMETRY_SAVE_READBACK_OK_VISUAL_NOT_RUN",
+    "visualAcceptance":  "NOT_RUN",
+    "stage":  "probe reopen and verify",
+    "utc":  "2026-10-01T07:31:49.5693217Z",
+    "os":  "Microsoft Windows NT 10.0.26100.0",
+    "powerShell":  "5.1.26100.9444",
+    "processBits":  64,
+    "template":  "C:\\Users\\FTUSER5\\Desktop\\客戶\\第一個.btw",
+    "output":  "C:\\Users\\FTUSER5\\Desktop\\BarTender_Automation_POC\\BarTender_Automation_POC\\results\\20261001-153149-2f8170a2\\output.btw",
+    "unsupported":  [
+
+                    ],
+    "objects":  [
+                    {
+                        "index":  1,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "條碼 1",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "4",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+                                           "Value":  {
+                                                         "available":  true,
+                                                         "value":  "1PW25N01GWZEIR#1T6612D7800ZZ",
+                                                         "error":  null
+                                                     },
+                                           "X":  {
+                                                     "available":  true,
+                                                     "value":  "4.5466",
+                                                     "error":  null
+                                                 },
+                                           "Y":  {
+                                                     "available":  true,
+                                                     "value":  "6.0198",
+                                                     "error":  null
+                                                 },
+                                           "Width":  {
+                                                         "available":  false,
+                                                         "value":  null,
+                                                         "error":  "Property Width is not exposed by the PowerShell adapter. | IDispatch: Exception calling \"InvokeMember\" with \"5\" argument(s): \"此物件類型不支援的作業。\""
+                                                     },
+                                           "Height":  {
+                                                          "available":  true,
+                                                          "value":  "3.81",
+                                                          "error":  null
+                                                      },
+                                           "FontSize":  {
+                                                            "available":  true,
+                                                            "value":  "12",
+                                                            "error":  null
+                                                        },
+                                           "FontScale":  {
+                                                             "available":  true,
+                                                             "value":  "100",
+                                                             "error":  null
+                                                         },
+                                           "DoNotPrint":  {
+                                                              "available":  true,
+                                                              "value":  "False",
+                                                              "error":  null
+                                                          }
+                                       }
+                    },
+                    {
+                        "index":  2,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "文字 1",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "5",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+                                           "Value":  {
+                                                         "available":  true,
+                                                         "value":  "(1P) PART NO :",
+                                                         "error":  null
+                                                     },
+                                           "X":  {
+                                                     "available":  true,
+                                                     "value":  "4.5466",
+                                                     "error":  null
+                                                 },
+                                           "Y":  {
+                                                     "available":  true,
+                                                     "value":  "6.0198",
+                                                     "error":  null
+                                                 },
+                                           "Width":  {
+                                                         "available":  true,
+                                                         "value":  "15.1638",
+                                                         "error":  null
+                                                     },
+                                           "Height":  {
+                                                          "available":  true,
+                                                          "value":  "2.54",
+                                                          "error":  null
+                                                      },
+                                           "FontSize":  {
+                                                            "available":  true,
+                                                            "value":  "6",
+                                                            "error":  null
+                                                        },
+                                           "FontScale":  {
+                                                             "available":  true,
+                                                             "value":  "100",
+                                                             "error":  null
+                                                         },
+                                           "DoNotPrint":  {
+                                                              "available":  true,
+                                                              "value":  "False",
+                                                              "error":  null
+                                                          }
+                                       }
+                    },
+                    {
+                        "index":  3,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "條碼 2",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "4",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+                                           "Value":  {
+                                                         "available":  true,
+                                                         "value":  "30PT#31PD#Q4000",
+                                                         "error":  null
+                                                     },
+                                           "X":  {
+                                                     "available":  true,
+                                                     "value":  "4.5466",
+                                                     "error":  null
+                                                 },
+                                           "Y":  {
+                                                     "available":  true,
+                                                     "value":  "12.446",
+                                                     "error":  null
+                                                 },
+                                           "Width":  {
+                                                         "available":  false,
+                                                         "value":  null,
+                                                         "error":  "Property Width is not exposed by the PowerShell adapter. | IDispatch: Exception calling \"InvokeMember\" with \"5\" argument(s): \"此物件類型不支援的作業。\""
+                                                     },
+                                           "Height":  {
+                                                          "available":  true,
+                                                          "value":  "3.0988",
+                                                          "error":  null
+                                                      },
+                                           "FontSize":  {
+                                                            "available":  true,
+                                                            "value":  "12",
+                                                            "error":  null
+                                                        },
+                                           "FontScale":  {
+                                                             "available":  true,
+                                                             "value":  "100",
+                                                             "error":  null
+                                                         },
+                                           "DoNotPrint":  {
+                                                              "available":  true,
+                                                              "value":  "False",
+                                                              "error":  null
+                                                          }
+                                       }
+                    },
+                    {
+                        "index":  4,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "文字 2",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "5",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+                                           "Value":  {
+                                                         "available":  true,
+                                                         "value":  "(30P)SHAPE:",
+                                                         "error":  null
+                                                     },
+                                           "X":  {
+                                                     "available":  true,
+                                                     "value":  "4.5466",
+                                                     "error":  null
+                                                 },
+                                           "Y":  {
+                                                     "available":  true,
+                                                     "value":  "11.0998",
+                                                     "error":  null
+                                                 },
+                                           "Width":  {
+                                                         "available":  true,
+                                                         "value":  "13.0302",
+                                                         "error":  null
+                                                     },
+                                           "Height":  {
+                                                          "available":  true,
+                                                          "value":  "2.54",
+                                                          "error":  null
+                                                      },
+                                           "FontSize":  {
+                                                            "available":  true,
+                                                            "value":  "6",
+                                                            "error":  null
+                                                        },
+                                           "FontScale":  {
+                                                             "available":  true,
+                                                             "value":  "100",
+                                                             "error":  null
+                                                         },
+                                           "DoNotPrint":  {
+                                                              "available":  true,
+                                                              "value":  "False",
+                                                              "error":  null
+                                                          }
+                                       }
+                    },
+                    {
+                        "index":  5,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "文字 3",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "5",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+                                           "Value":  {
+                                                         "available":  true,
+                                                         "value":  "W25N01GWZEIR",
+                                                         "error":  null
+                                                     },
+                                           "X":  {
+                                                     "available":  true,
+                                                     "value":  "22.3774",
+                                                     "error":  null
+                                                 },
+                                           "Y":  {
+                                                     "available":  true,
+                                                     "value":  "6.0198",
+                                                     "error":  null
+                                                 },
+                                           "Width":  {
+                                                         "available":  true,
+                                                         "value":  "16.51",
+                                                         "error":  null
+                                                     },
+                                           "Height":  {
+                                                          "available":  true,
+                                                          "value":  "2.54",
+                                                          "error":  null
+                                                      },
+                                           "FontSize":  {
+                                                            "available":  true,
+                                                            "value":  "6",
+                                                            "error":  null
+                                                        },
+                                           "FontScale":  {
+                                                             "available":  true,
+                                                             "value":  "100",
+                                                             "error":  null
+                                                         },
+                                           "DoNotPrint":  {
+                                                              "available":  true,
+                                                              "value":  "False",
+                                                              "error":  null
+                                                          }
+                                       }
+                    },
+                    {
+                        "index":  6,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "文字 4",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "5",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+                                           "Value":  {
+                                                         "available":  true,
+                                                         "value":  "(1T) PART NO :",
+                                                         "error":  null
+                                                     },
+                                           "X":  {
+                                                     "available":  true,
+                                                     "value":  "60.0964",
+                                                     "error":  null
+                                                 },
+                                           "Y":  {
+                                                     "available":  true,
+                                                     "value":  "2.9972",
+                                                     "error":  null
+                                                 },
+                                           "Width":  {
+                                                         "available":  true,
+                                                         "value":  "14.986",
+                                                         "error":  null
+                                                     },
+                                           "Height":  {
+                                                          "available":  true,
+                                                          "value":  "2.54",
+                                                          "error":  null
+                                                      },
+                                           "FontSize":  {
+                                                            "available":  true,
+                                                            "value":  "6",
+                                                            "error":  null
+                                                        },
+                                           "FontScale":  {
+                                                             "available":  true,
+                                                             "value":  "100",
+                                                             "error":  null
+                                                         },
+                                           "DoNotPrint":  {
+                                                              "available":  true,
+                                                              "value":  "False",
+                                                              "error":  null
+                                                          }
+                                       }
+                    },
+                    {
+                        "index":  7,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "文字 5",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "5",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+                                           "Value":  {
+                                                         "available":  true,
+                                                         "value":  "6612D7800ZZ",
+                                                         "error":  null
+                                                     },
+                                           "X":  {
+                                                     "available":  true,
+                                                     "value":  "84.4804",
+                                                     "error":  null
+                                                 },
+                                           "Y":  {
+                                                     "available":  true,
+                                                     "value":  "2.9972",
+                                                     "error":  null
+                                                 },
+                                           "Width":  {
+                                                         "available":  true,
+                                                         "value":  "13.3858",
+                                                         "error":  null
+                                                     },
+                                           "Height":  {
+                                                          "available":  true,
+                                                          "value":  "2.54",
+                                                          "error":  null
+                                                      },
+                                           "FontSize":  {
+                                                            "available":  true,
+                                                            "value":  "6",
+                                                            "error":  null
+                                                        },
+                                           "FontScale":  {
+                                                             "available":  true,
+                                                             "value":  "100",
+                                                             "error":  null
+                                                         },
+                                           "DoNotPrint":  {
+                                                              "available":  true,
+                                                              "value":  "False",
+                                                              "error":  null
+                                                          }
+                                       }
+                    },
+                    {
+                        "index":  8,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "條碼 3",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "4",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+                                           "Value":  {
+                                                         "available":  true,
+                                                         "value":  "[]\u003e061PW25N01GWZEIG2PUBG048HG0 AI1T6612D7800ZZQ400010D262821LG30PT31PD16D2026072231T6612D780032PG33P123LG24LPS1Y+090CI3L0_PS2Y3YN4YN21BPS32630S04374",
+                                                         "error":  null
+                                                     },
+                                           "X":  {
+                                                     "available":  true,
+                                                     "value":  "118.5672",
+                                                     "error":  null
+                                                 },
+                                           "Y":  {
+                                                     "available":  true,
+                                                     "value":  "3.3274",
+                                                     "error":  null
+                                                 },
+                                           "Width":  {
+                                                         "available":  false,
+                                                         "value":  null,
+                                                         "error":  "Property Width is not exposed by the PowerShell adapter. | IDispatch: Exception calling \"InvokeMember\" with \"5\" argument(s): \"此物件類型不支援的作業。\""
+                                                     },
+                                           "Height":  {
+                                                          "available":  true,
+                                                          "value":  "13.5382",
+                                                          "error":  null
+                                                      },
+                                           "FontSize":  {
+                                                            "available":  true,
+                                                            "value":  "12",
+                                                            "error":  null
+                                                        },
+                                           "FontScale":  {
+                                                             "available":  true,
+                                                             "value":  "100",
+                                                             "error":  null
+                                                         },
+                                           "DoNotPrint":  {
+                                                              "available":  true,
+                                                              "value":  "False",
+                                                              "error":  null
+                                                          }
+                                       }
+                    },
+                    {
+                        "index":  9,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "文字 6",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "5",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+                                           "Value":  {
+                                                         "available":  true,
+                                                         "value":  "(31P)GP:",
+                                                         "error":  null
+                                                     },
+                                           "X":  {
+                                                     "available":  true,
+                                                     "value":  "35.5854",
+                                                     "error":  null
+                                                 },
+                                           "Y":  {
+                                                     "available":  true,
+                                                     "value":  "11.0998",
+                                                     "error":  null
+                                                 },
+                                           "Width":  {
+                                                         "available":  true,
+                                                         "value":  "8.8138",
+                                                         "error":  null
+                                                     },
+                                           "Height":  {
+                                                          "available":  true,
+                                                          "value":  "2.54",
+                                                          "error":  null
+                                                      },
+                                           "FontSize":  {
+                                                            "available":  true,
+                                                            "value":  "6",
+                                                            "error":  null
+                                                        },
+                                           "FontScale":  {
+                                                             "available":  true,
+                                                             "value":  "100",
+                                                             "error":  null
+                                                         },
+                                           "DoNotPrint":  {
+                                                              "available":  true,
+                                                              "value":  "False",
+                                                              "error":  null
+                                                          }
+                                       }
+                    },
+                    {
+                        "index":  10,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "文字 7",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "5",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+                                           "Value":  {
+                                                         "available":  true,
+                                                         "value":  "(Q)QTY:",
+                                                         "error":  null
+                                                     },
+                                           "X":  {
+                                                     "available":  true,
+                                                     "value":  "59.2582",
+                                                     "error":  null
+                                                 },
+                                           "Y":  {
+                                                     "available":  true,
+                                                     "value":  "11.0998",
+                                                     "error":  null
+                                                 },
+                                           "Width":  {
+                                                         "available":  true,
+                                                         "value":  "7.874",
+                                                         "error":  null
+                                                     },
+                                           "Height":  {
+                                                          "available":  true,
+                                                          "value":  "2.54",
+                                                          "error":  null
+                                                      },
+                                           "FontSize":  {
+                                                            "available":  true,
+                                                            "value":  "6",
+                                                            "error":  null
+                                                        },
+                                           "FontScale":  {
+                                                             "available":  true,
+                                                             "value":  "100",
+                                                             "error":  null
+                                                         },
+                                           "DoNotPrint":  {
+                                                              "available":  true,
+                                                              "value":  "False",
+                                                              "error":  null
+                                                          }
+                                       }
+                    },
+                    {
+                        "index":  11,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "文字 8",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "5",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+                                           "Value":  {
+                                                         "available":  true,
+                                                         "value":  "T",
+                                                         "error":  null
+                                                     },
+                                           "X":  {
+                                                     "available":  true,
+                                                     "value":  "19.2532",
+                                                     "error":  null
+                                                 },
+                                           "Y":  {
+                                                     "available":  true,
+                                                     "value":  "11.0998",
+                                                     "error":  null
+                                                 },
+                                           "Width":  {
+                                                         "available":  true,
+                                                         "value":  "1.27",
+                                                         "error":  null
+                                                     },
+                                           "Height":  {
+                                                          "available":  true,
+                                                          "value":  "2.54",
+                                                          "error":  null
+                                                      },
+                                           "FontSize":  {
+                                                            "available":  true,
+                                                            "value":  "6",
+                                                            "error":  null
+                                                        },
+                                           "FontScale":  {
+                                                             "available":  true,
+                                                             "value":  "100",
+                                                             "error":  null
+                                                         },
+                                           "DoNotPrint":  {
+                                                              "available":  true,
+                                                              "value":  "False",
+                                                              "error":  null
+                                                          }
+                                       }
+                    },
+                    {
+                        "index":  12,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "文字 9",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "5",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+                                           "Value":  {
+                                                         "available":  true,
+                                                         "value":  "D",
+                                                         "error":  null
+                                                     },
+                                           "X":  {
+                                                     "available":  true,
+                                                     "value":  "41.8592",
+                                                     "error":  null
+                                                 },
+                                           "Y":  {
+                                                     "available":  true,
+                                                     "value":  "11.0998",
+                                                     "error":  null
+                                                 },
+                                           "Width":  {
+                                                         "available":  true,
+                                                         "value":  "1.524",
+                                                         "error":  null
+                                                     },
+                                           "Height":  {
+                                                          "available":  true,
+                                                          "value":  "2.54",
+                                                          "error":  null
+                                                      },
+                                           "FontSize":  {
+                                                            "available":  true,
+                                                            "value":  "6",
+                                                            "error":  null
+                                                        },
+                                           "FontScale":  {
+                                                             "available":  true,
+                                                             "value":  "100",
+                                                             "error":  null
+                                                         },
+                                           "DoNotPrint":  {
+                                                              "available":  true,
+                                                              "value":  "False",
+                                                              "error":  null
+                                                          }
+                                       }
+                    },
+                    {
+                        "index":  13,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "文字 10",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "5",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+                                           "Value":  {
+                                                         "available":  true,
+                                                         "value":  "4000",
+                                                         "error":  null
+                                                     },
+                                           "X":  {
+                                                     "available":  true,
+                                                     "value":  "69.1134",
+                                                     "error":  null
+                                                 },
+                                           "Y":  {
+                                                     "available":  true,
+                                                     "value":  "11.0998",
+                                                     "error":  null
+                                                 },
+                                           "Width":  {
+                                                         "available":  true,
+                                                         "value":  "4.7498",
+                                                         "error":  null
+                                                     },
+                                           "Height":  {
+                                                          "available":  true,
+                                                          "value":  "2.54",
+                                                          "error":  null
+                                                      },
+                                           "FontSize":  {
+                                                            "available":  true,
+                                                            "value":  "6",
+                                                            "error":  null
+                                                        },
+                                           "FontScale":  {
+                                                             "available":  true,
+                                                             "value":  "100",
+                                                             "error":  null
+                                                         },
+                                           "DoNotPrint":  {
+                                                              "available":  true,
+                                                              "value":  "False",
+                                                              "error":  null
+                                                          }
+                                       }
+                    },
+                    {
+                        "index":  14,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "文字 11",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "5",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+                                           "Value":  {
+                                                         "available":  true,
+                                                         "value":  "(10D)DATE NO:",
+                                                         "error":  null
+                                                     },
+                                           "X":  {
+                                                     "available":  true,
+                                                     "value":  "4.5466",
+                                                     "error":  null
+                                                 },
+                                           "Y":  {
+                                                     "available":  true,
+                                                     "value":  "15.5448",
+                                                     "error":  null
+                                                 },
+                                           "Width":  {
+                                                         "available":  true,
+                                                         "value":  "15.24",
+                                                         "error":  null
+                                                     },
+                                           "Height":  {
+                                                          "available":  true,
+                                                          "value":  "2.54",
+                                                          "error":  null
+                                                      },
+                                           "FontSize":  {
+                                                            "available":  true,
+                                                            "value":  "6",
+                                                            "error":  null
+                                                        },
+                                           "FontScale":  {
+                                                             "available":  true,
+                                                             "value":  "100",
+                                                             "error":  null
+                                                         },
+                                           "DoNotPrint":  {
+                                                              "available":  true,
+                                                              "value":  "False",
+                                                              "error":  null
+                                                          }
+                                       }
+                    },
+                    {
+                        "index":  15,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "文字 12",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "5",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+                                           "Value":  {
+                                                         "available":  true,
+                                                         "value":  "2628",
+                                                         "error":  null
+                                                     },
+                                           "X":  {
+                                                     "available":  true,
+                                                     "value":  "21.2598",
+                                                     "error":  null
+                                                 },
+                                           "Y":  {
+                                                     "available":  true,
+                                                     "value":  "15.5448",
+                                                     "error":  null
+                                                 },
+                                           "Width":  {
+                                                         "available":  true,
+                                                         "value":  "4.7498",
+                                                         "error":  null
+                                                     },
+                                           "Height":  {
+                                                          "available":  true,
+                                                          "value":  "2.54",
+                                                          "error":  null
+                                                      },
+                                           "FontSize":  {
+                                                            "available":  true,
+                                                            "value":  "6",
+                                                            "error":  null
+                                                        },
+                                           "FontScale":  {
+                                                             "available":  true,
+                                                             "value":  "100",
+                                                             "error":  null
+                                                         },
+                                           "DoNotPrint":  {
+                                                              "available":  true,
+                                                              "value":  "False",
+                                                              "error":  null
+                                                          }
+                                       }
+                    },
+                    {
+                        "index":  16,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "文字 13",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "5",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+                                           "Value":  {
+                                                         "available":  true,
+                                                         "value":  "(21L)ASSY:",
+                                                         "error":  null
+                                                     },
+                                           "X":  {
+                                                     "available":  true,
+                                                     "value":  "31.3944",
+                                                     "error":  null
+                                                 },
+                                           "Y":  {
+                                                     "available":  true,
+                                                     "value":  "15.5448",
+                                                     "error":  null
+                                                 },
+                                           "Width":  {
+                                                         "available":  true,
+                                                         "value":  "11.3538",
+                                                         "error":  null
+                                                     },
+                                           "Height":  {
+                                                          "available":  true,
+                                                          "value":  "2.54",
+                                                          "error":  null
+                                                      },
+                                           "FontSize":  {
+                                                            "available":  true,
+                                                            "value":  "6",
+                                                            "error":  null
+                                                        },
+                                           "FontScale":  {
+                                                             "available":  true,
+                                                             "value":  "100",
+                                                             "error":  null
+                                                         },
+                                           "DoNotPrint":  {
+                                                              "available":  true,
+                                                              "value":  "False",
+                                                              "error":  null
+                                                          }
+                                       }
+                    },
+                    {
+                        "index":  17,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "文字 14",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "5",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+                                           "Value":  {
+                                                         "available":  true,
+                                                         "value":  "G",
+                                                         "error":  null
+                                                     },
+                                           "X":  {
+                                                     "available":  true,
+                                                     "value":  "45.6184",
+                                                     "error":  null
+                                                 },
+                                           "Y":  {
+                                                     "available":  true,
+                                                     "value":  "15.5448",
+                                                     "error":  null
+                                                 },
+                                           "Width":  {
+                                                         "available":  true,
+                                                         "value":  "1.6002",
+                                                         "error":  null
+                                                     },
+                                           "Height":  {
+                                                          "available":  true,
+                                                          "value":  "2.54",
+                                                          "error":  null
+                                                      },
+                                           "FontSize":  {
+                                                            "available":  true,
+                                                            "value":  "6",
+                                                            "error":  null
+                                                        },
+                                           "FontScale":  {
+                                                             "available":  true,
+                                                             "value":  "100",
+                                                             "error":  null
+                                                         },
+                                           "DoNotPrint":  {
+                                                              "available":  true,
+                                                              "value":  "False",
+                                                              "error":  null
+                                                          }
+                                       }
+                    },
+                    {
+                        "index":  18,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "文字 15",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "5",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+                                           "Value":  {
+                                                         "available":  true,
+                                                         "value":  "(16D)DATE:",
+                                                         "error":  null
+                                                     },
+                                           "X":  {
+                                                     "available":  true,
+                                                     "value":  "74.1172",
+                                                     "error":  null
+                                                 },
+                                           "Y":  {
+                                                     "available":  true,
+                                                     "value":  "15.5448",
+                                                     "error":  null
+                                                 },
+                                           "Width":  {
+                                                         "available":  true,
+                                                         "value":  "11.5062",
+                                                         "error":  null
+                                                     },
+                                           "Height":  {
+                                                          "available":  true,
+                                                          "value":  "2.54",
+                                                          "error":  null
+                                                      },
+                                           "FontSize":  {
+                                                            "available":  true,
+                                                            "value":  "6",
+                                                            "error":  null
+                                                        },
+                                           "FontScale":  {
+                                                             "available":  true,
+                                                             "value":  "100",
+                                                             "error":  null
+                                                         },
+                                           "DoNotPrint":  {
+                                                              "available":  true,
+                                                              "value":  "False",
+                                                              "error":  null
+                                                          }
+                                       }
+                    },
+                    {
+                        "index":  19,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "文字 16",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "5",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+                                           "Value":  {
+                                                         "available":  true,
+                                                         "value":  "20260722",
+                                                         "error":  null
+                                                     },
+                                           "X":  {
+                                                     "available":  true,
+                                                     "value":  "79.7306",
+                                                     "error":  null
+                                                 },
+                                           "Y":  {
+                                                     "available":  true,
+                                                     "value":  "15.5448",
+                                                     "error":  null
+                                                 },
+                                           "Width":  {
+                                                         "available":  true,
+                                                         "value":  "9.4742",
+                                                         "error":  null
+                                                     },
+                                           "Height":  {
+                                                          "available":  true,
+                                                          "value":  "2.54",
+                                                          "error":  null
+                                                      },
+                                           "FontSize":  {
+                                                            "available":  true,
+                                                            "value":  "6",
+                                                            "error":  null
+                                                        },
+                                           "FontScale":  {
+                                                             "available":  true,
+                                                             "value":  "100",
+                                                             "error":  null
+                                                         },
+                                           "DoNotPrint":  {
+                                                              "available":  true,
+                                                              "value":  "False",
+                                                              "error":  null
+                                                          }
+                                       }
+                    },
+                    {
+                        "index":  20,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "條碼 4",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "4",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+                                           "Value":  {
+                                                         "available":  true,
+                                                         "value":  "10D2628#21LG#16D20260722",
+                                                         "error":  null
+                                                     },
+                                           "X":  {
+                                                     "available":  true,
+                                                     "value":  "4.5466",
+                                                     "error":  null
+                                                 },
+                                           "Y":  {
+                                                     "available":  true,
+                                                     "value":  "18.2372",
+                                                     "error":  null
+                                                 },
+                                           "Width":  {
+                                                         "available":  false,
+                                                         "value":  null,
+                                                         "error":  "Property Width is not exposed by the PowerShell adapter. | IDispatch: Exception calling \"InvokeMember\" with \"5\" argument(s): \"此物件類型不支援的作業。\""
+                                                     },
+                                           "Height":  {
+                                                          "available":  true,
+                                                          "value":  "3.2004",
+                                                          "error":  null
+                                                      },
+                                           "FontSize":  {
+                                                            "available":  true,
+                                                            "value":  "12",
+                                                            "error":  null
+                                                        },
+                                           "FontScale":  {
+                                                             "available":  true,
+                                                             "value":  "100",
+                                                             "error":  null
+                                                         },
+                                           "DoNotPrint":  {
+                                                              "available":  true,
+                                                              "value":  "False",
+                                                              "error":  null
+                                                          }
+                                       }
+                    },
+                    {
+                        "index":  21,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "文字 17",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "5",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+                                           "Value":  {
+                                                         "available":  true,
+                                                         "value":  "(31T)MLOT NO:",
+                                                         "error":  null
+                                                     },
+                                           "X":  {
+                                                     "available":  true,
+                                                     "value":  "4.5466",
+                                                     "error":  null
+                                                 },
+                                           "Y":  {
+                                                     "available":  true,
+                                                     "value":  "23.5204",
+                                                     "error":  null
+                                                 },
+                                           "Width":  {
+                                                         "available":  true,
+                                                         "value":  "15.24",
+                                                         "error":  null
+                                                     },
+                                           "Height":  {
+                                                          "available":  true,
+                                                          "value":  "2.54",
+                                                          "error":  null
+                                                      },
+                                           "FontSize":  {
+                                                            "available":  true,
+                                                            "value":  "6",
+                                                            "error":  null
+                                                        },
+                                           "FontScale":  {
+                                                             "available":  true,
+                                                             "value":  "100",
+                                                             "error":  null
+                                                         },
+                                           "DoNotPrint":  {
+                                                              "available":  true,
+                                                              "value":  "False",
+                                                              "error":  null
+                                                          }
+                                       }
+                    },
+                    {
+                        "index":  22,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "文字 18",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "5",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+                                           "Value":  {
+                                                         "available":  true,
+                                                         "value":  "6612D7800",
+                                                         "error":  null
+                                                     },
+                                           "X":  {
+                                                     "available":  true,
+                                                     "value":  "21.2598",
+                                                     "error":  null
+                                                 },
+                                           "Y":  {
+                                                     "available":  true,
+                                                     "value":  "23.5204",
+                                                     "error":  null
+                                                 },
+                                           "Width":  {
+                                                         "available":  true,
+                                                         "value":  "10.9982",
+                                                         "error":  null
+                                                     },
+                                           "Height":  {
+                                                          "available":  true,
+                                                          "value":  "2.54",
+                                                          "error":  null
+                                                      },
+                                           "FontSize":  {
+                                                            "available":  true,
+                                                            "value":  "6",
+                                                            "error":  null
+                                                        },
+                                           "FontScale":  {
+                                                             "available":  true,
+                                                             "value":  "100",
+                                                             "error":  null
+                                                         },
+                                           "DoNotPrint":  {
+                                                              "available":  true,
+                                                              "value":  "False",
+                                                              "error":  null
+                                                          }
+                                       }
+                    },
+                    {
+                        "index":  23,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "文字 19",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "5",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+                                           "Value":  {
+                                                         "available":  true,
+                                                         "value":  "(33P)BIN:",
+                                                         "error":  null
+                                                     },
+                                           "X":  {
+                                                     "available":  true,
+                                                     "value":  "54.7116",
+                                                     "error":  null
+                                                 },
+                                           "Y":  {
+                                                     "available":  true,
+                                                     "value":  "23.5204",
+                                                     "error":  null
+                                                 },
+                                           "Width":  {
+                                                         "available":  true,
+                                                         "value":  "9.398",
+                                                         "error":  null
+                                                     },
+                                           "Height":  {
+                                                          "available":  true,
+                                                          "value":  "2.54",
+                                                          "error":  null
+                                                      },
+                                           "FontSize":  {
+                                                            "available":  true,
+                                                            "value":  "6",
+                                                            "error":  null
+                                                        },
+                                           "FontScale":  {
+                                                             "available":  true,
+                                                             "value":  "100",
+                                                             "error":  null
+                                                         },
+                                           "DoNotPrint":  {
+                                                              "available":  true,
+                                                              "value":  "False",
+                                                              "error":  null
+                                                          }
+                                       }
+                    },
+                    {
+                        "index":  24,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "文字 20",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "5",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+                                           "Value":  {
+                                                         "available":  true,
+                                                         "value":  "1",
+                                                         "error":  null
+                                                     },
+                                           "X":  {
+                                                     "available":  true,
+                                                     "value":  "61.341",
+                                                     "error":  null
+                                                 },
+                                           "Y":  {
+                                                     "available":  true,
+                                                     "value":  "23.5204",
+                                                     "error":  null
+                                                 },
+                                           "Width":  {
+                                                         "available":  true,
+                                                         "value":  "1.1938",
+                                                         "error":  null
+                                                     },
+                                           "Height":  {
+                                                          "available":  true,
+                                                          "value":  "2.54",
+                                                          "error":  null
+                                                      },
+                                           "FontSize":  {
+                                                            "available":  true,
+                                                            "value":  "6",
+                                                            "error":  null
+                                                        },
+                                           "FontScale":  {
+                                                             "available":  true,
+                                                             "value":  "100",
+                                                             "error":  null
+                                                         },
+                                           "DoNotPrint":  {
+                                                              "available":  true,
+                                                              "value":  "False",
+                                                              "error":  null
+                                                          }
+                                       }
+                    },
+                    {
+                        "index":  25,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "文字 21",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "5",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+                                           "Value":  {
+                                                         "available":  true,
+                                                         "value":  "(23L)MC:",
+                                                         "error":  null
+                                                     },
+                                           "X":  {
+                                                     "available":  true,
+                                                     "value":  "78.9686",
+                                                     "error":  null
+                                                 },
+                                           "Y":  {
+                                                     "available":  true,
+                                                     "value":  "23.5204",
+                                                     "error":  null
+                                                 },
+                                           "Width":  {
+                                                         "available":  true,
+                                                         "value":  "8.89",
+                                                         "error":  null
+                                                     },
+                                           "Height":  {
+                                                          "available":  true,
+                                                          "value":  "2.54",
+                                                          "error":  null
+                                                      },
+                                           "FontSize":  {
+                                                            "available":  true,
+                                                            "value":  "6",
+                                                            "error":  null
+                                                        },
+                                           "FontScale":  {
+                                                             "available":  true,
+                                                             "value":  "100",
+                                                             "error":  null
+                                                         },
+                                           "DoNotPrint":  {
+                                                              "available":  true,
+                                                              "value":  "False",
+                                                              "error":  null
+                                                          }
+                                       }
+                    },
+                    {
+                        "index":  26,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "文字 22",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "5",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+                                           "Value":  {
+                                                         "available":  true,
+                                                         "value":  "G",
+                                                         "error":  null
+                                                     },
+                                           "X":  {
+                                                     "available":  true,
+                                                     "value":  "81.6864",
+                                                     "error":  null
+                                                 },
+                                           "Y":  {
+                                                     "available":  true,
+                                                     "value":  "23.5204",
+                                                     "error":  null
+                                                 },
+                                           "Width":  {
+                                                         "available":  true,
+                                                         "value":  "1.6002",
+                                                         "error":  null
+                                                     },
+                                           "Height":  {
+                                                          "available":  true,
+                                                          "value":  "2.54",
+                                                          "error":  null
+                                                      },
+                                           "FontSize":  {
+                                                            "available":  true,
+                                                            "value":  "6",
+                                                            "error":  null
+                                                        },
+                                           "FontScale":  {
+                                                             "available":  true,
+                                                             "value":  "100",
+                                                             "error":  null
+                                                         },
+                                           "DoNotPrint":  {
+                                                              "available":  true,
+                                                              "value":  "False",
+                                                              "error":  null
+                                                          }
+                                       }
+                    },
+                    {
+                        "index":  27,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "文字 23",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "5",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+                                           "Value":  {
+                                                         "available":  true,
+                                                         "value":  "(24L)VC:",
+                                                         "error":  null
+                                                     },
+                                           "X":  {
+                                                     "available":  true,
+                                                     "value":  "98.552",
+                                                     "error":  null
+                                                 },
+                                           "Y":  {
+                                                     "available":  true,
+                                                     "value":  "23.5204",
+                                                     "error":  null
+                                                 },
+                                           "Width":  {
+                                                         "available":  true,
+                                                         "value":  "8.5598",
+                                                         "error":  null
+                                                     },
+                                           "Height":  {
+                                                          "available":  true,
+                                                          "value":  "2.54",
+                                                          "error":  null
+                                                      },
+                                           "FontSize":  {
+                                                            "available":  true,
+                                                            "value":  "6",
+                                                            "error":  null
+                                                        },
+                                           "FontScale":  {
+                                                             "available":  true,
+                                                             "value":  "100",
+                                                             "error":  null
+                                                         },
+                                           "DoNotPrint":  {
+                                                              "available":  true,
+                                                              "value":  "False",
+                                                              "error":  null
+                                                          }
+                                       }
+                    },
+                    {
+                        "index":  28,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "文字 24",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "5",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+                                           "Value":  {
+                                                         "available":  true,
+                                                         "value":  "PS",
+                                                         "error":  null
+                                                     },
+                                           "X":  {
+                                                     "available":  true,
+                                                     "value":  "98.933",
+                                                     "error":  null
+                                                 },
+                                           "Y":  {
+                                                     "available":  true,
+                                                     "value":  "23.5204",
+                                                     "error":  null
+                                                 },
+                                           "Width":  {
+                                                         "available":  true,
+                                                         "value":  "2.8702",
+                                                         "error":  null
+                                                     },
+                                           "Height":  {
+                                                          "available":  true,
+                                                          "value":  "2.54",
+                                                          "error":  null
+                                                      },
+                                           "FontSize":  {
+                                                            "available":  true,
+                                                            "value":  "6",
+                                                            "error":  null
+                                                        },
+                                           "FontScale":  {
+                                                             "available":  true,
+                                                             "value":  "100",
+                                                             "error":  null
+                                                         },
+                                           "DoNotPrint":  {
+                                                              "available":  true,
+                                                              "value":  "False",
+                                                              "error":  null
+                                                          }
+                                       }
+                    },
+                    {
+                        "index":  29,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "條碼 5",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "4",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+                                           "Value":  {
+                                                         "available":  true,
+                                                         "value":  "31T6612D7800#33P1#23LG#24LPS",
+                                                         "error":  null
+                                                     },
+                                           "X":  {
+                                                     "available":  true,
+                                                     "value":  "4.5466",
+                                                     "error":  null
+                                                 },
+                                           "Y":  {
+                                                     "available":  true,
+                                                     "value":  "24.8666",
+                                                     "error":  null
+                                                 },
+                                           "Width":  {
+                                                         "available":  false,
+                                                         "value":  null,
+                                                         "error":  "Property Width is not exposed by the PowerShell adapter. | IDispatch: Exception calling \"InvokeMember\" with \"5\" argument(s): \"此物件類型不支援的作業。\""
+                                                     },
+                                           "Height":  {
+                                                          "available":  true,
+                                                          "value":  "3.2512",
+                                                          "error":  null
+                                                      },
+                                           "FontSize":  {
+                                                            "available":  true,
+                                                            "value":  "12",
+                                                            "error":  null
+                                                        },
+                                           "FontScale":  {
+                                                             "available":  true,
+                                                             "value":  "100",
+                                                             "error":  null
+                                                         },
+                                           "DoNotPrint":  {
+                                                              "available":  true,
+                                                              "value":  "False",
+                                                              "error":  null
+                                                          }
+                                       }
+                    },
+                    {
+                        "index":  30,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "文字 25",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "5",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+                                           "Value":  {
+                                                         "available":  true,
+                                                         "value":  "(1Y)P1:",
+                                                         "error":  null
+                                                     },
+                                           "X":  {
+                                                     "available":  true,
+                                                     "value":  "5.0038",
+                                                     "error":  null
+                                                 },
+                                           "Y":  {
+                                                     "available":  true,
+                                                     "value":  "29.0576",
+                                                     "error":  null
+                                                 },
+                                           "Width":  {
+                                                         "available":  true,
+                                                         "value":  "7.1882",
+                                                         "error":  null
+                                                     },
+                                           "Height":  {
+                                                          "available":  true,
+                                                          "value":  "2.54",
+                                                          "error":  null
+                                                      },
+                                           "FontSize":  {
+                                                            "available":  true,
+                                                            "value":  "6",
+                                                            "error":  null
+                                                        },
+                                           "FontScale":  {
+                                                             "available":  true,
+                                                             "value":  "100",
+                                                             "error":  null
+                                                         },
+                                           "DoNotPrint":  {
+                                                              "available":  true,
+                                                              "value":  "False",
+                                                              "error":  null
+                                                          }
+                                       }
+                    },
+                    {
+                        "index":  31,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "文字 26",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "5",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+                                           "Value":  {
+                                                         "available":  true,
+                                                         "value":  "+090PI3K0_PS",
+                                                         "error":  null
+                                                     },
+                                           "X":  {
+                                                     "available":  true,
+                                                     "value":  "13.0302",
+                                                     "error":  null
+                                                 },
+                                           "Y":  {
+                                                     "available":  true,
+                                                     "value":  "29.0576",
+                                                     "error":  null
+                                                 },
+                                           "Width":  {
+                                                         "available":  true,
+                                                         "value":  "14.8082",
+                                                         "error":  null
+                                                     },
+                                           "Height":  {
+                                                          "available":  true,
+                                                          "value":  "2.54",
+                                                          "error":  null
+                                                      },
+                                           "FontSize":  {
+                                                            "available":  true,
+                                                            "value":  "6",
+                                                            "error":  null
+                                                        },
+                                           "FontScale":  {
+                                                             "available":  true,
+                                                             "value":  "100",
+                                                             "error":  null
+                                                         },
+                                           "DoNotPrint":  {
+                                                              "available":  true,
+                                                              "value":  "False",
+                                                              "error":  null
+                                                          }
+                                       }
+                    },
+                    {
+                        "index":  32,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "文字 27",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "5",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+                                           "Value":  {
+                                                         "available":  true,
+                                                         "value":  "(2Y)P2:",
+                                                         "error":  null
+                                                     },
+                                           "X":  {
+                                                     "available":  true,
+                                                     "value":  "45.6184",
+                                                     "error":  null
+                                                 },
+                                           "Y":  {
+                                                     "available":  true,
+                                                     "value":  "29.0576",
+                                                     "error":  null
+                                                 },
+                                           "Width":  {
+                                                         "available":  true,
+                                                         "value":  "7.1882",
+                                                         "error":  null
+                                                     },
+                                           "Height":  {
+                                                          "available":  true,
+                                                          "value":  "2.54",
+                                                          "error":  null
+                                                      },
+                                           "FontSize":  {
+                                                            "available":  true,
+                                                            "value":  "6",
+                                                            "error":  null
+                                                        },
+                                           "FontScale":  {
+                                                             "available":  true,
+                                                             "value":  "100",
+                                                             "error":  null
+                                                         },
+                                           "DoNotPrint":  {
+                                                              "available":  true,
+                                                              "value":  "False",
+                                                              "error":  null
+                                                          }
+                                       }
+                    },
+                    {
+                        "index":  33,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "文字 28",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "5",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+                                           "Value":  {
+                                                         "available":  true,
+                                                         "value":  "(4Y)D:",
+                                                         "error":  null
+                                                     },
+                                           "X":  {
+                                                     "available":  true,
+                                                     "value":  "77.1906",
+                                                     "error":  null
+                                                 },
+                                           "Y":  {
+                                                     "available":  true,
+                                                     "value":  "29.0576",
+                                                     "error":  null
+                                                 },
+                                           "Width":  {
+                                                         "available":  true,
+                                                         "value":  "6.096",
+                                                         "error":  null
+                                                     },
+                                           "Height":  {
+                                                          "available":  true,
+                                                          "value":  "2.54",
+                                                          "error":  null
+                                                      },
+                                           "FontSize":  {
+                                                            "available":  true,
+                                                            "value":  "6",
+                                                            "error":  null
+                                                        },
+                                           "FontScale":  {
+                                                             "available":  true,
+                                                             "value":  "100",
+                                                             "error":  null
+                                                         },
+                                           "DoNotPrint":  {
+                                                              "available":  true,
+                                                              "value":  "False",
+                                                              "error":  null
+                                                          }
+                                       }
+                    },
+                    {
+                        "index":  34,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "文字 29",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "5",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+                                           "Value":  {
+                                                         "available":  true,
+                                                         "value":  "N2",
+                                                         "error":  null
+                                                     },
+                                           "X":  {
+                                                     "available":  true,
+                                                     "value":  "79.4004",
+                                                     "error":  null
+                                                 },
+                                           "Y":  {
+                                                     "available":  true,
+                                                     "value":  "29.0576",
+                                                     "error":  null
+                                                 },
+                                           "Width":  {
+                                                         "available":  true,
+                                                         "value":  "2.7178",
+                                                         "error":  null
+                                                     },
+                                           "Height":  {
+                                                          "available":  true,
+                                                          "value":  "2.54",
+                                                          "error":  null
+                                                      },
+                                           "FontSize":  {
+                                                            "available":  true,
+                                                            "value":  "6",
+                                                            "error":  null
+                                                        },
+                                           "FontScale":  {
+                                                             "available":  true,
+                                                             "value":  "100",
+                                                             "error":  null
+                                                         },
+                                           "DoNotPrint":  {
+                                                              "available":  true,
+                                                              "value":  "False",
+                                                              "error":  null
+                                                          }
+                                       }
+                    },
+                    {
+                        "index":  35,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "條碼 6",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "4",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+                                           "Value":  {
+                                                         "available":  true,
+                                                         "value":  "1Y+090PI3K0_PS#2Y#4YN2",
+                                                         "error":  null
+                                                     },
+                                           "X":  {
+                                                     "available":  true,
+                                                     "value":  "4.5466",
+                                                     "error":  null
+                                                 },
+                                           "Y":  {
+                                                     "available":  true,
+                                                     "value":  "31.6738",
+                                                     "error":  null
+                                                 },
+                                           "Width":  {
+                                                         "available":  false,
+                                                         "value":  null,
+                                                         "error":  "Property Width is not exposed by the PowerShell adapter. | IDispatch: Exception calling \"InvokeMember\" with \"5\" argument(s): \"此物件類型不支援的作業。\""
+                                                     },
+                                           "Height":  {
+                                                          "available":  true,
+                                                          "value":  "3.3274",
+                                                          "error":  null
+                                                      },
+                                           "FontSize":  {
+                                                            "available":  true,
+                                                            "value":  "12",
+                                                            "error":  null
+                                                        },
+                                           "FontScale":  {
+                                                             "available":  true,
+                                                             "value":  "100",
+                                                             "error":  null
+                                                         },
+                                           "DoNotPrint":  {
+                                                              "available":  true,
+                                                              "value":  "False",
+                                                              "error":  null
+                                                          }
+                                       }
+                    },
+                    {
+                        "index":  36,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "文字 30",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "5",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+                                           "Value":  {
+                                                         "available":  true,
+                                                         "value":  "RoHS\rCOMPLIANT",
+                                                         "error":  null
+                                                     },
+                                           "X":  {
+                                                     "available":  true,
+                                                     "value":  "107.8484",
+                                                     "error":  null
+                                                 },
+                                           "Y":  {
+                                                     "available":  true,
+                                                     "value":  "3.5052",
+                                                     "error":  null
+                                                 },
+                                           "Width":  {
+                                                         "available":  true,
+                                                         "value":  "13.6398",
+                                                         "error":  null
+                                                     },
+                                           "Height":  {
+                                                          "available":  true,
+                                                          "value":  "7.7216",
+                                                          "error":  null
+                                                      },
+                                           "FontSize":  {
+                                                            "available":  true,
+                                                            "value":  "12",
+                                                            "error":  null
+                                                        },
+                                           "FontScale":  {
+                                                             "available":  true,
+                                                             "value":  "100",
+                                                             "error":  null
+                                                         },
+                                           "DoNotPrint":  {
+                                                              "available":  true,
+                                                              "value":  "False",
+                                                              "error":  null
+                                                          }
+                                       }
+                    },
+                    {
+                        "index":  37,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "文字 31",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "5",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+                                           "Value":  {
+                                                         "available":  true,
+                                                         "value":  "HF",
+                                                         "error":  null
+                                                     },
+                                           "X":  {
+                                                     "available":  true,
+                                                     "value":  "108.1532",
+                                                     "error":  null
+                                                 },
+                                           "Y":  {
+                                                     "available":  true,
+                                                     "value":  "12.7762",
+                                                     "error":  null
+                                                 },
+                                           "Width":  {
+                                                         "available":  true,
+                                                         "value":  "8.7884",
+                                                         "error":  null
+                                                     },
+                                           "Height":  {
+                                                          "available":  true,
+                                                          "value":  "5.0038",
+                                                          "error":  null
+                                                      },
+                                           "FontSize":  {
+                                                            "available":  true,
+                                                            "value":  "12",
+                                                            "error":  null
+                                                        },
+                                           "FontScale":  {
+                                                             "available":  true,
+                                                             "value":  "100",
+                                                             "error":  null
+                                                         },
+                                           "DoNotPrint":  {
+                                                              "available":  true,
+                                                              "value":  "False",
+                                                              "error":  null
+                                                          }
+                                       }
+                    },
+                    {
+                        "index":  38,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "文字 32",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "5",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+                                           "Value":  {
+                                                         "available":  true,
+                                                         "value":  "Pb",
+                                                         "error":  null
+                                                     },
+                                           "X":  {
+                                                     "available":  true,
+                                                     "value":  "127.3302",
+                                                     "error":  null
+                                                 },
+                                           "Y":  {
+                                                     "available":  true,
+                                                     "value":  "23.5204",
+                                                     "error":  null
+                                                 },
+                                           "Width":  {
+                                                         "available":  true,
+                                                         "value":  "8.7884",
+                                                         "error":  null
+                                                     },
+                                           "Height":  {
+                                                          "available":  true,
+                                                          "value":  "5.0038",
+                                                          "error":  null
+                                                      },
+                                           "FontSize":  {
+                                                            "available":  true,
+                                                            "value":  "12",
+                                                            "error":  null
+                                                        },
+                                           "FontScale":  {
+                                                             "available":  true,
+                                                             "value":  "100",
+                                                             "error":  null
+                                                         },
+                                           "DoNotPrint":  {
+                                                              "available":  true,
+                                                              "value":  "False",
+                                                              "error":  null
+                                                          }
+                                       }
+                    },
+                    {
+                        "index":  39,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "線條 1",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "2",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+                                           "Value":  {
+                                                         "available":  false,
+                                                         "value":  null,
+                                                         "error":  "Property Value is not exposed by the PowerShell adapter. | IDispatch: Exception calling \"InvokeMember\" with \"5\" argument(s): \"此物件類型不支援的作業。\""
+                                                     },
+                                           "X":  {
+                                                     "available":  true,
+                                                     "value":  "127.3302",
+                                                     "error":  null
+                                                 },
+                                           "Y":  {
+                                                     "available":  true,
+                                                     "value":  "23.2664",
+                                                     "error":  null
+                                                 },
+                                           "Width":  {
+                                                         "available":  false,
+                                                         "value":  null,
+                                                         "error":  "Property Width is not exposed by the PowerShell adapter. | IDispatch: Exception calling \"InvokeMember\" with \"5\" argument(s): \"此物件類型不支援的作業。\""
+                                                     },
+                                           "Height":  {
+                                                          "available":  false,
+                                                          "value":  null,
+                                                          "error":  "Property Height is not exposed by the PowerShell adapter. | IDispatch: Exception calling \"InvokeMember\" with \"5\" argument(s): \"此物件類型不支援的作業。\""
+                                                      },
+                                           "FontSize":  {
+                                                            "available":  false,
+                                                            "value":  null,
+                                                            "error":  "Property FontSize is not exposed by the PowerShell adapter. | IDispatch: Exception calling \"InvokeMember\" with \"5\" argument(s): \"此物件類型不支援的作業。\""
+                                                        },
+                                           "FontScale":  {
+                                                             "available":  false,
+                                                             "value":  null,
+                                                             "error":  "Property FontScale is not exposed by the PowerShell adapter. | IDispatch: Exception calling \"InvokeMember\" with \"5\" argument(s): \"此物件類型不支援的作業。\""
+                                                         },
+                                           "DoNotPrint":  {
+                                                              "available":  true,
+                                                              "value":  "False",
+                                                              "error":  null
+                                                          }
+                                       }
+                    },
+                    {
+                        "index":  40,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "橢圓 1",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "8",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+                                           "Value":  {
+                                                         "available":  false,
+                                                         "value":  null,
+                                                         "error":  "Property Value is not exposed by the PowerShell adapter. | IDispatch: Exception calling \"InvokeMember\" with \"5\" argument(s): \"此物件類型不支援的作業。\""
+                                                     },
+                                           "X":  {
+                                                     "available":  true,
+                                                     "value":  "127.3302",
+                                                     "error":  null
+                                                 },
+                                           "Y":  {
+                                                     "available":  true,
+                                                     "value":  "23.5204",
+                                                     "error":  null
+                                                 },
+                                           "Width":  {
+                                                         "available":  true,
+                                                         "value":  "7.6708",
+                                                         "error":  null
+                                                     },
+                                           "Height":  {
+                                                          "available":  true,
+                                                          "value":  "7.6708",
+                                                          "error":  null
+                                                      },
+                                           "FontSize":  {
+                                                            "available":  false,
+                                                            "value":  null,
+                                                            "error":  "Property FontSize is not exposed by the PowerShell adapter. | IDispatch: Exception calling \"InvokeMember\" with \"5\" argument(s): \"此物件類型不支援的作業。\""
+                                                        },
+                                           "FontScale":  {
+                                                             "available":  false,
+                                                             "value":  null,
+                                                             "error":  "Property FontScale is not exposed by the PowerShell adapter. | IDispatch: Exception calling \"InvokeMember\" with \"5\" argument(s): \"此物件類型不支援的作業。\""
+                                                         },
+                                           "DoNotPrint":  {
+                                                              "available":  true,
+                                                              "value":  "False",
+                                                              "error":  null
+                                                          }
+                                       }
+                    },
+                    {
+                        "index":  41,
+                        "name":  {
+                                     "available":  true,
+                                     "value":  "文字 33",
+                                     "error":  null
+                                 },
+                        "type":  {
+                                     "available":  true,
+                                     "value":  "5",
+                                     "error":  null
+                                 },
+                        "members":  {
+                                        "available":  false,
+                                        "members":  [
+
+                                                    ],
+                                        "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                                    },
+                        "properties":  {
+                                           "Value":  {
+                                                         "available":  true,
+                                                         "value":  "            120824\rC.K.   QA  ACC",
+                                                         "error":  null
+                                                     },
+                                           "X":  {
+                                                     "available":  true,
+                                                     "value":  "115.0112",
+                                                     "error":  null
+                                                 },
+                                           "Y":  {
+                                                     "available":  true,
+                                                     "value":  "29.0576",
+                                                     "error":  null
+                                                 },
+                                           "Width":  {
+                                                         "available":  true,
+                                                         "value":  "17.3736",
+                                                         "error":  null
+                                                     },
+                                           "Height":  {
+                                                          "available":  true,
+                                                          "value":  "5.1562",
+                                                          "error":  null
+                                                      },
+                                           "FontSize":  {
+                                                            "available":  true,
+                                                            "value":  "6",
+                                                            "error":  null
+                                                        },
+                                           "FontScale":  {
+                                                             "available":  true,
+                                                             "value":  "100",
+                                                             "error":  null
+                                                         },
+                                           "DoNotPrint":  {
+                                                              "available":  true,
+                                                              "value":  "False",
+                                                              "error":  null
+                                                          }
+                                       }
+                    }
+                ],
+    "error":  null,
+    "diagnosticWarnings":  [
+                               "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\"",
+                               "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\"",
+                               "Object 1 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 2 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 3 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 4 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 5 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 6 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 7 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 8 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 9 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 10 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 11 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 12 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 13 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 14 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 15 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 16 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 17 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 18 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 19 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 20 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 21 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 22 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 23 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 24 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 25 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 26 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 27 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 28 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 29 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 30 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 31 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 32 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 33 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 34 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 35 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 36 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 37 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 38 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 39 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 40 has incomplete diagnostic metadata; see objects in report.",
+                               "Object 41 has incomplete diagnostic metadata; see objects in report."
+                           ],
+    "applicationMembers":  {
+                               "available":  false,
+                               "members":  [
+
+                                           ],
+                               "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                           },
+    "barTender":  {
+                      "FullVersion":  {
+                                          "available":  true,
+                                          "value":  "2022 R2",
+                                          "error":  null
+                                      },
+                      "Version":  {
+                                      "available":  true,
+                                      "value":  "11.3",
+                                      "error":  null
+                                  },
+                      "Edition":  {
+                                      "available":  true,
+                                      "value":  "Automation",
+                                      "error":  null
+                                  },
+                      "BuildNumber":  {
+                                          "available":  true,
+                                          "value":  "184527",
+                                          "error":  null
+                                      },
+                      "ProcessID":  {
+                                        "available":  true,
+                                        "value":  "28944",
+                                        "error":  null
+                                    }
+                  },
+    "templateSha256":  "4CF9FDAD67CB27AA79AA57FF2BFF5912463608D8F509067112EB940BDEE49612",
+    "openArgumentTypes":  [
+                              "System.String",
+                              "System.Boolean",
+                              "System.String"
+                          ],
+    "formatMembers":  {
+                          "available":  false,
+                          "members":  [
+
+                                      ],
+                          "error":  "Exception calling \"Read\" with \"1\" argument(s): \"This object exposes no ITypeInfo.\""
+                      },
+    "probe":  {
+                  "slot":  "文字 1",
+                  "before":  {
+                                 "X":  4.5466,
+                                 "Y":  6.0197999999999992,
+                                 "FontSize":  6
+                             },
+                  "expected":  {
+                                   "X":  5.5466,
+                                   "Y":  7.0197999999999992,
+                                   "FontSize":  8
+                               },
+                  "afterReopen":  {
+                                      "X":  5.5371999999999995,
+                                      "Y":  7.0104000000000006,
+                                      "FontSize":  8
+                                  },
+                  "payloadChanged":  false
+              },
+    "limitations":  [
+                        "Only first text X/Y/FontSize tested. Payload, barcode sizing and full layout acceptance remain untested."
+                    ]
+}

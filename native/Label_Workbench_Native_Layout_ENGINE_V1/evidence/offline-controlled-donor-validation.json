@@ -1,0 +1,26 @@
+{
+  "source": "blockers-13 result fixtures",
+  "uniqueFeederMapping": [
+    {
+      "sourceId": "{54296806-14EF-4EF3-8605-083CBCD81F79}",
+      "value": "W25N01GWZEIR",
+      "uniqueCandidates": [
+        "文字 3"
+      ]
+    },
+    {
+      "sourceId": "{5E8ECEA5-85E2-429B-B937-C14FA47E178E}",
+      "value": "6612D7800ZZ",
+      "uniqueCandidates": [
+        "文字 5"
+      ]
+    }
+  ],
+  "allMappingsUnique": true,
+  "expectedRoot": "BarCode-Code-128",
+  "embeddedSources": 2,
+  "remainingObjectValueSources": 2,
+  "remainingNonEmptyPrefixSuffix": [],
+  "primaryEmbeddedValue": "LWB-C128-001",
+  "note": "Offline fixture validation only; Windows BarTender readback remains required."
+}

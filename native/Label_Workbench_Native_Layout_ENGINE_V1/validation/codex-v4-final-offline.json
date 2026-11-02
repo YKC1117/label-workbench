@@ -1,0 +1,272 @@
+{
+  "date": "2026-10-06",
+  "checks": [
+    {
+      "name": "JSON/XML and nested ZIP integrity",
+      "status": "PASS",
+      "detail": {
+        "json": 61,
+        "xml": 155,
+        "nestedZip": 7
+      }
+    },
+    {
+      "name": "Input ZIP CRC",
+      "status": "PASS",
+      "detail": "Static source inspection, NOT runtime execution"
+    },
+    {
+      "name": "All original evidence byte-identical",
+      "status": "PASS",
+      "detail": 33
+    },
+    {
+      "name": "Proven Code128 SHA256",
+      "status": "PASS",
+      "detail": "Static source inspection, NOT runtime execution"
+    },
+    {
+      "name": "V4 HRESULT helper unchanged",
+      "status": "PASS",
+      "detail": "Static source inspection, NOT runtime execution"
+    },
+    {
+      "name": "PowerShell lexical delimiters/strings ONLY",
+      "status": "PASS",
+      "detail": {
+        "files": 20,
+        "nativeParser": "NOT RUN"
+      }
+    },
+    {
+      "name": "Non-ASCII PowerShell UTF8 BOM",
+      "status": "PASS",
+      "detail": "Static source inspection, NOT runtime execution"
+    },
+    {
+      "name": "C# lexical delimiters/strings ONLY",
+      "status": "PASS",
+      "detail": {
+        "files": 5,
+        "compile": "NOT RUN"
+      }
+    },
+    {
+      "name": "V3 module isolation retained",
+      "status": "PASS",
+      "detail": "Static source inspection, NOT runtime execution"
+    },
+    {
+      "name": "System.Xml explicit references in both tests",
+      "status": "PASS",
+      "detail": "Static source inspection, NOT runtime execution"
+    },
+    {
+      "name": "Test module cleanup / fixture cache cleanup",
+      "status": "PASS",
+      "detail": "Static source inspection, NOT runtime execution"
+    },
+    {
+      "name": "14 original scenarios and exact negative reason guards",
+      "status": "PASS",
+      "detail": [
+        "none",
+        "wrong-create",
+        "duplicate-name",
+        "duplicate-source",
+        "partial-insert",
+        "peer-payload",
+        "noop-index",
+        "bad-dpi",
+        "reopen-type",
+        "reopen-payload",
+        "reopen-nan",
+        "reopen-printer",
+        "reopen-margin",
+        "reopen-dpi"
+      ]
+    },
+    {
+      "name": "14-suite healthy case asserts real fallback calls",
+      "status": "PASS",
+      "detail": "Static source inspection, NOT runtime execution"
+    },
+    {
+      "name": "22 unique font scenarios declared",
+      "status": "PASS",
+      "detail": [
+        "already-matched",
+        "com-success",
+        "xml-success",
+        "com-noop",
+        "com-partial",
+        "missing-font",
+        "duplicate-font",
+        "missing-attribute",
+        "xml-noop",
+        "xml-partial",
+        "xml-position",
+        "xml-name",
+        "xml-id",
+        "xml-payload",
+        "xml-source",
+        "xml-source-attribute",
+        "xml-fontsize",
+        "xml-font-readback",
+        "xml-other-node",
+        "xml-fit-bounds",
+        "rollback-failure",
+        "geometry-font-reset"
+      ]
+    },
+    {
+      "name": "Both test suites wired before COM",
+      "status": "PASS",
+      "detail": "Static source inspection, NOT runtime execution"
+    },
+    {
+      "name": "Pre-COM baseline / pre-call mutation flag",
+      "status": "PASS",
+      "detail": "Static source inspection, NOT runtime execution"
+    },
+    {
+      "name": "Request changes only one existing direct FontName",
+      "status": "PASS",
+      "detail": "Static source inspection, NOT runtime execution"
+    },
+    {
+      "name": "Strict full XML / identity / COM / XML font readback",
+      "status": "PASS",
+      "detail": "Static source inspection, NOT runtime execution"
+    },
+    {
+      "name": "Partial SetXML rollback / rollback failure fail-closed",
+      "status": "PASS",
+      "detail": "Static source inspection, NOT runtime execution"
+    },
+    {
+      "name": "Post-geometry and presave requested font checks",
+      "status": "PASS",
+      "detail": "Static source inspection, NOT runtime execution"
+    },
+    {
+      "name": "FontSize remains on COM route",
+      "status": "PASS",
+      "detail": "Static source inspection, NOT runtime execution"
+    },
+    {
+      "name": "No barcode Width dependency",
+      "status": "PASS",
+      "detail": "Static source inspection, NOT runtime execution"
+    },
+    {
+      "name": "Barcode trust and output publication retained",
+      "status": "PASS",
+      "detail": "Static source inspection, NOT runtime execution"
+    },
+    {
+      "name": "Captured six font/XML TypeLib signatures",
+      "status": "PASS",
+      "detail": [
+        "FontName INVOKE_PROPERTYGET",
+        "FontName INVOKE_PROPERTYPUT",
+        "FontSize INVOKE_PROPERTYGET",
+        "FontSize INVOKE_PROPERTYPUT",
+        "GetXML INVOKE_FUNC",
+        "SetXML INVOKE_FUNC"
+      ]
+    },
+    {
+      "name": "Captured Text XML one-attribute data experiment",
+      "status": "PASS",
+      "detail": {
+        "xmlFiles": 18,
+        "scope": "Python XML data manipulation only; NOT PowerShell/SetXML execution"
+      }
+    }
+  ],
+  "dataCounts": {
+    "json": 61,
+    "xml": 155,
+    "nestedZip": 7
+  },
+  "originalEvidenceFilesUnchanged": 33,
+  "tools": {
+    "pwsh": null,
+    "powershell": null,
+    "dotnet": null,
+    "csc": null,
+    "mcs": null,
+    "mono": null
+  },
+  "changedExistingFiles": [
+    "START_HERE.md",
+    "READ_ME_FIRST.txt",
+    "program/SELF_CHECK_NATIVE.ps1",
+    "program/Build-NativeLayout.ps1",
+    "program/NativeLayoutEngine.psm1",
+    "program/Test-NativePersistence.ps1",
+    "program/NativeReviewFixtures.cs",
+    "V3_STATUS.txt",
+    "RUNTIME_FIX_FONTNAME_V4.md",
+    "TECHNICAL_REVIEW.md"
+  ],
+  "notRun": [
+    "PowerShell native parser",
+    "PowerShell input regression",
+    "22 font regressions",
+    "14 multi-object regressions",
+    "C# compile",
+    "Windows PowerShell 5.1 / real RCW",
+    "BarTender 2022 FontName fallback, Save-Close-Reopen",
+    "physical print/scan"
+  ],
+  "readiness": "NOT_READY_FOR_ONE_SHOT_WINDOWS_TEST",
+  "readinessReason": "No executable PowerShell/C# regression verification available; review candidate only. No user test requested.",
+  "newProgramFiles": [
+    "program/Test-NativeFontFallback.ps1"
+  ],
+  "programSha256AtPackaging": {
+    "program/BUILD_NATIVE.cmd": "483712f25169b2bea22cdaf759897ede17095c162a0df3f984e637032f95fdea",
+    "program/Build-NativeLayout.ps1": "6d6b8c5b8240bc182dc61debd5ebc3d642c73446b4e188c20f1d730999c0ae77",
+    "program/CORE_TEST.cmd": "53a644e3e2cf118d42c804913a44259079709264b32ca36c73634f09d63cd168",
+    "program/Com.psm1": "f30db54d63d84afa245ffb0cb69d39a3c8290f9fb6e9e95dc06a07b4bf2ff8db",
+    "program/ComBridge.cs": "2ef4808ffdd2097d64161671165feeb7fbd2030e929bd0ad8a03423da186cea4",
+    "program/ComMetadata.cs": "99f5d1c95d78502a892454404c38b6763e15a4b33c28b9ca0f2b7e153d0cf61a",
+    "program/Core.psm1": "6a9dcb3036107e153a4557c626bb0c3de05fbff9fc55c6ee036d8003f1d7acdc",
+    "program/Diagnostics.psm1": "bd663dc7b08f806ce581794a5ae61f713f94e2f9b73ad7b7b37ec998c86ea3ea",
+    "program/INSPECT.cmd": "e04e495926d453d47bedeaf87574ed310b2b2facecb8d0e65629a48e911c0a5b",
+    "program/Launch-Core.ps1": "626ebde0ab88a9f95b1c2b1169aa2e7d1a8de2ef82b1cc8f6906da6d82ae6134",
+    "program/Layout.psm1": "72ebfbf641a21025d141cafaa0a74a86851cbedb5158f6dc5cf4d7205c3e049e",
+    "program/NativeLayoutEngine.psm1": "61907c3fea18a8de7a8687d44946bfaba7eaf75ef519c89f5c58612cda2f045b",
+    "program/NativeReviewFixtures.cs": "3027e53a59529b5790e1f97e525041d76167203aadd94dc83ccedfc542e15fc7",
+    "program/README.md": "be4bc83a8b3848a240974757b30ea2edf80a482eabf797d50fde77aa2095ccb2",
+    "program/RUN_POC.cmd": "afbdca86e16564b5203db724a841a2cab7651379ac0c730af30fe7ae648cf5dc",
+    "program/RUN_SUPPORTED_SUBSET.cmd": "d3e47e3489849c0c0e0ade8f45589ffd5486403a79d9421bdd187e2c23460c0d",
+    "program/RasterEvidence.cs": "044b833e85eb567272fb41c8ea2e0dda77ad8227e0fb131bf055408a5ce561b1",
+    "program/ReviewFixtures.cs": "a8a770e040490941fad9f81ce3c97c218319b82994e0be932a027f49a7eb7756",
+    "program/Run.ps1": "f01f1e1a4be076e48b49b788d08799e6f2a886ad7223432e109f6a2de4c24ed3",
+    "program/SAVE_PROBE.cmd": "dc4111fb7c4cb0d8ad1e5aaa3d73bcd3b1a4cfffe0a70263469ce4e8270c8032",
+    "program/SELF_CHECK.ps1": "8865d8c16a0d6be38d107e079e1971871683259e26a35cc3389d9b3f133ef9ac",
+    "program/SELF_CHECK_NATIVE.ps1": "52edf82c37dbfd53f5fa10bce7005a4ece0438a904b51cecfeb4dbd4f45f1531",
+    "program/SOURCES.md": "ef12c36bf96522c14807e97340c8d96604e998d589979421f9e2b862a1110533",
+    "program/TEMPLATE-CONTRACT.md": "c2d6801a07706c9acb07f5b573f405a0b65890d1467ba1d01228d5b49a6a4432",
+    "program/Test-ComTransport.ps1": "3d42b0df966b294487a0ae7a21a1b76b94e6274e3fdb9b712d3106e8faef545e",
+    "program/Test-Core.ps1": "a8142b0a6b56566baa6269485e8a67ccfcda2892f6672a3410c81004f32254ca",
+    "program/Test-Layout.ps1": "369e6a299590c9cf17451d40d798680d4cad47b7609d22aa9202d4929d7d2dd4",
+    "program/Test-NativeFontFallback.ps1": "faa1b65d36c249944509fd20114130be48b64ca10f68fd886585dd11fab09782",
+    "program/Test-NativeLayoutEngine.ps1": "ec72291d3b15436d84f5469fd84665c11e0b88f580f6e73a0fde968f839f1f29",
+    "program/Test-NativePersistence.ps1": "1eb5cedcde5bb8603bdab4e1ed46bf99441bb556bf014b3f7449021420d53a87",
+    "program/Test-ReviewPersistence.ps1": "17e2ec394d5148ab0c74abf7ad4249437e77001d7b58bba449485db0ff429d6f",
+    "program/Test-XmlCore.ps1": "7933953dfd1ce3cbe687dbc26ac9a4e9e7a9936e22d595e696e7bcef8f200229",
+    "program/Watchdog.ps1": "3e2c2a4ce8e7ca78065fe6434374277f09f745035660b4e264cbc7f2208cc528",
+    "program/XmlCore.psm1": "15e9e27ba40923c9281e78e16c3a21c65f70c5cb7197f0aafe11a922f47350c3",
+    "program/core-test.json": "de5d79ee1cfa72722a3caef5ef962898b9ac121d55e155910908acc69f37ada1",
+    "program/layout-supported.json": "630fa91378c48f2a9dea9c5b896304441a7cb2fd793484579ea88105ea0d7a65",
+    "program/layout.json": "e686ebea1add7c362df8bba2bfcbddbfba3463e1600e37e6c65f30e3a9a1ec00",
+    "program/native-layout.multi.sample.json": "d1572342ccb24ea4925bba46205d73cad623966284e58fce41eeba40e23ee502",
+    "program/native-layout.sample.json": "12ed5313d1d51dbff667cd3ac9407cb2209a3e605ea54001061d9603ac74b0e3",
+    "program/proven-code128.btc": "0b1e2481bcde6e5cf1d084599f822dc3027ab19215530b7776296b40a59899f2",
+    "program/save-probe.json": "13e041525856027d258c6729f3f99508de86e6dafd1d927771c1e62f1653378c"
+  }
+}

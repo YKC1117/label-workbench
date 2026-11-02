@@ -1,0 +1,117 @@
+{
+  "schema": "native-final-review-20261005",
+  "checks": [
+    {
+      "check": "JSON/XML and nested ZIP parsing",
+      "status": "PASS",
+      "detail": {
+        "counts": {
+          "json": 56,
+          "xml": 155,
+          "nestedZip": 7
+        },
+        "errors": []
+      }
+    },
+    {
+      "check": "Evidence byte identity",
+      "status": "PASS",
+      "detail": 33
+    },
+    {
+      "check": "Bundled component identity",
+      "status": "PASS",
+      "detail": "Real V4 component preserved"
+    },
+    {
+      "check": "PowerShell lexical delimiter/string sanity ONLY",
+      "status": "PASS",
+      "detail": {
+        "files": 19,
+        "nativeParser": "NOT RUN"
+      }
+    },
+    {
+      "check": "Non-ASCII PowerShell has UTF-8 BOM",
+      "status": "PASS",
+      "detail": "PS5.1 source encoding"
+    },
+    {
+      "check": "No generic barcode Width access",
+      "status": "PASS",
+      "detail": "Native engine only"
+    },
+    {
+      "check": "Defined runner cleanup and no stale output aliases",
+      "status": "PASS",
+      "detail": "Static flow check"
+    },
+    {
+      "check": "Ref invalidated before release/reacquire",
+      "status": "PASS",
+      "detail": "Create and Insert"
+    },
+    {
+      "check": "Case/finite/identity/source guards",
+      "status": "PASS",
+      "detail": "Static source checks, not runtime"
+    },
+    {
+      "check": "No-op and final untrusted raster rejected",
+      "status": "PASS",
+      "detail": "Static branch guards"
+    },
+    {
+      "check": "No leaked reopen loop variables in create loop",
+      "status": "PASS",
+      "detail": "Scope audit"
+    },
+    {
+      "check": "Candidate promoted only after reopen and re-edit",
+      "status": "PASS",
+      "detail": "Failed candidates renamed after close; latest aliases only published by successful worker"
+    },
+    {
+      "check": "Sizing neutral rotation before final placement",
+      "status": "PASS",
+      "detail": "Avoids rotated ink width sizing"
+    },
+    {
+      "check": "Only one multi sample and six distinct ids",
+      "status": "PASS",
+      "detail": "2 Text + 2 Code128 + 2 Data Matrix unchanged"
+    },
+    {
+      "check": "Packaged TypeLib parameter AND return signatures",
+      "status": "PASS",
+      "detail": 8
+    },
+    {
+      "check": "C# lexical structure ONLY",
+      "status": "PASS",
+      "detail": {
+        "files": 5,
+        "compile": "NOT RUN"
+      }
+    }
+  ],
+  "notRun": [
+    "PowerShell native parser",
+    "Test-NativeLayoutEngine.ps1 execution",
+    "Test-NativePersistence.ps1 execution",
+    "SELF_CHECK_NATIVE.ps1 execution",
+    "C# compile",
+    "Windows/BarTender fresh multi-object generation",
+    "Visual/anchor/decoder/print acceptance"
+  ],
+  "tools": {
+    "pwsh": null,
+    "powershell": null,
+    "dotnet": null,
+    "csc": null,
+    "mcs": null,
+    "mono": null
+  },
+  "evidenceFilesUnchanged": 33,
+  "inputZipSha256": "18ebbfd80f799a4f6a174f30ebda0685cee4f5f7cc66265ccd110508b080c55e"
+}

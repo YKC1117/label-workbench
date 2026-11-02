@@ -1,0 +1,818 @@
+﻿{
+    "schema":  "lwb-bt-automation-report-v1",
+    "scriptRevision":  "one-shot-v4-final-review-20261005",
+    "baseDirectory":  "C:\\Users\\FTUSER5\\Downloads\\Label_Workbench_BarTender_ONE_SHOT_V4_FINAL(1)\\Label_Workbench_BarTender_ONE_SHOT_V4\\program",
+    "status":  "REVIEW_DIAGNOSTICS_COMPLETE_NOT_PRODUCT_ACCEPTANCE",
+    "visualAcceptance":  "NOT_RUN",
+    "stage":  "cleanup and package results",
+    "utc":  "2026-10-05T06:22:29.5229744Z",
+    "os":  "Microsoft Windows NT 10.0.26100.0",
+    "powerShell":  "5.1.26100.9444",
+    "processBits":  64,
+    "template":  "C:\\Users\\FTUSER5\\Desktop\\客戶\\第一個.btw",
+    "output":  "C:\\Users\\FTUSER5\\Downloads\\Label_Workbench_BarTender_ONE_SHOT_V4_FINAL(1)\\Label_Workbench_BarTender_ONE_SHOT_V4\\program\\results\\20261005-142229-ff3f8bae\\diagnostic.btw",
+    "unsupported":  [
+
+                    ],
+    "objects":  [
+
+                ],
+    "error":  null,
+    "diagnosticWarnings":  [
+
+                           ],
+    "barTender":  {
+                      "FullVersion":  {
+                                          "available":  true,
+                                          "value":  "2022 R2",
+                                          "error":  null
+                                      },
+                      "Version":  {
+                                      "available":  true,
+                                      "value":  "11.3",
+                                      "error":  null
+                                  },
+                      "Edition":  {
+                                      "available":  true,
+                                      "value":  "Automation",
+                                      "error":  null
+                                  },
+                      "BuildNumber":  {
+                                          "available":  true,
+                                          "value":  "184527",
+                                          "error":  null
+                                      },
+                      "ProcessID":  {
+                                        "available":  true,
+                                        "value":  "16500",
+                                        "error":  null
+                                    }
+                  },
+    "applicationMembers":  {
+                               "available":  false,
+                               "members":  [
+
+                                           ],
+                               "error":  "Skipped in CORE_TEST: prior Windows evidence already captured ITypeInfo diagnostics."
+                           },
+    "templateSha256":  "4CF9FDAD67CB27AA79AA57FF2BFF5912463608D8F509067112EB940BDEE49612",
+    "watchdog":  {
+                     "enabled":  true,
+                     "barTenderPid":  16500,
+                     "stallSeconds":  120,
+                     "maxSeconds":  600,
+                     "startsBeforeOpen":  true
+                 },
+    "openArgumentTypes":  [
+                              "System.String",
+                              "System.Boolean",
+                              "System.String"
+                          ],
+    "formatMembers":  {
+                          "available":  false,
+                          "members":  [
+
+                                      ],
+                          "error":  "Skipped in CORE_TEST; already proven in earlier Windows evidence."
+                      },
+    "core":  {
+                 "route":  "single proven Code128 component + size-before-position + empirical DataMatrix XDimension + persistence matrix",
+                 "tests":  [
+                               {
+                                   "slot":  "文字 1",
+                                   "type":  "text",
+                                   "objectName":  "文字 1",
+                                   "payload":  "EFFECTIVE_AND_SOURCE_READBACK_OK",
+                                   "geometry":  {
+                                                    "status":  "TARGET_GEOMETRY_WITHIN_TOLERANCE",
+                                                    "positionToleranceMm":  0.2,
+                                                    "properties":  {
+                                                                       "X":  {
+                                                                                 "requested":  2.5,
+                                                                                 "before":  4.5466,
+                                                                                 "readback":  2.4892,
+                                                                                 "error":  0.010800000000000143,
+                                                                                 "tolerance":  0.2,
+                                                                                 "status":  "TARGET_WITHIN_TOLERANCE"
+                                                                             },
+                                                                       "Y":  {
+                                                                                 "requested":  2.5,
+                                                                                 "before":  6.0197999999999992,
+                                                                                 "readback":  2.4892,
+                                                                                 "error":  0.010800000000000143,
+                                                                                 "tolerance":  0.2,
+                                                                                 "status":  "TARGET_WITHIN_TOLERANCE"
+                                                                             },
+                                                                       "RotationAngle":  {
+                                                                                             "requested":  0,
+                                                                                             "before":  0,
+                                                                                             "readback":  0,
+                                                                                             "error":  0,
+                                                                                             "tolerance":  0.05,
+                                                                                             "status":  "TARGET_WITHIN_TOLERANCE"
+                                                                                         },
+                                                                       "FontSize":  {
+                                                                                        "requested":  8,
+                                                                                        "before":  6,
+                                                                                        "readback":  8,
+                                                                                        "error":  0,
+                                                                                        "tolerance":  0.05,
+                                                                                        "status":  "TARGET_WITHIN_TOLERANCE"
+                                                                                    }
+                                                                   },
+                                                    "allTargetsReached":  true
+                                                },
+                                   "source":  "EXISTING_TEXT",
+                                   "size":  "NOT_APPLICABLE",
+                                   "persistence":  "SAVE_CLOSE_REOPEN_READBACK_OK_SYMBOL_BOUNDS_UNVERIFIED",
+                                   "errors":  [
+
+                                              ]
+                               },
+                               {
+                                   "slot":  "條碼 1",
+                                   "type":  "code128",
+                                   "objectName":  "Bar Code 1",
+                                   "payload":  "EFFECTIVE_AND_SOURCE_READBACK_OK",
+                                   "geometry":  {
+                                                    "status":  "TARGET_GEOMETRY_WITHIN_TOLERANCE",
+                                                    "positionToleranceMm":  0.2,
+                                                    "properties":  {
+                                                                       "X":  {
+                                                                                 "requested":  2.5,
+                                                                                 "before":  -10.8966,
+                                                                                 "readback":  2.4892,
+                                                                                 "error":  0.010800000000000143,
+                                                                                 "tolerance":  0.2,
+                                                                                 "status":  "TARGET_WITHIN_TOLERANCE"
+                                                                             },
+                                                                       "Y":  {
+                                                                                 "requested":  8,
+                                                                                 "before":  -0.93979999999999986,
+                                                                                 "readback":  7.9756,
+                                                                                 "error":  0.024399999999999977,
+                                                                                 "tolerance":  0.2,
+                                                                                 "status":  "TARGET_WITHIN_TOLERANCE"
+                                                                             },
+                                                                       "RotationAngle":  {
+                                                                                             "requested":  0,
+                                                                                             "before":  0,
+                                                                                             "readback":  0,
+                                                                                             "error":  0,
+                                                                                             "tolerance":  0.05,
+                                                                                             "status":  "TARGET_WITHIN_TOLERANCE"
+                                                                                         }
+                                                                   },
+                                                    "allTargetsReached":  true
+                                                },
+                                   "source":  "SINGLE_EMBEDDED_NO_SOURCE_TRANSFORMS",
+                                   "size":  {
+                                                "status":  "CODE128_DIAGNOSTICS_RECORDED_NOT_ACCEPTANCE",
+                                                "documentedHeight":  {
+                                                                         "status":  "HEIGHT_WITHIN_TOLERANCE",
+                                                                         "property":  "Height",
+                                                                         "toleranceMm":  0.1,
+                                                                         "requestedMm":  4.5,
+                                                                         "beforeMm":  12.7,
+                                                                         "readbackMm":  4.4957999999999991,
+                                                                         "errorMm":  0.00420000000000087,
+                                                                         "withinTolerance":  true,
+                                                                         "error":  null
+                                                                     },
+                                                "humanReadableControl":  {
+                                                                             "status":  "HIDDEN_BY_SETXML",
+                                                                             "beforeVisibility":  "VISIBLE_DEFAULT_OR_UNSPECIFIED",
+                                                                             "finalVisibility":  "None",
+                                                                             "restored":  true,
+                                                                             "error":  null
+                                                                         },
+                                                "xdimensionExperiment":  {
+                                                                             "status":  "INDEX_AND_RASTER_RESPONDED_SYMBOL_SIZE_UNVERIFIED",
+                                                                             "execution":  "RUN",
+                                                                             "targetWidthMm":  32,
+                                                                             "targetHeightMm":  4.5,
+                                                                             "indexSemantics":  "UNVERIFIED",
+                                                                             "symbolSize":  "NOT_VERIFIED",
+                                                                             "humanReadableVisibility":  "None",
+                                                                             "measurementBasis":  "RASTER_INK_WIDTH_NO_HUMAN_READABLE",
+                                                                             "physicalMmTrust":  "TRUSTED",
+                                                                             "slopeTrust":  "TRUSTED_INPUTS",
+                                                                             "bestSelection":  "BEST_TRUSTED_SAMPLE",
+                                                                             "samples":  [
+                                                                                             {
+                                                                                                 "requestedIndex":  3,
+                                                                                                 "readback":  {
+                                                                                                                  "index":  3,
+                                                                                                                  "mils":  13.33,
+                                                                                                                  "millimeters":  0.34,
+                                                                                                                  "indexMeaning":  "UNVERIFIED_ENUM_INDEX_NOT_DOTS"
+                                                                                                              },
+                                                                                                 "raster":  {
+                                                                                                                "file":  "object-2-xdim-fit-baseline.bmp",
+                                                                                                                "dpi":  600,
+                                                                                                                "requestedDpi":  600,
+                                                                                                                "headerDpiX":  599.9988,
+                                                                                                                "headerDpiY":  599.9988,
+                                                                                                                "dpiTolerance":  6,
+                                                                                                                "dpiTrust":  "TRUSTED_HEADER_MATCH",
+                                                                                                                "physicalMmTrust":  "TRUSTED",
+                                                                                                                "canvasWidthPx":  1338,
+                                                                                                                "canvasHeightPx":  108,
+                                                                                                                "canvasWidthMm":  56.641999999999996,
+                                                                                                                "canvasHeightMm":  4.572,
+                                                                                                                "inkLeft":  0,
+                                                                                                                "inkTop":  0,
+                                                                                                                "inkWidthPx":  1336,
+                                                                                                                "inkHeightPx":  106,
+                                                                                                                "inkWidthMm":  56.557333333333332,
+                                                                                                                "inkHeightMm":  4.487333333333333,
+                                                                                                                "sha256":  "83B6751FD13D3DA16C1B8B8632F0C7001EFC9C1D99F7EE3E2C4FA037AAF39A6E",
+                                                                                                                "symbolBounds":  "NOT_VERIFIED_NO_DECODER",
+                                                                                                                "quietZone":  "NOT_VERIFIED",
+                                                                                                                "physicalPrint":  "NOT_RUN"
+                                                                                                            },
+                                                                                                 "write":  "NONE"
+                                                                                             },
+                                                                                             {
+                                                                                                 "requestedIndex":  4,
+                                                                                                 "readback":  {
+                                                                                                                  "index":  4,
+                                                                                                                  "mils":  16.66,
+                                                                                                                  "millimeters":  0.42,
+                                                                                                                  "indexMeaning":  "UNVERIFIED_ENUM_INDEX_NOT_DOTS"
+                                                                                                              },
+                                                                                                 "raster":  {
+                                                                                                                "file":  "object-2-xdim-fit-index-4.bmp",
+                                                                                                                "dpi":  600,
+                                                                                                                "requestedDpi":  600,
+                                                                                                                "headerDpiX":  599.9988,
+                                                                                                                "headerDpiY":  599.9988,
+                                                                                                                "dpiTolerance":  6,
+                                                                                                                "dpiTrust":  "TRUSTED_HEADER_MATCH",
+                                                                                                                "physicalMmTrust":  "TRUSTED",
+                                                                                                                "canvasWidthPx":  1671,
+                                                                                                                "canvasHeightPx":  108,
+                                                                                                                "canvasWidthMm":  70.73899999999999,
+                                                                                                                "canvasHeightMm":  4.572,
+                                                                                                                "inkLeft":  0,
+                                                                                                                "inkTop":  0,
+                                                                                                                "inkWidthPx":  1670,
+                                                                                                                "inkHeightPx":  106,
+                                                                                                                "inkWidthMm":  70.696666666666673,
+                                                                                                                "inkHeightMm":  4.487333333333333,
+                                                                                                                "sha256":  "A59FCDF2545F27829635DEE834DDEBF0735E18A4BF91F34F5C8407DA80238A4A",
+                                                                                                                "symbolBounds":  "NOT_VERIFIED_NO_DECODER",
+                                                                                                                "quietZone":  "NOT_VERIFIED",
+                                                                                                                "physicalPrint":  "NOT_RUN"
+                                                                                                            },
+                                                                                                 "write":  "INDEX_ONLY_EXPERIMENT"
+                                                                                             },
+                                                                                             {
+                                                                                                 "requestedIndex":  2,
+                                                                                                 "readback":  {
+                                                                                                                  "index":  2,
+                                                                                                                  "mils":  10,
+                                                                                                                  "millimeters":  0.25,
+                                                                                                                  "indexMeaning":  "UNVERIFIED_ENUM_INDEX_NOT_DOTS"
+                                                                                                              },
+                                                                                                 "raster":  {
+                                                                                                                "file":  "object-2-xdim-fit-index-2.bmp",
+                                                                                                                "dpi":  600,
+                                                                                                                "requestedDpi":  600,
+                                                                                                                "headerDpiX":  599.9988,
+                                                                                                                "headerDpiY":  599.9988,
+                                                                                                                "dpiTolerance":  6,
+                                                                                                                "dpiTrust":  "TRUSTED_HEADER_MATCH",
+                                                                                                                "physicalMmTrust":  "TRUSTED",
+                                                                                                                "canvasWidthPx":  1004,
+                                                                                                                "canvasHeightPx":  108,
+                                                                                                                "canvasWidthMm":  42.502666666666663,
+                                                                                                                "canvasHeightMm":  4.572,
+                                                                                                                "inkLeft":  0,
+                                                                                                                "inkTop":  0,
+                                                                                                                "inkWidthPx":  1002,
+                                                                                                                "inkHeightPx":  106,
+                                                                                                                "inkWidthMm":  42.418,
+                                                                                                                "inkHeightMm":  4.487333333333333,
+                                                                                                                "sha256":  "7C9A7593963FB5E74928D26725A9A90B6F78A6E7D89C9ED8569D0C77B0888982",
+                                                                                                                "symbolBounds":  "NOT_VERIFIED_NO_DECODER",
+                                                                                                                "quietZone":  "NOT_VERIFIED",
+                                                                                                                "physicalPrint":  "NOT_RUN"
+                                                                                                            },
+                                                                                                 "write":  "INDEX_ONLY_EXPERIMENT"
+                                                                                             },
+                                                                                             {
+                                                                                                 "requestedIndex":  1,
+                                                                                                 "readback":  {
+                                                                                                                  "index":  1,
+                                                                                                                  "mils":  6.66,
+                                                                                                                  "millimeters":  0.17,
+                                                                                                                  "indexMeaning":  "UNVERIFIED_ENUM_INDEX_NOT_DOTS"
+                                                                                                              },
+                                                                                                 "raster":  {
+                                                                                                                "file":  "object-2-xdim-fit-index-1.bmp",
+                                                                                                                "dpi":  600,
+                                                                                                                "requestedDpi":  600,
+                                                                                                                "headerDpiX":  599.9988,
+                                                                                                                "headerDpiY":  599.9988,
+                                                                                                                "dpiTolerance":  6,
+                                                                                                                "dpiTrust":  "TRUSTED_HEADER_MATCH",
+                                                                                                                "physicalMmTrust":  "TRUSTED",
+                                                                                                                "canvasWidthPx":  669,
+                                                                                                                "canvasHeightPx":  108,
+                                                                                                                "canvasWidthMm":  28.320999999999998,
+                                                                                                                "canvasHeightMm":  4.572,
+                                                                                                                "inkLeft":  0,
+                                                                                                                "inkTop":  0,
+                                                                                                                "inkWidthPx":  668,
+                                                                                                                "inkHeightPx":  106,
+                                                                                                                "inkWidthMm":  28.278666666666666,
+                                                                                                                "inkHeightMm":  4.487333333333333,
+                                                                                                                "sha256":  "B50035C1C365D7F27CBCF29649FD2ABD142D7DA6CD4AB2246C5C0B41DE34BD5E",
+                                                                                                                "symbolBounds":  "NOT_VERIFIED_NO_DECODER",
+                                                                                                                "quietZone":  "NOT_VERIFIED",
+                                                                                                                "physicalPrint":  "NOT_RUN"
+                                                                                                            },
+                                                                                                 "write":  "INDEX_ONLY_EXPERIMENT"
+                                                                                             }
+                                                                                         ],
+                                                                             "finalX":  {
+                                                                                            "index":  1,
+                                                                                            "mils":  6.66,
+                                                                                            "millimeters":  0.17,
+                                                                                            "indexMeaning":  "UNVERIFIED_ENUM_INDEX_NOT_DOTS"
+                                                                                        },
+                                                                             "finalRaster":  {
+                                                                                                 "file":  "object-2-xdim-fit-final.bmp",
+                                                                                                 "dpi":  600,
+                                                                                                 "requestedDpi":  600,
+                                                                                                 "headerDpiX":  599.9988,
+                                                                                                 "headerDpiY":  599.9988,
+                                                                                                 "dpiTolerance":  6,
+                                                                                                 "dpiTrust":  "TRUSTED_HEADER_MATCH",
+                                                                                                 "physicalMmTrust":  "TRUSTED",
+                                                                                                 "canvasWidthPx":  669,
+                                                                                                 "canvasHeightPx":  108,
+                                                                                                 "canvasWidthMm":  28.320999999999998,
+                                                                                                 "canvasHeightMm":  4.572,
+                                                                                                 "inkLeft":  0,
+                                                                                                 "inkTop":  0,
+                                                                                                 "inkWidthPx":  668,
+                                                                                                 "inkHeightPx":  106,
+                                                                                                 "inkWidthMm":  28.278666666666666,
+                                                                                                 "inkHeightMm":  4.487333333333333,
+                                                                                                 "sha256":  "B50035C1C365D7F27CBCF29649FD2ABD142D7DA6CD4AB2246C5C0B41DE34BD5E",
+                                                                                                 "symbolBounds":  "NOT_VERIFIED_NO_DECODER",
+                                                                                                 "quietZone":  "NOT_VERIFIED",
+                                                                                                 "physicalPrint":  "NOT_RUN"
+                                                                                             },
+                                                                             "inkTargetErrorMm":  3.7213333333333338,
+                                                                             "restored":  true,
+                                                                             "error":  null
+                                                                         },
+                                                "finalHeight":  {
+                                                                    "status":  "HEIGHT_WITHIN_TOLERANCE",
+                                                                    "property":  "Height",
+                                                                    "toleranceMm":  0.1,
+                                                                    "requestedMm":  4.5,
+                                                                    "beforeMm":  4.4957999999999991,
+                                                                    "readbackMm":  4.4957999999999991,
+                                                                    "errorMm":  0.00420000000000087,
+                                                                    "withinTolerance":  true,
+                                                                    "error":  null
+                                                                },
+                                                "finalXDimension":  {
+                                                                        "index":  1,
+                                                                        "mils":  6.66,
+                                                                        "millimeters":  0.17,
+                                                                        "indexMeaning":  "UNVERIFIED_ENUM_INDEX_NOT_DOTS"
+                                                                    },
+                                                "finalHumanReadableVisibility":  "None",
+                                                "finalRaster":  {
+                                                                    "file":  "object-2-presave.bmp",
+                                                                    "dpi":  600,
+                                                                    "requestedDpi":  600,
+                                                                    "headerDpiX":  599.9988,
+                                                                    "headerDpiY":  599.9988,
+                                                                    "dpiTolerance":  6,
+                                                                    "dpiTrust":  "TRUSTED_HEADER_MATCH",
+                                                                    "physicalMmTrust":  "TRUSTED",
+                                                                    "canvasWidthPx":  670,
+                                                                    "canvasHeightPx":  109,
+                                                                    "canvasWidthMm":  28.363333333333333,
+                                                                    "canvasHeightMm":  4.6143333333333336,
+                                                                    "inkLeft":  0,
+                                                                    "inkTop":  0,
+                                                                    "inkWidthPx":  668,
+                                                                    "inkHeightPx":  106,
+                                                                    "inkWidthMm":  28.278666666666666,
+                                                                    "inkHeightMm":  4.487333333333333,
+                                                                    "sha256":  "CD35308FB91D2C968748791434180059FE9E255B6F281BCB35939C877B6A0EF2",
+                                                                    "symbolBounds":  "NOT_VERIFIED_NO_DECODER",
+                                                                    "quietZone":  "NOT_VERIFIED",
+                                                                    "physicalPrint":  "NOT_RUN"
+                                                                },
+                                                "targetMm":  {
+                                                                 "width":  32,
+                                                                 "height":  4.5
+                                                             },
+                                                "layoutWidthStatus":  "NEAREST_TRUSTED_LAYOUT_INK_WIDTH_OUTSIDE_TOLERANCE",
+                                                "widthMeaning":  "RASTER_INK_LAYOUT_WIDTH_APPROX_ONLY_NOT_DECODER_SYMBOL_BOUND",
+                                                "symbolBounds":  "NOT_VERIFIED_NO_DECODER",
+                                                "physicalPrint":  "NOT_RUN",
+                                                "presaveXDimensionXmlKey":  "1:E0:10:XDimension1:A0:7:Density6:13.6361:A0:5:Index1:11:A0:11:Millimeters5:0.1701:A0:4:Mils5:6.660",
+                                                "presaveDataSourcesXmlKey":  "1:E0:11:DataSources218:1:E0:18:EmbeddedDataSource1:A0:7:CharSet1:01:A0:9:CultureID2:-31:A0:2:ID38:{ED33BC48-B3D4-477A-A5C9-ADA62F5F7693}1:A0:14:InputCultureID4:10331:A0:21:SubStringListStringID10:429496729532:1:E0:5:Value17:Text:LWB-C128-001",
+                                                "finalInkTargetErrorMm":  3.7213333333333338
+                                            },
+                                   "persistence":  "SAVE_CLOSE_REOPEN_READBACK_OK_SYMBOL_BOUNDS_UNVERIFIED",
+                                   "errors":  [
+
+                                              ],
+                                   "reopenRaster":  {
+                                                        "file":  "object-2-reopen.bmp",
+                                                        "dpi":  600,
+                                                        "requestedDpi":  600,
+                                                        "headerDpiX":  599.9988,
+                                                        "headerDpiY":  599.9988,
+                                                        "dpiTolerance":  6,
+                                                        "dpiTrust":  "TRUSTED_HEADER_MATCH",
+                                                        "physicalMmTrust":  "TRUSTED",
+                                                        "canvasWidthPx":  670,
+                                                        "canvasHeightPx":  109,
+                                                        "canvasWidthMm":  28.363333333333333,
+                                                        "canvasHeightMm":  4.6143333333333336,
+                                                        "inkLeft":  0,
+                                                        "inkTop":  0,
+                                                        "inkWidthPx":  668,
+                                                        "inkHeightPx":  106,
+                                                        "inkWidthMm":  28.278666666666666,
+                                                        "inkHeightMm":  4.487333333333333,
+                                                        "sha256":  "CD35308FB91D2C968748791434180059FE9E255B6F281BCB35939C877B6A0EF2",
+                                                        "symbolBounds":  "NOT_VERIFIED_NO_DECODER",
+                                                        "quietZone":  "NOT_VERIFIED",
+                                                        "physicalPrint":  "NOT_RUN"
+                                                    },
+                                   "reopenEditable":  "SECOND_PAYLOAD_AND_ACTIVE_OBJECT_ISOLATION_OK"
+                               },
+                               {
+                                   "slot":  "條碼 3",
+                                   "type":  "datamatrix",
+                                   "objectName":  "條碼 3",
+                                   "payload":  "EFFECTIVE_AND_SOURCE_READBACK_OK",
+                                   "geometry":  {
+                                                    "status":  "TARGET_GEOMETRY_WITHIN_TOLERANCE",
+                                                    "positionToleranceMm":  0.2,
+                                                    "properties":  {
+                                                                       "X":  {
+                                                                                 "requested":  116,
+                                                                                 "before":  118.5672,
+                                                                                 "readback":  115.97639999999998,
+                                                                                 "error":  0.023600000000016053,
+                                                                                 "tolerance":  0.2,
+                                                                                 "status":  "TARGET_WITHIN_TOLERANCE"
+                                                                             },
+                                                                       "Y":  {
+                                                                                 "requested":  2,
+                                                                                 "before":  3.3274,
+                                                                                 "readback":  1.9811999999999999,
+                                                                                 "error":  0.01880000000000015,
+                                                                                 "tolerance":  0.2,
+                                                                                 "status":  "TARGET_WITHIN_TOLERANCE"
+                                                                             },
+                                                                       "RotationAngle":  {
+                                                                                             "requested":  0,
+                                                                                             "before":  0,
+                                                                                             "readback":  0,
+                                                                                             "error":  0,
+                                                                                             "tolerance":  0.05,
+                                                                                             "status":  "TARGET_WITHIN_TOLERANCE"
+                                                                                         }
+                                                                   },
+                                                    "allTargetsReached":  true
+                                                },
+                                   "source":  "SINGLE_EMBEDDED_NO_SOURCE_TRANSFORMS",
+                                   "size":  {
+                                                "status":  "DATAMATRIX_EMPIRICAL_XDIMENSION_CAPABILITY_COMPLETE",
+                                                "directWidthHeight":  "NOT_USED_FOR_2D_BARCODE",
+                                                "xdimensionExperiment":  {
+                                                                             "status":  "INDEX_AND_RASTER_RESPONDED_SYMBOL_SIZE_UNVERIFIED",
+                                                                             "execution":  "RUN",
+                                                                             "targetWidthMm":  12,
+                                                                             "targetHeightMm":  12,
+                                                                             "indexSemantics":  "UNVERIFIED",
+                                                                             "symbolSize":  "NOT_VERIFIED",
+                                                                             "humanReadableVisibility":  "None",
+                                                                             "measurementBasis":  "RASTER_INK_WIDTH_NO_HUMAN_READABLE",
+                                                                             "physicalMmTrust":  "TRUSTED",
+                                                                             "slopeTrust":  "TRUSTED_INPUTS",
+                                                                             "bestSelection":  "BEST_TRUSTED_SAMPLE",
+                                                                             "samples":  [
+                                                                                             {
+                                                                                                 "requestedIndex":  3,
+                                                                                                 "readback":  {
+                                                                                                                  "index":  3,
+                                                                                                                  "mils":  13.33,
+                                                                                                                  "millimeters":  0.34,
+                                                                                                                  "indexMeaning":  "UNVERIFIED_ENUM_INDEX_NOT_DOTS"
+                                                                                                              },
+                                                                                                 "raster":  {
+                                                                                                                "file":  "object-3-xdim-fit-baseline.bmp",
+                                                                                                                "dpi":  600,
+                                                                                                                "requestedDpi":  600,
+                                                                                                                "headerDpiX":  599.9988,
+                                                                                                                "headerDpiY":  599.9988,
+                                                                                                                "dpiTolerance":  6,
+                                                                                                                "dpiTrust":  "TRUSTED_HEADER_MATCH",
+                                                                                                                "physicalMmTrust":  "TRUSTED",
+                                                                                                                "canvasWidthPx":  322,
+                                                                                                                "canvasHeightPx":  321,
+                                                                                                                "canvasWidthMm":  13.631333333333332,
+                                                                                                                "canvasHeightMm":  13.588999999999999,
+                                                                                                                "inkLeft":  0,
+                                                                                                                "inkTop":  0,
+                                                                                                                "inkWidthPx":  128,
+                                                                                                                "inkHeightPx":  128,
+                                                                                                                "inkWidthMm":  5.4186666666666667,
+                                                                                                                "inkHeightMm":  5.4186666666666667,
+                                                                                                                "sha256":  "2343FF0587411333BC224C2CFA889E5E7B1F49AFB692D313FBC6BCB9D7272296",
+                                                                                                                "symbolBounds":  "NOT_VERIFIED_NO_DECODER",
+                                                                                                                "quietZone":  "NOT_VERIFIED",
+                                                                                                                "physicalPrint":  "NOT_RUN"
+                                                                                                            },
+                                                                                                 "write":  "NONE"
+                                                                                             },
+                                                                                             {
+                                                                                                 "requestedIndex":  4,
+                                                                                                 "readback":  {
+                                                                                                                  "index":  4,
+                                                                                                                  "mils":  16.66,
+                                                                                                                  "millimeters":  0.42,
+                                                                                                                  "indexMeaning":  "UNVERIFIED_ENUM_INDEX_NOT_DOTS"
+                                                                                                              },
+                                                                                                 "raster":  {
+                                                                                                                "file":  "object-3-xdim-fit-index-4.bmp",
+                                                                                                                "dpi":  600,
+                                                                                                                "requestedDpi":  600,
+                                                                                                                "headerDpiX":  599.9988,
+                                                                                                                "headerDpiY":  599.9988,
+                                                                                                                "dpiTolerance":  6,
+                                                                                                                "dpiTrust":  "TRUSTED_HEADER_MATCH",
+                                                                                                                "physicalMmTrust":  "TRUSTED",
+                                                                                                                "canvasWidthPx":  162,
+                                                                                                                "canvasHeightPx":  162,
+                                                                                                                "canvasWidthMm":  6.8580000000000005,
+                                                                                                                "canvasHeightMm":  6.8580000000000005,
+                                                                                                                "inkLeft":  0,
+                                                                                                                "inkTop":  0,
+                                                                                                                "inkWidthPx":  160,
+                                                                                                                "inkHeightPx":  160,
+                                                                                                                "inkWidthMm":  6.7733333333333334,
+                                                                                                                "inkHeightMm":  6.7733333333333334,
+                                                                                                                "sha256":  "BDDADA989706DB2E06BB78C670C29551F878E3FC4C100C165CD7818A4DC227B8",
+                                                                                                                "symbolBounds":  "NOT_VERIFIED_NO_DECODER",
+                                                                                                                "quietZone":  "NOT_VERIFIED",
+                                                                                                                "physicalPrint":  "NOT_RUN"
+                                                                                                            },
+                                                                                                 "write":  "INDEX_ONLY_EXPERIMENT"
+                                                                                             },
+                                                                                             {
+                                                                                                 "requestedIndex":  2,
+                                                                                                 "readback":  {
+                                                                                                                  "index":  2,
+                                                                                                                  "mils":  10,
+                                                                                                                  "millimeters":  0.25,
+                                                                                                                  "indexMeaning":  "UNVERIFIED_ENUM_INDEX_NOT_DOTS"
+                                                                                                              },
+                                                                                                 "raster":  {
+                                                                                                                "file":  "object-3-xdim-fit-index-2.bmp",
+                                                                                                                "dpi":  600,
+                                                                                                                "requestedDpi":  600,
+                                                                                                                "headerDpiX":  599.9988,
+                                                                                                                "headerDpiY":  599.9988,
+                                                                                                                "dpiTolerance":  6,
+                                                                                                                "dpiTrust":  "TRUSTED_HEADER_MATCH",
+                                                                                                                "physicalMmTrust":  "TRUSTED",
+                                                                                                                "canvasWidthPx":  98,
+                                                                                                                "canvasHeightPx":  98,
+                                                                                                                "canvasWidthMm":  4.1486666666666663,
+                                                                                                                "canvasHeightMm":  4.1486666666666663,
+                                                                                                                "inkLeft":  0,
+                                                                                                                "inkTop":  0,
+                                                                                                                "inkWidthPx":  96,
+                                                                                                                "inkHeightPx":  96,
+                                                                                                                "inkWidthMm":  4.0639999999999992,
+                                                                                                                "inkHeightMm":  4.0639999999999992,
+                                                                                                                "sha256":  "4DB8C6C6CC217561760A90487969DF058056B948ED5964E4B2A2A29D6F02F142",
+                                                                                                                "symbolBounds":  "NOT_VERIFIED_NO_DECODER",
+                                                                                                                "quietZone":  "NOT_VERIFIED",
+                                                                                                                "physicalPrint":  "NOT_RUN"
+                                                                                                            },
+                                                                                                 "write":  "INDEX_ONLY_EXPERIMENT"
+                                                                                             },
+                                                                                             {
+                                                                                                 "requestedIndex":  7,
+                                                                                                 "readback":  {
+                                                                                                                  "index":  7,
+                                                                                                                  "mils":  26.66,
+                                                                                                                  "millimeters":  0.68,
+                                                                                                                  "indexMeaning":  "UNVERIFIED_ENUM_INDEX_NOT_DOTS"
+                                                                                                              },
+                                                                                                 "raster":  {
+                                                                                                                "file":  "object-3-xdim-fit-index-7.bmp",
+                                                                                                                "dpi":  600,
+                                                                                                                "requestedDpi":  600,
+                                                                                                                "headerDpiX":  599.9988,
+                                                                                                                "headerDpiY":  599.9988,
+                                                                                                                "dpiTolerance":  6,
+                                                                                                                "dpiTrust":  "TRUSTED_HEADER_MATCH",
+                                                                                                                "physicalMmTrust":  "TRUSTED",
+                                                                                                                "canvasWidthPx":  258,
+                                                                                                                "canvasHeightPx":  258,
+                                                                                                                "canvasWidthMm":  10.921999999999999,
+                                                                                                                "canvasHeightMm":  10.921999999999999,
+                                                                                                                "inkLeft":  0,
+                                                                                                                "inkTop":  0,
+                                                                                                                "inkWidthPx":  256,
+                                                                                                                "inkHeightPx":  256,
+                                                                                                                "inkWidthMm":  10.837333333333333,
+                                                                                                                "inkHeightMm":  10.837333333333333,
+                                                                                                                "sha256":  "E6F554CC57AEC655E00E1EB61BBD6BECB572C0A5DBB4CD1B17A8722EF2E465AC",
+                                                                                                                "symbolBounds":  "NOT_VERIFIED_NO_DECODER",
+                                                                                                                "quietZone":  "NOT_VERIFIED",
+                                                                                                                "physicalPrint":  "NOT_RUN"
+                                                                                                            },
+                                                                                                 "write":  "INDEX_ONLY_EXPERIMENT"
+                                                                                             },
+                                                                                             {
+                                                                                                 "requestedIndex":  8,
+                                                                                                 "readback":  {
+                                                                                                                  "index":  8,
+                                                                                                                  "mils":  30,
+                                                                                                                  "millimeters":  0.76,
+                                                                                                                  "indexMeaning":  "UNVERIFIED_ENUM_INDEX_NOT_DOTS"
+                                                                                                              },
+                                                                                                 "raster":  {
+                                                                                                                "file":  "object-3-xdim-fit-index-8.bmp",
+                                                                                                                "dpi":  600,
+                                                                                                                "requestedDpi":  600,
+                                                                                                                "headerDpiX":  599.9988,
+                                                                                                                "headerDpiY":  599.9988,
+                                                                                                                "dpiTolerance":  6,
+                                                                                                                "dpiTrust":  "TRUSTED_HEADER_MATCH",
+                                                                                                                "physicalMmTrust":  "TRUSTED",
+                                                                                                                "canvasWidthPx":  290,
+                                                                                                                "canvasHeightPx":  290,
+                                                                                                                "canvasWidthMm":  12.276666666666667,
+                                                                                                                "canvasHeightMm":  12.276666666666667,
+                                                                                                                "inkLeft":  0,
+                                                                                                                "inkTop":  0,
+                                                                                                                "inkWidthPx":  288,
+                                                                                                                "inkHeightPx":  288,
+                                                                                                                "inkWidthMm":  12.192,
+                                                                                                                "inkHeightMm":  12.192,
+                                                                                                                "sha256":  "13A396E7367D4F752AE8A1DDAB51001FAFBF86366BC9C8393349D5ACB9A51464",
+                                                                                                                "symbolBounds":  "NOT_VERIFIED_NO_DECODER",
+                                                                                                                "quietZone":  "NOT_VERIFIED",
+                                                                                                                "physicalPrint":  "NOT_RUN"
+                                                                                                            },
+                                                                                                 "write":  "INDEX_ONLY_EXPERIMENT"
+                                                                                             }
+                                                                                         ],
+                                                                             "finalX":  {
+                                                                                            "index":  8,
+                                                                                            "mils":  30,
+                                                                                            "millimeters":  0.76,
+                                                                                            "indexMeaning":  "UNVERIFIED_ENUM_INDEX_NOT_DOTS"
+                                                                                        },
+                                                                             "finalRaster":  {
+                                                                                                 "file":  "object-3-xdim-fit-final.bmp",
+                                                                                                 "dpi":  600,
+                                                                                                 "requestedDpi":  600,
+                                                                                                 "headerDpiX":  599.9988,
+                                                                                                 "headerDpiY":  599.9988,
+                                                                                                 "dpiTolerance":  6,
+                                                                                                 "dpiTrust":  "TRUSTED_HEADER_MATCH",
+                                                                                                 "physicalMmTrust":  "TRUSTED",
+                                                                                                 "canvasWidthPx":  290,
+                                                                                                 "canvasHeightPx":  290,
+                                                                                                 "canvasWidthMm":  12.276666666666667,
+                                                                                                 "canvasHeightMm":  12.276666666666667,
+                                                                                                 "inkLeft":  0,
+                                                                                                 "inkTop":  0,
+                                                                                                 "inkWidthPx":  288,
+                                                                                                 "inkHeightPx":  288,
+                                                                                                 "inkWidthMm":  12.192,
+                                                                                                 "inkHeightMm":  12.192,
+                                                                                                 "sha256":  "13A396E7367D4F752AE8A1DDAB51001FAFBF86366BC9C8393349D5ACB9A51464",
+                                                                                                 "symbolBounds":  "NOT_VERIFIED_NO_DECODER",
+                                                                                                 "quietZone":  "NOT_VERIFIED",
+                                                                                                 "physicalPrint":  "NOT_RUN"
+                                                                                             },
+                                                                             "inkTargetErrorMm":  0.19200000000000017,
+                                                                             "restored":  true,
+                                                                             "error":  null
+                                                                         },
+                                                "finalXDimension":  {
+                                                                        "index":  8,
+                                                                        "mils":  30,
+                                                                        "millimeters":  0.76,
+                                                                        "indexMeaning":  "UNVERIFIED_ENUM_INDEX_NOT_DOTS"
+                                                                    },
+                                                "finalRaster":  {
+                                                                    "file":  "object-3-final-size.bmp",
+                                                                    "dpi":  600,
+                                                                    "requestedDpi":  600,
+                                                                    "headerDpiX":  599.9988,
+                                                                    "headerDpiY":  599.9988,
+                                                                    "dpiTolerance":  6,
+                                                                    "dpiTrust":  "TRUSTED_HEADER_MATCH",
+                                                                    "physicalMmTrust":  "TRUSTED",
+                                                                    "canvasWidthPx":  290,
+                                                                    "canvasHeightPx":  290,
+                                                                    "canvasWidthMm":  12.276666666666667,
+                                                                    "canvasHeightMm":  12.276666666666667,
+                                                                    "inkLeft":  0,
+                                                                    "inkTop":  0,
+                                                                    "inkWidthPx":  288,
+                                                                    "inkHeightPx":  288,
+                                                                    "inkWidthMm":  12.192,
+                                                                    "inkHeightMm":  12.192,
+                                                                    "sha256":  "13A396E7367D4F752AE8A1DDAB51001FAFBF86366BC9C8393349D5ACB9A51464",
+                                                                    "symbolBounds":  "NOT_VERIFIED_NO_DECODER",
+                                                                    "quietZone":  "NOT_VERIFIED",
+                                                                    "physicalPrint":  "NOT_RUN"
+                                                                },
+                                                "targetMm":  {
+                                                                 "width":  12,
+                                                                 "height":  12
+                                                             },
+                                                "symbolBounds":  "RASTER_INK_ONLY_NOT_DECODER_VERIFIED",
+                                                "physicalPrint":  "NOT_RUN"
+                                            },
+                                   "persistence":  "SAVE_CLOSE_REOPEN_READBACK_OK_SYMBOL_BOUNDS_UNVERIFIED",
+                                   "errors":  [
+
+                                              ],
+                                   "reopenRaster":  {
+                                                        "file":  "object-3-reopen.bmp",
+                                                        "dpi":  600,
+                                                        "requestedDpi":  600,
+                                                        "headerDpiX":  599.9988,
+                                                        "headerDpiY":  599.9988,
+                                                        "dpiTolerance":  6,
+                                                        "dpiTrust":  "TRUSTED_HEADER_MATCH",
+                                                        "physicalMmTrust":  "TRUSTED",
+                                                        "canvasWidthPx":  290,
+                                                        "canvasHeightPx":  290,
+                                                        "canvasWidthMm":  12.276666666666667,
+                                                        "canvasHeightMm":  12.276666666666667,
+                                                        "inkLeft":  0,
+                                                        "inkTop":  0,
+                                                        "inkWidthPx":  288,
+                                                        "inkHeightPx":  288,
+                                                        "inkWidthMm":  12.192,
+                                                        "inkHeightMm":  12.192,
+                                                        "sha256":  "13A396E7367D4F752AE8A1DDAB51001FAFBF86366BC9C8393349D5ACB9A51464",
+                                                        "symbolBounds":  "NOT_VERIFIED_NO_DECODER",
+                                                        "quietZone":  "NOT_VERIFIED",
+                                                        "physicalPrint":  "NOT_RUN"
+                                                    },
+                                   "reopenEditable":  "SECOND_PAYLOAD_AND_ACTIVE_OBJECT_ISOLATION_OK"
+                               }
+                           ],
+                 "blocking":  [
+                                  "Canvas/ink bounds are not decoder-confirmed symbol bounds. Barcode size acceptance and physical scanning are NOT RUN."
+                              ],
+                 "fullLayoutAccepted":  false,
+                 "scannerReadability":  "NOT_RUN",
+                 "symbolBounds":  "NOT_VERIFIED",
+                 "saveReopen":  "READBACK_CHECKS_COMPLETE",
+                 "measurementUnits":  "MILLIMETERS_CONFIRMED",
+                 "apiPath":  "C:\\Program Files\\Seagull\\BarTender 2022\\BarTend.exe",
+                 "apiSource":  "LIVE_REGISTERED_TYPELIB",
+                 "documentPrinter":  "Argox CP-3140 PPLA",
+                 "printerDotPitch":  "NOT_VERIFIED_FROM_DEVICE_SETTINGS",
+                 "selection":  {
+                                   "path":  "C:\\Users\\FTUSER5\\Downloads\\Label_Workbench_BarTender_ONE_SHOT_V4_FINAL(1)\\Label_Workbench_BarTender_ONE_SHOT_V4\\program\\proven-code128.btc",
+                                   "sha256":  "0B1E2481BCDE6E5CF1D084599F822DC3027AB19215530B7776296B40A59899F2",
+                                   "source":  {
+                                                  "root":  "BarCode-Code-128",
+                                                  "count":  1,
+                                                  "kinds":  [
+                                                                "EmbeddedDataSource"
+                                                            ],
+                                                  "sourceId":  "{ED33BC48-B3D4-477A-A5C9-ADA62F5F7693}",
+                                                  "value":  "12345678",
+                                                  "prefixSuffixCount":  0,
+                                                  "dataEntryCount":  0,
+                                                  "transformCount":  0
+                                              },
+                                   "humanReadableVisibility":  "VISIBLE_DEFAULT_OR_UNSPECIFIED",
+                                   "selectionClass":  "VERIFIED_DIRECT",
+                                   "realEvidence":  "single EmbeddedDataSource + two payload roundtrips"
+                               },
+                 "originalUnchanged":  true
+             },
+    "diagnosticFile":  "C:\\Users\\FTUSER5\\Downloads\\Label_Workbench_BarTender_ONE_SHOT_V4_FINAL(1)\\Label_Workbench_BarTender_ONE_SHOT_V4\\program\\results\\20261005-142229-ff3f8bae\\diagnostic.btw",
+    "diagnosticSha256":  "6A0ADBAC91C5BEF8DAB499E4E10F548BCD090F32E7D63CBE11DACC5E2D59C68D"
+}

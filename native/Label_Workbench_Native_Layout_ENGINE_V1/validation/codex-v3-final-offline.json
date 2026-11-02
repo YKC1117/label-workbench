@@ -1,0 +1,136 @@
+{
+  "date": "2026-10-06",
+  "basis": "Label_Workbench_Native_Layout_ENGINE_V1_GENERAL_GPT_V3_FOR_CODEX_REVIEW(1).zip",
+  "mode": "STATIC_ONLY_NO_PACKAGE_EXECUTION_PER_USER",
+  "checks": [
+    {
+      "name": "JSON/XML/nested ZIP integrity",
+      "status": "PASS",
+      "detail": {
+        "json": 58,
+        "xml": 155,
+        "nestedZip": 7
+      }
+    },
+    {
+      "name": "Input ZIP CRC",
+      "status": "PASS",
+      "detail": "Full extraction retained"
+    },
+    {
+      "name": "Original evidence unchanged",
+      "status": "PASS",
+      "detail": 33
+    },
+    {
+      "name": "Code128 component SHA256",
+      "status": "PASS",
+      "detail": "unchanged"
+    },
+    {
+      "name": "PowerShell lexical delimiters/strings ONLY",
+      "status": "PASS",
+      "detail": {
+        "files": 19,
+        "nativeParser": "NOT RUN"
+      }
+    },
+    {
+      "name": "PowerShell non-ASCII UTF8 BOM",
+      "status": "PASS",
+      "detail": 19
+    },
+    {
+      "name": "Engine owns private bridge and no nested import",
+      "status": "PASS",
+      "detail": "static"
+    },
+    {
+      "name": "Runner bridge qualification",
+      "status": "PASS",
+      "detail": "static"
+    },
+    {
+      "name": "Explicit System.Xml reference retained",
+      "status": "PASS",
+      "detail": "compilation NOT RUN"
+    },
+    {
+      "name": "14 unique mock cases / 13 expected errors",
+      "status": "PASS",
+      "detail": [
+        "none",
+        "wrong-create",
+        "duplicate-name",
+        "duplicate-source",
+        "partial-insert",
+        "peer-payload",
+        "noop-index",
+        "bad-dpi",
+        "reopen-type",
+        "reopen-payload",
+        "reopen-nan",
+        "reopen-printer",
+        "reopen-margin",
+        "reopen-dpi"
+      ]
+    },
+    {
+      "name": "Mock gate and cleanup",
+      "status": "PASS",
+      "detail": "static"
+    },
+    {
+      "name": "Preflight evidence routing",
+      "status": "PASS",
+      "detail": "static"
+    },
+    {
+      "name": "Preflight precedes COM activation",
+      "status": "PASS",
+      "detail": "static"
+    },
+    {
+      "name": "Width not used for barcode size",
+      "status": "PASS",
+      "detail": "static"
+    },
+    {
+      "name": "Core source gates retained",
+      "status": "PASS",
+      "detail": "static"
+    },
+    {
+      "name": "Six-object sample counts",
+      "status": "PASS",
+      "detail": "2+2+2"
+    }
+  ],
+  "tools": {
+    "pwsh": null,
+    "powershell": null,
+    "dotnet": null,
+    "csc": null,
+    "mcs": null,
+    "mono": null
+  },
+  "notRun": [
+    "PowerShell native parser",
+    "PowerShell regression",
+    "C# compile",
+    "production bridge probes",
+    "14 native multi-object mocks",
+    "Windows PowerShell 5.1",
+    "BarTender 2022 new blank BTW/native multi-object/Save-Close-Reopen-second-edit",
+    "visual reference point/decoder/print/scan"
+  ],
+  "changedExistingFiles": [
+    "program/NativeLayoutEngine.psm1",
+    "program/SELF_CHECK_NATIVE.ps1",
+    "program/Test-NativePersistence.ps1",
+    "program/Build-NativeLayout.ps1",
+    "START_HERE.md",
+    "READ_ME_FIRST.txt",
+    "V3_STATUS.txt"
+  ]
+}

@@ -1,0 +1,106 @@
+{
+  "schema": "lwb-final-offline-review-20261005",
+  "environment": "Linux; no Windows/BarTender",
+  "checks": [
+    {
+      "name": "JSON/XML parsing and nested ZIP integrity",
+      "status": "PASS",
+      "detail": {
+        "counts": {
+          "json": 44,
+          "xml": 102,
+          "zip": 6
+        },
+        "errors": []
+      }
+    },
+    {
+      "name": "Original evidence remains byte-identical",
+      "status": "PASS",
+      "detail": {
+        "files": 30
+      }
+    },
+    {
+      "name": "Proven component hash",
+      "status": "PASS",
+      "detail": "Unmodified real-machine component"
+    },
+    {
+      "name": "No runtime generic barcode Width dependency",
+      "status": "PASS",
+      "detail": "XmlCore.psm1 only; retired Core is not entrypoint"
+    },
+    {
+      "name": "Caption gate applies to Code128",
+      "status": "PASS",
+      "detail": "Static source contract, NOT runtime regression"
+    },
+    {
+      "name": "Failure cannot report ink target error",
+      "status": "PASS",
+      "detail": "Static source contract"
+    },
+    {
+      "name": "Final presave width uses hidden caption and trusted actual raster",
+      "status": "PASS",
+      "detail": "Static source contract"
+    },
+    {
+      "name": "Full XML rollback/presave source and XDimension comparison",
+      "status": "PASS",
+      "detail": "Static source contract"
+    },
+    {
+      "name": "PowerShell lexical delimiters ONLY",
+      "status": "PASS",
+      "detail": {
+        "files": 14,
+        "nativeParser": "NOT RUN"
+      }
+    },
+    {
+      "name": "Chinese-containing PS sources carry UTF-8 BOM",
+      "status": "PASS",
+      "detail": "Windows PowerShell 5.1 decoding guard"
+    },
+    {
+      "name": "Real V3 direct HumanReadable path",
+      "status": "PASS",
+      "detail": "Missing attribute means unspecified, not hidden; child caption has its own source"
+    },
+    {
+      "name": "Explicit diagnostic tolerance and Code128 target",
+      "status": "PASS",
+      "detail": "Height target +/-0.10 mm; width +/-0.85 mm retained as diagnostic threshold, not product acceptance"
+    }
+  ],
+  "notRun": {
+    "PowerShell native parser": "NOT RUN: executable not installed",
+    "PowerShell regression": "NOT RUN: executable not installed",
+    "C# compilation": "NOT RUN: executable not installed",
+    "Windows PowerShell 5.1": "NOT RUN",
+    "BarTender new Code128 path": "NOT RUN",
+    "Designer/decoder/print/scan": "NOT RUN"
+  },
+  "tools": {
+    "pwsh": null,
+    "powershell": null,
+    "dotnet": null,
+    "csc": null,
+    "mcs": null,
+    "mono": null
+  },
+  "modifiedAtValidation": [
+    "ONE_SHOT_V4_HANDOFF.md",
+    "program/XmlCore.psm1",
+    "program/Test-ReviewPersistence.ps1",
+    "program/Run.ps1",
+    "program/core-test.json",
+    "program/ReviewFixtures.cs",
+    "program/README.md",
+    "program/Test-XmlCore.ps1",
+    "TECHNICAL_REVIEW.md",
+    "START_HERE.md"
+  ]
+}

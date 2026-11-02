@@ -1,0 +1,1 @@
+PASS: all four C# source files compile with C#5 language syntax. Windows CLR/COM NOT RUN.

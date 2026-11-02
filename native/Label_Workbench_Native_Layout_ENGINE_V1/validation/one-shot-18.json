@@ -1,0 +1,22 @@
+{
+  "handoff": "one-shot-18",
+  "goal": "single Windows run collects independent capabilities instead of serial micro-tests",
+  "evidenceUnchanged": true,
+  "evidenceChanged": [],
+  "offline": {
+    "jsonParse": "PASS",
+    "grossDelimiterCheck": "PASS",
+    "zipIntegrity": "PENDING",
+    "powershellParser": "NOT_RUN - PowerShell unavailable in this Linux environment",
+    "csharpCompile": "NOT_RUN - C# compiler unavailable in this Linux environment",
+    "windowsPowerShell51": "NOT_RUN",
+    "barTenderCOM": "NOT_RUN"
+  },
+  "majorChanges": [
+    "program/ComBridge.cs",
+    "program/SELF_CHECK.ps1",
+    "program/XmlCore.psm1",
+    "program/Run.ps1",
+    "ONE_SHOT_HANDOFF.md"
+  ]
+}

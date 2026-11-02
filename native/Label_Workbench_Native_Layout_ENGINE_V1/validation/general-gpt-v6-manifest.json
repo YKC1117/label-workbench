@@ -1,0 +1,47 @@
+{
+  "schema": "general-gpt-v6-manifest-v1",
+  "base": "CODEX_V5_FINAL",
+  "coreModified": false,
+  "files": [
+    {
+      "path": "program/Build-NativeLayout.ps1",
+      "sha256": "853b479e7cb44c540a1248b70327d89e98040c6f0091d64858963690395980bd",
+      "size": 13179
+    },
+    {
+      "path": "program/ONE_SHOT_NATIVE_TEST.cmd",
+      "sha256": "82f26f4fe584db4c8e6117aea10d31820448b2ec2545a6162f0d8d34afea9c3f",
+      "size": 762
+    },
+    {
+      "path": "program/SELF_CHECK_NATIVE.ps1",
+      "sha256": "607da962b44093e9e290f0f2e485355b62fe208869c023d94317dc02fdf7f69a",
+      "size": 4700
+    },
+    {
+      "path": "program/SOURCES.md",
+      "sha256": "96c426b11655291e566fb9e254d8e3c827bd4a44407838a8f75b42e0cbff3cbf",
+      "size": 7468
+    },
+    {
+      "path": "GENERAL_GPT_V6_VISUAL_EVIDENCE_REVIEW.md",
+      "sha256": "c75aa6d49e15729d598b3ee43eb84d900ae279ebf902b969b86028f1f41cd9b0",
+      "size": 2116
+    },
+    {
+      "path": "READ_ME_V5_FIRST.txt",
+      "sha256": "f04f038f73d6b932af02abb03048578bc1938ecb23ad4ea3784a3cc30011cb6d",
+      "size": 1082
+    },
+    {
+      "path": "validation/general-gpt-v6-static.json",
+      "sha256": "f168114ba2f7097d216962af24d287a7ff64dd7c9dbb8847f5c6844f16ca5b4c",
+      "size": 829
+    },
+    {
+      "path": "validation/general-gpt-v6.patch",
+      "sha256": "aeb56818d02f745930613378f6e33031cea97316f60251daef8f18e9b54a048a",
+      "size": 35952
+    }
+  ]
+}

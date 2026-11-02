@@ -1,0 +1,1598 @@
+--- V3/program/NativeLayoutEngine.psm1
++++ FINAL/program/NativeLayoutEngine.psm1
+@@ -1,622 +1,624 @@
+-Set-StrictMode -Version 2
+-Import-Module (Join-Path $PSScriptRoot 'Com.psm1') -Force
+-# Keep the COM bridge commands in THIS module's script scope. Windows PowerShell 5.1
+-# does not reliably resolve commands imported by a nested module when an exported
+-# function later runs from NativeLayoutEngine's module session state.
+-function script:Read-Property($target,[string]$name,[object[]]$arguments=@()) {
+-    if($null -eq $target){throw "Cannot read $name from a null object."}
+-    $value=[LabelWorkbench.ComBridge]::Get($target,$name,$arguments)
+-    return ,$value
+-}
+-function script:Write-Property($target,[string]$name,$value,[object[]]$indices=@()) {
+-    if($null -eq $target){throw "Cannot write $name on a null object."}
+-    [LabelWorkbench.ComBridge]::Set($target,$name,([object[]]@($indices+@($value))))
+-}
+-function script:Invoke-ComMethod($target,[string]$name,[object[]]$arguments=@()) {
+-    if($null -eq $target){throw "Cannot invoke $name on a null object."}
+-    if($name -eq 'Open' -and $arguments.Count -eq 3){
+-        $value=[LabelWorkbench.ComBridge]::OpenFormat($target,[string]$arguments[0],[bool]$arguments[1],[string]$arguments[2])
+-    }else{
+-        $value=[LabelWorkbench.ComBridge]::Call($target,$name,$arguments)
+-    }
+-    return ,$value
+-}
+-$script:InvariantCulture=[Globalization.CultureInfo]::InvariantCulture
+-
+-function Release-NativeCom($target) {
+-    if ($null -ne $target -and [Runtime.InteropServices.Marshal]::IsComObject($target)) { [void][Runtime.InteropServices.Marshal]::ReleaseComObject($target) }
+-}
+-function Assert-NativeFinite([double]$value,[string]$name) {
+-    if([double]::IsNaN($value) -or [double]::IsInfinity($value)){throw ($name+' is not finite.')}
+-}
+-function Assert-NativeNear([double]$actual,[double]$expected,[double]$tolerance,[string]$name) {
+-    Assert-NativeFinite $actual $name
+-    Assert-NativeFinite $expected ($name+' expected')
+-    if([math]::Abs($actual-$expected) -gt $tolerance){throw ($name+' mismatch: '+$actual+' expected '+$expected)}
+-}
+-function Assert-NativeNames($names) {
+-    $set=New-Object 'System.Collections.Generic.HashSet[string]' ([StringComparer]::OrdinalIgnoreCase)
+-    foreach($n in @($names)){
+-        if($n -isnot [string] -or [string]::IsNullOrWhiteSpace($n) -or -not $set.Add($n)){throw 'Empty, non-flat or duplicate native object name.'}
+-    }
+-}
+-function Assert-NativeNameSet($expected,$actual) {
+-    Assert-NativeNames $expected;Assert-NativeNames $actual
+-    if(@($expected).Count -ne @($actual).Count -or @(Get-NativeNameDelta $expected $actual).Count -or @(Get-NativeNameDelta $actual $expected).Count){throw 'Native object identity set changed.'}
+-}
+-function Get-NativeXmlKey($node) {
+-    if($node -is [System.Xml.XmlDocument]){return Get-NativeXmlKey $node.DocumentElement}
+-    if($node -is [System.Xml.XmlElement]){
+-        $parts=@('E',$node.NamespaceURI,$node.LocalName)
+-        foreach($a in @($node.Attributes|Sort-Object NamespaceURI,LocalName)){$parts+=@('A',$a.NamespaceURI,$a.LocalName,$a.Value)}
+-        foreach($child in @($node.ChildNodes)){if($child -isnot [System.Xml.XmlWhitespace]){$parts+=,(Get-NativeXmlKey $child)}}
+-        return (($parts|ForEach-Object{[string]$_.Length+':'+$_}) -join '')
+-    }
+-    return ([string]$node.NodeType+':'+[string]$node.Value)
+-}
+-function Assert-NativePayload($obj,$xml,[string]$root,[string]$payload) {
+-    $state=Get-NativeLiteralState $xml $root
+-    if($state.value -cne $payload -or [string](Read-Property $obj 'Value') -cne $payload){throw 'Literal/effective payload mismatch.'}
+-}
+-function Restore-NativeXml($obj,[string]$text,[string]$prefix) {
+-    [void](Invoke-ComMethod $obj 'SetXML' @($text))
+-    $backText=[string](Invoke-ComMethod $obj 'GetXML' @($true,$true))
+-    $backText|Set-Content -LiteralPath ($prefix+'-rollback.xml') -Encoding UTF8
+-    $original=Read-NativeXml $text;$back=Read-NativeXml $backText
+-    if((Get-NativeXmlKey $original) -cne (Get-NativeXmlKey $back)){throw 'Rollback XML differs from baseline.'}
+-    $state=Get-NativeLiteralState $original $original.DocumentElement.LocalName
+-    Assert-NativePayload $obj $back $state.root $state.value
+-}
+-function Assert-NativeRaster($r) {
+-    if($null -eq $r -or $r.physicalMmTrust -cne 'TRUSTED'){throw 'Raster DPI is untrusted.'}
+-    Assert-NativeFinite ([double]$r.inkWidthMm) 'inkWidthMm';Assert-NativeFinite ([double]$r.inkHeightMm) 'inkHeightMm'
+-    if($r.inkWidthPx -le 0 -or $r.inkHeightPx -le 0){throw 'Raster has no ink.'}
+-}
+-function Assert-NativeSourceIsolation($objects) {
+-    $seen=New-Object 'System.Collections.Generic.HashSet[string]' ([StringComparer]::OrdinalIgnoreCase)
+-    foreach($name in @(Get-NativeObjectNames $objects)){
+-        $obj=Find-NativeObject $objects $name
+-        try{
+-            $xml=Read-NativeXml ([string](Invoke-ComMethod $obj 'GetXML' @($true,$true)))
+-            $state=Get-NativeLiteralState $xml $xml.DocumentElement.LocalName
+-            if(-not $seen.Add([string]$state.sourceId)){throw 'Different objects share an EmbeddedDataSource ID.'}
+-        }finally{Release-NativeCom $obj}
+-    }
+-}
+-function Get-NativePageState($document) {
+-    if([int](Read-Property $document 'MeasurementUnits') -ne 3){throw 'MeasurementUnits is not millimeters.'}
+-    $r=[ordered]@{printer=[string](Read-Property $document 'Printer');LabelColumns=$null;LabelRows=$null}
+-    if([string]::IsNullOrWhiteSpace($r.printer)){throw 'Generation printer is unknown.'}
+-    $page=Read-Property $document 'PageSetup'
+-    try{
+-        foreach($k in @('LabelColumns','LabelRows')){$r[$k]=[int](Read-Property $page $k);if($r[$k] -ne 1){throw ('Page grid mismatch: '+$k)}}
+-        foreach($k in @('PaperWidth','PaperHeight','LabelWidth','LabelHeight','MarginLeft','MarginRight','MarginTop','MarginBottom')){
+-            $r[$k]=[double](Read-Property $page $k @(3));Assert-NativeFinite $r[$k] $k
+-        }
+-    }finally{Release-NativeCom $page}
+-    return $r
+-}
+-function Save-NativeJson($value,[string]$path) {
+-    ConvertTo-Json -InputObject $value -Depth 24 | Set-Content -LiteralPath $path -Encoding UTF8
+-}
+-function Read-NativeXml([string]$value) {
+-    $settings=New-Object System.Xml.XmlReaderSettings
+-    $settings.DtdProcessing=[System.Xml.DtdProcessing]::Prohibit
+-    $settings.XmlResolver=$null
+-    $reader=[System.Xml.XmlReader]::Create((New-Object System.IO.StringReader($value)),$settings)
+-    try { $doc=New-Object System.Xml.XmlDocument; $doc.XmlResolver=$null; $doc.PreserveWhitespace=$true; $doc.Load($reader); return ,$doc } finally { $reader.Dispose() }
+-}
+-function Parse-NativeDouble([string]$value,[string]$name) {
+-    $number=0.0
+-    if (-not [double]::TryParse($value,[Globalization.NumberStyles]::Float,$script:InvariantCulture,[ref]$number)) { throw ("Invalid numeric XML value for ${name}: $value") }
+-    return $number
+-}
+-function Test-NativeNumber($value,[double]$min,[double]$max,[string]$name) {
+-    if ($null -eq $value -or $value -is [bool] -or $value -is [string]) { throw ($name+' must be a JSON number.') }
+-    $n=[double]$value
+-    if ([double]::IsNaN($n) -or [double]::IsInfinity($n) -or $n -lt $min -or $n -gt $max) { throw ($name+' out of range.') }
+-    return $n
+-}
+-function Get-NativeObjectNames($objects) {
+-    $count=[int](Read-Property $objects 'Count')
+-    $names=@()
+-    for($i=1;$i -le $count;$i++){
+-        $obj=Invoke-ComMethod $objects 'Item' @($i)
+-        try{$names += [string](Read-Property $obj 'Name')}finally{Release-NativeCom $obj}
+-    }
+-    Assert-NativeNames $names
+-    if([int](Read-Property $objects 'Count') -ne $count){throw 'Object collection changed while enumerating.'}
+-    return @($names)
+-}
+-function Get-NativeNameDelta($before,$after) {
+-    Assert-NativeNames $before;Assert-NativeNames $after
+-    $set=New-Object 'System.Collections.Generic.HashSet[string]' ([StringComparer]::Ordinal)
+-    foreach($n in @($before)){if(-not [string]::IsNullOrWhiteSpace([string]$n)){[void]$set.Add([string]$n)}}
+-    $delta=@()
+-    foreach($n in @($after)){if(-not $set.Contains([string]$n)){$delta += [string]$n}}
+-    return @($delta)
+-}
+-function Find-NativeObject($objects,[string]$name) {
+-    $obj=Invoke-ComMethod $objects 'Find' @($name)
+-    if($null -eq $obj){throw ('Object missing: '+$name)}
+-    if([string](Read-Property $obj 'Name') -cne $name){Release-NativeCom $obj;throw ('Object identity mismatch: '+$name)}
+-    return ,$obj
+-}
+-function Get-NativeDataSourceState($xml) {
+-    $container=$xml.SelectSingleNode('/*/*[local-name()="DataSources"]')
+-    if($null -eq $container){throw 'Object XML has no direct DataSources element.'}
+-    $sources=@($container.ChildNodes | Where-Object {$_ -is [System.Xml.XmlElement]})
+-    $kinds=@($sources | ForEach-Object {$_.LocalName})
+-    return [ordered]@{count=$sources.Count;kinds=$kinds;embeddedCount=@($sources|Where-Object{$_.LocalName -eq 'EmbeddedDataSource'}).Count;objectValueCount=@($sources|Where-Object{$_.LocalName -eq 'ObjectValueDataSource'}).Count}
+-}
+-function Get-NativeLiteralState($xml,[string]$expectedRoot) {
+-    if($xml.DocumentElement.LocalName -cne $expectedRoot){throw ('Unexpected object XML root: '+$xml.DocumentElement.LocalName+' expected '+$expectedRoot)}
+-    $state=Get-NativeDataSourceState $xml
+-    if($state.count -ne 1 -or $state.embeddedCount -ne 1 -or $state.objectValueCount -ne 0){throw 'Object must contain exactly one EmbeddedDataSource and no ObjectValueDataSource.'}
+-    $source=$xml.SelectSingleNode('/*/*[local-name()="DataSources"]/*')
+-    $transforms=@($source.SelectNodes('.//*[local-name()="Transforms"]/* | .//*[contains(local-name(),"Transform") and local-name()!="Transforms"]'))
+-    if($transforms.Count -ne 0){throw ('Data source transforms are not supported: '+(($transforms|ForEach-Object{$_.LocalName}) -join ', '))}
+-    foreach($attribute in @('Name','DataSourceName')){if($source.HasAttribute($attribute) -and $source.GetAttribute($attribute)){throw 'Named/shared source is not supported.'}}
+-    if([string]::IsNullOrWhiteSpace($source.GetAttribute('ID'))){throw 'Missing source ID.'}
+-    if($source.HasAttribute('SubStringListStringID') -and $source.GetAttribute('SubStringListStringID') -cne '4294967295'){throw 'Shared source ID is not supported.'}
+-    $values=@($source.SelectNodes('./*[local-name()="Value"]'))
+-    if($values.Count -ne 1){throw 'Embedded source does not expose one literal Value.'}
+-    return [ordered]@{root=$expectedRoot;sourceId=$source.GetAttribute('ID');value=$values[0].InnerText;sourceCount=$state.count;transforms=0}
+-}
+-function Get-NativeExportedValue($node) {
+-    if($node -is [System.Xml.XmlElement] -and $node.HasAttribute('Encoding')){
+-        if($node.GetAttribute('Encoding') -ine 'base64'){throw 'Unsupported exported value encoding.'}
+-        $bytes=[Convert]::FromBase64String($node.InnerText)
+-        if($bytes.Length % 2 -ne 0){throw 'Invalid UTF-16LE byte count.'}
+-        $enc=New-Object System.Text.UnicodeEncoding($false,$false,$true)
+-        return $enc.GetString($bytes)
+-    }
+-    return $node.InnerText
+-}
+-function Set-NativeExportedValue($node,[string]$value) {
+-    if($node -is [System.Xml.XmlElement] -and $node.HasAttribute('Encoding')){
+-        if($node.GetAttribute('Encoding') -ine 'base64'){throw 'Unsupported exported value encoding.'}
+-        $enc=New-Object System.Text.UnicodeEncoding($false,$false,$true)
+-        $node.InnerText=[Convert]::ToBase64String($enc.GetBytes($value))
+-    }else{$node.InnerText=$value}
+-}
+-function Set-NativeObjectPayload($objects,$obj,[string]$payload,[string]$expectedRoot,[string]$prefix) {
+-    Assert-NativeSourceIsolation $objects
+-    $name=[string](Read-Property $obj 'Name')
+-    $peerStates=@{}
+-    foreach($peerName in @(Get-NativeObjectNames $objects)){
+-        if($peerName -ceq $name){continue}
+-        $peer=Find-NativeObject $objects $peerName
+-        try{$peerStates[$peerName]=Get-NativeXmlKey (Read-NativeXml ([string](Invoke-ComMethod $peer 'GetXML' @($true,$true))))}finally{Release-NativeCom $peer}
+-    }
+-    $beforeText=[string](Invoke-ComMethod $obj 'GetXML' @($true,$true))
+-    $before=Read-NativeXml $beforeText
+-    [void](Get-NativeLiteralState $before $expectedRoot)
+-    $export=Read-NativeXml ([string](Invoke-ComMethod $objects 'ExportDataSourceValuesToXML' @()))
+-    $source=$before.SelectSingleNode('/*/*[local-name()="DataSources"]/*')
+-    $id=[string]$source.GetAttribute('ID')
+-    if([string]::IsNullOrWhiteSpace($id)){throw 'Embedded data source has no ID.'}
+-    $matches=@($export.SelectNodes('//*') | Where-Object {$node=$_; @($node.Attributes | Where-Object {$_.Value -ieq $id}).Count -gt 0})
+-    $target=$null
+-    if($matches.Count -eq 1){
+-        if($matches[0].HasAttribute('Value')){$target=$matches[0].GetAttributeNode('Value')}
+-        else{$values=@($matches[0].SelectNodes('./*[local-name()="Value"]'));if($values.Count -eq 1){$target=$values[0]}}
+-    }
+-    if($null -eq $target){
+-        $named=@($export.SelectNodes('//*') | Where-Object {$_.HasAttribute('Name') -and $_.GetAttribute('Name') -ceq $name})
+-        if($named.Count -ne 1){throw ('Cannot map exported data source for '+$name)}
+-        $values=@($named[0].SelectNodes('.//*[local-name()="Value"] | .//@Value'))
+-        if($values.Count -ne 1){throw ('Cannot find one exported literal value for '+$name)}
+-        if((Get-NativeExportedValue $values[0]) -cne [string](Get-NativeLiteralState $before $expectedRoot).value){throw 'Exported source order/value mismatch.'}
+-        $target=$values[0]
+-    }
+-    Set-NativeExportedValue $target $payload
+-    if($prefix){$beforeText|Set-Content -LiteralPath ($prefix+'-before.xml') -Encoding UTF8;$export.OuterXml|Set-Content -LiteralPath ($prefix+'-import-request.xml') -Encoding UTF8}
+-    $ok=Invoke-ComMethod $objects 'ImportDataSourceValuesFromXML' @($export.OuterXml)
+-    if(-not [bool]$ok){throw 'ImportDataSourceValuesFromXML returned false.'}
+-    $readText=[string](Invoke-ComMethod $obj 'GetXML' @($true,$true))
+-    if($prefix){$readText|Set-Content -LiteralPath ($prefix+'-readback.xml') -Encoding UTF8}
+-    $read=Read-NativeXml $readText
+-    $state=Get-NativeLiteralState $read $expectedRoot
+-    if($state.value -cne $payload -or [string](Read-Property $obj 'Value') -cne $payload){throw 'Literal/effective payload readback mismatch.'}
+-    if($state.sourceId -cne $id){throw 'Payload import changed source identity.'}
+-    foreach($peerName in @($peerStates.Keys)){
+-        $peer=Find-NativeObject $objects $peerName
+-        try{if((Get-NativeXmlKey (Read-NativeXml ([string](Invoke-ComMethod $peer 'GetXML' @($true,$true))))) -cne $peerStates[$peerName]){throw 'Payload import modified another object.'}}finally{Release-NativeCom $peer}
+-    }
+-    return $state
+-}
+-function Get-NativeHumanReadableVisibility($xml) {
+-    $nodes=@($xml.SelectNodes('/*/*[local-name()="HumanReadable"]'))
+-    if($nodes.Count -ne 1){return 'UNKNOWN'}
+-    $v=[string]$nodes[0].GetAttribute('Visibility')
+-    if([string]::IsNullOrWhiteSpace($v)){return 'VISIBLE_DEFAULT_OR_UNSPECIFIED'}
+-    return $v
+-}
+-function Hide-NativeCode128HumanReadable($obj,[string]$prefix,[string]$root='BarCode-Code-128') {
+-    $baselineText=[string](Invoke-ComMethod $obj 'GetXML' @($true,$true));$baseline=Read-NativeXml $baselineText
+-    $state=Get-NativeLiteralState $baseline $root;Assert-NativePayload $obj $baseline $root $state.value
+-    $before=Get-NativeHumanReadableVisibility $baseline
+-    $baselineText|Set-Content -LiteralPath ($prefix+'-baseline.xml') -Encoding UTF8
+-    if($before -ceq 'None'){return [ordered]@{status='ALREADY_HIDDEN';before=$before;after='None'}}
+-    $nodes=@($baseline.SelectNodes('/*/*[local-name()="HumanReadable"]'))
+-    if($nodes.Count -ne 1){throw 'Barcode HumanReadable node is missing or ambiguous; ink sizing is blocked.'}
+-    try{
+-        $write=Read-NativeXml $baselineText;$write.SelectSingleNode('/*/*[local-name()="HumanReadable"]').SetAttribute('Visibility','None')
+-        $write.OuterXml|Set-Content -LiteralPath ($prefix+'-request.xml') -Encoding UTF8
+-        [void](Invoke-ComMethod $obj 'SetXML' @($write.OuterXml))
+-        $text=[string](Invoke-ComMethod $obj 'GetXML' @($true,$true));$text|Set-Content -LiteralPath ($prefix+'-readback.xml') -Encoding UTF8
+-        $read=Read-NativeXml $text;Assert-NativePayload $obj $read $root $state.value
+-        if((Get-NativeXmlKey ($baseline.SelectSingleNode('/*/*[local-name()="DataSources"]'))) -cne (Get-NativeXmlKey ($read.SelectSingleNode('/*/*[local-name()="DataSources"]')))){throw 'Caption write changed DataSources.'}
+-        if((Get-NativeHumanReadableVisibility $read) -cne 'None'){throw 'HumanReadable hide was not accepted.'}
+-        return [ordered]@{status='HIDDEN_BY_SETXML';before=$before;after='None'}
+-    }catch{
+-        $failure=$_.Exception.Message
+-        try{Restore-NativeXml $obj $baselineText $prefix}catch{throw ($failure+' | rollback: '+$_.Exception.Message)}
+-        throw $failure
+-    }
+-}
+-function Get-NativeXDimension($xml) {
+-    $nodes=@($xml.SelectNodes('/*/*[local-name()="XDimension"]'))
+-    if($nodes.Count -ne 1){throw 'Missing/ambiguous XDimension.'}
+-    $n=$nodes[0]
+-    foreach($key in @('Index','Mils','Millimeters')){if(-not $n.HasAttribute($key)){throw ('XDimension missing '+$key)}}
+-    $index=[int]$n.GetAttribute('Index');$mils=Parse-NativeDouble $n.GetAttribute('Mils') 'Mils';$mm=Parse-NativeDouble $n.GetAttribute('Millimeters') 'Millimeters'
+-    Assert-NativeFinite $mils 'XDimension Mils';Assert-NativeFinite $mm 'XDimension Millimeters'
+-    if($index -lt 0 -or $index -gt 255 -or $mils -le 0 -or $mm -le 0 -or [math]::Abs($mm-$mils*0.0254) -gt 0.011){throw 'Inconsistent XDimension values.'}
+-    return [ordered]@{index=$index;mils=$mils;millimeters=$mm;indexMeaning='UNVERIFIED_ENUM_INDEX_NOT_DOTS'}
+-}
+-function Export-NativeMeasurement($obj,[string]$path,[int]$dpi) {
+-    if(Test-Path -LiteralPath $path){Remove-Item -LiteralPath $path -Force}
+-    [void](Invoke-ComMethod $obj 'ExportToFile' @($path,'BMP',[int]0,$dpi,[int]2))
+-    $r=[LabelWorkbench.RasterEvidence]::Read($path)
+-    $tol=[math]::Max(1.0,[double]$dpi*0.01)
+-    $valid=($r.HeaderDpiX -gt 0 -and $r.HeaderDpiY -gt 0 -and -not [double]::IsNaN($r.HeaderDpiX) -and -not [double]::IsNaN($r.HeaderDpiY) -and -not [double]::IsInfinity($r.HeaderDpiX) -and -not [double]::IsInfinity($r.HeaderDpiY))
+-    $trust='UNTRUSTED_HEADER_DPI_INVALID'
+-    if($valid){if([math]::Abs($r.HeaderDpiX-$dpi) -le $tol -and [math]::Abs($r.HeaderDpiY-$dpi) -le $tol){$trust='TRUSTED_HEADER_MATCH'}else{$trust='UNTRUSTED_HEADER_DPI_MISMATCH'}}
+-    $trusted=($trust -ceq 'TRUSTED_HEADER_MATCH')
+-    return [ordered]@{file=[IO.Path]::GetFileName($path);requestedDpi=$dpi;headerDpiX=$r.HeaderDpiX;headerDpiY=$r.HeaderDpiY;dpiTrust=$trust;physicalMmTrust=if($trusted){'TRUSTED'}else{'UNTRUSTED'};canvasWidthPx=$r.CanvasWidth;canvasHeightPx=$r.CanvasHeight;inkWidthPx=$r.InkWidth;inkHeightPx=$r.InkHeight;inkWidthMm=if($trusted){$r.InkWidth*25.4/$dpi}else{$null};inkHeightMm=if($trusted){$r.InkHeight*25.4/$dpi}else{$null};sha256=(Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash;symbolBounds='NOT_DECODER_CONFIRMED'}
+-}
+-function Get-NativeInkError($m,$request) {
+-    if($null -eq $m -or $m.physicalMmTrust -cne 'TRUSTED'){throw 'Raster physical-mm measurement is untrusted.'}
+-    $err=[math]::Abs([double]$m.inkWidthMm-[double]$request.widthMm)
+-    if($request.type -eq 'datamatrix'){$err=[math]::Max($err,[math]::Abs([double]$m.inkHeightMm-[double]$request.heightMm))}
+-    return $err
+-}
+-function Fit-NativeXDimensionNearest($obj,$request,[string]$prefix,[int]$dpi) {
+-    $result=[ordered]@{status='NOT_RUN';targetWidthMm=[double]$request.widthMm;targetHeightMm=[double]$request.heightMm;samples=@();selected=$null;errorMm=$null;approximation='NOT_RUN';warning='Raster ink is a layout approximation, not decoder-confirmed symbol bounds.'}
+-    $originalText=[string](Invoke-ComMethod $obj 'GetXML' @($true,$true));$original=Read-NativeXml $originalText
+-    $root=if($request.type -eq 'code128'){'BarCode-Code-128'}else{'BarCode-DataMatrix'}
+-    $payload=[string]$request.value
+-    $literal=Get-NativeLiteralState $original $root;if($literal.value -cne $payload){throw 'Payload mismatch before XDimension fitting.'}
+-    Assert-NativePayload $obj $original $root $payload
+-    if((Get-NativeHumanReadableVisibility $original) -cne 'None'){throw 'Code128 HumanReadable must be None before raster width fitting.'}
+-    $originalText|Set-Content -LiteralPath ($prefix+'-baseline.xml') -Encoding UTF8
+-    Assert-NativeNear ([double](Read-Property $obj 'RotationAngle')) 0 0.001 'Sizing rotation'
+-    $initial=Get-NativeXDimension $original
+-    $base=Export-NativeMeasurement $obj ($prefix+'-baseline.bmp') $dpi
+-    if($base.physicalMmTrust -cne 'TRUSTED'){throw 'Baseline raster DPI is untrusted.'}
+-    $result.samples+=,[ordered]@{requestedIndex=$initial.index;readback=$initial;raster=$base}
+-    $best=[ordered]@{x=$initial;raster=$base;xml=$originalText;error=(Get-NativeInkError $base $request)}
+-    $queue=New-Object 'System.Collections.Generic.List[int]';$queue.Add($initial.index+1);if($initial.index -gt 0){$queue.Add($initial.index-1)}
+-    $tried=@{};$tried[[string]$initial.index]=$true
+-    $responded=$false
+-    try{
+-    for($i=0;$i -lt $queue.Count -and $i -lt 5;$i++){
+-        $idx=[int]$queue[$i];if($idx -lt 0 -or $idx -gt 255 -or $tried.ContainsKey([string]$idx)){continue};$tried[[string]$idx]=$true
+-        $write=Read-NativeXml $originalText;$write.SelectSingleNode('/*/*[local-name()="XDimension"]').SetAttribute('Index',[string]$idx)
+-        $write.OuterXml|Set-Content -LiteralPath ($prefix+'-index-'+$idx+'-request.xml') -Encoding UTF8
+-        [void](Invoke-ComMethod $obj 'SetXML' @($write.OuterXml))
+-        $readText=[string](Invoke-ComMethod $obj 'GetXML' @($true,$true));$read=Read-NativeXml $readText
+-        $readText|Set-Content -LiteralPath ($prefix+'-index-'+$idx+'-readback.xml') -Encoding UTF8
+-        $state=Get-NativeLiteralState $read $root;if($state.value -cne $payload -or [string](Read-Property $obj 'Value') -cne $payload){throw 'Payload changed during XDimension fitting.'}
+-        if((Get-NativeHumanReadableVisibility $read) -cne 'None'){throw 'HumanReadable reappeared during fitting.'}
+-        if((Get-NativeXmlKey ($original.SelectSingleNode('/*/*[local-name()="DataSources"]'))) -cne (Get-NativeXmlKey ($read.SelectSingleNode('/*/*[local-name()="DataSources"]')))){throw 'XDimension write changed DataSources.'}
+-        $x=Get-NativeXDimension $read;$r=Export-NativeMeasurement $obj ($prefix+'-index-'+$idx+'.bmp') $dpi
+-        $result.samples+=,[ordered]@{requestedIndex=$idx;readback=$x;raster=$r}
+-        if($r.physicalMmTrust -cne 'TRUSTED'){throw 'Raster DPI became untrusted during fitting.'}
+-        if($x.index -ne $idx -or [math]::Abs($x.mils-$initial.mils) -lt 0.001 -or [math]::Abs($r.inkWidthPx-$base.inkWidthPx) -lt 1){continue}
+-        $responded=$true
+-        $err=Get-NativeInkError $r $request;if($err -lt $best.error){$best=[ordered]@{x=$x;raster=$r;xml=$readText;error=$err}}
+-        if($i -eq 0){$slope=([double]$r.inkWidthMm-[double]$base.inkWidthMm)/($x.index-$initial.index);if($slope -gt 0){$est=$initial.index+([double]$request.widthMm-[double]$base.inkWidthMm)/$slope;$queue.Add([int][math]::Floor($est));$queue.Add([int][math]::Ceiling($est))}}
+-    }
+-    if(-not $responded){throw 'XDimension write/raster response not proven; nearest selection rejected.'}
+-    [void](Invoke-ComMethod $obj 'SetXML' @([string]$best.xml))
+-    $final=Read-NativeXml ([string](Invoke-ComMethod $obj 'GetXML' @($true,$true)));$fx=Get-NativeXDimension $final;$fr=Export-NativeMeasurement $obj ($prefix+'-selected.bmp') $dpi
+-    $final.OuterXml|Set-Content -LiteralPath ($prefix+'-selected.xml') -Encoding UTF8
+-    Assert-NativePayload $obj $final $root $payload
+-    if((Get-NativeXmlKey $final) -cne (Get-NativeXmlKey (Read-NativeXml ([string]$best.xml)))){throw 'Selected XML did not restore completely.'}
+-    Assert-NativeRaster $fr
+-    Assert-NativeNear $fr.inkWidthPx $best.raster.inkWidthPx 1 'Selected raster width'
+-    Assert-NativeNear $fr.inkHeightPx $best.raster.inkHeightPx 1 'Selected raster height'
+-    if($fx.index -ne $best.x.index -or $fr.physicalMmTrust -cne 'TRUSTED'){throw 'Selected XDimension state did not persist in-memory.'}
+-    $result.selected=[ordered]@{xDimension=$fx;raster=$fr};$result.errorMm=Get-NativeInkError $fr $request;$result.status='BEST_OBSERVED_TRUSTED_XDIMENSION_SELECTED';$result.approximation='BEST_OF_BOUNDED_SAMPLES_NOT_GLOBAL_OPTIMUM'
+-    return $result
+-    }catch{
+-        $failure=$_.Exception.Message
+-        Save-NativeJson $result ($prefix+'-failed-samples.json')
+-        try{Restore-NativeXml $obj $originalText $prefix}catch{throw ($failure+' | rollback: '+$_.Exception.Message)}
+-        throw $failure
+-    }
+-}
+-function Get-NativeInstallRoot {
+-    $root=[Microsoft.Win32.Registry]::ClassesRoot;$clsidKey=$root.OpenSubKey('BarTender.Application\CLSID');if($null -eq $clsidKey){return $null}
+-    try{$clsid=[string]$clsidKey.GetValue('')}finally{$clsidKey.Dispose()}
+-    $serverKey=$root.OpenSubKey("CLSID\$clsid\LocalServer32");if($null -eq $serverKey){return $null}
+-    try{$command=[string]$serverKey.GetValue('')}finally{$serverKey.Dispose()}
+-    $exe=$null;if($command -match '^\s*"([^"]+\.exe)"'){$exe=$Matches[1]}elseif($command -match '^\s*(.+?\.exe)(?:\s|$)'){$exe=$Matches[1]}
+-    if([string]::IsNullOrWhiteSpace($exe)){return $null};return [IO.Path]::GetDirectoryName($exe)
+-}
+-function Resolve-NativeDataMatrixComponent([string]$runDir) {
+-    $root=Get-NativeInstallRoot
+-    if(-not [string]::IsNullOrWhiteSpace($root)){
+-        $exact=Join-Path $root 'Barcodes\Common Bar Codes\Data Matrix.btc'
+-        if(Test-Path -LiteralPath $exact -PathType Leaf){return $exact}
+-    }
+-    $candidates=@()
+-    if(-not [string]::IsNullOrWhiteSpace($root)){$candidates=@(Get-ChildItem -LiteralPath $root -Recurse -File -Filter 'Data Matrix.btc' -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName)}
+-    $candidates=@($candidates | Where-Object {$_ -notmatch 'GS1|HIBC'} | Sort-Object -Unique)
+-    $candidates|ConvertTo-Json -Depth 3|Set-Content -LiteralPath (Join-Path $runDir 'datamatrix-component-candidates.json') -Encoding UTF8
+-    if($candidates.Count -ne 1){throw ('Could not resolve exactly one standard Data Matrix.btc; candidates='+$candidates.Count)}
+-    return [string]$candidates[0]
+-}
+-function Insert-NativeComponent($document,[ref]$objectsRef,[string]$path,[string]$expectedRoot,$request,[string]$prefix) {
+-    $objects=$objectsRef.Value;$before=@(Get-NativeObjectNames $objects)
+-    $ok=[bool](Invoke-ComMethod $document 'InsertComponent' @($path,[double]$request.xMm,[double]$request.yMm))
+-    if(-not $ok){throw ('InsertComponent returned false: '+$path)}
+-    $objectsRef.Value=$null;Release-NativeCom $objects;$objects=$null;$objects=Read-Property $document 'Objects';$objectsRef.Value=$objects
+-    $after=@(Get-NativeObjectNames $objects);$delta=@(Get-NativeNameDelta $before $after)
+-    if($delta.Count -ne 1 -or $after.Count -ne $before.Count+1){throw 'InsertComponent did not add exactly one object.'}
+-    if(@(Get-NativeNameDelta $after $before).Count){throw 'Existing object disappeared during creation.'}
+-    Assert-NativeSourceIsolation $objects
+-    $name=[string]$delta[0];$obj=Find-NativeObject $objects $name
+-    try{
+-        if([int](Read-Property $obj 'Type') -ne 4){throw 'Inserted component is not a barcode object.'}
+-        $xml=Read-NativeXml ([string](Invoke-ComMethod $obj 'GetXML' @($true,$true)));[void](Get-NativeLiteralState $xml $expectedRoot)
+-        [void](Set-NativeObjectPayload $objects $obj ([string]$request.value) $expectedRoot ($prefix+'-payload'))
+-    }finally{Release-NativeCom $obj}
+-    return $name
+-}
+-function Create-NativeText($document,[ref]$objectsRef,$request,[string]$prefix) {
+-    $objects=$objectsRef.Value;$before=@(Get-NativeObjectNames $objects);$created=$null;$createdName=$null
+-    try{$created=Invoke-ComMethod $objects 'Create' @([int]5);if($null -eq $created){throw 'DesignObjects.Create(5) returned null.'};$createdName=[string](Read-Property $created 'Name')}finally{Release-NativeCom $created}
+-    $objectsRef.Value=$null;Release-NativeCom $objects;$objects=$null;$objects=Read-Property $document 'Objects';$objectsRef.Value=$objects
+-    $after=@(Get-NativeObjectNames $objects);$delta=@(Get-NativeNameDelta $before $after)
+-    if($delta.Count -ne 1 -or $after.Count -ne $before.Count+1 -or $delta[0] -cne $createdName){throw 'Create(5) did not return the one newly added text object.'}
+-    if(@(Get-NativeNameDelta $after $before).Count){throw 'Existing object disappeared during creation.'}
+-    Assert-NativeSourceIsolation $objects
+-    $name=[string]$delta[0];$obj=Find-NativeObject $objects $name
+-    try{
+-        if([int](Read-Property $obj 'Type') -ne 5){throw ('Create(5) produced unexpected Type '+[string](Read-Property $obj 'Type'))}
+-        $xml=Read-NativeXml ([string](Invoke-ComMethod $obj 'GetXML' @($true,$true)));[void](Get-NativeLiteralState $xml 'Text')
+-        [void](Set-NativeObjectPayload $objects $obj ([string]$request.value) 'Text' ($prefix+'-payload'))
+-    }finally{Release-NativeCom $obj}
+-    return $name
+-}
+-function Test-NativeLayoutInput($layout) {
+-    if($null -eq $layout){throw 'Layout is null.'}
+-    foreach($k in @('schema','widthMm','heightMm','objects')){if($null -eq $layout.PSObject.Properties[$k]){throw ('Missing layout.'+$k)}}
+-    if([string]$layout.schema -cne 'lwb-native-layout-v1'){throw 'Unsupported layout schema.'}
+-    foreach($prop in @($layout.PSObject.Properties)){if($prop.Name -cnotin @('schema','widthMm','heightMm','objects','printerName')){throw ('Unknown layout field: '+$prop.Name)}}
+-    $width=Test-NativeNumber $layout.widthMm 5 1000 'widthMm';$height=Test-NativeNumber $layout.heightMm 5 1000 'heightMm'
+-    if($layout.objects -isnot [array] -or $layout.objects.Count -lt 1 -or $layout.objects.Count -gt 200){throw 'objects must contain 1..200 entries.'}
+-    $ids=New-Object 'System.Collections.Generic.HashSet[string]' ([StringComparer]::Ordinal)
+-    $items=@()
+-    foreach($o in @($layout.objects)){
+-        foreach($k in @('id','type','value','xMm','yMm')){if($null -eq $o.PSObject.Properties[$k]){throw ('Missing object.'+$k)}}
+-        $id=[string]$o.id;if($o.id -isnot [string] -or $id -cnotmatch '^[A-Z0-9_\-]{1,64}$' -or -not $ids.Add($id)){throw ('Invalid/duplicate object id: '+$id)}
+-        $type=[string]$o.type;if($o.type -isnot [string] -or $type -cnotin @('text','code128','datamatrix')){throw ('Unsupported object type: '+$type)}
+-        $allowed=@('id','type','value','xMm','yMm','rotationDeg')
+-        if($type -eq 'text'){$allowed+=@('fontSizePt','fontName')}elseif($type -eq 'code128'){$allowed+=@('widthMm','heightMm')}else{$allowed+=@('sizeMm','widthMm')}
+-        foreach($prop in @($o.PSObject.Properties)){if($prop.Name -cnotin $allowed){throw ($id+'.unknown field: '+$prop.Name)}}
+-        if($o.value -isnot [string]){throw ($id+'.value must be a string.')}
+-        if($o.value -match '[\x00-\x08\x0B\x0C\x0E-\x1F]' -or ($type -eq 'text' -and $o.value -match '[\r\n]')){throw ($id+'.value contains unsupported control characters or multiple lines.')}
+-        $x=Test-NativeNumber $o.xMm 0 $width ($id+'.xMm');$y=Test-NativeNumber $o.yMm 0 $height ($id+'.yMm')
+-        $rotation=0.0;if($null -ne $o.PSObject.Properties['rotationDeg']){$rotation=Test-NativeNumber $o.rotationDeg -360 360 ($id+'.rotationDeg')}
+-        $item=[ordered]@{id=$id;type=$type;value=[string]$o.value;xMm=$x;yMm=$y;rotationDeg=$rotation}
+-        if($type -eq 'text'){
+-            if($null -eq $o.PSObject.Properties['fontSizePt']){throw ($id+'.fontSizePt required.')};$item.fontSizePt=Test-NativeNumber $o.fontSizePt 0.5 3600 ($id+'.fontSizePt')
+-            if($null -ne $o.PSObject.Properties['fontName'] -and $o.fontName -isnot [string]){throw 'fontName must be a string.'}
+-            $item.fontName=if($null -ne $o.PSObject.Properties['fontName']){[string]$o.fontName}else{'Arial'};if([string]::IsNullOrWhiteSpace($item.fontName)){throw ($id+'.fontName invalid.')}
+-        }elseif($type -eq 'code128'){
+-            if($null -eq $o.PSObject.Properties['widthMm'] -or $null -eq $o.PSObject.Properties['heightMm']){throw ($id+' requires widthMm and heightMm.')}
+-            $item.widthMm=Test-NativeNumber $o.widthMm 1 500 ($id+'.widthMm');$item.heightMm=Test-NativeNumber $o.heightMm 1 100 ($id+'.heightMm');$item.humanReadable='none'
+-        }else{
+-            if($null -ne $o.PSObject.Properties['sizeMm'] -and $null -ne $o.PSObject.Properties['widthMm']){throw 'DataMatrix must specify sizeMm or widthMm, not both.'}
+-            $size=$null;if($null -ne $o.PSObject.Properties['sizeMm']){$size=Test-NativeNumber $o.sizeMm 1 500 ($id+'.sizeMm')}elseif($null -ne $o.PSObject.Properties['widthMm']){$size=Test-NativeNumber $o.widthMm 1 500 ($id+'.widthMm')}else{throw ($id+'.sizeMm required.')}
+-            $item.widthMm=$size;$item.heightMm=$size
+-        }
+-        $items += [pscustomobject]$item
+-    }
+-    $printerName=$null;if($null -ne $layout.PSObject.Properties['printerName']){if($layout.printerName -isnot [string]){throw 'printerName must be a string.'};$printerName=[string]$layout.printerName;if([string]::IsNullOrWhiteSpace($printerName)){$printerName=$null}}
+-    return [pscustomobject]@{schema='lwb-native-layout-v1';widthMm=$width;heightMm=$height;printerName=$printerName;objects=$items}
+-}
+-function Set-NativePage($document,$plan) {
+-    Write-Property $document 'MeasurementUnits' 3
+-    if([int](Read-Property $document 'MeasurementUnits') -ne 3){throw 'MeasurementUnits did not read back as millimeters.'}
+-    if($plan.printerName){Write-Property $document 'Printer' ([string]$plan.printerName);if([string](Read-Property $document 'Printer') -cne [string]$plan.printerName){throw 'Requested printer did not read back exactly.'}}
+-    $page=Read-Property $document 'PageSetup'
+-    try{
+-        Write-Property $page 'LabelColumns' 1;Write-Property $page 'LabelRows' 1
+-        foreach($k in @('MarginLeft','MarginRight','MarginTop','MarginBottom')){Write-Property $page $k ([single]0) @(3)}
+-        Write-Property $page 'PaperWidth' ([single]$plan.widthMm) @(3);Write-Property $page 'PaperHeight' ([single]$plan.heightMm) @(3)
+-        Write-Property $page 'LabelWidth' ([single]$plan.widthMm) @(3);Write-Property $page 'LabelHeight' ([single]$plan.heightMm) @(3)
+-        $rw=[double](Read-Property $page 'LabelWidth' @(3));$rh=[double](Read-Property $page 'LabelHeight' @(3))
+-        if([math]::Abs($rw-$plan.widthMm) -gt 0.05 -or [math]::Abs($rh-$plan.heightMm) -gt 0.05){throw ('Label size readback mismatch: '+$rw+' x '+$rh)}
+-        $state=Get-NativePageState $document
+-        foreach($k in @('PaperWidth','LabelWidth')){Assert-NativeNear $state[$k] $plan.widthMm 0.05 $k}
+-        foreach($k in @('PaperHeight','LabelHeight')){Assert-NativeNear $state[$k] $plan.heightMm 0.05 $k}
+-        foreach($k in @('MarginLeft','MarginRight','MarginTop','MarginBottom')){Assert-NativeNear $state[$k] 0 0.05 $k}
+-        return $state
+-    }finally{Release-NativeCom $page}
+-}
+-function Set-NativeGeometry($obj,$request) {
+-    $targets=[ordered]@{}
+-    if($request.type -eq 'text'){$targets['FontName']=[string]$request.fontName;$targets['FontSize']=[double]$request.fontSizePt}
+-    elseif($request.type -eq 'code128'){$targets['Height']=[double]$request.heightMm}
+-    $targets['RotationAngle']=[double]$request.rotationDeg;$targets['X']=[double]$request.xMm;$targets['Y']=[double]$request.yMm
+-    foreach($key in $targets.Keys){Write-Property $obj $key $targets[$key]}
+-    $result=[ordered]@{status='TARGET_GEOMETRY_WITHIN_TOLERANCE';properties=[ordered]@{}}
+-    foreach($key in $targets.Keys){
+-        $actual=Read-Property $obj $key;$target=$targets[$key]
+-        if($key -eq 'FontName'){
+-            if([string]$actual -cne [string]$target){throw 'FontName readback mismatch.'}
+-            $result.properties[$key]=[ordered]@{requested=$target;actual=[string]$actual}
+-        }else{
+-            $tol=if($key -in @('X','Y')){0.20}elseif($key -eq 'Height'){0.10}else{0.05}
+-            Assert-NativeNear ([double]$actual) ([double]$target) $tol ($request.id+'.'+$key)
+-            $result.properties[$key]=[ordered]@{requested=$target;actual=[double]$actual;error=[math]::Abs([double]$actual-$target);tolerance=$tol}
+-        }
+-    }
+-    return $result
+-}
+-function Invoke-NativeLayoutBuild($formats,$layout,[string]$runDir,[string]$baseDirectory) {
+-    $plan=Test-NativeLayoutInput $layout
+-    $report=[ordered]@{schema='lwb-native-layout-build-report-v1';status='STARTED';layoutSchema=$plan.schema;page=$null;objects=@();warnings=@('Barcode raster ink dimensions are layout approximations, not decoder-confirmed symbol bounds.','Code128 width uses the nearest trusted XDimension observed on the active BarTender printer; exact target width may be physically unreachable.','Barcode sizing is tied to the printer active during generation; changing printer can change XDimension quantization.');output=$null;outputSha256=$null;reopen='NOT_RUN'}
+-    $document=$null;$objects=$null;$candidate=Join-Path $runDir 'candidate.unverified.btw';$accepted=Join-Path $runDir 'native-output.btw'
+-    try{
+-        'Create blank format'|Set-Content -LiteralPath (Join-Path $runDir 'LIVE_STAGE.txt') -Encoding UTF8
+-        $document=Invoke-ComMethod $formats 'Add' @()
+-        if($null -eq $document){throw 'Formats.Add returned null.'}
+-        $report['coordinateSemantics']='NATIVE_REFERENCE_POINT_NOT_TOP_LEFT_CERTIFIED'
+-        $report['productAcceptance']='NOT_RUN'
+-        $report.page=Set-NativePage $document $plan
+-        $objects=Read-Property $document 'Objects'
+-        if([int](Read-Property $objects 'Count') -ne 0){throw 'New Formats.Add document is not blank; generation stopped rather than deleting unknown objects.'}
+-        $dmComponent=$null
+-        if(@($plan.objects|Where-Object{$_.type -eq 'datamatrix'}).Count -gt 0){$dmComponent=Resolve-NativeDataMatrixComponent $runDir;$report['dataMatrixComponent']=$dmComponent;$report['dataMatrixComponentSha256']=(Get-FileHash -LiteralPath $dmComponent -Algorithm SHA256).Hash;Copy-Item -LiteralPath $dmComponent -Destination (Join-Path $runDir 'selected-datamatrix.btc')}
+-        $codeComponent=Join-Path $baseDirectory 'proven-code128.btc'
+-        if(@($plan.objects|Where-Object{$_.type -eq 'code128'}).Count -gt 0){if(-not(Test-Path -LiteralPath $codeComponent -PathType Leaf)){throw 'Bundled proven-code128.btc is missing.'};$report['code128ComponentSha256']=(Get-FileHash -LiteralPath $codeComponent -Algorithm SHA256).Hash;if($report.code128ComponentSha256 -cne '0B1E2481BCDE6E5CF1D084599F822DC3027AB19215530B7776296B40A59899F2'){throw 'Code128 component hash mismatch.'}}
+-        if(-not ('LabelWorkbench.RasterEvidence' -as [type])){Add-Type -Path (Join-Path $baseDirectory 'RasterEvidence.cs') -ErrorAction Stop}
+-        $dpi=600
+-        $physicalMap=@()
+-        $i=0
+-        foreach($request in @($plan.objects)){
+-            ('Build '+$request.id)|Set-Content -LiteralPath (Join-Path $runDir 'LIVE_STAGE.txt') -Encoding UTF8
+-            $i++;$prefix=Join-Path $runDir ('native-'+('{0:D3}' -f $i)+'-'+$request.id);$name=$null;$obj=$null
+-            $entry=[ordered]@{id=$request.id;type=$request.type;physicalName=$null;payload='NOT_RUN';geometry=$null;sizing='NOT_APPLICABLE';persistence='NOT_RUN';errors=@()}
+-            $report.objects+=,$entry
+-            try{
+-                if($request.type -eq 'text'){$name=Create-NativeText $document ([ref]$objects) $request $prefix}
+-                elseif($request.type -eq 'code128'){$name=Insert-NativeComponent $document ([ref]$objects) $codeComponent 'BarCode-Code-128' $request $prefix}
+-                else{$name=Insert-NativeComponent $document ([ref]$objects) $dmComponent 'BarCode-DataMatrix' $request $prefix}
+-                $entry.physicalName=$name;$obj=Find-NativeObject $objects $name
+-                $entry.payload='EMBEDDED_LITERAL_READBACK_OK'
+-                if($request.type -eq 'code128'){
+-                    $entry['humanReadable']=Hide-NativeCode128HumanReadable $obj ($prefix+'-human-readable')
+-                    Write-Property $obj 'RotationAngle' ([double]0)
+-                    Write-Property $obj 'Height' ([double]$request.heightMm)
+-                    $entry.sizing=Fit-NativeXDimensionNearest $obj $request ($prefix+'-size') $dpi
+-                    # XDimension may change object bounds, so position/height are re-applied after sizing.
+-                    $entry.geometry=Set-NativeGeometry $obj $request
+-                }elseif($request.type -eq 'datamatrix'){
+-                    $entry['humanReadable']=Hide-NativeCode128HumanReadable $obj ($prefix+'-human-readable') 'BarCode-DataMatrix'
+-                    Write-Property $obj 'RotationAngle' ([double]0)
+-                    $entry.sizing=Fit-NativeXDimensionNearest $obj $request ($prefix+'-size') $dpi
+-                    $entry.geometry=Set-NativeGeometry $obj $request
+-                }else{$entry.geometry=Set-NativeGeometry $obj $request}
+-                Write-Property $obj 'DoNotPrint' $false
+-                if([bool](Read-Property $obj 'DoNotPrint')){throw 'DoNotPrint write was ignored.'}
+-                $presaveText=[string](Invoke-ComMethod $obj 'GetXML' @($true,$true))
+-                $presaveText|Set-Content -LiteralPath ($prefix+'-presave.xml') -Encoding UTF8
+-                $presaveXml=Read-NativeXml $presaveText
+-                $nativeRoot=if($request.type -eq 'text'){'Text'}elseif($request.type -eq 'code128'){'BarCode-Code-128'}else{'BarCode-DataMatrix'}
+-                Assert-NativePayload $obj $presaveXml $nativeRoot $request.value
+-                $entry['referencePointXml']=$presaveXml.DocumentElement.GetAttribute('ReferencePoint')
+-                $entry['nativeType']=[int](Read-Property $obj 'Type')
+-                if($entry.nativeType -ne $(if($request.type -eq 'text'){5}else{4})){throw 'Native Type changed after geometry.'}
+-
+-                $expectedState=[ordered]@{X=[double](Read-Property $obj 'X');Y=[double](Read-Property $obj 'Y');RotationAngle=[double](Read-Property $obj 'RotationAngle');DoNotPrint=[bool](Read-Property $obj 'DoNotPrint');FontSize=$null;FontName=$null;Height=$null;XDimension=$null;raster=$null}
+-                if($request.type -eq 'text'){$expectedState.FontSize=[double](Read-Property $obj 'FontSize');$expectedState.FontName=[string](Read-Property $obj 'FontName')}
+-                elseif($request.type -eq 'code128'){$expectedState.Height=[double](Read-Property $obj 'Height')}
+-                if($request.type -ne 'text'){
+-                    $finalXml=Read-NativeXml ([string](Invoke-ComMethod $obj 'GetXML' @($true,$true)));$expectedState.XDimension=Get-NativeXDimension $finalXml
+-                    if((Get-NativeHumanReadableVisibility $finalXml) -cne 'None'){throw 'Caption reappeared before SaveAs.'}
+-                    if($expectedState.XDimension.index -ne $entry.sizing.selected.xDimension.index){throw 'Geometry changed the selected XDimension.'}
+-                    Assert-NativeNear $expectedState.XDimension.mils $entry.sizing.selected.xDimension.mils 0.02 'Final XDimension'
+-                    $expectedState.raster=Export-NativeMeasurement $obj ($prefix+'-presave.bmp') $dpi
+-                    Assert-NativeRaster $expectedState.raster
+-                    $entry['presaveRaster']=$expectedState.raster
+-                    if([math]::Abs($request.rotationDeg) -lt 0.001){Assert-NativeNear $expectedState.raster.inkWidthPx $entry.sizing.selected.raster.inkWidthPx 1 'Presave sizing width'}
+-                }
+-                $expectedState['xmlKey']=Get-NativeXmlKey $presaveXml
+-                $physicalMap+=,[ordered]@{id=$request.id;name=$name;type=$request.type;request=$request;expected=$expectedState}
+-            }catch{$entry.errors+=$_.Exception.Message;throw}
+-            finally{Release-NativeCom $obj;Save-NativeJson $report (Join-Path $runDir 'native-build-report.json')}
+-        }
+-        Assert-NativeSourceIsolation $objects
+-        Assert-NativeNameSet @($physicalMap|ForEach-Object{$_.name}) @(Get-NativeObjectNames $objects)
+-        [void](Invoke-ComMethod $document 'SaveAs' @($candidate,$false))
+-        Release-NativeCom $objects;$objects=$null;[void](Invoke-ComMethod $document 'Close' @(1));Release-NativeCom $document;$document=$null
+-        if(-not(Test-Path -LiteralPath $candidate) -or (Get-Item -LiteralPath $candidate).Length -le 0){throw 'SaveAs produced no native-output.btw.'}
+-        $savedHash=(Get-FileHash -LiteralPath $candidate -Algorithm SHA256).Hash
+-        $document=Invoke-ComMethod $formats 'Open' @($candidate,$false,'');Write-Property $document 'MeasurementUnits' 3
+-        $reopenState=Get-NativePageState $document
+-        if($reopenState.printer -cne $report.page.printer){throw 'Reopen printer changed; XDimension quantization is not comparable.'}
+-        foreach($k in @('PaperWidth','PaperHeight','LabelWidth','LabelHeight','MarginLeft','MarginRight','MarginTop','MarginBottom')){Assert-NativeNear $reopenState[$k] $report.page[$k] 0.05 ('Reopen '+$k)}
+-        $report['reopenPage']=$reopenState
+-        $objects=Read-Property $document 'Objects'
+-        $reopenNames=@(Get-NativeObjectNames $objects);Assert-NativeNameSet @($physicalMap|ForEach-Object{$_.name}) $reopenNames
+-        Assert-NativeSourceIsolation $objects
+-        foreach($m in @($physicalMap)){
+-            ('Verify/edit '+$m.id)|Set-Content -LiteralPath (Join-Path $runDir 'LIVE_STAGE.txt') -Encoding UTF8
+-            $obj=Find-NativeObject $objects ([string]$m.name)
+-            try{
+-                $expectedType=if($m.type -eq 'text'){5}else{4}
+-                if([int](Read-Property $obj 'Type') -ne $expectedType){throw ('Reopen native Type mismatch: '+$m.id)}
+-                if([string](Read-Property $obj 'Value') -cne [string]$m.request.value){throw ('Reopen payload mismatch: '+$m.id)}
+-                $root=if($m.type -eq 'text'){'Text'}elseif($m.type -eq 'code128'){'BarCode-Code-128'}else{'BarCode-DataMatrix'}
+-                $xml=Read-NativeXml ([string](Invoke-ComMethod $obj 'GetXML' @($true,$true)));$st=Get-NativeLiteralState $xml $root;if($st.value -cne [string]$m.request.value){throw ('Reopen literal source mismatch: '+$m.id)}
+-                $xml.OuterXml|Set-Content -LiteralPath (Join-Path $runDir ('reopen-'+$m.id+'.xml')) -Encoding UTF8
+-                if((Get-NativeXmlKey $xml) -cne $m.expected.xmlKey){throw ('Reopen XML state mismatch: '+$m.id)}
+-                if([bool](Read-Property $obj 'DoNotPrint')){throw ('Reopen object became DoNotPrint: '+$m.id)}
+-                foreach($key in @('X','Y','RotationAngle')){$actual=[double](Read-Property $obj $key);Assert-NativeFinite $actual $key;if([math]::Abs($actual-[double]$m.expected[$key]) -gt 0.02){throw ('Reopen geometry mismatch '+$m.id+'.'+$key)}}
+-                if($m.type -eq 'text'){
+-                    Assert-NativeNear ([double](Read-Property $obj 'FontSize')) ([double]$m.expected['FontSize']) 0.02 ('Reopen FontSize '+$m.id)
+-                    if([string](Read-Property $obj 'FontName') -cne [string]$m.expected['FontName']){throw ('Reopen FontName mismatch: '+$m.id)}
+-                }elseif($m.type -eq 'code128'){
+-                    Assert-NativeNear ([double](Read-Property $obj 'Height')) ([double]$m.expected['Height']) 0.02 ('Reopen Height '+$m.id)
+-                    if((Get-NativeHumanReadableVisibility $xml) -cne 'None'){throw ('Reopen HumanReadable mismatch: '+$m.id)}
+-                }
+-                if($m.type -ne 'text'){
+-                    $x=Get-NativeXDimension $xml;$ex=$m.expected['XDimension']
+-                    if($x.index -ne $ex.index -or [math]::Abs($x.mils-$ex.mils) -gt 0.02 -or [math]::Abs($x.millimeters-$ex.millimeters) -gt 0.011){throw ('Reopen XDimension mismatch: '+$m.id)}
+-                    $rr=Export-NativeMeasurement $obj (Join-Path $runDir ('reopen-'+$m.id+'.bmp')) $dpi
+-                    Assert-NativeRaster $rr
+-                    if($rr.physicalMmTrust -cne $m.expected['raster'].physicalMmTrust -or [math]::Abs($rr.inkWidthPx-$m.expected['raster'].inkWidthPx) -gt 1 -or [math]::Abs($rr.inkHeightPx-$m.expected['raster'].inkHeightPx) -gt 1){throw ('Reopen raster repeatability mismatch: '+$m.id)}
+-                }
+-                $e=@($report.objects|Where-Object{$_.id -ceq $m.id})[0];$e.persistence='SAVE_CLOSE_REOPEN_READBACK_OK'
+-            }finally{Release-NativeCom $obj}
+-        }
+-        foreach($m in @($physicalMap)){
+-            ('Verify/edit '+$m.id)|Set-Content -LiteralPath (Join-Path $runDir 'LIVE_STAGE.txt') -Encoding UTF8
+-            $obj=Find-NativeObject $objects $m.name
+-            $root=if($m.type -eq 'text'){'Text'}elseif($m.type -eq 'code128'){'BarCode-Code-128'}else{'BarCode-DataMatrix'}
+-            try{
+-                [void](Set-NativeObjectPayload $objects $obj ('NATIVE-EDIT-'+$m.id) $root (Join-Path $runDir ('edit-'+$m.id)))
+-            }finally{
+-                try{[void](Set-NativeObjectPayload $objects $obj ([string]$m.request.value) $root (Join-Path $runDir ('restore-'+$m.id)));if((Get-NativeXmlKey (Read-NativeXml ([string](Invoke-ComMethod $obj 'GetXML' @($true,$true))))) -cne $m.expected.xmlKey){throw 'Post-edit restored XML differs from saved state.'}}finally{Release-NativeCom $obj}
+-            }
+-            $e=@($report.objects|Where-Object{$_.id -ceq $m.id})[0];$e['reopenEditable']='SECOND_PAYLOAD_AND_PEER_ISOLATION_OK'
+-        }
+-        Release-NativeCom $objects;$objects=$null
+-        [void](Invoke-ComMethod $document 'Close' @(1));Release-NativeCom $objects;$objects=$null;Release-NativeCom $document;$document=$null
+-        if((Get-FileHash -LiteralPath $candidate -Algorithm SHA256).Hash -cne $savedHash){throw 'Output changed during read-only reopen verification.'}
+-        Move-Item -LiteralPath $candidate -Destination $accepted
+-        $report.status='NATIVE_LAYOUT_CANDIDATE_REOPEN_OK';$report.reopen='PASS';$report.output=$accepted;$report.outputSha256=$savedHash
+-        Save-NativeJson $report (Join-Path $runDir 'native-build-report.json')
+-        return $report
+-    }catch{
+-        $report.status='FAILED_OR_BLOCKED';$report.output=$null;$report.outputSha256=$null;$report['error']=$_.Exception.ToString();Save-NativeJson $report (Join-Path $runDir 'native-build-report.json');throw
+-    }finally{
+-        if($null -ne $document){try{[void](Invoke-ComMethod $document 'Close' @(1))}catch{}}
+-        Release-NativeCom $objects;Release-NativeCom $document
+-        if($report.status -eq 'FAILED_OR_BLOCKED'){
+-            foreach($f in @($candidate,$accepted)){
+-                if(Test-Path -LiteralPath $f){try{Move-Item -LiteralPath $f -Destination ($f+'.FAILED_UNVERIFIED') -Force}catch{$report.warnings+=('Quarantine failed: '+$_.Exception.Message)}}
+-            }
+-            Save-NativeJson $report (Join-Path $runDir 'native-build-report.json')
+-        }
+-    }
+-}
+-Export-ModuleMember -Function Test-NativeLayoutInput,Invoke-NativeLayoutBuild
++Set-StrictMode -Version 2
++# Own the compiled dependency and private wrappers; do not force-reimport the
++# caller's Com module into another session state.
++if (-not ('LabelWorkbench.ComBridge' -as [type])) {
++    Add-Type -Path (Join-Path $PSScriptRoot 'ComBridge.cs') -ErrorAction Stop
++}
++# These commands belong to this module, independent of caller imports.
++function script:Read-Property($target,[string]$name,[object[]]$arguments=@()) {
++    if($null -eq $target){throw "Cannot read $name from a null object."}
++    $value=[LabelWorkbench.ComBridge]::Get($target,$name,$arguments)
++    return ,$value
++}
++function script:Write-Property($target,[string]$name,$value,[object[]]$indices=@()) {
++    if($null -eq $target){throw "Cannot write $name on a null object."}
++    [LabelWorkbench.ComBridge]::Set($target,$name,([object[]]@($indices+@($value))))
++}
++function script:Invoke-ComMethod($target,[string]$name,[object[]]$arguments=@()) {
++    if($null -eq $target){throw "Cannot invoke $name on a null object."}
++    if($name -eq 'Open' -and $arguments.Count -eq 3){
++        $value=[LabelWorkbench.ComBridge]::OpenFormat($target,[string]$arguments[0],[bool]$arguments[1],[string]$arguments[2])
++    }else{
++        $value=[LabelWorkbench.ComBridge]::Call($target,$name,$arguments)
++    }
++    return ,$value
++}
++$script:InvariantCulture=[Globalization.CultureInfo]::InvariantCulture
++
++function Release-NativeCom($target) {
++    if ($null -ne $target -and [Runtime.InteropServices.Marshal]::IsComObject($target)) { [void][Runtime.InteropServices.Marshal]::ReleaseComObject($target) }
++}
++function Assert-NativeFinite([double]$value,[string]$name) {
++    if([double]::IsNaN($value) -or [double]::IsInfinity($value)){throw ($name+' is not finite.')}
++}
++function Assert-NativeNear([double]$actual,[double]$expected,[double]$tolerance,[string]$name) {
++    Assert-NativeFinite $actual $name
++    Assert-NativeFinite $expected ($name+' expected')
++    if([math]::Abs($actual-$expected) -gt $tolerance){throw ($name+' mismatch: '+$actual+' expected '+$expected)}
++}
++function Assert-NativeNames($names) {
++    $set=New-Object 'System.Collections.Generic.HashSet[string]' ([StringComparer]::OrdinalIgnoreCase)
++    foreach($n in @($names)){
++        if($n -isnot [string] -or [string]::IsNullOrWhiteSpace($n) -or -not $set.Add($n)){throw 'Empty, non-flat or duplicate native object name.'}
++    }
++}
++function Assert-NativeNameSet($expected,$actual) {
++    Assert-NativeNames $expected;Assert-NativeNames $actual
++    if(@($expected).Count -ne @($actual).Count -or @(Get-NativeNameDelta $expected $actual).Count -or @(Get-NativeNameDelta $actual $expected).Count){throw 'Native object identity set changed.'}
++}
++function Get-NativeXmlKey($node) {
++    if($node -is [System.Xml.XmlDocument]){return Get-NativeXmlKey $node.DocumentElement}
++    if($node -is [System.Xml.XmlElement]){
++        $parts=@('E',$node.NamespaceURI,$node.LocalName)
++        foreach($a in @($node.Attributes|Sort-Object NamespaceURI,LocalName)){$parts+=@('A',$a.NamespaceURI,$a.LocalName,$a.Value)}
++        foreach($child in @($node.ChildNodes)){if($child -isnot [System.Xml.XmlWhitespace]){$parts+=,(Get-NativeXmlKey $child)}}
++        return (($parts|ForEach-Object{[string]$_.Length+':'+$_}) -join '')
++    }
++    return ([string]$node.NodeType+':'+[string]$node.Value)
++}
++function Assert-NativePayload($obj,$xml,[string]$root,[string]$payload) {
++    $state=Get-NativeLiteralState $xml $root
++    if($state.value -cne $payload -or [string](Read-Property $obj 'Value') -cne $payload){throw 'Literal/effective payload mismatch.'}
++}
++function Restore-NativeXml($obj,[string]$text,[string]$prefix) {
++    [void](Invoke-ComMethod $obj 'SetXML' @($text))
++    $backText=[string](Invoke-ComMethod $obj 'GetXML' @($true,$true))
++    $backText|Set-Content -LiteralPath ($prefix+'-rollback.xml') -Encoding UTF8
++    $original=Read-NativeXml $text;$back=Read-NativeXml $backText
++    if((Get-NativeXmlKey $original) -cne (Get-NativeXmlKey $back)){throw 'Rollback XML differs from baseline.'}
++    $state=Get-NativeLiteralState $original $original.DocumentElement.LocalName
++    Assert-NativePayload $obj $back $state.root $state.value
++}
++function Assert-NativeRaster($r) {
++    if($null -eq $r -or $r.physicalMmTrust -cne 'TRUSTED'){throw 'Raster DPI is untrusted.'}
++    Assert-NativeFinite ([double]$r.inkWidthMm) 'inkWidthMm';Assert-NativeFinite ([double]$r.inkHeightMm) 'inkHeightMm'
++    if($r.inkWidthPx -le 0 -or $r.inkHeightPx -le 0){throw 'Raster has no ink.'}
++}
++function Assert-NativeSourceIsolation($objects) {
++    $seen=New-Object 'System.Collections.Generic.HashSet[string]' ([StringComparer]::OrdinalIgnoreCase)
++    foreach($name in @(Get-NativeObjectNames $objects)){
++        $obj=Find-NativeObject $objects $name
++        try{
++            $xml=Read-NativeXml ([string](Invoke-ComMethod $obj 'GetXML' @($true,$true)))
++            $state=Get-NativeLiteralState $xml $xml.DocumentElement.LocalName
++            if(-not $seen.Add([string]$state.sourceId)){throw 'Different objects share an EmbeddedDataSource ID.'}
++        }finally{Release-NativeCom $obj}
++    }
++}
++function Get-NativePageState($document) {
++    if([int](Read-Property $document 'MeasurementUnits') -ne 3){throw 'MeasurementUnits is not millimeters.'}
++    $r=[ordered]@{printer=[string](Read-Property $document 'Printer');LabelColumns=$null;LabelRows=$null}
++    if([string]::IsNullOrWhiteSpace($r.printer)){throw 'Generation printer is unknown.'}
++    $page=Read-Property $document 'PageSetup'
++    try{
++        foreach($k in @('LabelColumns','LabelRows')){$r[$k]=[int](Read-Property $page $k);if($r[$k] -ne 1){throw ('Page grid mismatch: '+$k)}}
++        foreach($k in @('PaperWidth','PaperHeight','LabelWidth','LabelHeight','MarginLeft','MarginRight','MarginTop','MarginBottom')){
++            $r[$k]=[double](Read-Property $page $k @(3));Assert-NativeFinite $r[$k] $k
++        }
++    }finally{Release-NativeCom $page}
++    return $r
++}
++function Save-NativeJson($value,[string]$path) {
++    ConvertTo-Json -InputObject $value -Depth 24 | Set-Content -LiteralPath $path -Encoding UTF8
++}
++function Read-NativeXml([string]$value) {
++    $settings=New-Object System.Xml.XmlReaderSettings
++    $settings.DtdProcessing=[System.Xml.DtdProcessing]::Prohibit
++    $settings.XmlResolver=$null
++    $reader=[System.Xml.XmlReader]::Create((New-Object System.IO.StringReader($value)),$settings)
++    try { $doc=New-Object System.Xml.XmlDocument; $doc.XmlResolver=$null; $doc.PreserveWhitespace=$true; $doc.Load($reader); return ,$doc } finally { $reader.Dispose() }
++}
++function Parse-NativeDouble([string]$value,[string]$name) {
++    $number=0.0
++    if (-not [double]::TryParse($value,[Globalization.NumberStyles]::Float,$script:InvariantCulture,[ref]$number)) { throw ("Invalid numeric XML value for ${name}: $value") }
++    return $number
++}
++function Test-NativeNumber($value,[double]$min,[double]$max,[string]$name) {
++    if ($null -eq $value -or $value -is [bool] -or $value -is [string]) { throw ($name+' must be a JSON number.') }
++    $n=[double]$value
++    if ([double]::IsNaN($n) -or [double]::IsInfinity($n) -or $n -lt $min -or $n -gt $max) { throw ($name+' out of range.') }
++    return $n
++}
++function Get-NativeObjectNames($objects) {
++    $count=[int](Read-Property $objects 'Count')
++    $names=@()
++    for($i=1;$i -le $count;$i++){
++        $obj=Invoke-ComMethod $objects 'Item' @($i)
++        try{$names += [string](Read-Property $obj 'Name')}finally{Release-NativeCom $obj}
++    }
++    Assert-NativeNames $names
++    if([int](Read-Property $objects 'Count') -ne $count){throw 'Object collection changed while enumerating.'}
++    return @($names)
++}
++function Get-NativeNameDelta($before,$after) {
++    Assert-NativeNames $before;Assert-NativeNames $after
++    $set=New-Object 'System.Collections.Generic.HashSet[string]' ([StringComparer]::Ordinal)
++    foreach($n in @($before)){if(-not [string]::IsNullOrWhiteSpace([string]$n)){[void]$set.Add([string]$n)}}
++    $delta=@()
++    foreach($n in @($after)){if(-not $set.Contains([string]$n)){$delta += [string]$n}}
++    return @($delta)
++}
++function Find-NativeObject($objects,[string]$name) {
++    $obj=Invoke-ComMethod $objects 'Find' @($name)
++    if($null -eq $obj){throw ('Object missing: '+$name)}
++    if([string](Read-Property $obj 'Name') -cne $name){Release-NativeCom $obj;throw ('Object identity mismatch: '+$name)}
++    return ,$obj
++}
++function Get-NativeDataSourceState($xml) {
++    $container=$xml.SelectSingleNode('/*/*[local-name()="DataSources"]')
++    if($null -eq $container){throw 'Object XML has no direct DataSources element.'}
++    $sources=@($container.ChildNodes | Where-Object {$_ -is [System.Xml.XmlElement]})
++    $kinds=@($sources | ForEach-Object {$_.LocalName})
++    return [ordered]@{count=$sources.Count;kinds=$kinds;embeddedCount=@($sources|Where-Object{$_.LocalName -eq 'EmbeddedDataSource'}).Count;objectValueCount=@($sources|Where-Object{$_.LocalName -eq 'ObjectValueDataSource'}).Count}
++}
++function Get-NativeLiteralState($xml,[string]$expectedRoot) {
++    if($xml.DocumentElement.LocalName -cne $expectedRoot){throw ('Unexpected object XML root: '+$xml.DocumentElement.LocalName+' expected '+$expectedRoot)}
++    $state=Get-NativeDataSourceState $xml
++    if($state.count -ne 1 -or $state.embeddedCount -ne 1 -or $state.objectValueCount -ne 0){throw 'Object must contain exactly one EmbeddedDataSource and no ObjectValueDataSource.'}
++    $source=$xml.SelectSingleNode('/*/*[local-name()="DataSources"]/*')
++    $transforms=@($source.SelectNodes('.//*[local-name()="Transforms"]/* | .//*[contains(local-name(),"Transform") and local-name()!="Transforms"]'))
++    if($transforms.Count -ne 0){throw ('Data source transforms are not supported: '+(($transforms|ForEach-Object{$_.LocalName}) -join ', '))}
++    foreach($attribute in @('Name','DataSourceName')){if($source.HasAttribute($attribute) -and $source.GetAttribute($attribute)){throw 'Named/shared source is not supported.'}}
++    if([string]::IsNullOrWhiteSpace($source.GetAttribute('ID'))){throw 'Missing source ID.'}
++    if($source.HasAttribute('SubStringListStringID') -and $source.GetAttribute('SubStringListStringID') -cne '4294967295'){throw 'Shared source ID is not supported.'}
++    $values=@($source.SelectNodes('./*[local-name()="Value"]'))
++    if($values.Count -ne 1){throw 'Embedded source does not expose one literal Value.'}
++    return [ordered]@{root=$expectedRoot;sourceId=$source.GetAttribute('ID');value=$values[0].InnerText;sourceCount=$state.count;transforms=0}
++}
++function Get-NativeExportedValue($node) {
++    if($node -is [System.Xml.XmlElement] -and $node.HasAttribute('Encoding')){
++        if($node.GetAttribute('Encoding') -ine 'base64'){throw 'Unsupported exported value encoding.'}
++        $bytes=[Convert]::FromBase64String($node.InnerText)
++        if($bytes.Length % 2 -ne 0){throw 'Invalid UTF-16LE byte count.'}
++        $enc=New-Object System.Text.UnicodeEncoding($false,$false,$true)
++        return $enc.GetString($bytes)
++    }
++    return $node.InnerText
++}
++function Set-NativeExportedValue($node,[string]$value) {
++    if($node -is [System.Xml.XmlElement] -and $node.HasAttribute('Encoding')){
++        if($node.GetAttribute('Encoding') -ine 'base64'){throw 'Unsupported exported value encoding.'}
++        $enc=New-Object System.Text.UnicodeEncoding($false,$false,$true)
++        $node.InnerText=[Convert]::ToBase64String($enc.GetBytes($value))
++    }else{$node.InnerText=$value}
++}
++function Set-NativeObjectPayload($objects,$obj,[string]$payload,[string]$expectedRoot,[string]$prefix) {
++    Assert-NativeSourceIsolation $objects
++    $name=[string](Read-Property $obj 'Name')
++    $peerStates=@{}
++    foreach($peerName in @(Get-NativeObjectNames $objects)){
++        if($peerName -ceq $name){continue}
++        $peer=Find-NativeObject $objects $peerName
++        try{$peerStates[$peerName]=Get-NativeXmlKey (Read-NativeXml ([string](Invoke-ComMethod $peer 'GetXML' @($true,$true))))}finally{Release-NativeCom $peer}
++    }
++    $beforeText=[string](Invoke-ComMethod $obj 'GetXML' @($true,$true))
++    $before=Read-NativeXml $beforeText
++    [void](Get-NativeLiteralState $before $expectedRoot)
++    $export=Read-NativeXml ([string](Invoke-ComMethod $objects 'ExportDataSourceValuesToXML' @()))
++    $source=$before.SelectSingleNode('/*/*[local-name()="DataSources"]/*')
++    $id=[string]$source.GetAttribute('ID')
++    if([string]::IsNullOrWhiteSpace($id)){throw 'Embedded data source has no ID.'}
++    $matches=@($export.SelectNodes('//*') | Where-Object {$node=$_; @($node.Attributes | Where-Object {$_.Value -ieq $id}).Count -gt 0})
++    $target=$null
++    if($matches.Count -eq 1){
++        if($matches[0].HasAttribute('Value')){$target=$matches[0].GetAttributeNode('Value')}
++        else{$values=@($matches[0].SelectNodes('./*[local-name()="Value"]'));if($values.Count -eq 1){$target=$values[0]}}
++    }
++    if($null -eq $target){
++        $named=@($export.SelectNodes('//*') | Where-Object {$_.HasAttribute('Name') -and $_.GetAttribute('Name') -ceq $name})
++        if($named.Count -ne 1){throw ('Cannot map exported data source for '+$name)}
++        $values=@($named[0].SelectNodes('.//*[local-name()="Value"] | .//@Value'))
++        if($values.Count -ne 1){throw ('Cannot find one exported literal value for '+$name)}
++        if((Get-NativeExportedValue $values[0]) -cne [string](Get-NativeLiteralState $before $expectedRoot).value){throw 'Exported source order/value mismatch.'}
++        $target=$values[0]
++    }
++    Set-NativeExportedValue $target $payload
++    if($prefix){$beforeText|Set-Content -LiteralPath ($prefix+'-before.xml') -Encoding UTF8;$export.OuterXml|Set-Content -LiteralPath ($prefix+'-import-request.xml') -Encoding UTF8}
++    $ok=Invoke-ComMethod $objects 'ImportDataSourceValuesFromXML' @($export.OuterXml)
++    if(-not [bool]$ok){throw 'ImportDataSourceValuesFromXML returned false.'}
++    $readText=[string](Invoke-ComMethod $obj 'GetXML' @($true,$true))
++    if($prefix){$readText|Set-Content -LiteralPath ($prefix+'-readback.xml') -Encoding UTF8}
++    $read=Read-NativeXml $readText
++    $state=Get-NativeLiteralState $read $expectedRoot
++    if($state.value -cne $payload -or [string](Read-Property $obj 'Value') -cne $payload){throw 'Literal/effective payload readback mismatch.'}
++    if($state.sourceId -cne $id){throw 'Payload import changed source identity.'}
++    foreach($peerName in @($peerStates.Keys)){
++        $peer=Find-NativeObject $objects $peerName
++        try{if((Get-NativeXmlKey (Read-NativeXml ([string](Invoke-ComMethod $peer 'GetXML' @($true,$true))))) -cne $peerStates[$peerName]){throw 'Payload import modified another object.'}}finally{Release-NativeCom $peer}
++    }
++    return $state
++}
++function Get-NativeHumanReadableVisibility($xml) {
++    $nodes=@($xml.SelectNodes('/*/*[local-name()="HumanReadable"]'))
++    if($nodes.Count -ne 1){return 'UNKNOWN'}
++    $v=[string]$nodes[0].GetAttribute('Visibility')
++    if([string]::IsNullOrWhiteSpace($v)){return 'VISIBLE_DEFAULT_OR_UNSPECIFIED'}
++    return $v
++}
++function Hide-NativeCode128HumanReadable($obj,[string]$prefix,[string]$root='BarCode-Code-128') {
++    $baselineText=[string](Invoke-ComMethod $obj 'GetXML' @($true,$true));$baseline=Read-NativeXml $baselineText
++    $state=Get-NativeLiteralState $baseline $root;Assert-NativePayload $obj $baseline $root $state.value
++    $before=Get-NativeHumanReadableVisibility $baseline
++    $baselineText|Set-Content -LiteralPath ($prefix+'-baseline.xml') -Encoding UTF8
++    if($before -ceq 'None'){return [ordered]@{status='ALREADY_HIDDEN';before=$before;after='None'}}
++    $nodes=@($baseline.SelectNodes('/*/*[local-name()="HumanReadable"]'))
++    if($nodes.Count -ne 1){throw 'Barcode HumanReadable node is missing or ambiguous; ink sizing is blocked.'}
++    try{
++        $write=Read-NativeXml $baselineText;$write.SelectSingleNode('/*/*[local-name()="HumanReadable"]').SetAttribute('Visibility','None')
++        $write.OuterXml|Set-Content -LiteralPath ($prefix+'-request.xml') -Encoding UTF8
++        [void](Invoke-ComMethod $obj 'SetXML' @($write.OuterXml))
++        $text=[string](Invoke-ComMethod $obj 'GetXML' @($true,$true));$text|Set-Content -LiteralPath ($prefix+'-readback.xml') -Encoding UTF8
++        $read=Read-NativeXml $text;Assert-NativePayload $obj $read $root $state.value
++        if((Get-NativeXmlKey ($baseline.SelectSingleNode('/*/*[local-name()="DataSources"]'))) -cne (Get-NativeXmlKey ($read.SelectSingleNode('/*/*[local-name()="DataSources"]')))){throw 'Caption write changed DataSources.'}
++        if((Get-NativeHumanReadableVisibility $read) -cne 'None'){throw 'HumanReadable hide was not accepted.'}
++        return [ordered]@{status='HIDDEN_BY_SETXML';before=$before;after='None'}
++    }catch{
++        $failure=$_.Exception.Message
++        try{Restore-NativeXml $obj $baselineText $prefix}catch{throw ($failure+' | rollback: '+$_.Exception.Message)}
++        throw $failure
++    }
++}
++function Get-NativeXDimension($xml) {
++    $nodes=@($xml.SelectNodes('/*/*[local-name()="XDimension"]'))
++    if($nodes.Count -ne 1){throw 'Missing/ambiguous XDimension.'}
++    $n=$nodes[0]
++    foreach($key in @('Index','Mils','Millimeters')){if(-not $n.HasAttribute($key)){throw ('XDimension missing '+$key)}}
++    $index=[int]$n.GetAttribute('Index');$mils=Parse-NativeDouble $n.GetAttribute('Mils') 'Mils';$mm=Parse-NativeDouble $n.GetAttribute('Millimeters') 'Millimeters'
++    Assert-NativeFinite $mils 'XDimension Mils';Assert-NativeFinite $mm 'XDimension Millimeters'
++    if($index -lt 0 -or $index -gt 255 -or $mils -le 0 -or $mm -le 0 -or [math]::Abs($mm-$mils*0.0254) -gt 0.011){throw 'Inconsistent XDimension values.'}
++    return [ordered]@{index=$index;mils=$mils;millimeters=$mm;indexMeaning='UNVERIFIED_ENUM_INDEX_NOT_DOTS'}
++}
++function Export-NativeMeasurement($obj,[string]$path,[int]$dpi) {
++    if(Test-Path -LiteralPath $path){Remove-Item -LiteralPath $path -Force}
++    [void](Invoke-ComMethod $obj 'ExportToFile' @($path,'BMP',[int]0,$dpi,[int]2))
++    $r=[LabelWorkbench.RasterEvidence]::Read($path)
++    $tol=[math]::Max(1.0,[double]$dpi*0.01)
++    $valid=($r.HeaderDpiX -gt 0 -and $r.HeaderDpiY -gt 0 -and -not [double]::IsNaN($r.HeaderDpiX) -and -not [double]::IsNaN($r.HeaderDpiY) -and -not [double]::IsInfinity($r.HeaderDpiX) -and -not [double]::IsInfinity($r.HeaderDpiY))
++    $trust='UNTRUSTED_HEADER_DPI_INVALID'
++    if($valid){if([math]::Abs($r.HeaderDpiX-$dpi) -le $tol -and [math]::Abs($r.HeaderDpiY-$dpi) -le $tol){$trust='TRUSTED_HEADER_MATCH'}else{$trust='UNTRUSTED_HEADER_DPI_MISMATCH'}}
++    $trusted=($trust -ceq 'TRUSTED_HEADER_MATCH')
++    return [ordered]@{file=[IO.Path]::GetFileName($path);requestedDpi=$dpi;headerDpiX=$r.HeaderDpiX;headerDpiY=$r.HeaderDpiY;dpiTrust=$trust;physicalMmTrust=if($trusted){'TRUSTED'}else{'UNTRUSTED'};canvasWidthPx=$r.CanvasWidth;canvasHeightPx=$r.CanvasHeight;inkWidthPx=$r.InkWidth;inkHeightPx=$r.InkHeight;inkWidthMm=if($trusted){$r.InkWidth*25.4/$dpi}else{$null};inkHeightMm=if($trusted){$r.InkHeight*25.4/$dpi}else{$null};sha256=(Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash;symbolBounds='NOT_DECODER_CONFIRMED'}
++}
++function Get-NativeInkError($m,$request) {
++    if($null -eq $m -or $m.physicalMmTrust -cne 'TRUSTED'){throw 'Raster physical-mm measurement is untrusted.'}
++    $err=[math]::Abs([double]$m.inkWidthMm-[double]$request.widthMm)
++    if($request.type -eq 'datamatrix'){$err=[math]::Max($err,[math]::Abs([double]$m.inkHeightMm-[double]$request.heightMm))}
++    return $err
++}
++function Fit-NativeXDimensionNearest($obj,$request,[string]$prefix,[int]$dpi) {
++    $result=[ordered]@{status='NOT_RUN';targetWidthMm=[double]$request.widthMm;targetHeightMm=[double]$request.heightMm;samples=@();selected=$null;errorMm=$null;approximation='NOT_RUN';warning='Raster ink is a layout approximation, not decoder-confirmed symbol bounds.'}
++    $originalText=[string](Invoke-ComMethod $obj 'GetXML' @($true,$true));$original=Read-NativeXml $originalText
++    $root=if($request.type -eq 'code128'){'BarCode-Code-128'}else{'BarCode-DataMatrix'}
++    $payload=[string]$request.value
++    $literal=Get-NativeLiteralState $original $root;if($literal.value -cne $payload){throw 'Payload mismatch before XDimension fitting.'}
++    Assert-NativePayload $obj $original $root $payload
++    if((Get-NativeHumanReadableVisibility $original) -cne 'None'){throw 'Code128 HumanReadable must be None before raster width fitting.'}
++    $originalText|Set-Content -LiteralPath ($prefix+'-baseline.xml') -Encoding UTF8
++    Assert-NativeNear ([double](Read-Property $obj 'RotationAngle')) 0 0.001 'Sizing rotation'
++    $initial=Get-NativeXDimension $original
++    $base=Export-NativeMeasurement $obj ($prefix+'-baseline.bmp') $dpi
++    if($base.physicalMmTrust -cne 'TRUSTED'){throw 'Baseline raster DPI is untrusted.'}
++    $result.samples+=,[ordered]@{requestedIndex=$initial.index;readback=$initial;raster=$base}
++    $best=[ordered]@{x=$initial;raster=$base;xml=$originalText;error=(Get-NativeInkError $base $request)}
++    $queue=New-Object 'System.Collections.Generic.List[int]';$queue.Add($initial.index+1);if($initial.index -gt 0){$queue.Add($initial.index-1)}
++    $tried=@{};$tried[[string]$initial.index]=$true
++    $responded=$false
++    try{
++    for($i=0;$i -lt $queue.Count -and $i -lt 5;$i++){
++        $idx=[int]$queue[$i];if($idx -lt 0 -or $idx -gt 255 -or $tried.ContainsKey([string]$idx)){continue};$tried[[string]$idx]=$true
++        $write=Read-NativeXml $originalText;$write.SelectSingleNode('/*/*[local-name()="XDimension"]').SetAttribute('Index',[string]$idx)
++        $write.OuterXml|Set-Content -LiteralPath ($prefix+'-index-'+$idx+'-request.xml') -Encoding UTF8
++        [void](Invoke-ComMethod $obj 'SetXML' @($write.OuterXml))
++        $readText=[string](Invoke-ComMethod $obj 'GetXML' @($true,$true));$read=Read-NativeXml $readText
++        $readText|Set-Content -LiteralPath ($prefix+'-index-'+$idx+'-readback.xml') -Encoding UTF8
++        $state=Get-NativeLiteralState $read $root;if($state.value -cne $payload -or [string](Read-Property $obj 'Value') -cne $payload){throw 'Payload changed during XDimension fitting.'}
++        if((Get-NativeHumanReadableVisibility $read) -cne 'None'){throw 'HumanReadable reappeared during fitting.'}
++        if((Get-NativeXmlKey ($original.SelectSingleNode('/*/*[local-name()="DataSources"]'))) -cne (Get-NativeXmlKey ($read.SelectSingleNode('/*/*[local-name()="DataSources"]')))){throw 'XDimension write changed DataSources.'}
++        $x=Get-NativeXDimension $read;$r=Export-NativeMeasurement $obj ($prefix+'-index-'+$idx+'.bmp') $dpi
++        $result.samples+=,[ordered]@{requestedIndex=$idx;readback=$x;raster=$r}
++        if($r.physicalMmTrust -cne 'TRUSTED'){throw 'Raster DPI became untrusted during fitting.'}
++        if($x.index -ne $idx -or [math]::Abs($x.mils-$initial.mils) -lt 0.001 -or [math]::Abs($r.inkWidthPx-$base.inkWidthPx) -lt 1){continue}
++        $responded=$true
++        $err=Get-NativeInkError $r $request;if($err -lt $best.error){$best=[ordered]@{x=$x;raster=$r;xml=$readText;error=$err}}
++        if($i -eq 0){$slope=([double]$r.inkWidthMm-[double]$base.inkWidthMm)/($x.index-$initial.index);if($slope -gt 0){$est=$initial.index+([double]$request.widthMm-[double]$base.inkWidthMm)/$slope;$queue.Add([int][math]::Floor($est));$queue.Add([int][math]::Ceiling($est))}}
++    }
++    if(-not $responded){throw 'XDimension write/raster response not proven; nearest selection rejected.'}
++    [void](Invoke-ComMethod $obj 'SetXML' @([string]$best.xml))
++    $final=Read-NativeXml ([string](Invoke-ComMethod $obj 'GetXML' @($true,$true)));$fx=Get-NativeXDimension $final;$fr=Export-NativeMeasurement $obj ($prefix+'-selected.bmp') $dpi
++    $final.OuterXml|Set-Content -LiteralPath ($prefix+'-selected.xml') -Encoding UTF8
++    Assert-NativePayload $obj $final $root $payload
++    if((Get-NativeXmlKey $final) -cne (Get-NativeXmlKey (Read-NativeXml ([string]$best.xml)))){throw 'Selected XML did not restore completely.'}
++    Assert-NativeRaster $fr
++    Assert-NativeNear $fr.inkWidthPx $best.raster.inkWidthPx 1 'Selected raster width'
++    Assert-NativeNear $fr.inkHeightPx $best.raster.inkHeightPx 1 'Selected raster height'
++    if($fx.index -ne $best.x.index -or $fr.physicalMmTrust -cne 'TRUSTED'){throw 'Selected XDimension state did not persist in-memory.'}
++    $result.selected=[ordered]@{xDimension=$fx;raster=$fr};$result.errorMm=Get-NativeInkError $fr $request;$result.status='BEST_OBSERVED_TRUSTED_XDIMENSION_SELECTED';$result.approximation='BEST_OF_BOUNDED_SAMPLES_NOT_GLOBAL_OPTIMUM'
++    return $result
++    }catch{
++        $failure=$_.Exception.Message
++        Save-NativeJson $result ($prefix+'-failed-samples.json')
++        try{Restore-NativeXml $obj $originalText $prefix}catch{throw ($failure+' | rollback: '+$_.Exception.Message)}
++        throw $failure
++    }
++}
++function Get-NativeInstallRoot {
++    $root=[Microsoft.Win32.Registry]::ClassesRoot;$clsidKey=$root.OpenSubKey('BarTender.Application\CLSID');if($null -eq $clsidKey){return $null}
++    try{$clsid=[string]$clsidKey.GetValue('')}finally{$clsidKey.Dispose()}
++    $serverKey=$root.OpenSubKey("CLSID\$clsid\LocalServer32");if($null -eq $serverKey){return $null}
++    try{$command=[string]$serverKey.GetValue('')}finally{$serverKey.Dispose()}
++    $exe=$null;if($command -match '^\s*"([^"]+\.exe)"'){$exe=$Matches[1]}elseif($command -match '^\s*(.+?\.exe)(?:\s|$)'){$exe=$Matches[1]}
++    if([string]::IsNullOrWhiteSpace($exe)){return $null};return [IO.Path]::GetDirectoryName($exe)
++}
++function Resolve-NativeDataMatrixComponent([string]$runDir) {
++    $root=Get-NativeInstallRoot
++    if(-not [string]::IsNullOrWhiteSpace($root)){
++        $exact=Join-Path $root 'Barcodes\Common Bar Codes\Data Matrix.btc'
++        if(Test-Path -LiteralPath $exact -PathType Leaf){return $exact}
++    }
++    $candidates=@()
++    if(-not [string]::IsNullOrWhiteSpace($root)){$candidates=@(Get-ChildItem -LiteralPath $root -Recurse -File -Filter 'Data Matrix.btc' -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName)}
++    $candidates=@($candidates | Where-Object {$_ -notmatch 'GS1|HIBC'} | Sort-Object -Unique)
++    $candidates|ConvertTo-Json -Depth 3|Set-Content -LiteralPath (Join-Path $runDir 'datamatrix-component-candidates.json') -Encoding UTF8
++    if($candidates.Count -ne 1){throw ('Could not resolve exactly one standard Data Matrix.btc; candidates='+$candidates.Count)}
++    return [string]$candidates[0]
++}
++function Insert-NativeComponent($document,[ref]$objectsRef,[string]$path,[string]$expectedRoot,$request,[string]$prefix) {
++    $objects=$objectsRef.Value;$before=@(Get-NativeObjectNames $objects)
++    $ok=[bool](Invoke-ComMethod $document 'InsertComponent' @($path,[double]$request.xMm,[double]$request.yMm))
++    if(-not $ok){throw ('InsertComponent returned false: '+$path)}
++    $objectsRef.Value=$null;Release-NativeCom $objects;$objects=$null;$objects=Read-Property $document 'Objects';$objectsRef.Value=$objects
++    $after=@(Get-NativeObjectNames $objects);$delta=@(Get-NativeNameDelta $before $after)
++    if($delta.Count -ne 1 -or $after.Count -ne $before.Count+1){throw 'InsertComponent did not add exactly one object.'}
++    if(@(Get-NativeNameDelta $after $before).Count){throw 'Existing object disappeared during creation.'}
++    Assert-NativeSourceIsolation $objects
++    $name=[string]$delta[0];$obj=Find-NativeObject $objects $name
++    try{
++        if([int](Read-Property $obj 'Type') -ne 4){throw 'Inserted component is not a barcode object.'}
++        $xml=Read-NativeXml ([string](Invoke-ComMethod $obj 'GetXML' @($true,$true)));[void](Get-NativeLiteralState $xml $expectedRoot)
++        [void](Set-NativeObjectPayload $objects $obj ([string]$request.value) $expectedRoot ($prefix+'-payload'))
++    }finally{Release-NativeCom $obj}
++    return $name
++}
++function Create-NativeText($document,[ref]$objectsRef,$request,[string]$prefix) {
++    $objects=$objectsRef.Value;$before=@(Get-NativeObjectNames $objects);$created=$null;$createdName=$null
++    try{$created=Invoke-ComMethod $objects 'Create' @([int]5);if($null -eq $created){throw 'DesignObjects.Create(5) returned null.'};$createdName=[string](Read-Property $created 'Name')}finally{Release-NativeCom $created}
++    $objectsRef.Value=$null;Release-NativeCom $objects;$objects=$null;$objects=Read-Property $document 'Objects';$objectsRef.Value=$objects
++    $after=@(Get-NativeObjectNames $objects);$delta=@(Get-NativeNameDelta $before $after)
++    if($delta.Count -ne 1 -or $after.Count -ne $before.Count+1 -or $delta[0] -cne $createdName){throw 'Create(5) did not return the one newly added text object.'}
++    if(@(Get-NativeNameDelta $after $before).Count){throw 'Existing object disappeared during creation.'}
++    Assert-NativeSourceIsolation $objects
++    $name=[string]$delta[0];$obj=Find-NativeObject $objects $name
++    try{
++        if([int](Read-Property $obj 'Type') -ne 5){throw ('Create(5) produced unexpected Type '+[string](Read-Property $obj 'Type'))}
++        $xml=Read-NativeXml ([string](Invoke-ComMethod $obj 'GetXML' @($true,$true)));[void](Get-NativeLiteralState $xml 'Text')
++        [void](Set-NativeObjectPayload $objects $obj ([string]$request.value) 'Text' ($prefix+'-payload'))
++    }finally{Release-NativeCom $obj}
++    return $name
++}
++function Test-NativeLayoutInput($layout) {
++    if($null -eq $layout){throw 'Layout is null.'}
++    foreach($k in @('schema','widthMm','heightMm','objects')){if($null -eq $layout.PSObject.Properties[$k]){throw ('Missing layout.'+$k)}}
++    if([string]$layout.schema -cne 'lwb-native-layout-v1'){throw 'Unsupported layout schema.'}
++    foreach($prop in @($layout.PSObject.Properties)){if($prop.Name -cnotin @('schema','widthMm','heightMm','objects','printerName')){throw ('Unknown layout field: '+$prop.Name)}}
++    $width=Test-NativeNumber $layout.widthMm 5 1000 'widthMm';$height=Test-NativeNumber $layout.heightMm 5 1000 'heightMm'
++    if($layout.objects -isnot [array] -or $layout.objects.Count -lt 1 -or $layout.objects.Count -gt 200){throw 'objects must contain 1..200 entries.'}
++    $ids=New-Object 'System.Collections.Generic.HashSet[string]' ([StringComparer]::Ordinal)
++    $items=@()
++    foreach($o in @($layout.objects)){
++        foreach($k in @('id','type','value','xMm','yMm')){if($null -eq $o.PSObject.Properties[$k]){throw ('Missing object.'+$k)}}
++        $id=[string]$o.id;if($o.id -isnot [string] -or $id -cnotmatch '^[A-Z0-9_\-]{1,64}$' -or -not $ids.Add($id)){throw ('Invalid/duplicate object id: '+$id)}
++        $type=[string]$o.type;if($o.type -isnot [string] -or $type -cnotin @('text','code128','datamatrix')){throw ('Unsupported object type: '+$type)}
++        $allowed=@('id','type','value','xMm','yMm','rotationDeg')
++        if($type -eq 'text'){$allowed+=@('fontSizePt','fontName')}elseif($type -eq 'code128'){$allowed+=@('widthMm','heightMm')}else{$allowed+=@('sizeMm','widthMm')}
++        foreach($prop in @($o.PSObject.Properties)){if($prop.Name -cnotin $allowed){throw ($id+'.unknown field: '+$prop.Name)}}
++        if($o.value -isnot [string]){throw ($id+'.value must be a string.')}
++        if($o.value -match '[\x00-\x08\x0B\x0C\x0E-\x1F]' -or ($type -eq 'text' -and $o.value -match '[\r\n]')){throw ($id+'.value contains unsupported control characters or multiple lines.')}
++        $x=Test-NativeNumber $o.xMm 0 $width ($id+'.xMm');$y=Test-NativeNumber $o.yMm 0 $height ($id+'.yMm')
++        $rotation=0.0;if($null -ne $o.PSObject.Properties['rotationDeg']){$rotation=Test-NativeNumber $o.rotationDeg -360 360 ($id+'.rotationDeg')}
++        $item=[ordered]@{id=$id;type=$type;value=[string]$o.value;xMm=$x;yMm=$y;rotationDeg=$rotation}
++        if($type -eq 'text'){
++            if($null -eq $o.PSObject.Properties['fontSizePt']){throw ($id+'.fontSizePt required.')};$item.fontSizePt=Test-NativeNumber $o.fontSizePt 0.5 3600 ($id+'.fontSizePt')
++            if($null -ne $o.PSObject.Properties['fontName'] -and $o.fontName -isnot [string]){throw 'fontName must be a string.'}
++            $item.fontName=if($null -ne $o.PSObject.Properties['fontName']){[string]$o.fontName}else{'Arial'};if([string]::IsNullOrWhiteSpace($item.fontName)){throw ($id+'.fontName invalid.')}
++        }elseif($type -eq 'code128'){
++            if($null -eq $o.PSObject.Properties['widthMm'] -or $null -eq $o.PSObject.Properties['heightMm']){throw ($id+' requires widthMm and heightMm.')}
++            $item.widthMm=Test-NativeNumber $o.widthMm 1 500 ($id+'.widthMm');$item.heightMm=Test-NativeNumber $o.heightMm 1 100 ($id+'.heightMm');$item.humanReadable='none'
++        }else{
++            if($null -ne $o.PSObject.Properties['sizeMm'] -and $null -ne $o.PSObject.Properties['widthMm']){throw 'DataMatrix must specify sizeMm or widthMm, not both.'}
++            $size=$null;if($null -ne $o.PSObject.Properties['sizeMm']){$size=Test-NativeNumber $o.sizeMm 1 500 ($id+'.sizeMm')}elseif($null -ne $o.PSObject.Properties['widthMm']){$size=Test-NativeNumber $o.widthMm 1 500 ($id+'.widthMm')}else{throw ($id+'.sizeMm required.')}
++            $item.widthMm=$size;$item.heightMm=$size
++        }
++        $items += [pscustomobject]$item
++    }
++    $printerName=$null;if($null -ne $layout.PSObject.Properties['printerName']){if($layout.printerName -isnot [string]){throw 'printerName must be a string.'};$printerName=[string]$layout.printerName;if([string]::IsNullOrWhiteSpace($printerName)){$printerName=$null}}
++    return [pscustomobject]@{schema='lwb-native-layout-v1';widthMm=$width;heightMm=$height;printerName=$printerName;objects=$items}
++}
++function Set-NativePage($document,$plan) {
++    Write-Property $document 'MeasurementUnits' 3
++    if([int](Read-Property $document 'MeasurementUnits') -ne 3){throw 'MeasurementUnits did not read back as millimeters.'}
++    if($plan.printerName){Write-Property $document 'Printer' ([string]$plan.printerName);if([string](Read-Property $document 'Printer') -cne [string]$plan.printerName){throw 'Requested printer did not read back exactly.'}}
++    $page=Read-Property $document 'PageSetup'
++    try{
++        Write-Property $page 'LabelColumns' 1;Write-Property $page 'LabelRows' 1
++        foreach($k in @('MarginLeft','MarginRight','MarginTop','MarginBottom')){Write-Property $page $k ([single]0) @(3)}
++        Write-Property $page 'PaperWidth' ([single]$plan.widthMm) @(3);Write-Property $page 'PaperHeight' ([single]$plan.heightMm) @(3)
++        Write-Property $page 'LabelWidth' ([single]$plan.widthMm) @(3);Write-Property $page 'LabelHeight' ([single]$plan.heightMm) @(3)
++        $rw=[double](Read-Property $page 'LabelWidth' @(3));$rh=[double](Read-Property $page 'LabelHeight' @(3))
++        if([math]::Abs($rw-$plan.widthMm) -gt 0.05 -or [math]::Abs($rh-$plan.heightMm) -gt 0.05){throw ('Label size readback mismatch: '+$rw+' x '+$rh)}
++        $state=Get-NativePageState $document
++        foreach($k in @('PaperWidth','LabelWidth')){Assert-NativeNear $state[$k] $plan.widthMm 0.05 $k}
++        foreach($k in @('PaperHeight','LabelHeight')){Assert-NativeNear $state[$k] $plan.heightMm 0.05 $k}
++        foreach($k in @('MarginLeft','MarginRight','MarginTop','MarginBottom')){Assert-NativeNear $state[$k] 0 0.05 $k}
++        return $state
++    }finally{Release-NativeCom $page}
++}
++function Set-NativeGeometry($obj,$request) {
++    $targets=[ordered]@{}
++    if($request.type -eq 'text'){$targets['FontName']=[string]$request.fontName;$targets['FontSize']=[double]$request.fontSizePt}
++    elseif($request.type -eq 'code128'){$targets['Height']=[double]$request.heightMm}
++    $targets['RotationAngle']=[double]$request.rotationDeg;$targets['X']=[double]$request.xMm;$targets['Y']=[double]$request.yMm
++    foreach($key in $targets.Keys){Write-Property $obj $key $targets[$key]}
++    $result=[ordered]@{status='TARGET_GEOMETRY_WITHIN_TOLERANCE';properties=[ordered]@{}}
++    foreach($key in $targets.Keys){
++        $actual=Read-Property $obj $key;$target=$targets[$key]
++        if($key -eq 'FontName'){
++            if([string]$actual -cne [string]$target){throw 'FontName readback mismatch.'}
++            $result.properties[$key]=[ordered]@{requested=$target;actual=[string]$actual}
++        }else{
++            $tol=if($key -in @('X','Y')){0.20}elseif($key -eq 'Height'){0.10}else{0.05}
++            Assert-NativeNear ([double]$actual) ([double]$target) $tol ($request.id+'.'+$key)
++            $result.properties[$key]=[ordered]@{requested=$target;actual=[double]$actual;error=[math]::Abs([double]$actual-$target);tolerance=$tol}
++        }
++    }
++    return $result
++}
++function Invoke-NativeLayoutBuild($formats,$layout,[string]$runDir,[string]$baseDirectory) {
++    $plan=Test-NativeLayoutInput $layout
++    $report=[ordered]@{schema='lwb-native-layout-build-report-v1';status='STARTED';layoutSchema=$plan.schema;page=$null;objects=@();warnings=@('Barcode raster ink dimensions are layout approximations, not decoder-confirmed symbol bounds.','Code128 width uses the nearest trusted XDimension observed on the active BarTender printer; exact target width may be physically unreachable.','Barcode sizing is tied to the printer active during generation; changing printer can change XDimension quantization.');output=$null;outputSha256=$null;reopen='NOT_RUN'}
++    $document=$null;$objects=$null;$candidate=Join-Path $runDir 'candidate.unverified.btw';$accepted=Join-Path $runDir 'native-output.btw'
++    try{
++        'Create blank format'|Set-Content -LiteralPath (Join-Path $runDir 'LIVE_STAGE.txt') -Encoding UTF8
++        $document=Invoke-ComMethod $formats 'Add' @()
++        if($null -eq $document){throw 'Formats.Add returned null.'}
++        $report['coordinateSemantics']='NATIVE_REFERENCE_POINT_NOT_TOP_LEFT_CERTIFIED'
++        $report['productAcceptance']='NOT_RUN'
++        $report.page=Set-NativePage $document $plan
++        $objects=Read-Property $document 'Objects'
++        if([int](Read-Property $objects 'Count') -ne 0){throw 'New Formats.Add document is not blank; generation stopped rather than deleting unknown objects.'}
++        $dmComponent=$null
++        if(@($plan.objects|Where-Object{$_.type -eq 'datamatrix'}).Count -gt 0){$dmComponent=Resolve-NativeDataMatrixComponent $runDir;$report['dataMatrixComponent']=$dmComponent;$report['dataMatrixComponentSha256']=(Get-FileHash -LiteralPath $dmComponent -Algorithm SHA256).Hash;Copy-Item -LiteralPath $dmComponent -Destination (Join-Path $runDir 'selected-datamatrix.btc')}
++        $codeComponent=Join-Path $baseDirectory 'proven-code128.btc'
++        if(@($plan.objects|Where-Object{$_.type -eq 'code128'}).Count -gt 0){if(-not(Test-Path -LiteralPath $codeComponent -PathType Leaf)){throw 'Bundled proven-code128.btc is missing.'};$report['code128ComponentSha256']=(Get-FileHash -LiteralPath $codeComponent -Algorithm SHA256).Hash;if($report.code128ComponentSha256 -cne '0B1E2481BCDE6E5CF1D084599F822DC3027AB19215530B7776296B40A59899F2'){throw 'Code128 component hash mismatch.'}}
++        if(-not ('LabelWorkbench.RasterEvidence' -as [type])){Add-Type -Path (Join-Path $baseDirectory 'RasterEvidence.cs') -ErrorAction Stop}
++        $dpi=600
++        $physicalMap=@()
++        $i=0
++        foreach($request in @($plan.objects)){
++            ('Build '+$request.id)|Set-Content -LiteralPath (Join-Path $runDir 'LIVE_STAGE.txt') -Encoding UTF8
++            $i++;$prefix=Join-Path $runDir ('native-'+('{0:D3}' -f $i)+'-'+$request.id);$name=$null;$obj=$null
++            $entry=[ordered]@{id=$request.id;type=$request.type;physicalName=$null;payload='NOT_RUN';geometry=$null;sizing='NOT_APPLICABLE';persistence='NOT_RUN';errors=@()}
++            $report.objects+=,$entry
++            try{
++                if($request.type -eq 'text'){$name=Create-NativeText $document ([ref]$objects) $request $prefix}
++                elseif($request.type -eq 'code128'){$name=Insert-NativeComponent $document ([ref]$objects) $codeComponent 'BarCode-Code-128' $request $prefix}
++                else{$name=Insert-NativeComponent $document ([ref]$objects) $dmComponent 'BarCode-DataMatrix' $request $prefix}
++                $entry.physicalName=$name;$obj=Find-NativeObject $objects $name
++                $entry.payload='EMBEDDED_LITERAL_READBACK_OK'
++                if($request.type -eq 'code128'){
++                    $entry['humanReadable']=Hide-NativeCode128HumanReadable $obj ($prefix+'-human-readable')
++                    Write-Property $obj 'RotationAngle' ([double]0)
++                    Write-Property $obj 'Height' ([double]$request.heightMm)
++                    $entry.sizing=Fit-NativeXDimensionNearest $obj $request ($prefix+'-size') $dpi
++                    # XDimension may change object bounds, so position/height are re-applied after sizing.
++                    $entry.geometry=Set-NativeGeometry $obj $request
++                }elseif($request.type -eq 'datamatrix'){
++                    $entry['humanReadable']=Hide-NativeCode128HumanReadable $obj ($prefix+'-human-readable') 'BarCode-DataMatrix'
++                    Write-Property $obj 'RotationAngle' ([double]0)
++                    $entry.sizing=Fit-NativeXDimensionNearest $obj $request ($prefix+'-size') $dpi
++                    $entry.geometry=Set-NativeGeometry $obj $request
++                }else{$entry.geometry=Set-NativeGeometry $obj $request}
++                Write-Property $obj 'DoNotPrint' $false
++                if([bool](Read-Property $obj 'DoNotPrint')){throw 'DoNotPrint write was ignored.'}
++                $presaveText=[string](Invoke-ComMethod $obj 'GetXML' @($true,$true))
++                $presaveText|Set-Content -LiteralPath ($prefix+'-presave.xml') -Encoding UTF8
++                $presaveXml=Read-NativeXml $presaveText
++                $nativeRoot=if($request.type -eq 'text'){'Text'}elseif($request.type -eq 'code128'){'BarCode-Code-128'}else{'BarCode-DataMatrix'}
++                Assert-NativePayload $obj $presaveXml $nativeRoot $request.value
++                $entry['referencePointXml']=$presaveXml.DocumentElement.GetAttribute('ReferencePoint')
++                $entry['nativeType']=[int](Read-Property $obj 'Type')
++                if($entry.nativeType -ne $(if($request.type -eq 'text'){5}else{4})){throw 'Native Type changed after geometry.'}
++
++                $expectedState=[ordered]@{X=[double](Read-Property $obj 'X');Y=[double](Read-Property $obj 'Y');RotationAngle=[double](Read-Property $obj 'RotationAngle');DoNotPrint=[bool](Read-Property $obj 'DoNotPrint');FontSize=$null;FontName=$null;Height=$null;XDimension=$null;raster=$null}
++                if($request.type -eq 'text'){$expectedState.FontSize=[double](Read-Property $obj 'FontSize');$expectedState.FontName=[string](Read-Property $obj 'FontName')}
++                elseif($request.type -eq 'code128'){$expectedState.Height=[double](Read-Property $obj 'Height')}
++                if($request.type -ne 'text'){
++                    $finalXml=Read-NativeXml ([string](Invoke-ComMethod $obj 'GetXML' @($true,$true)));$expectedState.XDimension=Get-NativeXDimension $finalXml
++                    if((Get-NativeHumanReadableVisibility $finalXml) -cne 'None'){throw 'Caption reappeared before SaveAs.'}
++                    if($expectedState.XDimension.index -ne $entry.sizing.selected.xDimension.index){throw 'Geometry changed the selected XDimension.'}
++                    Assert-NativeNear $expectedState.XDimension.mils $entry.sizing.selected.xDimension.mils 0.02 'Final XDimension'
++                    $expectedState.raster=Export-NativeMeasurement $obj ($prefix+'-presave.bmp') $dpi
++                    Assert-NativeRaster $expectedState.raster
++                    $entry['presaveRaster']=$expectedState.raster
++                    if([math]::Abs($request.rotationDeg) -lt 0.001){Assert-NativeNear $expectedState.raster.inkWidthPx $entry.sizing.selected.raster.inkWidthPx 1 'Presave sizing width'}
++                }
++                $expectedState['xmlKey']=Get-NativeXmlKey $presaveXml
++                $physicalMap+=,[ordered]@{id=$request.id;name=$name;type=$request.type;request=$request;expected=$expectedState}
++            }catch{$entry.errors+=$_.Exception.Message;throw}
++            finally{Release-NativeCom $obj;Save-NativeJson $report (Join-Path $runDir 'native-build-report.json')}
++        }
++        Assert-NativeSourceIsolation $objects
++        Assert-NativeNameSet @($physicalMap|ForEach-Object{$_.name}) @(Get-NativeObjectNames $objects)
++        [void](Invoke-ComMethod $document 'SaveAs' @($candidate,$false))
++        Release-NativeCom $objects;$objects=$null;[void](Invoke-ComMethod $document 'Close' @(1));Release-NativeCom $document;$document=$null
++        if(-not(Test-Path -LiteralPath $candidate) -or (Get-Item -LiteralPath $candidate).Length -le 0){throw 'SaveAs produced no native-output.btw.'}
++        $savedHash=(Get-FileHash -LiteralPath $candidate -Algorithm SHA256).Hash
++        $document=Invoke-ComMethod $formats 'Open' @($candidate,$false,'');Write-Property $document 'MeasurementUnits' 3
++        $reopenState=Get-NativePageState $document
++        if($reopenState.printer -cne $report.page.printer){throw 'Reopen printer changed; XDimension quantization is not comparable.'}
++        foreach($k in @('PaperWidth','PaperHeight','LabelWidth','LabelHeight','MarginLeft','MarginRight','MarginTop','MarginBottom')){Assert-NativeNear $reopenState[$k] $report.page[$k] 0.05 ('Reopen '+$k)}
++        $report['reopenPage']=$reopenState
++        $objects=Read-Property $document 'Objects'
++        $reopenNames=@(Get-NativeObjectNames $objects);Assert-NativeNameSet @($physicalMap|ForEach-Object{$_.name}) $reopenNames
++        Assert-NativeSourceIsolation $objects
++        foreach($m in @($physicalMap)){
++            ('Verify/edit '+$m.id)|Set-Content -LiteralPath (Join-Path $runDir 'LIVE_STAGE.txt') -Encoding UTF8
++            $obj=Find-NativeObject $objects ([string]$m.name)
++            try{
++                $expectedType=if($m.type -eq 'text'){5}else{4}
++                if([int](Read-Property $obj 'Type') -ne $expectedType){throw ('Reopen native Type mismatch: '+$m.id)}
++                if([string](Read-Property $obj 'Value') -cne [string]$m.request.value){throw ('Reopen payload mismatch: '+$m.id)}
++                $root=if($m.type -eq 'text'){'Text'}elseif($m.type -eq 'code128'){'BarCode-Code-128'}else{'BarCode-DataMatrix'}
++                $xml=Read-NativeXml ([string](Invoke-ComMethod $obj 'GetXML' @($true,$true)));$st=Get-NativeLiteralState $xml $root;if($st.value -cne [string]$m.request.value){throw ('Reopen literal source mismatch: '+$m.id)}
++                $xml.OuterXml|Set-Content -LiteralPath (Join-Path $runDir ('reopen-'+$m.id+'.xml')) -Encoding UTF8
++                if((Get-NativeXmlKey $xml) -cne $m.expected.xmlKey){throw ('Reopen XML state mismatch: '+$m.id)}
++                if([bool](Read-Property $obj 'DoNotPrint')){throw ('Reopen object became DoNotPrint: '+$m.id)}
++                foreach($key in @('X','Y','RotationAngle')){$actual=[double](Read-Property $obj $key);Assert-NativeFinite $actual $key;if([math]::Abs($actual-[double]$m.expected[$key]) -gt 0.02){throw ('Reopen geometry mismatch '+$m.id+'.'+$key)}}
++                if($m.type -eq 'text'){
++                    Assert-NativeNear ([double](Read-Property $obj 'FontSize')) ([double]$m.expected['FontSize']) 0.02 ('Reopen FontSize '+$m.id)
++                    if([string](Read-Property $obj 'FontName') -cne [string]$m.expected['FontName']){throw ('Reopen FontName mismatch: '+$m.id)}
++                }elseif($m.type -eq 'code128'){
++                    Assert-NativeNear ([double](Read-Property $obj 'Height')) ([double]$m.expected['Height']) 0.02 ('Reopen Height '+$m.id)
++                    if((Get-NativeHumanReadableVisibility $xml) -cne 'None'){throw ('Reopen HumanReadable mismatch: '+$m.id)}
++                }
++                if($m.type -ne 'text'){
++                    $x=Get-NativeXDimension $xml;$ex=$m.expected['XDimension']
++                    if($x.index -ne $ex.index -or [math]::Abs($x.mils-$ex.mils) -gt 0.02 -or [math]::Abs($x.millimeters-$ex.millimeters) -gt 0.011){throw ('Reopen XDimension mismatch: '+$m.id)}
++                    $rr=Export-NativeMeasurement $obj (Join-Path $runDir ('reopen-'+$m.id+'.bmp')) $dpi
++                    Assert-NativeRaster $rr
++                    if($rr.physicalMmTrust -cne $m.expected['raster'].physicalMmTrust -or [math]::Abs($rr.inkWidthPx-$m.expected['raster'].inkWidthPx) -gt 1 -or [math]::Abs($rr.inkHeightPx-$m.expected['raster'].inkHeightPx) -gt 1){throw ('Reopen raster repeatability mismatch: '+$m.id)}
++                }
++                $e=@($report.objects|Where-Object{$_.id -ceq $m.id})[0];$e.persistence='SAVE_CLOSE_REOPEN_READBACK_OK'
++            }finally{Release-NativeCom $obj}
++        }
++        foreach($m in @($physicalMap)){
++            ('Verify/edit '+$m.id)|Set-Content -LiteralPath (Join-Path $runDir 'LIVE_STAGE.txt') -Encoding UTF8
++            $obj=Find-NativeObject $objects $m.name
++            $root=if($m.type -eq 'text'){'Text'}elseif($m.type -eq 'code128'){'BarCode-Code-128'}else{'BarCode-DataMatrix'}
++            try{
++                [void](Set-NativeObjectPayload $objects $obj ('NATIVE-EDIT-'+$m.id) $root (Join-Path $runDir ('edit-'+$m.id)))
++            }finally{
++                try{[void](Set-NativeObjectPayload $objects $obj ([string]$m.request.value) $root (Join-Path $runDir ('restore-'+$m.id)));if((Get-NativeXmlKey (Read-NativeXml ([string](Invoke-ComMethod $obj 'GetXML' @($true,$true))))) -cne $m.expected.xmlKey){throw 'Post-edit restored XML differs from saved state.'}}finally{Release-NativeCom $obj}
++            }
++            $e=@($report.objects|Where-Object{$_.id -ceq $m.id})[0];$e['reopenEditable']='SECOND_PAYLOAD_AND_PEER_ISOLATION_OK'
++        }
++        Release-NativeCom $objects;$objects=$null
++        [void](Invoke-ComMethod $document 'Close' @(1));Release-NativeCom $objects;$objects=$null;Release-NativeCom $document;$document=$null
++        if((Get-FileHash -LiteralPath $candidate -Algorithm SHA256).Hash -cne $savedHash){throw 'Output changed during read-only reopen verification.'}
++        Move-Item -LiteralPath $candidate -Destination $accepted
++        $report.status='NATIVE_LAYOUT_CANDIDATE_REOPEN_OK';$report.reopen='PASS';$report.output=$accepted;$report.outputSha256=$savedHash
++        Save-NativeJson $report (Join-Path $runDir 'native-build-report.json')
++        return $report
++    }catch{
++        $report.status='FAILED_OR_BLOCKED';$report.output=$null;$report.outputSha256=$null;$report['error']=$_.Exception.ToString();Save-NativeJson $report (Join-Path $runDir 'native-build-report.json');throw
++    }finally{
++        if($null -ne $document){try{[void](Invoke-ComMethod $document 'Close' @(1))}catch{}}
++        Release-NativeCom $objects;Release-NativeCom $document
++        if($report.status -eq 'FAILED_OR_BLOCKED'){
++            foreach($f in @($candidate,$accepted)){
++                if(Test-Path -LiteralPath $f){try{Move-Item -LiteralPath $f -Destination ($f+'.FAILED_UNVERIFIED') -Force}catch{$report.warnings+=('Quarantine failed: '+$_.Exception.Message)}}
++            }
++            Save-NativeJson $report (Join-Path $runDir 'native-build-report.json')
++        }
++    }
++}
++Export-ModuleMember -Function Test-NativeLayoutInput,Invoke-NativeLayoutBuild
+--- V3/program/SELF_CHECK_NATIVE.ps1
++++ FINAL/program/SELF_CHECK_NATIVE.ps1
+@@ -1,34 +1,37 @@
+-$ErrorActionPreference='Stop'
+-Set-StrictMode -Version 2
+-$root=$PSScriptRoot
+-$runtime=@('Build-NativeLayout.ps1','NativeLayoutEngine.psm1','Com.psm1','Watchdog.ps1','SELF_CHECK_NATIVE.ps1','Test-NativeLayoutEngine.ps1','Test-NativePersistence.ps1')
+-foreach($name in $runtime){$path=Join-Path $root $name;if(-not(Test-Path -LiteralPath $path -PathType Leaf)){throw ('Missing native runtime file: '+$name)};$tokens=$null;$errors=$null;[void][Management.Automation.Language.Parser]::ParseFile($path,[ref]$tokens,[ref]$errors);if(@($errors).Count){throw (($errors|ForEach-Object{$name+': '+$_.Message}) -join ' | ')}}
+-Write-Host ('PASS: parsed '+$runtime.Count+' native runtime PowerShell files.') -ForegroundColor Green
+-$sample=Join-Path $root 'native-layout.sample.json';$multi=Join-Path $root 'native-layout.multi.sample.json';foreach($j in @($sample,$multi)){if(-not(Test-Path -LiteralPath $j)){throw ('Missing native layout sample: '+$j)};[void](Get-Content -LiteralPath $j -Raw -Encoding UTF8|ConvertFrom-Json)}
+-Write-Host 'PASS: native layout sample JSON files parse.' -ForegroundColor Green
+-if(-not('LabelWorkbench.ComBridge' -as [type])){Add-Type -Path (Join-Path $root 'ComBridge.cs') -ErrorAction Stop}
+-Write-Host 'PASS: ComBridge compiles.' -ForegroundColor Green
+-if(-not('LabelWorkbench.RasterEvidence' -as [type])){Add-Type -Path (Join-Path $root 'RasterEvidence.cs') -ErrorAction Stop}
+-Write-Host 'PASS: RasterEvidence compiles.' -ForegroundColor Green
+-$evidence=Join-Path (Split-Path -Parent $root) 'evidence\installed-api.json';$api=Get-Content -LiteralPath $evidence -Raw -Encoding UTF8|ConvertFrom-Json
+-function Require([string]$type,[string]$name,[string]$invoke,[int[]]$params,[int]$returnType){$m=@($api.members|Where-Object{$_.TypeName -ceq $type -and $_.Name -ceq $name -and $_.InvokeKind -ceq $invoke});if($m.Count -ne 1){throw ('Missing/ambiguous API: '+$type+'.'+$name+' '+$invoke)};if($m[0].ReturnVariantType -ne $returnType){throw ('API return signature changed: '+$type+'.'+$name)};if((@($m[0].ParameterVariantTypes)-join ',') -cne (@($params)-join ',')){throw ('API parameter signature changed: '+$type+'.'+$name)}}
+-Require 'IBtFormats' 'Add' 'INVOKE_FUNC' @() 26
+-Require 'IBtDesignObjects' 'Create' 'INVOKE_FUNC' @(29) 26
+-Require 'IBtFormat' 'InsertComponent' 'INVOKE_FUNC' @(8,5,5) 11
+-Require 'IBtDesignObjects' 'ExportDataSourceValuesToXML' 'INVOKE_FUNC' @() 8
+-Require 'IBtDesignObjects' 'ImportDataSourceValuesFromXML' 'INVOKE_FUNC' @(8) 11
+-Require 'IBtDesignObject' 'GetXML' 'INVOKE_FUNC' @(11,11) 8
+-Require 'IBtDesignObject' 'SetXML' 'INVOKE_FUNC' @(8) 24
+-Require 'IBtDesignObject' 'ExportToFile' 'INVOKE_FUNC' @(8,8,29,29,29) 24
+-Write-Host 'PASS: packaged real-machine TypeLib evidence covers blank format, text creation, component insertion, XML payload and raster APIs.' -ForegroundColor Green
+-$proven=Join-Path $root 'proven-code128.btc';$sha='0B1E2481BCDE6E5CF1D084599F822DC3027AB19215530B7776296B40A59899F2';if((Get-FileHash -LiteralPath $proven -Algorithm SHA256).Hash -cne $sha){throw 'proven-code128.btc hash mismatch.'}
+-Write-Host 'PASS: proven Code128 component hash matches real Windows evidence.' -ForegroundColor Green
+-Import-Module (Join-Path $root 'NativeLayoutEngine.psm1') -Force
+-$layout=Get-Content -LiteralPath $sample -Raw -Encoding UTF8|ConvertFrom-Json;$plan=Test-NativeLayoutInput $layout
+-if($plan.objects.Count -ne 3){throw 'Native layout sample contract regression.'}
+-$multiPlan=Test-NativeLayoutInput (Get-Content -LiteralPath $multi -Raw -Encoding UTF8|ConvertFrom-Json)
+-if($multiPlan.objects.Count -ne 6){throw 'Multi-object sample contract regression.'}
+-& (Join-Path $root 'Test-NativeLayoutEngine.ps1')
+-& (Join-Path $root 'Test-NativePersistence.ps1')
+-Remove-Module NativeLayoutEngine -Force -ErrorAction SilentlyContinue
+-Write-Host 'SELF_CHECK_NATIVE PASS: parser/input regression/C# helpers/14 native multi-object mocks passed; BarTender has not been opened yet.' -ForegroundColor Green
++param([string]$EvidenceDirectory='')
++$ErrorActionPreference='Stop'
++Set-StrictMode -Version 2
++$root=$PSScriptRoot
++$runtime=@('Build-NativeLayout.ps1','NativeLayoutEngine.psm1','Com.psm1','Watchdog.ps1','SELF_CHECK_NATIVE.ps1','Test-NativeLayoutEngine.ps1','Test-NativePersistence.ps1')
++foreach($name in $runtime){$path=Join-Path $root $name;if(-not(Test-Path -LiteralPath $path -PathType Leaf)){throw ('Missing native runtime file: '+$name)};$tokens=$null;$errors=$null;[void][Management.Automation.Language.Parser]::ParseFile($path,[ref]$tokens,[ref]$errors);if(@($errors).Count){throw (($errors|ForEach-Object{$name+': '+$_.Message}) -join ' | ')}}
++Write-Host ('PASS: parsed '+$runtime.Count+' native runtime PowerShell files.') -ForegroundColor Green
++$sample=Join-Path $root 'native-layout.sample.json';$multi=Join-Path $root 'native-layout.multi.sample.json';foreach($j in @($sample,$multi)){if(-not(Test-Path -LiteralPath $j)){throw ('Missing native layout sample: '+$j)};[void](Get-Content -LiteralPath $j -Raw -Encoding UTF8|ConvertFrom-Json)}
++Write-Host 'PASS: native layout sample JSON files parse.' -ForegroundColor Green
++if(-not('LabelWorkbench.ComBridge' -as [type])){Add-Type -Path (Join-Path $root 'ComBridge.cs') -ErrorAction Stop}
++Write-Host 'PASS: ComBridge compiles.' -ForegroundColor Green
++if(-not('LabelWorkbench.RasterEvidence' -as [type])){Add-Type -Path (Join-Path $root 'RasterEvidence.cs') -ErrorAction Stop}
++Write-Host 'PASS: RasterEvidence compiles.' -ForegroundColor Green
++$evidence=Join-Path (Split-Path -Parent $root) 'evidence\installed-api.json';$api=Get-Content -LiteralPath $evidence -Raw -Encoding UTF8|ConvertFrom-Json
++function Require([string]$type,[string]$name,[string]$invoke,[int[]]$params,[int]$returnType){$m=@($api.members|Where-Object{$_.TypeName -ceq $type -and $_.Name -ceq $name -and $_.InvokeKind -ceq $invoke});if($m.Count -ne 1){throw ('Missing/ambiguous API: '+$type+'.'+$name+' '+$invoke)};if($m[0].ReturnVariantType -ne $returnType){throw ('API return signature changed: '+$type+'.'+$name)};if((@($m[0].ParameterVariantTypes)-join ',') -cne (@($params)-join ',')){throw ('API parameter signature changed: '+$type+'.'+$name)}}
++Require 'IBtFormats' 'Add' 'INVOKE_FUNC' @() 26
++Require 'IBtDesignObjects' 'Create' 'INVOKE_FUNC' @(29) 26
++Require 'IBtFormat' 'InsertComponent' 'INVOKE_FUNC' @(8,5,5) 11
++Require 'IBtDesignObjects' 'ExportDataSourceValuesToXML' 'INVOKE_FUNC' @() 8
++Require 'IBtDesignObjects' 'ImportDataSourceValuesFromXML' 'INVOKE_FUNC' @(8) 11
++Require 'IBtDesignObject' 'GetXML' 'INVOKE_FUNC' @(11,11) 8
++Require 'IBtDesignObject' 'SetXML' 'INVOKE_FUNC' @(8) 24
++Require 'IBtDesignObject' 'ExportToFile' 'INVOKE_FUNC' @(8,8,29,29,29) 24
++Write-Host 'PASS: packaged real-machine TypeLib evidence covers blank format, text creation, component insertion, XML payload and raster APIs.' -ForegroundColor Green
++$proven=Join-Path $root 'proven-code128.btc';$sha='0B1E2481BCDE6E5CF1D084599F822DC3027AB19215530B7776296B40A59899F2';if((Get-FileHash -LiteralPath $proven -Algorithm SHA256).Hash -cne $sha){throw 'proven-code128.btc hash mismatch.'}
++Write-Host 'PASS: proven Code128 component hash matches real Windows evidence.' -ForegroundColor Green
++Import-Module (Join-Path $root 'NativeLayoutEngine.psm1') -Force
++$layout=Get-Content -LiteralPath $sample -Raw -Encoding UTF8|ConvertFrom-Json;$plan=Test-NativeLayoutInput $layout
++if($plan.objects.Count -ne 3){throw 'Native layout sample contract regression.'}
++$multiPlan=Test-NativeLayoutInput (Get-Content -LiteralPath $multi -Raw -Encoding UTF8|ConvertFrom-Json)
++if($multiPlan.objects.Count -ne 6){throw 'Multi-object sample contract regression.'}
++& (Join-Path $root 'Test-NativeLayoutEngine.ps1')
++$mockResultPath=''
++if($EvidenceDirectory){$mockResultPath=Join-Path $EvidenceDirectory 'native-mock-results.json'}
++& (Join-Path $root 'Test-NativePersistence.ps1') -ResultPath $mockResultPath
++Remove-Module NativeLayoutEngine -Force -ErrorAction SilentlyContinue
++Write-Host 'SELF_CHECK_NATIVE PASS: parser/input regression/C# helpers/14 native multi-object mocks passed; BarTender has not been opened yet.' -ForegroundColor Green
+--- V3/program/Test-NativePersistence.ps1
++++ FINAL/program/Test-NativePersistence.ps1
+@@ -1,49 +1,109 @@
+-$ErrorActionPreference='Stop'
+-Set-StrictMode -Version 2
+-Import-Module (Join-Path $PSScriptRoot 'NativeLayoutEngine.psm1') -Force
+-if(-not('NativeReviewFixture.Formats' -as [type])){
+- $xmlAssembly=[System.Xml.XmlDocument].Assembly.Location
+- if([string]::IsNullOrWhiteSpace($xmlAssembly) -or -not(Test-Path -LiteralPath $xmlAssembly)){throw 'System.Xml assembly location unavailable; Windows PowerShell/.NET Framework preflight cannot compile NativeReviewFixtures.cs.'}
+- Add-Type -Path (Join-Path $PSScriptRoot 'NativeReviewFixtures.cs') -ReferencedAssemblies @($xmlAssembly) -ErrorAction Stop
+-}
+-$m=Get-Module NativeLayoutEngine
+-& $m {
+- param($base)
+- # Only emulate the indexed PageSetup properties; all collection/object transport uses ComBridge.
+- function script:Read-Property($target,[string]$name,[object[]]$arguments=@()){
+-  if($target -is [NativeReviewFixture.Page]){return $target.Values[$name]}
+-  return ,([LabelWorkbench.ComBridge]::Get($target,$name,$arguments))
+- }
+- function script:Write-Property($target,[string]$name,$value,[object[]]$indices=@()){
+-  if($target -is [NativeReviewFixture.Page]){$target.Values[$name]=[double]$value;return}
+-  [LabelWorkbench.ComBridge]::Set($target,$name,([object[]]@($indices+@($value))))
+- }
+- # Override the module resolver in module script scope so the regression never touches the Windows registry or real BarTender component folders.
+- function script:Resolve-NativeDataMatrixComponent {param([string]$runDir) $p=Join-Path $runDir 'Data Matrix.btc';Set-Content -LiteralPath $p -Value 'MOCK ONLY';return $p}
+- if(-not(Get-Command Read-Property -CommandType Function -ErrorAction SilentlyContinue)){throw 'NativeLayoutEngine mock bridge Read-Property is not visible in module script scope.'}
+- if(-not(Get-Command Write-Property -CommandType Function -ErrorAction SilentlyContinue)){throw 'NativeLayoutEngine mock bridge Write-Property is not visible in module script scope.'}
+- if(-not(Get-Command Invoke-ComMethod -CommandType Function -ErrorAction SilentlyContinue)){throw 'NativeLayoutEngine mock bridge Invoke-ComMethod is not visible in module script scope.'}
+- foreach($fault in @('none','wrong-create','duplicate-name','duplicate-source','partial-insert','peer-payload','noop-index','bad-dpi','reopen-type','reopen-payload','reopen-nan','reopen-printer','reopen-margin','reopen-dpi')){
+-  $dir=Join-Path ([IO.Path]::GetTempPath()) ('native-review-'+[guid]::NewGuid().ToString('N'));[void][IO.Directory]::CreateDirectory($dir)
+-  try{
+-   $layout=Get-Content -LiteralPath (Join-Path $base 'native-layout.multi.sample.json') -Raw -Encoding UTF8|ConvertFrom-Json
+-   $formats=New-Object NativeReviewFixture.Formats;$formats.Fault=$fault
+-   $failed=$false;$result=$null
+-   try{$result=Invoke-NativeLayoutBuild $formats $layout $dir $base}catch{$failed=$true}
+-   if($fault -eq 'none'){
+-    if($failed){Get-Content -LiteralPath (Join-Path $dir 'native-build-report.json') -Raw|Write-Host;throw 'Healthy six-object mock failed.'}
+-    if($result.objects.Count -ne 6 -or $result.reopen -cne 'PASS' -or -not(Test-Path -LiteralPath $result.output)){throw 'Healthy mock output missing.'}
+-    if([object]::ReferenceEquals($formats.Added,$formats.Reopened)){throw 'Reopen must be a new instance.'}
+-    if(@($result.objects|Where-Object{$_.reopenEditable -cne 'SECOND_PAYLOAD_AND_PEER_ISOLATION_OK'}).Count){throw 'Editability/isolation missing.'}
+-   }else{
+-    if(-not $failed){throw ('Injected fault accepted: '+$fault)}
+-    if(Test-Path -LiteralPath (Join-Path $dir 'native-output.btw')){throw ('Failed build published output: '+$fault)}
+-    if(Test-Path -LiteralPath (Join-Path $dir 'candidate.unverified.btw')){throw ('Failed build left an unquarantined candidate: '+$fault)}
+-    $r=Get-Content -LiteralPath (Join-Path $dir 'native-build-report.json') -Raw -Encoding UTF8|ConvertFrom-Json
+-    if($r.status -cne 'FAILED_OR_BLOCKED' -or $null -ne $r.output){throw 'Failure report not closed.'}
+-   }
+-   if($null -ne $formats.Added -and $formats.Added.CloseCalls -lt 1){throw 'New document not closed.'}
+-  }finally{Remove-Item -LiteralPath $dir -Recurse -Force}
+- }
+- 'PASS: 14 native multi-object mock scenarios; no real BarTender execution.'
+-} $PSScriptRoot
++param([string]$ResultPath='')
++$ErrorActionPreference='Stop'
++Set-StrictMode -Version 2
++Import-Module (Join-Path $PSScriptRoot 'NativeLayoutEngine.psm1') -Force
++if(-not('NativeReviewFixture.Formats' -as [type])){
++ $xmlAssembly=[System.Xml.XmlDocument].Assembly.Location
++ if([string]::IsNullOrWhiteSpace($xmlAssembly) -or -not(Test-Path -LiteralPath $xmlAssembly)){throw 'System.Xml assembly location unavailable; Windows PowerShell/.NET Framework preflight cannot compile NativeReviewFixtures.cs.'}
++ Add-Type -Path (Join-Path $PSScriptRoot 'NativeReviewFixtures.cs') -ReferencedAssemblies @($xmlAssembly) -ErrorAction Stop
++}
++$m=Get-Module NativeLayoutEngine -ErrorAction Stop
++$scenarioResults=New-Object 'System.Collections.Generic.List[object]'
++$suiteStatus='STARTED';$suiteError=$null
++try {
++& $m {
++ param($base,$scenarioResults)
++ # Exercise production wrappers BEFORE installing the PageSetup adapter.
++ foreach($commandName in @('Read-Property','Write-Property','Invoke-ComMethod')){
++  $command=Get-Command $commandName -CommandType Function -ErrorAction Stop
++  if($command.ModuleName -cne 'NativeLayoutEngine'){throw ('Bridge command belongs to another session state: '+$commandName)}
++ }
++ $probe=New-Object NativeReviewFixture.Obj
++ Write-Property $probe 'Name' 'scope-probe'
++ if([string](Read-Property $probe 'Name') -cne 'scope-probe'){throw 'Production bridge property probe failed.'}
++ $probeXml=[string](Invoke-ComMethod $probe 'GetXML' @($true,$true))
++ if(([xml]$probeXml).DocumentElement.GetAttribute('Name') -cne 'scope-probe'){throw 'Production bridge method probe failed.'}
++ $collectionProbe=New-Object NativeReviewFixture.Objects
++ $collectionResult=Invoke-ComMethod $collectionProbe 'Create' @([int]5)
++ if($null -eq $collectionResult -or [int](Read-Property $collectionResult 'Type') -ne 5){throw 'Production bridge object return failed.'}
++ $documentProbe=New-Object NativeReviewFixture.Document
++ $returnedCollection=Read-Property $documentProbe 'Objects'
++ if(-not [object]::ReferenceEquals($returnedCollection,$documentProbe.Objects)){throw 'Production bridge flattened enumerable collection.'}
++ Write-Host 'PASS: native module ownership/property/method/object/collection bridge probes.'
++
++ # Only emulate the indexed PageSetup properties; all collection/object transport uses ComBridge.
++ function script:Read-Property($target,[string]$name,[object[]]$arguments=@()){
++  if($target -is [NativeReviewFixture.Page]){return $target.Values[$name]}
++  return ,([LabelWorkbench.ComBridge]::Get($target,$name,$arguments))
++ }
++ function script:Write-Property($target,[string]$name,$value,[object[]]$indices=@()){
++  if($target -is [NativeReviewFixture.Page]){$target.Values[$name]=[double]$value;return}
++  [LabelWorkbench.ComBridge]::Set($target,$name,([object[]]@($indices+@($value))))
++ }
++ # Override the module resolver in module script scope so the regression never touches the Windows registry or real BarTender component folders.
++ function script:Resolve-NativeDataMatrixComponent {param([string]$runDir) $p=Join-Path $runDir 'Data Matrix.btc';Set-Content -LiteralPath $p -Value 'MOCK ONLY';return $p}
++ if(-not(Get-Command Read-Property -CommandType Function -ErrorAction SilentlyContinue)){throw 'NativeLayoutEngine mock bridge Read-Property is not visible in module script scope.'}
++ if(-not(Get-Command Write-Property -CommandType Function -ErrorAction SilentlyContinue)){throw 'NativeLayoutEngine mock bridge Write-Property is not visible in module script scope.'}
++ if(-not(Get-Command Invoke-ComMethod -CommandType Function -ErrorAction SilentlyContinue)){throw 'NativeLayoutEngine mock bridge Invoke-ComMethod is not visible in module script scope.'}
++ # A negative test must fail for its injected defect, not merely any exception.
++ $expectedErrors=@{
++  'wrong-create'='Create(5) produced unexpected Type'
++  'duplicate-name'='Empty, non-flat or duplicate native object name.'
++  'duplicate-source'='Different objects share an EmbeddedDataSource ID.'
++  'partial-insert'='Partial insertion fault'
++  'peer-payload'='Payload import modified another object.'
++  'noop-index'='XDimension write/raster response not proven'
++  'bad-dpi'='Baseline raster DPI is untrusted.'
++  'reopen-type'='Reopen native Type mismatch:'
++  'reopen-payload'='Reopen payload mismatch:'
++  'reopen-nan'='Reopen XML state mismatch:'
++  'reopen-printer'='Reopen printer changed;'
++  'reopen-margin'='Reopen MarginLeft mismatch:'
++  'reopen-dpi'='Raster DPI is untrusted.'
++ }
++ foreach($fault in @('none','wrong-create','duplicate-name','duplicate-source','partial-insert','peer-payload','noop-index','bad-dpi','reopen-type','reopen-payload','reopen-nan','reopen-printer','reopen-margin','reopen-dpi')){
++  $dir=Join-Path ([IO.Path]::GetTempPath()) ('native-review-'+[guid]::NewGuid().ToString('N'));[void][IO.Directory]::CreateDirectory($dir)
++  $case=[ordered]@{scenario=$fault;status='STARTED';actualError=$null;expectedError=$null}
++  [void]$scenarioResults.Add($case)
++  try{
++   $layout=Get-Content -LiteralPath (Join-Path $base 'native-layout.multi.sample.json') -Raw -Encoding UTF8|ConvertFrom-Json
++   $formats=New-Object NativeReviewFixture.Formats;$formats.Fault=$fault
++   $failed=$false;$result=$null
++   try{$result=Invoke-NativeLayoutBuild $formats $layout $dir $base}catch{$failed=$true;$case.actualError=$_.Exception.ToString()}
++   if($fault -eq 'none'){
++    if($failed){throw ('Healthy six-object mock failed: '+$case.actualError)}
++    if($result.objects.Count -ne 6 -or $result.reopen -cne 'PASS' -or -not(Test-Path -LiteralPath $result.output)){throw 'Healthy mock output missing.'}
++    if([object]::ReferenceEquals($formats.Added,$formats.Reopened)){throw 'Reopen must be a new instance.'}
++    if(@($result.objects|Where-Object{$_.reopenEditable -cne 'SECOND_PAYLOAD_AND_PEER_ISOLATION_OK'}).Count){throw 'Editability/isolation missing.'}
++   }else{
++    if(-not $failed){throw ('Injected fault accepted: '+$fault)}
++    $case.expectedError=$expectedErrors[$fault]
++    if($case.actualError -notmatch [regex]::Escape($case.expectedError)){throw ('Unexpected failure for '+$fault+': '+$case.actualError)}
++    if($null -eq $formats.Added){throw ('Fault did not reach document creation: '+$fault)}
++    if($fault -like 'reopen-*' -and $null -eq $formats.Reopened){throw ('Fault did not reach reopen: '+$fault)}
++    if(Test-Path -LiteralPath (Join-Path $dir 'native-output.btw')){throw ('Failed build published output: '+$fault)}
++    if(Test-Path -LiteralPath (Join-Path $dir 'candidate.unverified.btw')){throw ('Failed build left an unquarantined candidate: '+$fault)}
++    $r=Get-Content -LiteralPath (Join-Path $dir 'native-build-report.json') -Raw -Encoding UTF8|ConvertFrom-Json
++    if($r.status -cne 'FAILED_OR_BLOCKED' -or $null -ne $r.output){throw 'Failure report not closed.'}
++   }
++   if($null -ne $formats.Added -and $formats.Added.CloseCalls -lt 1){throw 'New document not closed.'}
++   if($null -ne $formats.Reopened -and $formats.Reopened.CloseCalls -lt 1){throw 'Reopened document not closed.'}
++   $case.status='PASS'
++   Write-Host ('PASS: native mock '+$fault)
++  }catch{$case.status='FAIL';$case['testError']=$_.Exception.ToString();throw}
++  finally{
++   [void][NativeReviewFixture.Document]::Saved.Remove((Join-Path $dir 'candidate.unverified.btw'))
++   Remove-Item -LiteralPath $dir -Recurse -Force
++  }
++ }
++ 'PASS: 14 native multi-object mock scenarios; no real BarTender execution.'
++} $PSScriptRoot $scenarioResults
++$suiteStatus='PASS'
++}catch{$suiteStatus='FAIL';$suiteError=$_.Exception.ToString();throw}
++finally{
++ # Never leave mock script-scope overrides available to a production invocation.
++ Remove-Module -ModuleInfo $m -Force -ErrorAction SilentlyContinue
++ if($ResultPath){
++  [ordered]@{schema='native-mock-results-v1';status=$suiteStatus;error=$suiteError;expectedScenarios=14;completed=@($scenarioResults.ToArray()|Where-Object{$_.status -eq 'PASS'}).Count;scenarios=@($scenarioResults.ToArray())}|ConvertTo-Json -Depth 8|Set-Content -LiteralPath $ResultPath -Encoding UTF8
++ }
++}
+--- V3/program/Build-NativeLayout.ps1
++++ FINAL/program/Build-NativeLayout.ps1
+@@ -25,7 +25,7 @@
+     }
+     if([string]::IsNullOrWhiteSpace($LayoutPath) -or -not(Test-Path -LiteralPath $LayoutPath -PathType Leaf)){throw 'No valid layout JSON selected.'}
+     Copy-Item -LiteralPath $LayoutPath -Destination (Join-Path $runDir 'input-layout.json')
+-    & (Join-Path $BaseDirectory 'SELF_CHECK_NATIVE.ps1') *> (Join-Path $runDir 'PREFLIGHT_LOG.txt')
++    & (Join-Path $BaseDirectory 'SELF_CHECK_NATIVE.ps1') -EvidenceDirectory $runDir *> (Join-Path $runDir 'PREFLIGHT_LOG.txt')
+     Import-Module (Join-Path $BaseDirectory 'Com.psm1') -Force
+     Import-Module (Join-Path $BaseDirectory 'NativeLayoutEngine.psm1') -Force
+     $layout=Get-Content -LiteralPath (Join-Path $runDir 'input-layout.json') -Raw -Encoding UTF8|ConvertFrom-Json
+@@ -33,18 +33,18 @@
+     $runtime['objectCount']=$plan.objects.Count
+     $existing=@(Get-Process -Name BarTend -ErrorAction SilentlyContinue|Select-Object -ExpandProperty Id)
+     $app=New-Object -ComObject BarTender.Application
+-    $pidBt=[int](Read-Property $app 'ProcessID');$bt=Get-Process -Id $pidBt -ErrorAction Stop
++    $pidBt=[int](Com\Read-Property $app 'ProcessID');$bt=Get-Process -Id $pidBt -ErrorAction Stop
+     if($pidBt -in $existing -or $bt.ProcessName -ine 'BarTend'){throw 'BarTender process is pre-existing or unidentified; refusing to modify or Quit it.'}
+     $ownsBt=$true
+-    foreach($key in @('FullVersion','Version','Edition','BuildNumber')){try{$runtime.barTender[$key]=[string](Read-Property $app $key)}catch{$runtime.barTender[$key]='UNAVAILABLE'}}
++    foreach($key in @('FullVersion','Version','Edition','BuildNumber')){try{$runtime.barTender[$key]=[string](Com\Read-Property $app $key)}catch{$runtime.barTender[$key]='UNAVAILABLE'}}
+     $runtime.barTender['ProcessID']=$pidBt
+     'COM process acquired'|Set-Content -LiteralPath (Join-Path $runDir 'LIVE_STAGE.txt') -Encoding UTF8
+     $psExe=Join-Path $env:SystemRoot 'System32/WindowsPowerShell/v1.0/powershell.exe'
+     $wdArgs='-NoProfile -ExecutionPolicy Bypass -File "'+(Join-Path $BaseDirectory 'Watchdog.ps1')+'" -MainPid '+$PID+' -BarTenderPid '+$pidBt+' -RunDir "'+$runDir+'" -BaseDirectory "'+$BaseDirectory+'" -StallSeconds 120 -MaxSeconds 600 -BarTenderStartTicks '+[string]$bt.StartTime.ToUniversalTime().Ticks+' -MainStartTicks '+[string](Get-Process -Id $PID).StartTime.ToUniversalTime().Ticks+' -ReturnZipName NATIVE_BUILD_RESULT.zip'
+     $watchdog=Start-Process -FilePath $psExe -ArgumentList $wdArgs -PassThru -WindowStyle Hidden -ErrorAction Stop
+     $runtime['watchdog']='120-second stall / 600-second owned-run maximum; activation itself precedes watchdog'
+-    Write-Property $app 'Visible' $false
+-    $formats=Read-Property $app 'Formats'
++    Com\Write-Property $app 'Visible' $false
++    $formats=Com\Read-Property $app 'Formats'
+     $report=Invoke-NativeLayoutBuild $formats $layout $runDir $BaseDirectory
+     $exitCode=0
+ }catch{
+@@ -53,7 +53,7 @@
+ }finally{
+     try{Release-RunnerCom $formats}catch{$runtime.cleanupErrors+=$_.Exception.Message;$exitCode=1}
+     if($null -ne $app){
+-        if($ownsBt){try{[void](Invoke-ComMethod $app 'Quit' @(1))}catch{$runtime.cleanupErrors+=$_.Exception.Message;$exitCode=1}}
++        if($ownsBt){try{[void](Com\Invoke-ComMethod $app 'Quit' @(1))}catch{$runtime.cleanupErrors+=$_.Exception.Message;$exitCode=1}}
+         try{Release-RunnerCom $app}catch{$runtime.cleanupErrors+=$_.Exception.Message;$exitCode=1}
+     }
+     'done'|Set-Content -LiteralPath (Join-Path $runDir 'WATCHDOG_DONE.txt') -Encoding ASCII
+--- V3/START_HERE.md
++++ FINAL/START_HERE.md
+@@ -1,19 +1,7 @@
+-# 2026-10-05 第二次交叉複查更新
++V3 最終靜態複查候選（2026-10-06）
+ 
+-一般 GPT 已完成第二次交叉複查；詳見 `GENERAL_GPT_FINAL_REVIEW.md`。
+-本輪未改 NativeLayoutEngine 核心 COM 演算法；重點是把 `Test-NativePersistence.ps1` 14 種 multi-object mock 正式接進 `SELF_CHECK_NATIVE.ps1`，因此下一次 `program/BUILD_NATIVE.cmd` 會先做 parser / C# helper / input regression / 14 mocks，通過後才開 BarTender。
+-本 Linux 環境仍無 PowerShell/C# runtime，所以 parser / 14 mocks / Windows BarTender 仍標示 NOT RUN，不冒稱 PASS。
+-
+----
+-
+-# Native Layout Engine V1 FINAL — 交叉複查候選
+-
+-此包是 Codex 集中修正版，原 V1 不要先測。
+-本次不要求使用者跑 Windows；先把 Codex 回覆與此 ZIP 一起交第二次交叉檢查。
+-
+-已修正新空白文件、多物件建立、尺寸/來源隔離、持久化與失敗輸出問題。詳細見 TECHNICAL_REVIEW.md。
+-**原生 PowerShell parser、regression、C# compile、Windows/BarTender 新路徑仍 NOT RUN。**
+-沒有把 V4 existing-BTW POC 的 PASS 擴張成新引擎 PASS。
+-
+-後續若決定做單次實機驗證，唯一新入口是 program/BUILD_NATIVE.cmd，使用 native-layout.multi.sample.json，收集 NATIVE_BUILD_RESULT.zip。
+-輸出的成功狀態僅為可編輯候選重開驗證；native ReferencePoint 尚未證明符合 OCR 左上角座標，不能宣稱完整還原產品已完成。
++請先讀 CODEX_V3_FINAL_REVIEW.md。
++本輪沒有執行附件程式；Windows PowerShell 5.1 parser、C# compile、14 mocks 與 BarTender 均 NOT RUN。
++本次不要求使用者測試，也不宣稱 preflight 已在實機排除。
++唯一後續入口仍為 program/BUILD_NATIVE.cmd，六物件輸入 native-layout.multi.sample.json；先 preflight 全部通過才可進入 BarTender。
++歷史 validation/manifest/PASS 紀錄不得當成本包的執行證據。
+--- V3/READ_ME_FIRST.txt
++++ FINAL/READ_ME_FIRST.txt
+@@ -1,20 +1,7 @@
+-Label Workbench Native Layout Engine V1 — 2026-10-05 第二次交叉複查版
++V3 最終靜態複查候選（2026-10-06）
+ 
+-這包目前已完成一般 GPT 第二次交叉複查。
+-
+-重要：
+-1. 新架構唯一入口：program\BUILD_NATIVE.cmd
+-2. 它現在會先跑 PowerShell parser / C# helper / input regression / 14 種 multi-object mock。
+-3. 前置驗證失敗時，不應啟動 BarTender。
+-4. 前置驗證全過後，才會做一次 fresh blank BTW + 6 個原生物件的 BarTender 實機驗證。
+-5. 測試完成只需要回傳 program\NATIVE_BUILD_RESULT.zip。
+-
+-仍未宣稱完成：
+-- OCR 圖片左上座標 -> BarTender ReferencePoint 映射
+-- 真正列印/掃碼驗收
+-- 任意圖片/PDF完整版面還原
+-
+-詳細結果：GENERAL_GPT_FINAL_REVIEW.md
+-
+-
+-HOTFIX 2026-10-05: Windows PowerShell 5.1 mock fixture compile now explicitly references System.Xml.dll.
++請先讀 CODEX_V3_FINAL_REVIEW.md。
++本輪沒有執行附件程式；Windows PowerShell 5.1 parser、C# compile、14 mocks 與 BarTender 均 NOT RUN。
++本次不要求使用者測試，也不宣稱 preflight 已在實機排除。
++唯一後續入口仍為 program/BUILD_NATIVE.cmd，六物件輸入 native-layout.multi.sample.json；先 preflight 全部通過才可進入 BarTender。
++歷史 validation/manifest/PASS 紀錄不得當成本包的執行證據。
+--- V3/V3_STATUS.txt
++++ FINAL/V3_STATUS.txt
+@@ -1,4 +1,7 @@
+-V3 STATUS
+-- Exact V2 failure addressed: Read-Property module scope on Windows PowerShell 5.1.
+-- NOT USER-TEST-READY by declaration; requires one more deep code review before asking user to run.
+-- BarTender 2022: NOT RUN in this environment.
++V3 最終靜態複查候選（2026-10-06）
++
++請先讀 CODEX_V3_FINAL_REVIEW.md。
++本輪沒有執行附件程式；Windows PowerShell 5.1 parser、C# compile、14 mocks 與 BarTender 均 NOT RUN。
++本次不要求使用者測試，也不宣稱 preflight 已在實機排除。
++唯一後續入口仍為 program/BUILD_NATIVE.cmd，六物件輸入 native-layout.multi.sample.json；先 preflight 全部通過才可進入 BarTender。
++歷史 validation/manifest/PASS 紀錄不得當成本包的執行證據。

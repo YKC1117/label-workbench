@@ -25,3 +25,8 @@ if(typeof G.validSourceBox!=='function'||!G.validSourceBox({x:.1,y:.2,w:.3,h:.1}
 const label={textObjects:[{text:'Made in Taiwan',sourceBox:{x:.05,y:.1,w:.3,h:.08}},{text:'II',sourceBox:{x:.13,y:.55,w:.54,h:.20}}],barcodes:[{format:'Code 128',text:'ABC123',sourceBox:{x:.12,y:.54,w:.56,h:.22}}]};
 const removed=G.suppressBarcodeOccludedText(label);if(removed!==1||label.textObjects.length!==1||label.textObjects[0].text!=='Made in Taiwan')throw new Error('barcode OCR suppression failed '+JSON.stringify(label));
 console.log('PASS: known text fields, native barcode positions and barcode-overlap OCR suppression map to normalized source geometry');
+
+// scanCanvas skips a resize below 1.05x. Its measured box is authoritative.
+const measured={x:.5,y:.1,w:.2,h:.1};
+const hit=G.matchKnownBarcodes(existing,[{text:'ABC123',sourceBox:measured,position:pos}],3400,400);
+if(hit[0].sourceBox!==measured)throw Error('Rescaled a measured frame twice');

@@ -1,0 +1,33 @@
+{
+  "schema": "lwb-native-layout-v1",
+  "widthMm": 140,
+  "heightMm": 38,
+  "objects": [
+    {
+      "id": "TEXT_001",
+      "type": "text",
+      "value": "(1P) PART NO : W25N01GWZE",
+      "xMm": 2.5,
+      "yMm": 2.5,
+      "fontSizePt": 8,
+      "fontName": "Arial"
+    },
+    {
+      "id": "C128_001",
+      "type": "code128",
+      "value": "W25N01GWZE",
+      "xMm": 2.5,
+      "yMm": 8,
+      "widthMm": 32,
+      "heightMm": 4.5
+    },
+    {
+      "id": "DM_001",
+      "type": "datamatrix",
+      "value": "DM_PAYLOAD",
+      "xMm": 116,
+      "yMm": 2,
+      "sizeMm": 12
+    }
+  ]
+}
