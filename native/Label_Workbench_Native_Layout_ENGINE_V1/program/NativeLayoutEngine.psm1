@@ -287,6 +287,21 @@ function Get-NativeInkError($m,$request) {
 }
 function Fit-NativeXDimensionNearest($obj,$request,[string]$prefix,[int]$dpi) {
     $result=[ordered]@{status='NOT_RUN';targetWidthMm=[double]$request.widthMm;targetHeightMm=[double]$request.heightMm;samples=@();selected=$null;errorMm=$null;approximation='NOT_RUN';warning='Raster ink is a layout approximation, not decoder-confirmed symbol bounds.'}
+    if($null -ne $request.PSObject.Properties['moduleIndex']){
+        $xml=Read-NativeXml ([string](Invoke-ComMethod $obj 'GetXML' @($true,$true)))
+        $node=$xml.SelectSingleNode('/*/*[local-name()="XDimension"]')
+        if($null -eq $node){throw 'No XDimension for explicit module request.'}
+        $node.SetAttribute('Index',[string]$request.moduleIndex)
+        [void](Invoke-ComMethod $obj 'SetXML' @($xml.OuterXml))
+        $actual=Read-NativeXml ([string](Invoke-ComMethod $obj 'GetXML' @($true,$true)))
+        $x=Get-NativeXDimension $actual
+        if($x.index -ne $request.moduleIndex){throw 'Module index ignored.'}
+        Assert-NativeNear ($x.mils*0.0254) $request.moduleMm 0.001 'Printer module profile'
+        $bmp=Export-NativeMeasurement $obj ($prefix+'-module.bmp') $dpi
+        Assert-NativeRaster $bmp
+        $result.selected=[ordered]@{xDimension=$x;raster=$bmp}
+        $result.status='EXPLICIT_MODULE_READBACK';return $result
+    }
     $originalText=[string](Invoke-ComMethod $obj 'GetXML' @($true,$true));$original=Read-NativeXml $originalText
     $root=if($request.type -eq 'code128'){'BarCode-Code-128'}else{'BarCode-DataMatrix'}
     $payload=[string]$request.value
@@ -398,6 +413,32 @@ function Create-NativeText($document,[ref]$objectsRef,$request,[string]$prefix) 
 function Test-NativeLayoutInput($layout) {
     if($null -eq $layout){throw 'Layout is null.'}
     foreach($k in @('schema','widthMm','heightMm','objects')){if($null -eq $layout.PSObject.Properties[$k]){throw ('Missing layout.'+$k)}}
+    if($layout.schema -ceq 'renderer-probe-v1'){
+        # Reuse existing scalar/type validation, then retain the canonical targets intact.
+        $converted=@()
+        foreach($o in $layout.objects){
+            if($o.referencePoint -cne 'TopLeft' -or $o.rotationDeg -ne 0){throw 'Unsupported prototype anchor or angle.'}
+            $v=[ordered]@{id=$o.id;type=$o.type;value=$o.value;xMm=$o.xMm;yMm=$o.yMm;rotationDeg=$o.rotationDeg}
+            [void](Test-NativeNumber $o.widthMm 0.01 1000 'frame width')
+            [void](Test-NativeNumber $o.heightMm 0.01 1000 'frame height')
+            if($o.type -eq 'text'){
+                if($o.alignment -cne 'left'){throw 'Unsupported text alignment.'}
+                $v.fontName=$o.fontName;$v.fontSizePt=$o.fontSizePt
+            }else{
+                if($o.humanReadable -cne 'none'){throw 'Unsupported caption mode.'}
+                [void](Test-NativeNumber $o.moduleMm 0.001 10 'moduleMm')
+                [void](Test-NativeNumber $o.moduleIndex 0 255 'moduleIndex')
+                if([int]$o.moduleIndex -ne $o.moduleIndex){throw 'Invalid module index.'}
+                $v.widthMm=$o.widthMm
+                if($o.type -eq 'code128'){$v.heightMm=$o.heightMm}
+            }
+            $converted+=,[pscustomobject]$v
+        }
+        $legacy=[pscustomobject]@{schema='lwb-native-layout-v1';widthMm=$layout.widthMm;heightMm=$layout.heightMm;objects=$converted}
+        $checked=Test-NativeLayoutInput $legacy
+        $checked.objects=$layout.objects
+        return $checked
+    }
     if([string]$layout.schema -cne 'lwb-native-layout-v1'){throw 'Unsupported layout schema.'}
     foreach($prop in @($layout.PSObject.Properties)){if($prop.Name -cnotin @('schema','widthMm','heightMm','objects','printerName')){throw ('Unknown layout field: '+$prop.Name)}}
     $width=Test-NativeNumber $layout.widthMm 5 1000 'widthMm';$height=Test-NativeNumber $layout.heightMm 5 1000 'heightMm'
@@ -548,6 +589,13 @@ function Set-NativeTextFontName($obj,[string]$fontName,[string]$prefix='') {
 function Set-NativeGeometry($obj,$request,[string]$prefix='') {
     $targets=[ordered]@{}
     $result=[ordered]@{status='TARGET_GEOMETRY_WITHIN_TOLERANCE';properties=[ordered]@{}}
+    if($null -ne $request.PSObject.Properties['referencePoint']){
+        $xml=Read-NativeXml ([string](Invoke-ComMethod $obj 'GetXML' @($true,$true)))
+        $xml.DocumentElement.SetAttribute('ReferencePoint',[string]$request.referencePoint)
+        [void](Invoke-ComMethod $obj 'SetXML' @($xml.OuterXml))
+        $back=Read-NativeXml ([string](Invoke-ComMethod $obj 'GetXML' @($true,$true)))
+        if($back.DocumentElement.GetAttribute('ReferencePoint') -cne $request.referencePoint){throw 'REFERENCE_POINT_UNPROVEN'}
+    }
     if($request.type -eq 'text'){
         $result.properties['FontName']=(Set-NativeTextFontName $obj ([string]$request.fontName) $(if($prefix){$prefix+'-font'}else{''}))
         $targets['FontSize']=[double]$request.fontSizePt
