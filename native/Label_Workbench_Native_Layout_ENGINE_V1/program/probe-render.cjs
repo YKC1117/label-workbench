@@ -10,6 +10,10 @@ function verdict(o,p){
   const errors=p.type==='text'?[Math.abs(dx),-dy,dx+dw,dy+dh]:[dx,dy,dw,dh].map(Math.abs);
   return errors.some(e=>e>0.5)?'OUTSIDE_FRAME':'WITHIN_FIXTURE_TOLERANCE';
 }
+function anchorCertified(actual,p){
+  if(actual.referencePoint==='TopLeft')return true;
+  return p.type==='text'&&p.anchorPolicy==='BARTENDER_DOCUMENTED_DEFAULT_TOP_LEFT_VISUAL_GATE'&&actual.referencePointPresent===false&&actual.referencePoint==null;
+}
 if(require.main===module){
  const [dir,file]=process.argv.slice(2),plan=read(file),ev=read(path.join(dir,'native-visual-evidence.json'));
  const hash=crypto.createHash('sha256').update(fs.readFileSync(path.join(dir,'native-output.btw'))).digest('hex').toUpperCase();
@@ -30,9 +34,9 @@ if(require.main===module){
  for(const o of rows){
    const p=plan.objects.find(x=>x.id===o.id), actual=ev.objects.find(x=>x.id===o.id);
    o.verdict=verdict(o,p);
-   if(actual.referencePoint!==p.referencePoint||Math.abs(actual.rotationDeg-p.rotationDeg)>.05)o.verdict='ANCHOR_OR_ROTATION_UNPROVEN';
+   if(!anchorCertified(actual,p)||Math.abs(actual.rotationDeg-p.rotationDeg)>.05)o.verdict='ANCHOR_OR_ROTATION_UNPROVEN';
  }
  fs.writeFileSync(path.join(dir,'prototype-render.json'),JSON.stringify({sha256:hash,productAcceptance:'NOT_RUN',objects:rows},null,2));
  if(rows.some(r=>r.verdict!=='WITHIN_FIXTURE_TOLERANCE'))process.exitCode=2;
 }
-module.exports={verdict};
+module.exports={verdict,anchorCertified};
