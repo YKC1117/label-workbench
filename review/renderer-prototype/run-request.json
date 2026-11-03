@@ -1,7 +1,7 @@
 {
   "enabled": true,
-  "purpose": "Verify the tracked HybridPool retained-peer isolation fix without any runtime patch: eight Designer Text objects plus Code128 and Data Matrix must pass source isolation, Save/Reopen, stable SHA and 600dpi dual-render Visual QA.",
-  "requestedAt": "2026-11-03T14:14:00+08:00",
+  "purpose": "One consolidated 8-Text Hybrid verification: capture bounded unsaved legacy full-import peer deltas, then use pre-pruned independent Text pool with target-only sparse payload imports and strict all-peer XML/COM isolation; Save/Reopen plus 600dpi visual gate.",
+  "requestedAt": "2026-11-03T14:27:25.869526+08:00",
   "requestedBy": "YKC1117",
   "target": "experiment/com-renderer-prototype"
 }

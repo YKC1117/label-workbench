@@ -24,7 +24,7 @@ if($effectiveProfile -ceq 'Auto'){
     }
 }
 
-$runtime=@('Build-NativeLayout.ps1','NativeLayoutEngine.psm1','HybridPool.psm1','Com.psm1','Watchdog.ps1','SELF_CHECK_NATIVE.ps1','Test-NativeLayoutEngine.ps1','Test-NativePersistence.ps1','Test-NativeFontFallback.ps1')
+$runtime=@('HybridPayload.psm1','Test-HybridPayload.ps1','HybridPool.psm1','Build-NativeLayout.ps1','NativeLayoutEngine.psm1','HybridPool.psm1','Com.psm1','Watchdog.ps1','SELF_CHECK_NATIVE.ps1','Test-NativeLayoutEngine.ps1','Test-NativePersistence.ps1','Test-NativeFontFallback.ps1')
 foreach($name in $runtime){
     $path=Join-Path $root $name
     if(-not(Test-Path -LiteralPath $path -PathType Leaf)){throw ('Missing native runtime file: '+$name)}
@@ -108,3 +108,5 @@ if($effectiveProfile -ceq 'Legacy'){
     Write-Host 'SELF_CHECK_NATIVE PASS [Hybrid]: parser/input/C# helpers/TypeLib/Delete/InsertComponent/payload/raster/Code128 contracts passed; BarTender has not been opened yet.' -ForegroundColor Green
 }
 Remove-Module NativeLayoutEngine -Force -ErrorAction SilentlyContinue
+
+& (Join-Path $root 'Test-HybridPayload.ps1')

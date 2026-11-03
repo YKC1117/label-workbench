@@ -10,6 +10,8 @@ function Invoke-HybridPoolBuild($formats,$plan,[string]$textPoolPath,[string]$ru
     return & $engine {
         param($formats,$plan,$textPoolPath,$runDir,$baseDirectory,$poolHash)
 
+        Import-Module (Join-Path $baseDirectory 'HybridPayload.psm1') -Force -ErrorAction Stop
+
         function Get-HybridAnchorState($obj) {
             $text=[string](Invoke-ComMethod $obj 'GetXML' @($true,$true));$xml=Read-NativeXml $text
             $present=$xml.DocumentElement.HasAttribute('ReferencePoint')
@@ -37,32 +39,50 @@ function Invoke-HybridPoolBuild($formats,$plan,[string]$textPoolPath,[string]$ru
                 if($peerName -ceq $targetName){continue}
                 $peer=Find-NativeObject $objects $peerName
                 try{
-                    # Exact XML/value isolation protects retained objects only.
-                    # Every donor is parked DoNotPrint=true before assignment and
-                    # unused donors are deleted before barcode insertion. Source-ID
-                    # collision checks below still inspect every donor object.
-                    if([bool](Read-Property $peer 'DoNotPrint')){continue}
+                    # All remaining slots are part of the candidate. Parked slots
+                    # are protected too; unused donor graphs were already removed.
                     $xmlText=[string](Invoke-ComMethod $peer 'GetXML' @($true,$true))
                     $value=$null;$valueReadable=$false
                     try{$value=[string](Read-Property $peer 'Value');$valueReadable=$true}catch{}
-                    $rows[$peerName]=[ordered]@{xmlKey=Get-NativeXmlKey (Read-NativeXml $xmlText);valueReadable=$valueReadable;value=$value}
+                    $properties=[ordered]@{}
+                    foreach($property in @('Name','Type','X','Y','RotationAngle','DoNotPrint')){$properties[$property]=Read-Property $peer $property}
+                    if([int]$properties.Type -eq 4){$properties['Height']=Read-Property $peer 'Height'}
+                    if([int]$properties.Type -eq 5){foreach($property in @('FontName','FontSize','FontBold','FontItalic')){$properties[$property]=Read-Property $peer $property}}
+                    $rows[$peerName]=[ordered]@{xml=$xmlText;xmlKey=Get-NativeXmlKey (Read-NativeXml $xmlText);properties=$properties;valueReadable=$valueReadable;value=$value}
                 }finally{Release-NativeCom $peer}
             }
             return $rows
         }
-        function Assert-HybridPeerSnapshot($objects,$snapshot) {
-            foreach($peerName in @($snapshot.Keys)){
-                $peer=Find-NativeObject $objects $peerName
+        function Assert-HybridPeerSnapshot($objects,$snapshot,[string]$prefix,[switch]$DiagnosticOnly) {
+            $audit=@();$failures=@();$index=0
+            foreach($peerName in @($snapshot.Keys|Sort-Object)){
+                $index++;$peer=Find-NativeObject $objects $peerName
                 try{
-                    $now=Get-NativeXmlKey (Read-NativeXml ([string](Invoke-ComMethod $peer 'GetXML' @($true,$true))))
-                    if($now -cne $snapshot[$peerName].xmlKey){throw ('Hybrid payload import modified peer XML: '+$peerName)}
-                    if([bool]$snapshot[$peerName].valueReadable){
-                        if([string](Read-Property $peer 'Value') -cne [string]$snapshot[$peerName].value){throw ('Hybrid payload import modified peer Value: '+$peerName)}
+                    $before=$snapshot[$peerName]
+                    $nowText=[string](Invoke-ComMethod $peer 'GetXML' @($true,$true))
+                    $now=Get-NativeXmlKey (Read-NativeXml $nowText)
+                    $propertyChanges=@()
+                    foreach($property in $before.properties.Keys){
+                        $actual=Read-Property $peer $property
+                        if([string]$actual -cne [string]$before.properties[$property]){$propertyChanges+=,[ordered]@{property=$property;before=$before.properties[$property];after=$actual}}
+                    }
+                    $actualValue=if($before.valueReadable){[string](Read-Property $peer 'Value')}else{$null}
+                    $changed=($now -cne $before.xmlKey -or $propertyChanges.Count -gt 0 -or ($before.valueReadable -and $actualValue -cne $before.value))
+                    $audit+=,[ordered]@{name=$peerName;status=if($changed){'FAIL'}else{'PASS'};strictXmlEqual=($now -ceq $before.xmlKey);propertiesEqual=($propertyChanges.Count -eq 0);originalRetainedPeer=(-not [bool]$before.properties.DoNotPrint);valueEqual=if($before.valueReadable){$actualValue -ceq $before.value}else{$null}}
+                    if($changed){
+                        $stem=$prefix+'-peer-'+$index
+                        $before.xml|Set-Content -LiteralPath ($stem+'-before.xml') -Encoding UTF8
+                        $nowText|Set-Content -LiteralPath ($stem+'-after.xml') -Encoding UTF8
+                        $diff=[ordered]@{name=$peerName;policy='STRICT_XML_AND_COM_NO_NORMALIZATION_EXCEPTIONS';before=Get-HybridXmlSemantics $before.xml;after=Get-HybridXmlSemantics $nowText;properties=$propertyChanges;effectiveValueBefore=$before.value;effectiveValueAfter=$actualValue;xmlChanges=@(Get-HybridXmlDifferences $before.xml $nowText)}
+                        Save-NativeJson $diff ($stem+'-diff.json')
+                        $failures+=,$peerName
                     }
                 }finally{Release-NativeCom $peer}
             }
+            Save-NativeJson ([ordered]@{status=if($failures.Count){'FAIL'}else{'PASS'};peerCount=$audit.Count;policy='ALL_RETAINED_PEERS_INCLUDING_PARKED';diagnosticOnly=[bool]$DiagnosticOnly;objects=$audit}) ($prefix+'-peer-isolation.json')
+            if($failures.Count -and -not $DiagnosticOnly){throw ('Hybrid payload import modified peer XML or semantic state: '+($failures -join ', '))}
         }
-        function Set-HybridPayload($objects,$obj,[string]$payload,[string]$expectedRoot,[string]$prefix) {
+        function Set-HybridPayload($objects,$obj,[string]$payload,[string]$expectedRoot,[string]$prefix,[switch]$DiagnosticFullImport) {
             $name=[string](Read-Property $obj 'Name')
             $beforeText=[string](Invoke-ComMethod $obj 'GetXML' @($true,$true));$before=Read-NativeXml $beforeText
             $literal=Get-NativeLiteralState $before $expectedRoot
@@ -78,28 +98,23 @@ function Invoke-HybridPoolBuild($formats,$plan,[string]$textPoolPath,[string]$ru
             }
             $peers=Get-HybridPeerSnapshot $objects $name
             $export=Read-NativeXml ([string](Invoke-ComMethod $objects 'ExportDataSourceValuesToXML' @()))
-            $matches=@($export.SelectNodes('//*') | Where-Object {$node=$_; @($node.Attributes | Where-Object {$_.Value -ieq $id}).Count -gt 0})
-            $target=$null
-            if($matches.Count -eq 1){
-                if($matches[0].HasAttribute('Value')){$target=$matches[0].GetAttributeNode('Value')}
-                else{$values=@($matches[0].SelectNodes('./*[local-name()="Value"]'));if($values.Count -eq 1){$target=$values[0]}}
-            }
-            if($null -eq $target){
-                $named=@($export.SelectNodes('//*') | Where-Object {$_.HasAttribute('Name') -and $_.GetAttribute('Name') -ceq $name})
-                if($named.Count -ne 1){throw ('Hybrid cannot map exported source for '+$name)}
-                $values=@($named[0].SelectNodes('.//*[local-name()="Value"] | .//@Value'))
-                if($values.Count -ne 1){throw ('Hybrid cannot find one exported literal value for '+$name)}
-                if((Get-NativeExportedValue $values[0]) -cne [string]$literal.value){throw 'Hybrid exported source value mismatch.'}
-                $target=$values[0]
-            }
-            Set-NativeExportedValue $target $payload
+            $sparse=New-HybridPayloadImport $export $name ([string]$literal.value) $payload
+            if($DiagnosticFullImport){
+                # Replay the old full-document transaction only in a disposable,
+                # unsaved diagnostic format. It can never publish a candidate.
+                $row=@($export.SelectNodes('/Command/DataMerge/Object')|Where-Object{$_.GetAttribute('Name') -ceq $name})[0]
+                $row.SelectSingleNode('./SubString/Value').InnerText=$sparse.SelectSingleNode('/Command/DataMerge/Object/SubString/Value').InnerText
+            }else{$export=$sparse}
             if($prefix){$beforeText|Set-Content -LiteralPath ($prefix+'-payload-before.xml') -Encoding UTF8;$export.OuterXml|Set-Content -LiteralPath ($prefix+'-payload-import.xml') -Encoding UTF8}
             $ok=Invoke-ComMethod $objects 'ImportDataSourceValuesFromXML' @($export.OuterXml);if(-not [bool]$ok){throw 'Hybrid ImportDataSourceValuesFromXML returned false.'}
             $readText=[string](Invoke-ComMethod $obj 'GetXML' @($true,$true));if($prefix){$readText|Set-Content -LiteralPath ($prefix+'-payload-readback.xml') -Encoding UTF8}
             $read=Read-NativeXml $readText;$state=Get-NativeLiteralState $read $expectedRoot
             if($state.value -cne $payload -or [string](Read-Property $obj 'Value') -cne $payload){throw 'Hybrid target payload readback mismatch.'}
             if($state.sourceId -cne $id){throw 'Hybrid target source identity changed.'}
-            Assert-HybridPeerSnapshot $objects $peers
+            $expectedTarget=Read-NativeXml $beforeText
+            $expectedTarget.SelectSingleNode('/*/*[local-name()="DataSources"]/*/*[local-name()="Value"]').InnerText=$payload
+            if((Get-NativeXmlKey $read) -cne (Get-NativeXmlKey $expectedTarget)){throw 'Hybrid import changed protected target XML outside literal Value.'}
+            Assert-HybridPeerSnapshot $objects $peers $prefix -DiagnosticOnly:$DiagnosticFullImport
             return $state
         }
         function Get-HybridCleanTextSlots($objects,[int]$needed) {
@@ -119,12 +134,12 @@ function Invoke-HybridPoolBuild($formats,$plan,[string]$textPoolPath,[string]$ru
             if($slots.Count -lt $needed){throw ('HYBRID_TEXT_POOL_CAPACITY: '+$slots.Count+' clean Text slots for '+$needed+' requests.')}
             return @($slots)
         }
-        function Set-HybridText($objects,[string]$name,$request,[string]$prefix) {
+        function Set-HybridText($objects,[string]$name,$request,[string]$prefix,[switch]$DiagnosticFullImport) {
             $obj=Find-NativeObject $objects $name
             try{
                 if([int](Read-Property $obj 'Type') -ne 5){throw 'Hybrid selected slot is not Text.'}
                 $anchor=Set-HybridTopLeft $obj $prefix
-                $payload=Set-HybridPayload $objects $obj ([string]$request.value) 'Text' $prefix
+                $payload=Set-HybridPayload $objects $obj ([string]$request.value) 'Text' $prefix -DiagnosticFullImport:$DiagnosticFullImport
                 $targets=[ordered]@{FontName=[string]$request.fontName;FontSize=[double]$request.fontSizePt;FontBold=$false;FontItalic=$false;RotationAngle=[double]$request.rotationDeg;X=[double]$request.xMm;Y=[double]$request.yMm}
                 foreach($key in @($targets.Keys)){Write-Property $obj $key $targets[$key]}
                 $properties=[ordered]@{}
@@ -203,9 +218,38 @@ function Invoke-HybridPoolBuild($formats,$plan,[string]$textPoolPath,[string]$ru
             return $name
         }
 
+        function Capture-HybridLegacyDiagnostic {
+            $diagDir=Join-Path $runDir 'legacy-payload-diagnostic';[void][IO.Directory]::CreateDirectory($diagDir)
+            $doc=$null;$objs=$null;$summary=[ordered]@{diagnosticOnly=$true;candidatePublication='PROHIBITED';imports=@();status='STARTED'}
+            try{
+                $doc=Invoke-ComMethod $formats 'Open' @($textPoolPath,$false,'');Write-Property $doc 'MeasurementUnits' 3
+                [void](Set-NativePage $doc $plan);$objs=Read-Property $doc 'Objects'
+                foreach($n in @(Get-NativeObjectNames $objs)){
+                    $peer=Find-NativeObject $objs $n
+                    try{Write-Property $peer 'DoNotPrint' $true}finally{Release-NativeCom $peer}
+                }
+                $requests=@($plan.objects|Where-Object{$_.type -eq 'text'}|Select-Object -First 3)
+                $slots=@(Get-HybridCleanTextSlots $objs $requests.Count)
+                for($i=0;$i -lt $requests.Count;$i++){
+                    ('Legacy diagnostic '+$requests[$i].id)|Set-Content -LiteralPath (Join-Path $runDir 'LIVE_STAGE.txt') -Encoding UTF8
+                    [void](Set-HybridText $objs ([string]$slots[$i]) $requests[$i] (Join-Path $diagDir ('legacy-'+$requests[$i].id)) -DiagnosticFullImport)
+                    $summary.imports+=,[string]$requests[$i].id
+                }
+                $summary.status='DIAGNOSTIC_CAPTURED_NOT_ACCEPTANCE'
+            }catch{$summary.status='DIAGNOSTIC_STOPPED';$summary['error']=$_.Exception.ToString()}
+            finally{
+                Release-NativeCom $objs
+                if($null -ne $doc){try{[void](Invoke-ComMethod $doc 'Close' @(1))}catch{$summary['closeError']=$_.Exception.ToString()};Release-NativeCom $doc}
+                Save-NativeJson $summary (Join-Path $diagDir 'summary.json')
+            }
+        }
+        # One bounded legacy replay in this engineering stress run captures the
+        # previously missing peer delta; the production transaction stays strict.
+        if(@($plan.objects|Where-Object{$_.type -eq 'text'}).Count -ge 3){Capture-HybridLegacyDiagnostic}
+
         $candidate=Join-Path $runDir 'candidate.unverified.btw';$accepted=Join-Path $runDir 'native-output.btw'
         $document=$null;$objects=$null;$reopenDoc=$null;$reopenObjects=$null
-        $report=[ordered]@{schema='lwb-hybrid-pool-build-report-v1';status='STARTED';renderer='hybrid-text-pool-btc';productAcceptance='NOT_RUN';textPool=[ordered]@{path=$textPoolPath;sha256=$poolHash};page=$null;objects=@();warnings=@('Designer-authored Text slots are reused; unused donor objects are deleted from the disposable candidate copy before barcode insertion; the embedded donor source remains unchanged.','An omitted ReferencePoint after an explicit TopLeft request is accepted only pending final unique full-page BMP Visual QA.');output=$null;outputSha256=$null;reopen='NOT_RUN'}
+        $report=[ordered]@{schema='lwb-hybrid-pool-build-report-v1';status='STARTED';renderer='hybrid-text-pool-btc';productAcceptance='NOT_RUN';textPool=[ordered]@{path=$textPoolPath;sha256=$poolHash};page=$null;objects=@();warnings=@('Designer-authored Text slots are reused; unused donor objects are deleted from the disposable candidate copy before any payload assignment; the embedded donor source remains unchanged.','An omitted ReferencePoint after an explicit TopLeft request is accepted only pending final unique full-page BMP Visual QA.');output=$null;outputSha256=$null;reopen='NOT_RUN'}
         try{
             $document=Invoke-ComMethod $formats 'Open' @($textPoolPath,$false,'');if($null -eq $document){throw 'Hybrid Formats.Open returned null.'}
             Write-Property $document 'MeasurementUnits' 3
@@ -216,24 +260,24 @@ function Invoke-HybridPoolBuild($formats,$plan,[string]$textPoolPath,[string]$ru
 
             $textRequests=@($plan.objects|Where-Object{$_.type -eq 'text'})
             $textSlots=@(Get-HybridCleanTextSlots $objects $textRequests.Count)
-            $usedPool=New-Object 'System.Collections.Generic.HashSet[string]' ([StringComparer]::Ordinal)
-            for($i=0;$i -lt $textRequests.Count;$i++){
-                $request=$textRequests[$i];$name=[string]$textSlots[$i];[void]$usedPool.Add($name)
-                $prefix=Join-Path $runDir ('hybrid-'+$request.id)
-                $state=Set-HybridText $objects $name $request $prefix
-                $report.objects+=,[ordered]@{id=[string]$request.id;type='text';physicalName=$name;nativeType=5;referencePointXml=$state.anchor.serialized;geometry=$state;reopenEditable='NOT_RUN'}
-            }
-
-            $unusedNames=@($originalNames|Where-Object{-not $usedPool.Contains([string]$_)})
+            $unusedNames=@($originalNames|Where-Object{-not ($textSlots -ccontains [string]$_)})
             foreach($unusedName in $unusedNames){
                 $deleted=[bool](Invoke-ComMethod $objects 'Delete' @([string]$unusedName))
                 if(-not $deleted){throw ('Hybrid failed to delete unused donor object: '+$unusedName)}
             }
             Release-NativeCom $objects;$objects=$null;$objects=Read-Property $document 'Objects'
-            $expectedTextNames=@($textSlots|Where-Object{$usedPool.Contains([string]$_)})
+            $expectedTextNames=@($textSlots)
             Assert-NativeNameSet $expectedTextNames @(Get-NativeObjectNames $objects)
             Assert-NativeSourceIsolation $objects
             $report['deletedUnusedDonorObjects']=$unusedNames.Count
+
+            for($i=0;$i -lt $textRequests.Count;$i++){
+                ('Hybrid candidate '+$textRequests[$i].id)|Set-Content -LiteralPath (Join-Path $runDir 'LIVE_STAGE.txt') -Encoding UTF8
+                $request=$textRequests[$i];$name=[string]$textSlots[$i]
+                $prefix=Join-Path $runDir ('hybrid-'+$request.id)
+                $state=Set-HybridText $objects $name $request $prefix
+                $report.objects+=,[ordered]@{id=[string]$request.id;type='text';physicalName=$name;nativeType=5;referencePointXml=$state.anchor.serialized;geometry=$state;reopenEditable='NOT_RUN'}
+            }
 
             $codeComponent=Join-Path $baseDirectory 'proven-code128.btc'
             if(@($plan.objects|Where-Object{$_.type -eq 'code128'}).Count -gt 0){if(-not(Test-Path -LiteralPath $codeComponent -PathType Leaf)){throw 'Bundled proven-code128.btc is missing.'};$h=(Get-FileHash -LiteralPath $codeComponent -Algorithm SHA256).Hash;if($h -cne '0B1E2481BCDE6E5CF1D084599F822DC3027AB19215530B7776296B40A59899F2'){throw 'Code128 component hash mismatch.'}}

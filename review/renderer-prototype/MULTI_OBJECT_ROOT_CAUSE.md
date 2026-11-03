@@ -1,0 +1,13 @@
+# Eight-Text payload transaction review
+
+Base branch HEAD 59250ce. Read CODEX_MULTI_OBJECT_HANDOFF.md in full. Run #36 artifact ID 13208705232 was downloaded and its SHA-256 verified as 25c617279e225ce45cafeb9eceeba13d6be73cc165906fd6f4ccac63f2b4bb17.
+
+Verified from the actual artifact: TEXT_3 target XML changes literal value from LWLWLWLWLWLW to EXP 2027-12-31 and retains source ID {3FA6A9C6-F049-4293-AAB2-CB190BB7ED0E}. Its submitted import contains all donor Object rows, including barcode 1 with four SubString entries. The repository's original barcode 1 XML contains two ObjectValueDataSource nodes and transforms. Unused donor deletion runs only after all eight text payloads are assigned. This combination unnecessarily exposes linked donor graphs to a global import operation. Source-ID uniqueness alone does not prove absence of ObjectValue dependencies.
+
+Not established by Run #36: the exact peer XML/COM fields changed. That artifact lacks the rejected peer's before/after pair. Classification A (normalization) versus B/C/D (real change, link propagation, global import effects) must remain pending actual captured deltas. No normalization exception or tolerance was added to peer equality.
+
+Consolidated change: delete unused donor graphs immediately after selecting clean text slots, before any anchor/payload writes. Keep the eight independent Text slots, then insert only proven BTC barcodes. Payload import is constrained to one Object/one SubString Position 0/one Value, preserving wrapper and encoding. Check target XML changed only the literal Value. Check all retained peers including parked slots, strict full XML plus COM identity/geometry/style/printability and effective payload. On any mismatch save peer before/after XML and complete structured semantic diff, then fail closed.
+
+The same single Windows run includes a bounded unsaved three-Text replay of the original full-import mechanism. It writes legacy-payload-diagnostic/ and records diffs even for parked donor peers; originalRetainedPeer marks whether the old assertion would have protected that peer. Diagnostic mismatches are recorded without certifying that temporary document, and it is always closed without SaveAs. The real stress candidate then uses only the corrected path and never bypasses strict isolation. This supplies missing root-cause evidence without a second speculative Windows job.
+
+Local Node renderer tests and stress canonical conversion passed. Windows PowerShell XML helper tests are part of SELF_CHECK_NATIVE and will execute on the same runner before COM. The eight-Text runtime result remains pending until the triggered run is inspected. Product acceptance remains NOT RUN / NOT COMPLETE.
