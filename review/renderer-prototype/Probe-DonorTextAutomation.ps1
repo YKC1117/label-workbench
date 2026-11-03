@@ -13,6 +13,7 @@ function Release-Com($v){if($null -ne $v -and [Runtime.InteropServices.Marshal]:
 # comma, an empty Formats collection becomes $null and a populated Objects
 # collection is flattened into its members by Windows PowerShell 5.1.
 function Get-Com($o,[string]$n){return ,([LabelWorkbench.ComBridge]::Get($o,$n,[object[]]@()))}
+function Get-ComIndexed($o,[string]$n,[object[]]$a){return ,([LabelWorkbench.ComBridge]::Get($o,$n,$a))}
 function Set-Com($o,[string]$n,$v){[LabelWorkbench.ComBridge]::Set($o,$n,[object[]]@($v))}
 function Call-Com($o,[string]$n,[object[]]$a){return [LabelWorkbench.ComBridge]::Call($o,$n,$a)}
 function Snapshot-Xml($o){return [string](Call-Com $o 'GetXML' ([object[]]@($true,$true)))}
@@ -25,8 +26,17 @@ try{
  foreach($p in @('FullVersion','Edition','BuildNumber')){$result.runtime[$p]=[string](Get-Com $app $p)};$result.runtime.ProcessID=$ownedPid
  $formats=Get-Com $app 'Formats';$format=Call-Com $formats 'Open' ([object[]]@($DonorPath,$false,''));if($null -eq $format){throw 'Formats.Open returned null.'}
  Set-Com $format 'MeasurementUnits' 3
- $objects=Get-Com $format 'Objects';$obj=Call-Com $objects 'Find' ([object[]]@('文字 1'));if($null -eq $obj){throw 'Designer-authored Text object 文字 1 not found.'}
- $result.object.name=[string](Get-Com $obj 'Name');$result.object.type=[int](Get-Com $obj 'Type');if($result.object.type -ne 5){throw ('文字 1 is not native Text Type 5; actual '+$result.object.type)}
+ $objects=Get-Com $format 'Objects'
+ $count=[int](Get-Com $objects 'Count')
+ for($i=1;$i -le $count;$i++){
+  $candidate=$null
+  try{
+   $candidate=Get-ComIndexed $objects 'Item' ([object[]]@($i))
+   if($null -ne $candidate -and [int](Get-Com $candidate 'Type') -eq 5){$obj=$candidate;$candidate=$null;break}
+  }finally{Release-Com $candidate}
+ }
+ if($null -eq $obj){throw 'No Designer-authored native Text Type 5 object found in controlled donor.'}
+ $result.object.index=$i;$result.object.name=[string](Get-Com $obj 'Name');$result.object.type=[int](Get-Com $obj 'Type')
  $result.xmlBefore=Snapshot-Xml $obj
  $specs=@(
   [ordered]@{name='X';kind='double';delta=1.0},
