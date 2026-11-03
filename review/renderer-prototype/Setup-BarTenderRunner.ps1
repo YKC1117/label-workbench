@@ -33,9 +33,11 @@ Write-Host 'BarTender.Application: REGISTERED'
 
 $programFilesX86 = [Environment]::GetEnvironmentVariable('ProgramFiles(x86)')
 $barTenderCandidates = @(
-    $(if ($env:ProgramFiles) { Join-Path $env:ProgramFiles 'Seagull\BarTender 2022\BarTend.exe' }),
-    $(if ($programFilesX86) { Join-Path $programFilesX86 'Seagull\BarTender 2022\BarTend.exe' })
-) | Where-Object { $_ -and (Test-Path -LiteralPath $_) }
+    @(
+        $(if ($env:ProgramFiles) { Join-Path $env:ProgramFiles 'Seagull\BarTender 2022\BarTend.exe' }),
+        $(if ($programFilesX86) { Join-Path $programFilesX86 'Seagull\BarTender 2022\BarTend.exe' })
+    ) | Where-Object { $_ -and (Test-Path -LiteralPath $_) }
+)
 if ($barTenderCandidates.Count -gt 0) {
     Write-Host ('BarTender executable: ' + $barTenderCandidates[0])
 } else {
