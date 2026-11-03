@@ -1,7 +1,7 @@
 {
   "enabled": true,
-  "purpose": "One consolidated 8-Text Hybrid verification: capture bounded unsaved legacy full-import peer deltas, then use pre-pruned independent Text pool with target-only sparse payload imports and strict all-peer XML/COM isolation; Save/Reopen plus 600dpi visual gate.",
-  "requestedAt": "2026-11-03T14:27:25.869526+08:00",
+  "purpose": "Final consolidated Windows BarTender verification for Codex multi-object peer-isolation fix: 8 Text + Code128 + Data Matrix, target-only sparse payload import, strict all-peer XML/COM isolation, Save/Reopen editability, 600dpi Visual QA, and stable evidence SHA.",
+  "requestedAt": "2026-11-03T14:37:00+08:00",
   "requestedBy": "YKC1117",
   "target": "experiment/com-renderer-prototype"
 }
