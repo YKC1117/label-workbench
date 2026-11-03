@@ -167,15 +167,30 @@ function Invoke-HybridPoolBuild($formats,$plan,[string]$textPoolPath,[string]$ru
                     $targets.Y=[double]$request.yMm+$shift*[math]::Sin($radians)
                     $alignmentEvidence=[ordered]@{policy='CANONICAL_FRAME_ALIGNED_USING_NATIVE_INK';alignment=[string]$request.alignment;upright=$measure;shiftMm=$shift;targetX=$targets.X;targetY=$targets.Y}
                 }
-                foreach($key in @($targets.Keys)){Write-Property $obj $key $targets[$key]}
+                foreach($key in @($targets.Keys)){if(-not $isGeneralCandidate -or $key -notin @('X','Y')){Write-Property $obj $key $targets[$key]}}
                 $unquantized=@{}
                 if($isGeneralCandidate){
                     if([double]$request.coordinateQuantumMm -ne 0.0254){throw 'Unknown native coordinate quantum.'}
                     foreach($key in @('X','Y')){
                         $unquantized[$key]=[double]$targets[$key]
                         $targets[$key]=[math]::Round([double]$targets[$key]/0.0254,0,[MidpointRounding]::AwayFromZero)*0.0254
-                        Write-Property $obj $key $targets[$key]
                     }
+                }
+                if($isGeneralCandidate){
+                    # Set the representable native inch literals directly. The mm
+                    # COM setter truncates floating conversions by one mil at
+                    # some values (Run43: 81.4578 -> 81.4324). No epsilon offset.
+                    $positionBefore=Read-NativeXml ([string](Invoke-ComMethod $obj 'GetXML' @($true,$true)))
+                    $positionWrite=Read-NativeXml $positionBefore.OuterXml
+                    foreach($key in @('X','Y')){
+                        $inches=[math]::Round([double]$unquantized[$key]/25.4,3,[MidpointRounding]::AwayFromZero)
+                        $positionWrite.DocumentElement.SetAttribute(('Position.'+$key),($inches.ToString('0.000',[Globalization.CultureInfo]::InvariantCulture)+' in'))
+                    }
+                    $positionWrite.OuterXml|Set-Content -LiteralPath ($prefix+'-position-request.xml') -Encoding UTF8
+                    [void](Invoke-ComMethod $obj 'SetXML' @($positionWrite.OuterXml))
+                    $positionAfter=Read-NativeXml ([string](Invoke-ComMethod $obj 'GetXML' @($true,$true)))
+                    $positionAfter.OuterXml|Set-Content -LiteralPath ($prefix+'-position-readback.xml') -Encoding UTF8
+                    if((Get-NativeXmlKey $positionBefore.SelectSingleNode('/*/*[local-name()="DataSources"]')) -cne (Get-NativeXmlKey $positionAfter.SelectSingleNode('/*/*[local-name()="DataSources"]'))){throw 'Native position write changed DataSources.'}
                 }
                 $properties=[ordered]@{}
                 foreach($key in @($targets.Keys)){
@@ -341,6 +356,10 @@ function Invoke-HybridPoolBuild($formats,$plan,[string]$textPoolPath,[string]$ru
                 }finally{Release-NativeCom $obj}
             }
 
+            if($isGeneralCandidate){
+                [void](Invoke-ComMethod $document 'ExportToFile' @((Join-Path $runDir 'settled-presave.bmp'),'BMP',[int]0,[int]600,[int]2))
+                if(-not(Test-Path -LiteralPath (Join-Path $runDir 'settled-presave.bmp'))){throw 'Pre-save layout settlement render missing.'}
+            }
             Assert-NativeSourceIsolation $objects
             Assert-NativeNameSet @($report.objects|ForEach-Object{[string]$_.physicalName}) @(Get-NativeObjectNames $objects)
             [void](Invoke-ComMethod $document 'SaveAs' @($candidate,$false))
@@ -351,6 +370,11 @@ function Invoke-HybridPoolBuild($formats,$plan,[string]$textPoolPath,[string]$ru
             $page=Get-NativePageState $reopenDoc
             foreach($k in @('PaperWidth','PaperHeight','LabelWidth','LabelHeight','MarginLeft','MarginRight','MarginTop','MarginBottom')){Assert-NativeNear ([double]$page[$k]) ([double]$report.page[$k]) 0.05 ('Hybrid reopen '+$k)}
             $reopenObjects=Read-Property $reopenDoc 'Objects'
+            if($isGeneralCandidate){
+                [void](Invoke-ComMethod $reopenDoc 'ExportToFile' @((Join-Path $runDir 'settled-reopen.bmp'),'BMP',[int]0,[int]600,[int]2))
+                if(-not(Test-Path -LiteralPath (Join-Path $runDir 'settled-reopen.bmp'))){throw 'Reopen layout settlement render missing.'}
+                $report['layoutSettlement']='FULL_FORMAT_RENDER_BEFORE_SAVE_AND_REOPEN_TRANSACTIONS'
+            }
             foreach($request in @($plan.objects)){
                 $entry=@($report.objects|Where-Object{$_.id -ceq $request.id})[0];$obj=Find-NativeObject $reopenObjects ([string]$entry.physicalName)
                 try{

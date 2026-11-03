@@ -1,0 +1,286 @@
+{
+  "sha256": "A1CD0C9F742545BBF7FBB4F73A664DDE3974C2E0C1A301377F87CD3395CE26B8",
+  "productAcceptance": "NOT_RUN",
+  "objects": [
+    {
+      "id": "ROT90",
+      "metrics": {
+        "dx": {
+          "policy": "DIAGNOSTIC_ONLY",
+          "value": -3.9179999999999993
+        },
+        "dy": {
+          "policy": "DIAGNOSTIC_ONLY",
+          "value": 0.33399999999999963
+        },
+        "dw": {
+          "policy": "DIAGNOSTIC_ONLY",
+          "value": -26.867333333333335
+        },
+        "dh": {
+          "policy": "DIAGNOSTIC_ONLY",
+          "value": 14.563666666666666
+        },
+        "placementX": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        },
+        "placementY": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        },
+        "renderedRotation": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        }
+      },
+      "status": "MEASURED",
+      "expected": {
+        "x": 25,
+        "y": 5,
+        "width": 30,
+        "height": 8,
+        "rotation": 270
+      },
+      "actual": {
+        "x": 21.082,
+        "y": 5.334,
+        "width": 3.1326666666666667,
+        "height": 22.563666666666666
+      },
+      "delta": {
+        "dx": -3.9179999999999993,
+        "dy": 0.33399999999999963,
+        "dw": -26.867333333333335,
+        "dh": 14.563666666666666
+      },
+      "rotationDeltaRendered": null,
+      "rotationDeltaCom": 0,
+      "verdict": "WITHIN_FIXTURE_TOLERANCE"
+    },
+    {
+      "id": "ROT180",
+      "metrics": {
+        "dx": {
+          "policy": "DIAGNOSTIC_ONLY",
+          "value": -25.258333333333333
+        },
+        "dy": {
+          "policy": "DIAGNOSTIC_ONLY",
+          "value": -3.9556666666666658
+        },
+        "dw": {
+          "policy": "DIAGNOSTIC_ONLY",
+          "value": -15.065666666666665
+        },
+        "dh": {
+          "policy": "DIAGNOSTIC_ONLY",
+          "value": -4.867333333333333
+        },
+        "placementX": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        },
+        "placementY": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        },
+        "renderedRotation": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        }
+      },
+      "status": "MEASURED",
+      "expected": {
+        "x": 75,
+        "y": 20,
+        "width": 40,
+        "height": 8,
+        "rotation": 180
+      },
+      "actual": {
+        "x": 49.74166666666667,
+        "y": 16.044333333333334,
+        "width": 24.934333333333335,
+        "height": 3.1326666666666667
+      },
+      "delta": {
+        "dx": -25.258333333333333,
+        "dy": -3.9556666666666658,
+        "dw": -15.065666666666665,
+        "dh": -4.867333333333333
+      },
+      "rotationDeltaRendered": null,
+      "rotationDeltaCom": 0,
+      "verdict": "WITHIN_FIXTURE_TOLERANCE"
+    },
+    {
+      "id": "ROT270",
+      "metrics": {
+        "dx": {
+          "policy": "DIAGNOSTIC_ONLY",
+          "value": 0.8050000000000068
+        },
+        "dy": {
+          "policy": "DIAGNOSTIC_ONLY",
+          "value": -25.272666666666666
+        },
+        "dw": {
+          "policy": "DIAGNOSTIC_ONLY",
+          "value": -31.867333333333335
+        },
+        "dh": {
+          "policy": "DIAGNOSTIC_ONLY",
+          "value": 16.934333333333335
+        },
+        "placementX": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        },
+        "placementY": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        },
+        "renderedRotation": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        }
+      },
+      "status": "MEASURED",
+      "expected": {
+        "x": 90,
+        "y": 45,
+        "width": 35,
+        "height": 8,
+        "rotation": 90
+      },
+      "actual": {
+        "x": 90.805,
+        "y": 19.727333333333334,
+        "width": 3.1326666666666667,
+        "height": 24.934333333333335
+      },
+      "delta": {
+        "dx": 0.8050000000000068,
+        "dy": -25.272666666666666,
+        "dw": -31.867333333333335,
+        "dh": 16.934333333333335
+      },
+      "rotationDeltaRendered": null,
+      "rotationDeltaCom": 0,
+      "verdict": "WITHIN_FIXTURE_TOLERANCE"
+    },
+    {
+      "id": "BAR90",
+      "metrics": {
+        "dx": {
+          "policy": "DIAGNOSTIC_ONLY",
+          "value": -7.859666666666666
+        },
+        "dy": {
+          "policy": "DIAGNOSTIC_ONLY",
+          "value": 0.08500000000000085
+        },
+        "dw": {
+          "policy": "DIAGNOSTIC_ONLY",
+          "value": -12.107333333333333
+        },
+        "dh": {
+          "policy": "DIAGNOSTIC_ONLY",
+          "value": 12.065999999999999
+        },
+        "placementX": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        },
+        "placementY": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        },
+        "renderedRotation": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        }
+      },
+      "status": "MEASURED",
+      "expected": {
+        "x": 30,
+        "y": 47.54,
+        "width": 20.066,
+        "height": 8,
+        "rotation": 270
+      },
+      "actual": {
+        "x": 22.140333333333334,
+        "y": 47.625,
+        "width": 7.958666666666667,
+        "height": 20.066
+      },
+      "delta": {
+        "dx": -7.859666666666666,
+        "dy": 0.08500000000000085,
+        "dw": -12.107333333333333,
+        "dh": 12.065999999999999
+      },
+      "rotationDeltaRendered": null,
+      "rotationDeltaCom": 0,
+      "verdict": "WITHIN_FIXTURE_TOLERANCE"
+    },
+    {
+      "id": "DM270",
+      "metrics": {
+        "dx": {
+          "policy": "DIAGNOSTIC_ONLY",
+          "value": -0.01833333333333087
+        },
+        "dy": {
+          "policy": "DIAGNOSTIC_ONLY",
+          "value": -5.432333333333332
+        },
+        "dw": {
+          "policy": "DIAGNOSTIC_ONLY",
+          "value": 0.0013546666666668372
+        },
+        "dh": {
+          "policy": "DIAGNOSTIC_ONLY",
+          "value": 0.0013546666666668372
+        },
+        "placementX": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        },
+        "placementY": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        },
+        "renderedRotation": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        }
+      },
+      "status": "MEASURED",
+      "expected": {
+        "x": 65,
+        "y": 60,
+        "width": 5.417312,
+        "height": 5.417312,
+        "rotation": 90
+      },
+      "actual": {
+        "x": 64.98166666666667,
+        "y": 54.56766666666667,
+        "width": 5.418666666666667,
+        "height": 5.418666666666667
+      },
+      "delta": {
+        "dx": -0.01833333333333087,
+        "dy": -5.432333333333332,
+        "dw": 0.0013546666666668372,
+        "dh": 0.0013546666666668372
+      },
+      "rotationDeltaRendered": null,
+      "rotationDeltaCom": 0,
+      "verdict": "WITHIN_FIXTURE_TOLERANCE"
+    }
+  ]
+}

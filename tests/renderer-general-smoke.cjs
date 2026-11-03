@@ -29,4 +29,16 @@ const hri=clone(models[1]);hri.objects[0].humanReadable=true;assert.throws(()=>n
 const pattern=[[1,0,0],[1,1,0]].map(r=>Buffer.from(r));
 for(const angle of [90,180,270]){assert.equal(comparePattern(pattern,rotate(pattern,angle),angle).status,'PASS');assert.equal(comparePattern(pattern,rotate(pattern,(angle+180)%360),angle).status,'FAIL');}
 assert.throws(()=>rotate(pattern,45));
-console.log('PASS general candidate: shared expansion/CLI parity, 8 styles/lines, three alignments, orthogonal transforms, modules/quiet zones, visual displacement rejection, exact optical pattern rotation, unsupported capabilities fail closed; NOT BarTender runtime evidence');
+const symmetric=[[1,1],[1,1]].map(r=>Buffer.from(r));assert.equal(comparePattern(symmetric,symmetric,180).status,'FAIL');
+// A single raster-boundary pixel may differ in hinted text; no missing geometry,
+// dimensions, angle ambiguity, barcode pixel differences or two-pixel outliers.
+const glyph=Array.from({length:11},(_,y)=>Buffer.from(Array.from({length:23},(_,x)=>+(x===0||x===22||y===0||y===10||(x===4&&y<5)||(y===3&&x>=4&&x<=10)||(x===17&&y>7)))));
+const wanted=rotate(glyph,90),edge=wanted.map(r=>Buffer.from(r));edge[3][0]=0;
+assert.equal(comparePattern(glyph,edge,90,true).status,'PASS');assert.equal(comparePattern(glyph,edge,90,false).status,'FAIL');
+assert.equal(comparePattern(glyph,rotate(glyph,270),90,true).status,'FAIL');
+const broken=wanted.map(r=>Buffer.from(r));for(let y=4;y<=10;y++)for(let x=0;x<broken[0].length;x++)broken[y][x]=0;
+assert.equal(comparePattern(glyph,broken,90,true).status,'FAIL');
+const qmodel=clone(models[1]),qd=preview(qmodel),qa=qd.objects.map(p=>({id:p.id,status:'MEASURED',actual:clone(p.symbolBounds)})),qr=qd.objects.map(p=>({id:p.id,rotationDeg:0,referencePoint:'TopLeft',referencePointPresent:true}));
+qa[1].actual={x:5.1,y:5.1,width:1,height:3};assert.equal(evaluate(qd,qa,qr).quietZones.length,1);
+
+console.log('PASS general candidate: shared expansion/CLI parity, 8 styles/lines, three alignments, orthogonal transforms, modules/quiet zones, visual displacement rejection, optical geometry/angle ambiguity and exact barcode patterns, unsupported capabilities fail closed; NOT BarTender runtime evidence');

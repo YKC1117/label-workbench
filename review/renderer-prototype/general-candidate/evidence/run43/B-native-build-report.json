@@ -1,0 +1,518 @@
+﻿{
+    "schema":  "lwb-hybrid-pool-build-report-v1",
+    "status":  "FAILED_OR_BLOCKED",
+    "renderer":  "hybrid-text-pool-btc",
+    "productAcceptance":  "NOT_RUN",
+    "textPool":  {
+                     "path":  "C:\\Users\\FTUSER5\\actions-runner-label-workbench\\_work\\label-workbench\\label-workbench\\native\\Label_Workbench_Native_Layout_ENGINE_V1\\program\\native-results\\B\\r-b691c631f6db\\hybrid-text-pool.btw",
+                     "sha256":  "73E620EC2154D18AF3E279B4438A3775BE85D2A71F5BD8AFAAF664B31F03198B"
+                 },
+    "page":  {
+                 "printer":  "Argox CP-3140 PPLA",
+                 "LabelColumns":  1,
+                 "LabelRows":  1,
+                 "PaperWidth":  119.98999786376953,
+                 "PaperHeight":  80.010002136230469,
+                 "LabelWidth":  119.98999786376953,
+                 "LabelHeight":  80.010002136230469,
+                 "MarginLeft":  0,
+                 "MarginRight":  0,
+                 "MarginTop":  0,
+                 "MarginBottom":  0
+             },
+    "objects":  [
+                    {
+                        "id":  "CODE_SHORT",
+                        "type":  "code128",
+                        "physicalName":  "Bar Code 1",
+                        "nativeType":  4,
+                        "humanReadable":  {
+                                              "status":  "HIDDEN_BY_SETXML",
+                                              "before":  "VISIBLE_DEFAULT_OR_UNSPECIFIED",
+                                              "after":  "None"
+                                          },
+                        "sizing":  {
+                                       "status":  "EXPLICIT_MODULE_READBACK",
+                                       "targetWidthMm":  20.066,
+                                       "targetHeightMm":  7,
+                                       "samples":  [
+
+                                                   ],
+                                       "selected":  {
+                                                        "xDimension":  {
+                                                                           "index":  2,
+                                                                           "mils":  10,
+                                                                           "millimeters":  0.25,
+                                                                           "indexMeaning":  "UNVERIFIED_ENUM_INDEX_NOT_DOTS"
+                                                                       },
+                                                        "raster":  {
+                                                                       "file":  "hybrid-CODE_SHORT-size-module.bmp",
+                                                                       "requestedDpi":  600,
+                                                                       "headerDpiX":  599.9988,
+                                                                       "headerDpiY":  599.9988,
+                                                                       "dpiTrust":  "TRUSTED_HEADER_MATCH",
+                                                                       "physicalMmTrust":  "TRUSTED",
+                                                                       "canvasWidthPx":  476,
+                                                                       "canvasHeightPx":  167,
+                                                                       "inkWidthPx":  474,
+                                                                       "inkHeightPx":  165,
+                                                                       "inkWidthMm":  20.066,
+                                                                       "inkHeightMm":  6.985,
+                                                                       "sha256":  "06DC8857C5A864BE00B0C8EB764800BE58D44B60C820F87F20FDBF8C81EF4A5B",
+                                                                       "symbolBounds":  "NOT_DECODER_CONFIRMED"
+                                                                   }
+                                                    },
+                                       "errorMm":  null,
+                                       "approximation":  "NOT_RUN",
+                                       "warning":  "Raster ink is a layout approximation, not decoder-confirmed symbol bounds."
+                                   },
+                        "geometry":  {
+                                         "status":  "TARGET_GEOMETRY_WITHIN_TOLERANCE_VISUAL_PENDING",
+                                         "anchor":  {
+                                                        "status":  "PASS_VISUAL_PENDING",
+                                                        "mode":  "BARTENDER_DEFAULT_TOPLEFT_OMITTED",
+                                                        "serialized":  null
+                                                    },
+                                         "properties":  {
+                                                            "Height":  {
+                                                                           "requested":  7,
+                                                                           "actual":  6.985,
+                                                                           "tolerance":  0.1
+                                                                       },
+                                                            "RotationAngle":  {
+                                                                                  "requested":  0,
+                                                                                  "actual":  0,
+                                                                                  "tolerance":  0.01
+                                                                              },
+                                                            "X":  {
+                                                                      "requested":  7.54,
+                                                                      "actual":  7.5183999999999989,
+                                                                      "tolerance":  0.05
+                                                                  },
+                                                            "Y":  {
+                                                                      "requested":  5,
+                                                                      "actual":  4.9784,
+                                                                      "tolerance":  0.05
+                                                                  }
+                                                        },
+                                         "xDimension":  {
+                                                            "index":  2,
+                                                            "mils":  10,
+                                                            "millimeters":  0.25,
+                                                            "indexMeaning":  "UNVERIFIED_ENUM_INDEX_NOT_DOTS"
+                                                        }
+                                     },
+                        "reopenEditable":  "PAYLOAD_GEOMETRY_STYLE_PERSISTED"
+                    },
+                    {
+                        "id":  "CODE_NUM",
+                        "type":  "code128",
+                        "physicalName":  "Bar Code 2",
+                        "nativeType":  4,
+                        "humanReadable":  {
+                                              "status":  "HIDDEN_BY_SETXML",
+                                              "before":  "VISIBLE_DEFAULT_OR_UNSPECIFIED",
+                                              "after":  "None"
+                                          },
+                        "sizing":  {
+                                       "status":  "EXPLICIT_MODULE_READBACK",
+                                       "targetWidthMm":  34.196782,
+                                       "targetHeightMm":  15,
+                                       "samples":  [
+
+                                                   ],
+                                       "selected":  {
+                                                        "xDimension":  {
+                                                                           "index":  3,
+                                                                           "mils":  13.33,
+                                                                           "millimeters":  0.34,
+                                                                           "indexMeaning":  "UNVERIFIED_ENUM_INDEX_NOT_DOTS"
+                                                                       },
+                                                        "raster":  {
+                                                                       "file":  "hybrid-CODE_NUM-size-module.bmp",
+                                                                       "requestedDpi":  600,
+                                                                       "headerDpiX":  599.9988,
+                                                                       "headerDpiY":  599.9988,
+                                                                       "dpiTrust":  "TRUSTED_HEADER_MATCH",
+                                                                       "physicalMmTrust":  "TRUSTED",
+                                                                       "canvasWidthPx":  810,
+                                                                       "canvasHeightPx":  356,
+                                                                       "inkWidthPx":  808,
+                                                                       "inkHeightPx":  354,
+                                                                       "inkWidthMm":  34.205333333333328,
+                                                                       "inkHeightMm":  14.986,
+                                                                       "sha256":  "5996DEB229CB9662228DD984A9F0EC9B18DDC256403366CC6D897D313FE8D5D2",
+                                                                       "symbolBounds":  "NOT_DECODER_CONFIRMED"
+                                                                   }
+                                                    },
+                                       "errorMm":  null,
+                                       "approximation":  "NOT_RUN",
+                                       "warning":  "Raster ink is a layout approximation, not decoder-confirmed symbol bounds."
+                                   },
+                        "geometry":  {
+                                         "status":  "TARGET_GEOMETRY_WITHIN_TOLERANCE_VISUAL_PENDING",
+                                         "anchor":  {
+                                                        "status":  "PASS_VISUAL_PENDING",
+                                                        "mode":  "BARTENDER_DEFAULT_TOPLEFT_OMITTED",
+                                                        "serialized":  null
+                                                    },
+                                         "properties":  {
+                                                            "Height":  {
+                                                                           "requested":  15,
+                                                                           "actual":  14.985999999999999,
+                                                                           "tolerance":  0.1
+                                                                       },
+                                                            "RotationAngle":  {
+                                                                                  "requested":  0,
+                                                                                  "actual":  0,
+                                                                                  "tolerance":  0.01
+                                                                              },
+                                                            "X":  {
+                                                                      "requested":  48.4,
+                                                                      "actual":  48.387,
+                                                                      "tolerance":  0.05
+                                                                  },
+                                                            "Y":  {
+                                                                      "requested":  5,
+                                                                      "actual":  4.9784,
+                                                                      "tolerance":  0.05
+                                                                  }
+                                                        },
+                                         "xDimension":  {
+                                                            "index":  3,
+                                                            "mils":  13.33,
+                                                            "millimeters":  0.34,
+                                                            "indexMeaning":  "UNVERIFIED_ENUM_INDEX_NOT_DOTS"
+                                                        }
+                                     },
+                        "reopenEditable":  "NOT_RUN"
+                    },
+                    {
+                        "id":  "CODE_LONG",
+                        "type":  "code128",
+                        "physicalName":  "Bar Code 3",
+                        "nativeType":  4,
+                        "humanReadable":  {
+                                              "status":  "HIDDEN_BY_SETXML",
+                                              "before":  "VISIBLE_DEFAULT_OR_UNSPECIFIED",
+                                              "after":  "None"
+                                          },
+                        "sizing":  {
+                                       "status":  "EXPLICIT_MODULE_READBACK",
+                                       "targetWidthMm":  36.83,
+                                       "targetHeightMm":  12,
+                                       "samples":  [
+
+                                                   ],
+                                       "selected":  {
+                                                        "xDimension":  {
+                                                                           "index":  2,
+                                                                           "mils":  10,
+                                                                           "millimeters":  0.25,
+                                                                           "indexMeaning":  "UNVERIFIED_ENUM_INDEX_NOT_DOTS"
+                                                                       },
+                                                        "raster":  {
+                                                                       "file":  "hybrid-CODE_LONG-size-module.bmp",
+                                                                       "requestedDpi":  600,
+                                                                       "headerDpiX":  599.9988,
+                                                                       "headerDpiY":  599.9988,
+                                                                       "dpiTrust":  "TRUSTED_HEADER_MATCH",
+                                                                       "physicalMmTrust":  "TRUSTED",
+                                                                       "canvasWidthPx":  872,
+                                                                       "canvasHeightPx":  285,
+                                                                       "inkWidthPx":  870,
+                                                                       "inkHeightPx":  283,
+                                                                       "inkWidthMm":  36.83,
+                                                                       "inkHeightMm":  11.980333333333332,
+                                                                       "sha256":  "C86D192F49DFDEC1C4668FBB42DD427F1676E495E50640E1DB27593708A1FC37",
+                                                                       "symbolBounds":  "NOT_DECODER_CONFIRMED"
+                                                                   }
+                                                    },
+                                       "errorMm":  null,
+                                       "approximation":  "NOT_RUN",
+                                       "warning":  "Raster ink is a layout approximation, not decoder-confirmed symbol bounds."
+                                   },
+                        "geometry":  {
+                                         "status":  "TARGET_GEOMETRY_WITHIN_TOLERANCE_VISUAL_PENDING",
+                                         "anchor":  {
+                                                        "status":  "PASS_VISUAL_PENDING",
+                                                        "mode":  "BARTENDER_DEFAULT_TOPLEFT_OMITTED",
+                                                        "serialized":  null
+                                                    },
+                                         "properties":  {
+                                                            "Height":  {
+                                                                           "requested":  12,
+                                                                           "actual":  11.9888,
+                                                                           "tolerance":  0.1
+                                                                       },
+                                                            "RotationAngle":  {
+                                                                                  "requested":  0,
+                                                                                  "actual":  0,
+                                                                                  "tolerance":  0.01
+                                                                              },
+                                                            "X":  {
+                                                                      "requested":  5,
+                                                                      "actual":  4.9784,
+                                                                      "tolerance":  0.05
+                                                                  },
+                                                            "Y":  {
+                                                                      "requested":  28,
+                                                                      "actual":  27.9908,
+                                                                      "tolerance":  0.05
+                                                                  }
+                                                        },
+                                         "xDimension":  {
+                                                            "index":  2,
+                                                            "mils":  10,
+                                                            "millimeters":  0.25,
+                                                            "indexMeaning":  "UNVERIFIED_ENUM_INDEX_NOT_DOTS"
+                                                        }
+                                     },
+                        "reopenEditable":  "NOT_RUN"
+                    },
+                    {
+                        "id":  "DM_SMALL",
+                        "type":  "datamatrix",
+                        "physicalName":  "條碼 1",
+                        "nativeType":  4,
+                        "humanReadable":  {
+                                              "status":  "HIDDEN_BY_SETXML",
+                                              "before":  "VISIBLE_DEFAULT_OR_UNSPECIFIED",
+                                              "after":  "None"
+                                          },
+                        "sizing":  {
+                                       "status":  "EXPLICIT_MODULE_READBACK",
+                                       "targetWidthMm":  2.54,
+                                       "targetHeightMm":  2.54,
+                                       "samples":  [
+
+                                                   ],
+                                       "selected":  {
+                                                        "xDimension":  {
+                                                                           "index":  2,
+                                                                           "mils":  10,
+                                                                           "millimeters":  0.25,
+                                                                           "indexMeaning":  "UNVERIFIED_ENUM_INDEX_NOT_DOTS"
+                                                                       },
+                                                        "raster":  {
+                                                                       "file":  "hybrid-DM_SMALL-size-module.bmp",
+                                                                       "requestedDpi":  600,
+                                                                       "headerDpiX":  599.9988,
+                                                                       "headerDpiY":  599.9988,
+                                                                       "dpiTrust":  "TRUSTED_HEADER_MATCH",
+                                                                       "physicalMmTrust":  "TRUSTED",
+                                                                       "canvasWidthPx":  62,
+                                                                       "canvasHeightPx":  62,
+                                                                       "inkWidthPx":  60,
+                                                                       "inkHeightPx":  60,
+                                                                       "inkWidthMm":  2.54,
+                                                                       "inkHeightMm":  2.54,
+                                                                       "sha256":  "25DEB7383EDBCD0C2DF0301F325BC044F0EBBE16ED87B9D541E16397D0F31BEE",
+                                                                       "symbolBounds":  "NOT_DECODER_CONFIRMED"
+                                                                   }
+                                                    },
+                                       "errorMm":  null,
+                                       "approximation":  "NOT_RUN",
+                                       "warning":  "Raster ink is a layout approximation, not decoder-confirmed symbol bounds."
+                                   },
+                        "geometry":  {
+                                         "status":  "TARGET_GEOMETRY_WITHIN_TOLERANCE_VISUAL_PENDING",
+                                         "anchor":  {
+                                                        "status":  "PASS_VISUAL_PENDING",
+                                                        "mode":  "BARTENDER_DEFAULT_TOPLEFT_OMITTED",
+                                                        "serialized":  null
+                                                    },
+                                         "properties":  {
+                                                            "RotationAngle":  {
+                                                                                  "requested":  0,
+                                                                                  "actual":  0,
+                                                                                  "tolerance":  0.01
+                                                                              },
+                                                            "X":  {
+                                                                      "requested":  75,
+                                                                      "actual":  74.980799999999988,
+                                                                      "tolerance":  0.05
+                                                                  },
+                                                            "Y":  {
+                                                                      "requested":  30,
+                                                                      "actual":  29.9974,
+                                                                      "tolerance":  0.05
+                                                                  }
+                                                        },
+                                         "xDimension":  {
+                                                            "index":  2,
+                                                            "mils":  10,
+                                                            "millimeters":  0.25,
+                                                            "indexMeaning":  "UNVERIFIED_ENUM_INDEX_NOT_DOTS"
+                                                        }
+                                     },
+                        "reopenEditable":  "NOT_RUN"
+                    },
+                    {
+                        "id":  "DM_MEDIUM",
+                        "type":  "datamatrix",
+                        "physicalName":  "條碼 2",
+                        "nativeType":  4,
+                        "humanReadable":  {
+                                              "status":  "HIDDEN_BY_SETXML",
+                                              "before":  "VISIBLE_DEFAULT_OR_UNSPECIFIED",
+                                              "after":  "None"
+                                          },
+                        "sizing":  {
+                                       "status":  "EXPLICIT_MODULE_READBACK",
+                                       "targetWidthMm":  6.094476,
+                                       "targetHeightMm":  6.094476,
+                                       "samples":  [
+
+                                                   ],
+                                       "selected":  {
+                                                        "xDimension":  {
+                                                                           "index":  3,
+                                                                           "mils":  13.33,
+                                                                           "millimeters":  0.34,
+                                                                           "indexMeaning":  "UNVERIFIED_ENUM_INDEX_NOT_DOTS"
+                                                                       },
+                                                        "raster":  {
+                                                                       "file":  "hybrid-DM_MEDIUM-size-module.bmp",
+                                                                       "requestedDpi":  600,
+                                                                       "headerDpiX":  599.9988,
+                                                                       "headerDpiY":  599.9988,
+                                                                       "dpiTrust":  "TRUSTED_HEADER_MATCH",
+                                                                       "physicalMmTrust":  "TRUSTED",
+                                                                       "canvasWidthPx":  146,
+                                                                       "canvasHeightPx":  146,
+                                                                       "inkWidthPx":  144,
+                                                                       "inkHeightPx":  144,
+                                                                       "inkWidthMm":  6.096,
+                                                                       "inkHeightMm":  6.096,
+                                                                       "sha256":  "B0BD1E7C02CDDA346C915AD136B0DFD8BD2BA11745F5C17C8B557CD04D3DEE60",
+                                                                       "symbolBounds":  "NOT_DECODER_CONFIRMED"
+                                                                   }
+                                                    },
+                                       "errorMm":  null,
+                                       "approximation":  "NOT_RUN",
+                                       "warning":  "Raster ink is a layout approximation, not decoder-confirmed symbol bounds."
+                                   },
+                        "geometry":  {
+                                         "status":  "TARGET_GEOMETRY_WITHIN_TOLERANCE_VISUAL_PENDING",
+                                         "anchor":  {
+                                                        "status":  "PASS_VISUAL_PENDING",
+                                                        "mode":  "BARTENDER_DEFAULT_TOPLEFT_OMITTED",
+                                                        "serialized":  null
+                                                    },
+                                         "properties":  {
+                                                            "RotationAngle":  {
+                                                                                  "requested":  0,
+                                                                                  "actual":  0,
+                                                                                  "tolerance":  0.01
+                                                                              },
+                                                            "X":  {
+                                                                      "requested":  85,
+                                                                      "actual":  84.9884,
+                                                                      "tolerance":  0.05
+                                                                  },
+                                                            "Y":  {
+                                                                      "requested":  30,
+                                                                      "actual":  29.9974,
+                                                                      "tolerance":  0.05
+                                                                  }
+                                                        },
+                                         "xDimension":  {
+                                                            "index":  3,
+                                                            "mils":  13.33,
+                                                            "millimeters":  0.34,
+                                                            "indexMeaning":  "UNVERIFIED_ENUM_INDEX_NOT_DOTS"
+                                                        }
+                                     },
+                        "reopenEditable":  "NOT_RUN"
+                    },
+                    {
+                        "id":  "DM_LARGE",
+                        "type":  "datamatrix",
+                        "physicalName":  "條碼 3",
+                        "nativeType":  4,
+                        "humanReadable":  {
+                                              "status":  "HIDDEN_BY_SETXML",
+                                              "before":  "VISIBLE_DEFAULT_OR_UNSPECIFIED",
+                                              "after":  "None"
+                                          },
+                        "sizing":  {
+                                       "status":  "EXPLICIT_MODULE_READBACK",
+                                       "targetWidthMm":  8.125968,
+                                       "targetHeightMm":  8.125968,
+                                       "samples":  [
+
+                                                   ],
+                                       "selected":  {
+                                                        "xDimension":  {
+                                                                           "index":  3,
+                                                                           "mils":  13.33,
+                                                                           "millimeters":  0.34,
+                                                                           "indexMeaning":  "UNVERIFIED_ENUM_INDEX_NOT_DOTS"
+                                                                       },
+                                                        "raster":  {
+                                                                       "file":  "hybrid-DM_LARGE-size-module.bmp",
+                                                                       "requestedDpi":  600,
+                                                                       "headerDpiX":  599.9988,
+                                                                       "headerDpiY":  599.9988,
+                                                                       "dpiTrust":  "TRUSTED_HEADER_MATCH",
+                                                                       "physicalMmTrust":  "TRUSTED",
+                                                                       "canvasWidthPx":  194,
+                                                                       "canvasHeightPx":  194,
+                                                                       "inkWidthPx":  192,
+                                                                       "inkHeightPx":  192,
+                                                                       "inkWidthMm":  8.1279999999999983,
+                                                                       "inkHeightMm":  8.1279999999999983,
+                                                                       "sha256":  "FD083855C00E2D1D5D21DFDE2B2D2D4083544C239BFE10A10D5CF972AEECDF7F",
+                                                                       "symbolBounds":  "NOT_DECODER_CONFIRMED"
+                                                                   }
+                                                    },
+                                       "errorMm":  null,
+                                       "approximation":  "NOT_RUN",
+                                       "warning":  "Raster ink is a layout approximation, not decoder-confirmed symbol bounds."
+                                   },
+                        "geometry":  {
+                                         "status":  "TARGET_GEOMETRY_WITHIN_TOLERANCE_VISUAL_PENDING",
+                                         "anchor":  {
+                                                        "status":  "PASS_VISUAL_PENDING",
+                                                        "mode":  "BARTENDER_DEFAULT_TOPLEFT_OMITTED",
+                                                        "serialized":  null
+                                                    },
+                                         "properties":  {
+                                                            "RotationAngle":  {
+                                                                                  "requested":  0,
+                                                                                  "actual":  0,
+                                                                                  "tolerance":  0.01
+                                                                              },
+                                                            "X":  {
+                                                                      "requested":  5,
+                                                                      "actual":  4.9784,
+                                                                      "tolerance":  0.05
+                                                                  },
+                                                            "Y":  {
+                                                                      "requested":  52,
+                                                                      "actual":  51.9938,
+                                                                      "tolerance":  0.05
+                                                                  }
+                                                        },
+                                         "xDimension":  {
+                                                            "index":  3,
+                                                            "mils":  13.33,
+                                                            "millimeters":  0.34,
+                                                            "indexMeaning":  "UNVERIFIED_ENUM_INDEX_NOT_DOTS"
+                                                        }
+                                     },
+                        "reopenEditable":  "NOT_RUN"
+                    }
+                ],
+    "warnings":  [
+                     "Designer-authored Text slots are reused; unused donor objects are deleted from the disposable candidate copy before any payload assignment; the embedded donor source remains unchanged.",
+                     "An omitted ReferencePoint after an explicit TopLeft request is accepted only pending final unique full-page BMP Visual QA."
+                 ],
+    "output":  null,
+    "outputSha256":  null,
+    "reopen":  "NOT_RUN",
+    "deletedUnusedDonorObjects":  41,
+    "dataMatrixComponent":  "C:\\Program Files\\Seagull\\BarTender 2022\\Barcodes\\Common Bar Codes\\Data Matrix.btc",
+    "error":  "System.Management.Automation.RuntimeException: Hybrid payload import modified peer XML or semantic state: Bar Code 2"
+}

@@ -1,0 +1,1 @@
+﻿System.Management.Automation.RuntimeException: Render comparison unresolved or outside tolerance. See render-comparison.json / dual-render-qa.json.

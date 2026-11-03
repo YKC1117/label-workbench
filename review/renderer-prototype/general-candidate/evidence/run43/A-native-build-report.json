@@ -1,0 +1,217 @@
+﻿{
+    "schema":  "lwb-hybrid-pool-build-report-v1",
+    "status":  "FAILED_OR_BLOCKED",
+    "renderer":  "hybrid-text-pool-btc",
+    "productAcceptance":  "NOT_RUN",
+    "textPool":  {
+                     "path":  "C:\\Users\\FTUSER5\\actions-runner-label-workbench\\_work\\label-workbench\\label-workbench\\native\\Label_Workbench_Native_Layout_ENGINE_V1\\program\\native-results\\A\\r-ff32561434fc\\hybrid-text-pool.btw",
+                     "sha256":  "73E620EC2154D18AF3E279B4438A3775BE85D2A71F5BD8AFAAF664B31F03198B"
+                 },
+    "page":  {
+                 "printer":  "Argox CP-3140 PPLA",
+                 "LabelColumns":  1,
+                 "LabelRows":  1,
+                 "PaperWidth":  119.98999786376953,
+                 "PaperHeight":  80.010002136230469,
+                 "LabelWidth":  119.98999786376953,
+                 "LabelHeight":  80.010002136230469,
+                 "MarginLeft":  0,
+                 "MarginRight":  0,
+                 "MarginTop":  0,
+                 "MarginBottom":  0
+             },
+    "objects":  [
+                    {
+                        "id":  "BOLD9",
+                        "type":  "text",
+                        "physicalName":  "文字 1",
+                        "nativeType":  5,
+                        "referencePointXml":  null,
+                        "geometry":  {
+                                         "anchor":  {
+                                                        "status":  "PASS_VISUAL_PENDING",
+                                                        "mode":  "BARTENDER_DEFAULT_TOPLEFT_OMITTED",
+                                                        "serialized":  null
+                                                    },
+                                         "payload":  {
+                                                         "root":  "Text",
+                                                         "sourceId":  "{6E1B676D-8F75-4730-9296-8F59D6DFC18A}",
+                                                         "value":  "Bold Nine",
+                                                         "sourceCount":  1,
+                                                         "transforms":  0
+                                                     },
+                                         "properties":  {
+                                                            "FontName":  {
+                                                                             "requested":  "Arial",
+                                                                             "actual":  "Arial",
+                                                                             "unquantized":  null
+                                                                         },
+                                                            "FontSize":  {
+                                                                             "requested":  9,
+                                                                             "actual":  9,
+                                                                             "unquantized":  null
+                                                                         },
+                                                            "FontBold":  {
+                                                                             "requested":  true,
+                                                                             "actual":  true,
+                                                                             "unquantized":  null
+                                                                         },
+                                                            "FontItalic":  {
+                                                                               "requested":  false,
+                                                                               "actual":  false,
+                                                                               "unquantized":  null
+                                                                           },
+                                                            "RotationAngle":  {
+                                                                                  "requested":  0,
+                                                                                  "actual":  0,
+                                                                                  "unquantized":  null
+                                                                              },
+                                                            "X":  {
+                                                                      "requested":  5.0038,
+                                                                      "actual":  5.0038,
+                                                                      "unquantized":  5
+                                                                  },
+                                                            "Y":  {
+                                                                      "requested":  5.0038,
+                                                                      "actual":  5.0038,
+                                                                      "unquantized":  5
+                                                                  }
+                                                        },
+                                         "anchorAfterProperties":  "BARTENDER_DEFAULT_TOPLEFT_OMITTED",
+                                         "alignmentEvidence":  null
+                                     },
+                        "reopenEditable":  "NOT_RUN"
+                    },
+                    {
+                        "id":  "ITALIC18",
+                        "type":  "text",
+                        "physicalName":  "文字 2",
+                        "nativeType":  5,
+                        "referencePointXml":  null,
+                        "geometry":  {
+                                         "anchor":  {
+                                                        "status":  "PASS_VISUAL_PENDING",
+                                                        "mode":  "BARTENDER_DEFAULT_TOPLEFT_OMITTED",
+                                                        "serialized":  null
+                                                    },
+                                         "payload":  {
+                                                         "root":  "Text",
+                                                         "sourceId":  "{0A8D34E0-04AF-484A-8AF4-C3AA658128D2}",
+                                                         "value":  "Italic 18",
+                                                         "sourceCount":  1,
+                                                         "transforms":  0
+                                                     },
+                                         "properties":  {
+                                                            "FontName":  {
+                                                                             "requested":  "Arial",
+                                                                             "actual":  "Arial",
+                                                                             "unquantized":  null
+                                                                         },
+                                                            "FontSize":  {
+                                                                             "requested":  18,
+                                                                             "actual":  18,
+                                                                             "unquantized":  null
+                                                                         },
+                                                            "FontBold":  {
+                                                                             "requested":  false,
+                                                                             "actual":  false,
+                                                                             "unquantized":  null
+                                                                         },
+                                                            "FontItalic":  {
+                                                                               "requested":  true,
+                                                                               "actual":  true,
+                                                                               "unquantized":  null
+                                                                           },
+                                                            "RotationAngle":  {
+                                                                                  "requested":  0,
+                                                                                  "actual":  0,
+                                                                                  "unquantized":  null
+                                                                              },
+                                                            "X":  {
+                                                                      "requested":  54.991,
+                                                                      "actual":  54.991,
+                                                                      "unquantized":  55
+                                                                  },
+                                                            "Y":  {
+                                                                      "requested":  5.0038,
+                                                                      "actual":  5.0038,
+                                                                      "unquantized":  5
+                                                                  }
+                                                        },
+                                         "anchorAfterProperties":  "BARTENDER_DEFAULT_TOPLEFT_OMITTED",
+                                         "alignmentEvidence":  null
+                                     },
+                        "reopenEditable":  "NOT_RUN"
+                    },
+                    {
+                        "id":  "BOTH24",
+                        "type":  "text",
+                        "physicalName":  "文字 3",
+                        "nativeType":  5,
+                        "referencePointXml":  null,
+                        "geometry":  {
+                                         "anchor":  {
+                                                        "status":  "PASS_VISUAL_PENDING",
+                                                        "mode":  "BARTENDER_DEFAULT_TOPLEFT_OMITTED",
+                                                        "serialized":  null
+                                                    },
+                                         "payload":  {
+                                                         "root":  "Text",
+                                                         "sourceId":  "{3FA6A9C6-F049-4293-AAB2-CB190BB7ED0E}",
+                                                         "value":  "Style 24",
+                                                         "sourceCount":  1,
+                                                         "transforms":  0
+                                                     },
+                                         "properties":  {
+                                                            "FontName":  {
+                                                                             "requested":  "Arial",
+                                                                             "actual":  "Arial",
+                                                                             "unquantized":  null
+                                                                         },
+                                                            "FontSize":  {
+                                                                             "requested":  24,
+                                                                             "actual":  24,
+                                                                             "unquantized":  null
+                                                                         },
+                                                            "FontBold":  {
+                                                                             "requested":  true,
+                                                                             "actual":  true,
+                                                                             "unquantized":  null
+                                                                         },
+                                                            "FontItalic":  {
+                                                                               "requested":  true,
+                                                                               "actual":  true,
+                                                                               "unquantized":  null
+                                                                           },
+                                                            "RotationAngle":  {
+                                                                                  "requested":  0,
+                                                                                  "actual":  0,
+                                                                                  "unquantized":  null
+                                                                              },
+                                                            "X":  {
+                                                                      "requested":  5.0038,
+                                                                      "actual":  5.0038,
+                                                                      "unquantized":  5
+                                                                  },
+                                                            "Y":  {
+                                                                      "requested":  19.9898,
+                                                                      "actual":  19.9898,
+                                                                      "unquantized":  20
+                                                                  }
+                                                        },
+                                         "anchorAfterProperties":  "BARTENDER_DEFAULT_TOPLEFT_OMITTED",
+                                         "alignmentEvidence":  null
+                                     },
+                        "reopenEditable":  "NOT_RUN"
+                    }
+                ],
+    "warnings":  [
+                     "Designer-authored Text slots are reused; unused donor objects are deleted from the disposable candidate copy before any payload assignment; the embedded donor source remains unchanged.",
+                     "An omitted ReferencePoint after an explicit TopLeft request is accepted only pending final unique full-page BMP Visual QA."
+                 ],
+    "output":  null,
+    "outputSha256":  null,
+    "reopen":  "NOT_RUN",
+    "deletedUnusedDonorObjects":  33,
+    "error":  "System.Management.Automation.RuntimeException: Hybrid Text X mismatch: 81.4324 expected 81.4578"
+}
