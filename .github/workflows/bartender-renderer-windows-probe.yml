@@ -31,6 +31,31 @@ jobs:
           persist-credentials: false
           clean: true
 
+      - name: Provision isolated Node.js runtime
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install locked renderer dependencies
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $evidence = Join-Path $env:GITHUB_WORKSPACE 'review\renderer-prototype\runner-evidence'
+          New-Item -ItemType Directory -Force -Path $evidence | Out-Null
+          ('node=' + (& node.exe --version)) | Set-Content -LiteralPath (Join-Path $evidence 'node-runtime.txt') -Encoding UTF8
+          ('npm=' + (& npm.cmd --version)) | Add-Content -LiteralPath (Join-Path $evidence 'node-runtime.txt') -Encoding UTF8
+          & npm.cmd ci --ignore-scripts --no-audit --no-fund 2>&1 | Tee-Object -FilePath (Join-Path $evidence 'npm-ci.log')
+          if ($LASTEXITCODE -ne 0) { throw ('npm ci failed with exit code ' + $LASTEXITCODE) }
+
+      - name: Run renderer offline regression on the same Windows host
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $evidence = Join-Path $env:GITHUB_WORKSPACE 'review\renderer-prototype\runner-evidence'
+          & npm.cmd run test:renderer 2>&1 | Tee-Object -FilePath (Join-Path $evidence 'renderer-offline-regression.log')
+          if ($LASTEXITCODE -ne 0) { throw ('Renderer offline regression failed with exit code ' + $LASTEXITCODE) }
+
       - name: Preflight Windows / PowerShell 5.1 / BarTender COM
         shell: powershell
         run: |
@@ -44,7 +69,10 @@ jobs:
             os = [Environment]::OSVersion.VersionString
             powershell = $PSVersionTable.PSVersion.ToString()
             processBits = [IntPtr]::Size * 8
+            node = (& node.exe --version).Trim()
+            npm = (& npm.cmd --version).Trim()
             bartenderProgId = 'NOT_CHECKED'
+            bartenderExecutable = $null
             existingBarTendProcesses = 0
           }
 
@@ -65,6 +93,12 @@ jobs:
             throw 'BarTender.Application COM ProgID is not registered on this machine.'
           }
           $rows.bartenderProgId = 'REGISTERED'
+
+          $btCandidates = @(
+            (Join-Path $env:ProgramFiles 'Seagull\BarTender 2022\BarTend.exe'),
+            $(if (${env:ProgramFiles(x86)}) { Join-Path ${env:ProgramFiles(x86)} 'Seagull\BarTender 2022\BarTend.exe' })
+          ) | Where-Object { $_ -and (Test-Path -LiteralPath $_) }
+          if ($btCandidates.Count -gt 0) { $rows.bartenderExecutable = [string]$btCandidates[0] }
 
           $existing = @(Get-Process -Name BarTend -ErrorAction SilentlyContinue)
           $rows.existingBarTendProcesses = $existing.Count
@@ -90,6 +124,8 @@ jobs:
           $summary = [ordered]@{
             sha = $env:GITHUB_SHA
             ref = $env:GITHUB_REF
+            runId = $env:GITHUB_RUN_ID
+            runAttempt = $env:GITHUB_RUN_ATTEMPT
             resultZip = Test-Path -LiteralPath (Join-Path $program 'NATIVE_BUILD_RESULT.zip')
             latestBtw = Test-Path -LiteralPath (Join-Path $program 'LATEST_NATIVE_OUTPUT.btw')
             latestReport = Test-Path -LiteralPath (Join-Path $program 'LATEST_NATIVE_REPORT.json')
