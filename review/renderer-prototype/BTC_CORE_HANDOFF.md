@@ -1,3 +1,5 @@
+> Historical snapshot. Run41 proves the upright 8-Text Hybrid gate. Current general-capability work and pending Run44 are documented in [GENERAL_RENDERER_HANDOFF.md](GENERAL_RENDERER_HANDOFF.md); do not reopen the solved 8-Text contamination or retired Create(5) primary route.
+
 # BTC Canonical Renderer core
 
 本輪基準 experiment/com-renderer-prototype 的 22ef92e45095b2269e598c749034c1d1d3f9c303。Create 與 InsertComponent 的存在、Code128 BTC 的首次成功插入已由 repository 的 installed-api.json 及歷史 Windows evidence 證實。保留 Create(5) 建立 Text；Barcodes 以 BTC 插入，沒有使用 Create(4) 猜測 symbology。

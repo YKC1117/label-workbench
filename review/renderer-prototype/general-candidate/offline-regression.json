@@ -81,8 +81,66 @@
     {
       "file": "tests/renderer-general-smoke.cjs",
       "status": "PASS",
-      "output": "PASS general candidate: shared expansion/CLI parity, 8 styles/lines, three alignments, orthogonal transforms, modules/quiet zones, visual displacement rejection, exact optical pattern rotation, unsupported capabilities fail closed; NOT BarTender runtime evidence\n",
+      "output": "PASS general candidate: shared expansion/CLI parity, 8 styles/lines, three alignments, orthogonal transforms, modules/quiet zones, visual displacement rejection, optical geometry/angle ambiguity and exact barcode patterns, unsupported capabilities fail closed; NOT BarTender runtime evidence\n",
       "stderr": ""
+    }
+  ],
+  "syntax": [
+    {
+      "file": "renderer/preview.cjs",
+      "status": "PASS"
+    },
+    {
+      "file": "renderer/rotation-qa.cjs",
+      "status": "PASS"
+    },
+    {
+      "file": "renderer/adapter.cjs",
+      "status": "PASS"
+    },
+    {
+      "file": "renderer/barcode.cjs",
+      "status": "PASS"
+    },
+    {
+      "file": "renderer/text-layout.cjs",
+      "status": "PASS"
+    },
+    {
+      "file": "renderer/canonical.cjs",
+      "status": "PASS"
+    },
+    {
+      "file": "renderer/visual-qa.cjs",
+      "status": "PASS"
+    },
+    {
+      "file": "renderer/prepare.cjs",
+      "status": "PASS"
+    },
+    {
+      "file": "renderer/materialize-text-pool.cjs",
+      "status": "PASS"
+    },
+    {
+      "file": "renderer/pool-contract.cjs",
+      "status": "PASS"
+    },
+    {
+      "file": "renderer/geometry.cjs",
+      "status": "PASS"
+    },
+    {
+      "file": "tests/renderer-general-smoke.cjs",
+      "status": "PASS"
+    },
+    {
+      "file": "native/Label_Workbench_Native_Layout_ENGINE_V1/program/probe-render.cjs",
+      "status": "PASS"
+    },
+    {
+      "file": "native/Label_Workbench_Native_Layout_ENGINE_V1/program/compare-render.cjs",
+      "status": "PASS"
     }
   ],
   "runtimeClaim": "NONE: offline only"

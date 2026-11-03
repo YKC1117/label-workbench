@@ -1,3 +1,5 @@
+> Historical snapshot. Run41 proves the upright 8-Text Hybrid gate. Current general-capability work and pending Run44 are documented in [GENERAL_RENDERER_HANDOFF.md](GENERAL_RENDERER_HANDOFF.md); do not reopen the solved 8-Text contamination or retired Create(5) primary route.
+
 # CODEX HANDOFF — Hybrid multi-object payload isolation blocker
 
 Repository: `YKC1117/label-workbench`
