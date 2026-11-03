@@ -23,10 +23,12 @@ const dm=footprint(canonical.objects[3]);assert.equal(dm.rows,10);assert.equal(d
 const numeric={...canonical.objects[2],value:'123456789012'};assert.ok(footprint(numeric).modules<11*(numeric.value.length+2)+13);
 const drawing=preview(canonical),actual=drawing.objects.map(o=>({id:o.id,status:'MEASURED',actual:clone(o.symbolBounds??o.bounds)})),readback=drawing.objects.map(o=>({id:o.id,rotationDeg:-o.rotation,referencePoint:'TopLeft',referencePointPresent:true}));
 assert.equal(evaluate(drawing,actual,readback).status,'PASS_PLACEMENT_AND_SIZE');
-const documentedTextDefault=clone(readback);documentedTextDefault[0].referencePoint=null;documentedTextDefault[0].referencePointPresent=false;
-assert.equal(evaluate(drawing,actual,documentedTextDefault).status,'PASS_PLACEMENT_AND_SIZE');
-const missingBarcodeAnchor=clone(readback);missingBarcodeAnchor[2].referencePoint=null;missingBarcodeAnchor[2].referencePointPresent=false;
-assert.equal(evaluate(drawing,actual,missingBarcodeAnchor).status,'UNRESOLVED');
+const omittedTextDefault=clone(readback);omittedTextDefault[0].referencePoint=null;omittedTextDefault[0].referencePointPresent=false;
+assert.equal(evaluate(drawing,actual,omittedTextDefault).status,'PASS_PLACEMENT_AND_SIZE');
+const omittedBarcodeDefault=clone(readback);omittedBarcodeDefault[2].referencePoint=null;omittedBarcodeDefault[2].referencePointPresent=false;
+assert.equal(evaluate(drawing,actual,omittedBarcodeDefault).status,'PASS_PLACEMENT_AND_SIZE');
+const omittedBarcodeWithoutUniqueVisual=clone(actual);omittedBarcodeWithoutUniqueVisual[2].actual=null;omittedBarcodeWithoutUniqueVisual[2].status='UNRESOLVED';
+assert.equal(evaluate(drawing,omittedBarcodeWithoutUniqueVisual,omittedBarcodeDefault).status,'UNRESOLVED');
 for(const key of ['x','y','width','height']){const shifted=clone(actual);shifted[2].actual[key]+=2;assert.equal(evaluate(drawing,shifted,readback).status,'FAIL',key);}
 const badAngle=clone(readback);badAngle[2].rotationDeg=90;assert.equal(evaluate(drawing,actual,badAngle).status,'FAIL');
 assert.equal(evaluate(drawing,actual,[]).status,'UNRESOLVED');
@@ -47,4 +49,4 @@ try{
  const alias=clone(manifest);alias.slots[1].namedSubString=alias.slots[0].namedSubString;assert.throws(()=>validatePool(alias,file,request));
  assert.throws(()=>validatePool({...manifest,slots:manifest.slots.slice(1)},file,request));
 }finally{fs.rmSync(dir,{recursive:true,force:true});}
-console.log('PASS canonical/schema, geometry, encoder footprint, explicit TopLeft Designer Text pool adapter, documented-default readback guard, two-renderer QA, pool contract; no BarTender execution');
+console.log('PASS canonical/schema, geometry, encoder footprint, explicit TopLeft Designer Text pool adapter, visual-gated omitted TopLeft readback for Text/barcode, two-renderer QA, pool contract; no BarTender execution');
