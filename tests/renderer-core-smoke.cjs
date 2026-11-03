@@ -8,8 +8,8 @@ assert.deepEqual(validate(clone(canonical)),canonical);
 assert.equal(canonical.objects[0].fontSizePt,9);assert.equal(canonical.objects[1].fontSizePt,18);
 const original=clone(canonical),request=nativeRequest(canonical);assert.deepEqual(canonical,original);
 assert.equal(request.objects[2].heightMm,9);assert.equal(request.objects[0].fontName,'Arial');
-assert.equal(request.objects[0].referencePoint,undefined);assert.equal(request.objects[0].anchorPolicy,'BARTENDER_DOCUMENTED_DEFAULT_TOP_LEFT_VISUAL_GATE');
-assert.equal(request.objects[0].fontMutationPolicy,'DISPOSABLE_CANDIDATE_XML_FONTNAME_POINTSIZE');assert.equal(request.objects[0].bold,undefined);assert.equal(request.objects[0].italic,undefined);
+assert.equal(request.objects[0].referencePoint,'TopLeft');assert.equal(request.objects[0].anchorPolicy,'BARTENDER_DOCUMENTED_DEFAULT_TOP_LEFT_VISUAL_GATE');
+assert.equal(request.objects[0].fontMutationPolicy,'DESIGNER_TEXT_POOL_AUTOMATION');assert.equal(request.objects[0].bold,undefined);assert.equal(request.objects[0].italic,undefined);
 assert.equal(request.objects[2].referencePoint,'TopLeft');assert.equal(request.objects[3].referencePoint,'TopLeft');
 assert.deepEqual(JSON.parse(JSON.stringify(request)),request);
 for(const dpi of [203,300,600])for(const mm of [0,.031,3.38582,24.8,100])assert.ok(Math.abs(G.dotsToMm(G.mmToDots(mm,dpi),dpi)-mm)<=25.4/dpi/2+1e-10);
@@ -47,4 +47,4 @@ try{
  const alias=clone(manifest);alias.slots[1].namedSubString=alias.slots[0].namedSubString;assert.throws(()=>validatePool(alias,file,request));
  assert.throws(()=>validatePool({...manifest,slots:manifest.slots.slice(1)},file,request));
 }finally{fs.rmSync(dir,{recursive:true,force:true});}
-console.log('PASS canonical/schema, geometry, encoder footprint, four-object transform, documented Text default anchor guard, disposable Text font XML policy, two-renderer QA, pool contract; no BarTender execution');
+console.log('PASS canonical/schema, geometry, encoder footprint, explicit TopLeft Designer Text pool adapter, documented-default readback guard, two-renderer QA, pool contract; no BarTender execution');
