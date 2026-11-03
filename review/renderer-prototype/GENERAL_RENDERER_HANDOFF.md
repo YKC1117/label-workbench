@@ -1,60 +1,53 @@
-> Update: Run44 is completed, not queued. B barcode and C rotation are PASS; A fails one 24pt bold/italic ink-origin alignment row (.503333 mm). See GENERAL_RENDERER_REVIEW.md and general-candidate/evidence/run44. A measured ink-origin conversion is now implemented with unchanged tolerances; the next consolidated probe must verify this new candidate. The queued-state text below is historical only.
+# General Renderer handoff — 2026-11-03, Run45 verified
 
-# General Renderer handoff — 2026-11-03
+Only YKC1117/label-workbench / experiment/com-renderer-prototype / Draft PR #35. Main, Pages and Releases untouched. Preserve latest remote HEAD; no rollback.
 
-Repository YKC1117/label-workbench; only experiment/com-renderer-prototype, Draft PR #35. Main/Pages/Release untouched. Entry baseline bbcaa6dcdc93249e1e9adb4730d636918619e05a; no rollback.
+## Current authoritative evidence
 
-## Current candidate and runtime state
+**Run #45 / 41598871444: SUCCESS**, code candidate **f610c62ddbdaaa627cb6d6f878991fadfa51a628**, Windows job 125792600726 on LWB-FTUSER5.
+https://github.com/YKC1117/label-workbench/actions/runs/41598871444
+Windows PowerShell 5.1, BarTender 2022 R2 / 11.3 Automation build 184527. The real COM renderer, not just CI/parser, produced and verified all three cases:
 
-Code candidate: **1447acdfb4e81666edb75532e2f2b07f920cf124**.
-Latest requested Windows probe: **Run #44 / 41596108274**, job 125783723629.
-https://github.com/YKC1117/label-workbench/actions/runs/41596108274
-Observed 2026-11-03T07:28:12Z: **QUEUED**, no Windows steps or artifact. Cause of queue not established. Do not infer current runner Offline, do not claim this candidate runtime PASS, do not queue another copy. It will execute the exact candidate commit when scheduled; subsequent evidence-only commits do not change its source.
+| Case | Scope | Native/editable | Reopen challenge + exact restore / peer | 600dpi Dual QA |
+|---|---|---|---|---|
+| A | Arial/Courier New/Times New Roman, 7/9/12/18/24 pt, bold/italic/both, left/center/right positioning, explicit two-line composition | 8 | PASS / 32 strict audits | PASS_PLACEMENT_AND_SIZE |
+| B | 3 Code128 + 3 square DM, payload/module/size/bar-height variation, quiet-zone reservation | 6 | PASS / 24 strict audits | PASS_PLACEMENT_AND_SIZE |
+| C | Text 90/180/270, Code12890, DM270 | 5 | PASS / 20 strict audits | PASS_PLACEMENT_AND_SIZE + independent optical orientation PASS |
 
-Previously completed real new-capability probes:
+Total: **19 native objects, 76 strict all-retained-peer audits PASS**, zero unexpected overlap/out-of-bounds. All 19 saved/closed/reopened, accepted exact payload challenge/restore with no peer change. Actual BTW SHA recomputed from artifact bytes equals both before/after evidence hashes and native build report. Details and three hashes in general-candidate/evidence/run45/summary.json.
 
-| Gate | Run42 | Run43 |
-|---|---|---|
-| Windows / PS5.1 / BarTender.Application | PASS | PASS |
-| BarTender | 2022 R2 / 11.3 Automation build 184527 | same |
-| A: 8 Text styles/fonts/lines/alignment | FAIL: 5 mm COM write -> 4.9784 | FAIL: center 81.4578 -> 81.4324 |
-| B: 3 Code128 + 3 DM variants | FAIL: missing BMP at 266-char path | FAIL: peer Code128 Density 6.818 -> 13.636 during editability challenge |
-| C: Text90/180/270 + Code12890 + DM270 | FAIL: equivalent -90/270 readback | FAIL: initial experimental exact Text pixel comparator |
-| C Save/Close/Reopen/edit challenge/exact restore/peer | NOT RUN | PASS, all 5 |
-| C canonical placement/size + actual 600dpi bitmap | NOT RUN | PASS, all 5; unexpected overlap 0 |
-| C before/after evidence BTW SHA | NOT RUN | identical A1CD0C9F742545BBF7FBB4F73A664DDE3974C2E0C1A301377F87CD3395CE26B8 |
-| Overall candidate / product acceptance | FAIL / NOT COMPLETE | FAIL / NOT COMPLETE |
+## Root causes resolved
 
-Run41's previously proven 10-object upright Hybrid gate remains authoritative for that scope; do not redo its peer-contamination investigation. Run43's original FAIL report stays FAIL. Separate offline reanalysis of its actual BMP now passes the corrected optical-geometry comparator, and is explicitly labelled reanalysis, not a new runtime run.
+1. mm COM X/Y setter truncated some native inch coordinates. Candidate uses BarTender's GetXML native inch literals (3 decimals), preserving .02mm checks against both original unquantized native target and representable target.
+2. Negative angles are normalized to equivalent COM [0,360), without source anchor compensation. Explicit TopLeft remains mandatory, and omitted defaults require unique real whole-page visual registration.
+3. Long batch paths exceeded Win32 BMP path length. Short UUID/case paths fixed export; no system policy change required.
+4. Numeric Code128 peer Density 6.818→13.636 appeared on Run43 challenge. Full-format real layout settlement **before Save and before reopen transactions** makes the strict snapshots stable; Run44 and Run45 B pass. There is no ignored Density field, post-mutation normalization or re-baselining.
+5. Run44 A failed 24pt bold/italic x by .503333mm: native font glyph bearing was omitted by the adapter. Measured 600dpi BMP ink-left was 12px=.508mm. New shared pure renderer/text-placement.cjs maps frame origin through native measured ink offset and rotation. Run45 BOTH24 x residual is -.004667mm, y -.018667mm. No tolerance increase or empirical per-font offset.
 
-## Changes and limits
+Renderer conversion is explicit: nativeAnchor = canonicalFrameOrigin + R(alignmentShift - measuredInkLeft, -measuredInkTop). It uses actual native raster bounds at trusted 600dpi, not font-size guesses. Every candidate Text uses the same function. Visual QA also now checks ink-top alignment, an additional gate. Source frame remains authoritative.
 
-- Candidate-only profile, ordinary profile fail-closed capabilities retained.
-- Bold/italic + font family presence/readback, 7/9/12/18/24pt fixture.
-- Shared explicit-mm multiline expansion for native request and preview; independently editable lines, no wrapping or Paragraph/Rich Text claim.
-- Left/center/right single-line **frame positioning** from native ink measurement. Native paragraph justification and automatic realignment after manual value edits are **not certified**. Do not advertise those semantics as completed.
-- Canonical TopLeft and mm remain unchanged; orthogonal COM angles normalized [0,360). TopLeft anchor passes real C visual geometry without empirical offsets.
-- Run43 proves mm COM setter may truncate a whole mil despite representable input. Candidate now writes GetXML's native inch literals, keeps .02mm versus original AND native targets. This final write method awaits Run44.
-- Strict peer XML/COM snapshots also surround style/geometry operations; reopen challenge/restore checks exact target XML and both peer transactions. No Density exemption.
-- Before Save and reopen edits, perform whole-format render to settle layout. Whether this fixes numeric Code128 Density is an explicit **hypothesis**, awaiting Run44. No rendering/normalization after mutation to hide a peer delta.
-- Code128 payload/module/bar-height/quiet-zone reservation and square Data Matrix payload/module variations. No symbol stretching.
-- 600dpi exact barcode pattern comparison. Text optical orientation: identical ink extents, bidirectional ink distance <=1 pixel (0.042333 mm), unique angle, exact mismatches still recorded. Measured Run43 text differences: 1/3/5 pixels, all within this pixel radius. Original .5mm geometry, .1° angle, .25mm² overlap, strict peer, persistence and SHA gates unchanged. Reject wrong/ambiguous angles and geometric mismatch.
-- Short UUID result directory and single-letter case subfolder avoid Win32 BMP long paths; suite continues to capture all three failures/passes in one job.
-- Native HRI/caption, Image/Line/Box, fixed/Paragraph/Rich Text, arbitrary angle, GS1/rectangular DM still blocked. Existing canonical preview representations do not count as native implementations.
+## Current capability limits — do not claim full product completion
 
-## Files / evidence
+The `candidate-general-v1` profile is experimental; ordinary profile keeps unsupported capabilities blocked. Current runtime proof covers the listed fixtures/fonts, not arbitrary fonts/scripts/customers.
 
-Core changes: renderer/{canonical,adapter,preview,text-layout,visual-qa,rotation-qa}.cjs; HybridPool.psm1; NativeLayoutEngine.psm1; Build-NativeLayout.ps1; probe-render.cjs; compare-render.cjs; PROBE.cmd; Run-GeneralRendererSuite.ps1; tests/renderer-general-smoke.cjs and test:renderer.
+Multiline is explicit-pitch independently editable native lines, not Paragraph/Rich Text or automatic wrapping. Center/right are **single-line frame positioning** at build time; native paragraph justification/reflow after manual text edits is not certified. Fixed text boxes remain unsupported. HRI/caption, Image/Line/Box, arbitrary angles, GS1 and rectangular DM remain blocked by native adapter. Canonical/preview support alone does not certify native output. Overall image/PDF-to-editable-BTW product acceptance is **NOT COMPLETE**. Do not integrate the website or claim general customer acceptance from these synthetic runtime fixtures.
 
-GENERAL_RENDERER_REVIEW.md contains root-cause facts vs hypotheses. general-candidate/evidence/run42 and run43 retain native readbacks, errors, raw peer before/after XML and Density diff, original comparison JSON and artifact IDs/digests. Run43 C-FAILED-runtime-evidence.zip preserves original failed BTW, whole/per-object/upright BMP, canonical/native request, preview, readbacks and original report. It is **failed evidence**, not a release or certified output. Package SHA in C-evidence-package.json.
+## Regression / comparability
 
-Latest offline regression: **14/14 PASS** (13 prior + new candidate suite), **14/14 Node syntax PASS**. Offline report records exact outputs. Windows regression in completed Run43 also PASS; final PowerShell/native changes require Run44. No Playwright UI rebuild/test was needed for this renderer-only scope.
+14/14 offline regression (13 retained + general suite), 15/15 Node syntax PASS. Windows Node regression and PS5.1 parser/self checks PASS in Run45. Real Run44 ledger regression proves measured offset transformation, and remains labelled offline reprojection, separate from Run45 runtime proof. Ledger source BMP SHA/file identities are corrected in the evidence follow-up; renderer code is identical to the proven candidate.
 
-## Next agent: direct steps, no new architecture research
+Existing .5mm placement/size/edge, .1° angle, .25mm² overlap and strict peer/persistence/SHA gates remain. Text frame sizes are not ink sizes; validate ink alignment/containment. Barcode dimensions compare actual symbol ink to encoder footprint. Rotated text requires identical extents, bidirectional ink distance <=1px at 600dpi, unique angle; barcode rotated masks are exact. Raw bit differences remain visible. No independent font-shape or barcode decoder acceptance claim.
 
-1. Fetch the remote branch, preserve latest HEAD. Read this handoff and latest Run44 job/artifact. Do not retrigger if it remains queued/running.
-2. Download Run44 artifact. Read suite-report.json, each NATIVE_BUILD_ERROR/native-build-report/runtime, dual-render-qa, strict peer diffs; verify both SHA values against actual BTW bytes. Retain full package or compact actual BTW/BMP evidence in this branch.
-3. If B still changes Density, keep FAIL CLOSED. Determine whether the import transaction invalidates another object's derived encoding state even after full pretransaction render. Do not ignore Density or re-baseline after mutation. Next narrow engineering task is a target-only native payload transaction with strict peer evidence (current Value is getter-only in installed TypeLib), or a deterministic Designer NamedSubString component contract. Do not re-open Create(5), donor patching, or the solved 8-Text bug.
-4. If A still fails native position serialization, inspect saved position-request/readback XML and both unquantized/native targets. Fix actual unit conversion; don't raise .02mm or add empirical offsets.
-5. If all A/B/C pass, update exact runtime evidence and capability coverage. Next expansion should obtain a deterministic Designer-authored native primitive contract for Image/Line/Box and native caption/paragraph alignment; keep them blocked until strict readback/reopen/render proof. Then construct one mixed case. No website integration yet.
-6. Normal GPT can continue artifact review and the stated bounded tasks from this branch. The unresolved work requires actual BarTender behavior evidence, not another general architecture study. No manual user BTW test is requested.
+## Saved evidence
+
+GENERAL_RENDERER_REVIEW.md retains the original facts/hypotheses and failures (Run42/43/44 are never relabelled). general-candidate/evidence/run45/verified-runtime-evidence.zip contains each generated BTW, whole/per-object/upright BMP, canonical/request/preview, native XML/readbacks, exact edit challenge/restores, all strict peer audits and runtime reports. Only reproducible unchanged materialized source Text pool omitted; its fixed SHA is in native reports. ZIP SHA in summary.json. Evidence is committed to this branch, not only a temporary Actions artifact. Optional human-readable page thumbnails are stored alongside it; they are derived actual BMPs, not mock previews.
+
+## Next bounded engineering task
+
+1. Fetch latest branch; use Run45 as authoritative Text/barcode baseline. Do not rerun or re-investigate solved 8-Text Run41, Create(5) primary, or donor binary patching. No user manual BTW tests requested.
+2. Highest remaining semantic gap: obtain a deterministic native **paragraph/fixed Text alignment** contract and native **HRI caption** contract. Existing center/right positioning must not be advertised as persistent paragraph justification. Preserve all new ink-origin/peer/editability gates.
+3. For Image/Line/Box, first retrieve installed TypeLib enum values/object XML using a bounded capability probe or existing Designer-authored native components. The repository's installed-api.json proves Create exists but does not enumerate the object-type constants. Do not guess enum numbers or silently rasterize a vector/label to bypass native editability. No mass BTC scan; source contracts must be deterministic.
+4. Implement supported primitives as separate adapter branches in the same Canonical mm model; extend native validator, source-isolation semantics for non-payload primitives, persistence and dual-render QA together. Images must survive without external file dependencies. Keep unsupported cases fail closed.
+5. Consolidate those new contracts into a single mixed-case runtime probe; avoid one Windows run per property. Keep main and Pages unchanged, Draft PR #35 only.
+
+Normal GPT can continue directly from this branch/evidence. No architecture restart or manual user testing is needed to read the next real capability contracts.

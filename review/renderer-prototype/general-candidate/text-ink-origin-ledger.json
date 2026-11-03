@@ -44,7 +44,8 @@
         "inkWidthMm": 14.562666666666667,
         "inkHeightMm": 2.3706666666666663,
         "sha256": "BD62ECA99A2556CE94547AF17C31D804F8B1BE9AE96EF7675D814833FBDBA48B",
-        "physicalMmTrust": "TRUSTED"
+        "physicalMmTrust": "TRUSTED",
+        "sourceFile": "visual-BOLD9.bmp"
       },
       "nativeAnchor": {
         "xMm": 5.0038,
@@ -98,7 +99,8 @@
         "inkWidthMm": 21.843999999999998,
         "inkHeightMm": 4.698999999999999,
         "sha256": "56449D45072F9F4597FEC7795FE39A14B6BA107153ABF2383FC5D772661FDC94",
-        "physicalMmTrust": "TRUSTED"
+        "physicalMmTrust": "TRUSTED",
+        "sourceFile": "visual-ITALIC18.bmp"
       },
       "nativeAnchor": {
         "xMm": 54.991,
@@ -152,7 +154,8 @@
         "inkWidthMm": 31.665333333333333,
         "inkHeightMm": 7.916333333333333,
         "sha256": "F67D8C94965E3B19FC5034746DE984948C8E405F00680FACF2870DB449D9A19B",
-        "physicalMmTrust": "TRUSTED"
+        "physicalMmTrust": "TRUSTED",
+        "sourceFile": "visual-BOTH24.bmp"
       },
       "nativeAnchor": {
         "xMm": 5.0038,
@@ -206,7 +209,8 @@
         "inkWidthMm": 22.098,
         "inkHeightMm": 2.7093333333333334,
         "sha256": "C351DC46C8B15216EDFFF20E709AC1C0CE734F599ED3B2C31FDA294AA808C1D5",
-        "physicalMmTrust": "TRUSTED"
+        "physicalMmTrust": "TRUSTED",
+        "sourceFile": "visual-CENTER.bmp"
       },
       "nativeAnchor": {
         "xMm": 81.45779999999999,
@@ -260,7 +264,8 @@
         "inkWidthMm": 25.188333333333333,
         "inkHeightMm": 2.921,
         "sha256": "9DDAF40FC2108DB70D6574AC93B9405EF0DDF76DABCB390A7EC66DD9B233097E",
-        "physicalMmTrust": "TRUSTED"
+        "physicalMmTrust": "TRUSTED",
+        "sourceFile": "visual-RIGHT.bmp"
       },
       "nativeAnchor": {
         "xMm": 24.8158,
@@ -314,7 +319,8 @@
         "inkWidthMm": 13.419666666666666,
         "inkHeightMm": 1.8626666666666665,
         "sha256": "3BE6EA5AA72D4EB949C4B92DBB1AF940AC5D67F9906DDA1EFC6BDFF8E2926DFB",
-        "physicalMmTrust": "TRUSTED"
+        "physicalMmTrust": "TRUSTED",
+        "sourceFile": "visual-SMALL7.bmp"
       },
       "nativeAnchor": {
         "xMm": 59.9948,
@@ -368,7 +374,8 @@
         "inkWidthMm": 19.177,
         "inkHeightMm": 3.1326666666666667,
         "sha256": "D332F4FD5D76E500E72BF0443BE79B3A22D8DEFB23B51B00C1442CD795706085",
-        "physicalMmTrust": "TRUSTED"
+        "physicalMmTrust": "TRUSTED",
+        "sourceFile": "visual-MULTI_L1.bmp"
       },
       "nativeAnchor": {
         "xMm": 45.4152,
@@ -422,7 +429,8 @@
         "inkWidthMm": 20.192999999999998,
         "inkHeightMm": 3.1326666666666667,
         "sha256": "95F3059D57E059A739731B2C72E77A00E5E146EA42DE08C9AC4350509F3780E9",
-        "physicalMmTrust": "TRUSTED"
+        "physicalMmTrust": "TRUSTED",
+        "sourceFile": "visual-MULTI_L2.bmp"
       },
       "nativeAnchor": {
         "xMm": 44.907199999999996,
@@ -473,10 +481,11 @@
         "darkPixels": 12267,
         "canvasWidthMm": 5.0376666666666665,
         "canvasHeightMm": 23.198666666666664,
-        "inkWidthMm": 3.1326666666666667,
-        "inkHeightMm": 22.563666666666666,
-        "sha256": "6031508F89BE4643548A70DF18B3D14346AD6E38ED1AB89CC3CC1FE07B34A75E",
-        "physicalMmTrust": "TRUSTED"
+        "inkWidthMm": 22.563666666666666,
+        "inkHeightMm": 3.1326666666666667,
+        "sha256": "33EDF928DDF73CBF9157F7C1B4ABCCF0548988987533A6592C5ADE0F921998F7",
+        "physicalMmTrust": "TRUSTED",
+        "sourceFile": "hybrid-ROT90-upright.bmp"
       },
       "nativeAnchor": {
         "xMm": 24.993599999999997,
@@ -529,8 +538,9 @@
         "canvasHeightMm": 4.995333333333333,
         "inkWidthMm": 24.93433333333333,
         "inkHeightMm": 3.1326666666666667,
-        "sha256": "797F51E3230A1E146D6EF4C6B46AE8F7C580FD6E58208FC5C7D262C5B1B0A640",
-        "physicalMmTrust": "TRUSTED"
+        "sha256": "2D8F2062BE8BD98E8282A484751D06B032A1314D56A425285E9929AAE5DB7D39",
+        "physicalMmTrust": "TRUSTED",
+        "sourceFile": "hybrid-ROT180-upright.bmp"
       },
       "nativeAnchor": {
         "xMm": 75.00619999999999,
@@ -581,10 +591,11 @@
         "darkPixels": 13041,
         "canvasWidthMm": 4.995333333333333,
         "canvasHeightMm": 25.56933333333333,
-        "inkWidthMm": 3.1326666666666667,
-        "inkHeightMm": 24.93433333333333,
-        "sha256": "2AB33FF7C7A62E5022306FD1478207C717DACA9BBC35F19E9C76EF1F5E38F1CA",
-        "physicalMmTrust": "TRUSTED"
+        "inkWidthMm": 24.93433333333333,
+        "inkHeightMm": 3.1326666666666667,
+        "sha256": "E6155BCABD27CC2D178D70EA31219B6B95394020E758F0CAD7D1E98101D1A795",
+        "physicalMmTrust": "TRUSTED",
+        "sourceFile": "hybrid-ROT270-upright.bmp"
       },
       "nativeAnchor": {
         "xMm": 89.9922,

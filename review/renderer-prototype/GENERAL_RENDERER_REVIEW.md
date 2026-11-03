@@ -75,3 +75,11 @@ Correction: one pure renderer/text-placement.cjs consumes the authoritative cano
 The actual Run44 ledger is committed, with original anchors, whole-page measured bounds and per-object upright pixel bounds. Regression projects the observed ink using only the computed anchor translation, rejects untrusted DPI/bad raster/overflow, and shows corrected horizontal residuals below one 600dpi pixel for all eleven captured Text rows. This is offline reprojection, **not** new runtime PASS. A consolidated A/B/C runtime candidate is required because the correction also changes rotated Text anchors; already verified barcode behavior must remain stable in the complete candidate.
 
 Run44 evidence package contains A's failed BTW and B/C verified BTW, whole-format/per-object/upright BMP, canonical/request/preview and reports, with manifest hashes. Do not relabel the original overall failed run as success.
+
+## Run #45 — measured ink-origin candidate confirmed
+
+Run 41598871444 / candidate f610c62ddbdaaa627cb6d6f878991fadfa51a628 completed **SUCCESS** on real BarTender 2022 R2. A8 + B6 + C5 = 19 native/editable objects; all 76 strict peer audits, saved/reopened payload challenge/exact restoration, original geometry/style/module/anchor readback, 600dpi unique page registration, optical rotation, overlap/out-of-bounds and before/after BTW identity pass. Actual BTW bytes and all audits are persisted in evidence/run45; manifest/summary hashes independently recomputed.
+
+The previous .503333mm 24pt bold/italic alignment error is now -.004667mm (ink-top -.018667mm), without enlarging any gate. Other A horizontal residuals are within .014mm; maximum absolute ink-top residual .114mm. This confirms the omitted glyph-bearing adapter conversion as the direct A failure cause. Rendered A/B/C pages were also visually inspected: separated expected objects, intended fonts/styles/angles and barcode sizes, with no clipping/overlap.
+
+The completed candidate is scoped to the documented Text/barcode fixtures. It does not complete native HRI, paragraph justification/fixed boxes, Image/Line/Box or arbitrary customer end-to-end acceptance. See the updated GENERAL_RENDERER_HANDOFF.md for precise limits and next implementation steps.

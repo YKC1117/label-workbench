@@ -1,0 +1,408 @@
+{
+  "schema": "lwb-dual-render-qa-v1",
+  "status": "PASS_PLACEMENT_AND_SIZE",
+  "tolerance": {
+    "centerMm": 0.5,
+    "sizeMm": 0.5,
+    "edgeMm": 0.5,
+    "rotationDeg": 0.1,
+    "overlapAreaMm2": 0.25
+  },
+  "productAcceptance": "NOT_RUN",
+  "scope": "orthogonal local-frame text alignment and containment, native pattern rotation gate consumed separately, placement, footprint, containment and API rotation; every native request explicitly asks for TopLeft; BarTender may omit that default in XML only when unique full-page visual geometry independently passes; no independent optical angle estimation",
+  "objects": [
+    {
+      "id": "ROT90",
+      "status": "PASS",
+      "policy": "TEXT_CONTAINMENT",
+      "expected": {
+        "x": 17,
+        "y": 5,
+        "width": 8.000000000000004,
+        "height": 30
+      },
+      "actual": {
+        "x": 21.92866666666667,
+        "y": 4.995333333333333,
+        "width": 3.1326666666666667,
+        "height": 22.563666666666666
+      },
+      "localInk": {
+        "x": -0.004666666666667229,
+        "y": -0.061333333333333684,
+        "right": 22.558999999999997,
+        "bottom": 3.071333333333333
+      },
+      "alignmentErrorMm": -0.004666666666667229,
+      "delta": {
+        "centerX": 2.494999999999999,
+        "centerY": -3.722833333333334,
+        "width": -4.867333333333336,
+        "height": -7.436333333333334,
+        "rotation": 0
+      },
+      "outOfBounds": false,
+      "referencePoint": null,
+      "referencePointPresent": false,
+      "anchorEvidence": "TOPLEFT_REQUEST_OMITTED_PLUS_UNIQUE_VISUAL_GEOMETRY",
+      "rotationEvidence": "COM_READBACK_ONLY",
+      "renderedRotation": "NOT_INDEPENDENTLY_VERIFIED",
+      "barcodeFootprint": null
+    },
+    {
+      "id": "ROT180",
+      "status": "PASS",
+      "policy": "TEXT_CONTAINMENT",
+      "expected": {
+        "x": 35,
+        "y": 12,
+        "width": 40,
+        "height": 8.000000000000004
+      },
+      "actual": {
+        "x": 50.080333333333336,
+        "y": 16.933333333333334,
+        "width": 24.934333333333335,
+        "height": 3.1326666666666667
+      },
+      "localInk": {
+        "x": -0.014666666666670755,
+        "y": -0.06599999999999895,
+        "right": 24.919666666666664,
+        "bottom": 3.0666666666666695
+      },
+      "alignmentErrorMm": -0.014666666666670755,
+      "delta": {
+        "centerX": 7.547499999999999,
+        "centerY": 2.4996666666666645,
+        "width": -15.065666666666665,
+        "height": -4.867333333333336,
+        "rotation": 0
+      },
+      "outOfBounds": false,
+      "referencePoint": null,
+      "referencePointPresent": false,
+      "anchorEvidence": "TOPLEFT_REQUEST_OMITTED_PLUS_UNIQUE_VISUAL_GEOMETRY",
+      "rotationEvidence": "COM_READBACK_ONLY",
+      "renderedRotation": "NOT_INDEPENDENTLY_VERIFIED",
+      "barcodeFootprint": null
+    },
+    {
+      "id": "ROT270",
+      "status": "PASS",
+      "policy": "TEXT_CONTAINMENT",
+      "expected": {
+        "x": 90,
+        "y": 10,
+        "width": 8,
+        "height": 35
+      },
+      "actual": {
+        "x": 89.95833333333333,
+        "y": 20.066,
+        "width": 3.1326666666666667,
+        "height": 24.934333333333335
+      },
+      "localInk": {
+        "x": -0.0003333333333307558,
+        "y": -0.041666666666671404,
+        "right": 24.934,
+        "bottom": 3.0909999999999984
+      },
+      "alignmentErrorMm": -0.0003333333333307558,
+      "delta": {
+        "centerX": -2.4753333333333387,
+        "centerY": 5.033166666666666,
+        "width": -4.867333333333333,
+        "height": -10.065666666666665,
+        "rotation": 0
+      },
+      "outOfBounds": false,
+      "referencePoint": null,
+      "referencePointPresent": false,
+      "anchorEvidence": "TOPLEFT_REQUEST_OMITTED_PLUS_UNIQUE_VISUAL_GEOMETRY",
+      "rotationEvidence": "COM_READBACK_ONLY",
+      "renderedRotation": "NOT_INDEPENDENTLY_VERIFIED",
+      "barcodeFootprint": null
+    },
+    {
+      "id": "BAR90",
+      "status": "PASS",
+      "policy": "SYMBOL_INK",
+      "expected": {
+        "x": 22,
+        "y": 47.54,
+        "width": 8,
+        "height": 20.065999999999995
+      },
+      "actual": {
+        "x": 22.140333333333334,
+        "y": 47.625,
+        "width": 7.958666666666667,
+        "height": 20.066
+      },
+      "localInk": null,
+      "alignmentErrorMm": null,
+      "delta": {
+        "centerX": 0.11966666666666725,
+        "centerY": 0.0850000000000044,
+        "width": -0.04133333333333322,
+        "height": 3.552713678800501e-15,
+        "rotation": 0
+      },
+      "outOfBounds": false,
+      "referencePoint": null,
+      "referencePointPresent": false,
+      "anchorEvidence": "TOPLEFT_REQUEST_OMITTED_PLUS_UNIQUE_VISUAL_GEOMETRY",
+      "rotationEvidence": "COM_READBACK_ONLY",
+      "renderedRotation": "NOT_INDEPENDENTLY_VERIFIED",
+      "barcodeFootprint": {
+        "widthMm": 25.146,
+        "heightMm": 8,
+        "rows": null,
+        "columns": null
+      }
+    },
+    {
+      "id": "DM270",
+      "status": "PASS",
+      "policy": "SYMBOL_INK",
+      "expected": {
+        "x": 65,
+        "y": 54.582688,
+        "width": 5.4173119999999955,
+        "height": 5.417312000000003
+      },
+      "actual": {
+        "x": 64.98166666666667,
+        "y": 54.56766666666667,
+        "width": 5.418666666666667,
+        "height": 5.418666666666667
+      },
+      "localInk": null,
+      "alignmentErrorMm": null,
+      "delta": {
+        "centerX": -0.01765599999999523,
+        "centerY": -0.014343999999997692,
+        "width": 0.001354666666671278,
+        "height": 0.0013546666666641727,
+        "rotation": 0
+      },
+      "outOfBounds": false,
+      "referencePoint": null,
+      "referencePointPresent": false,
+      "anchorEvidence": "TOPLEFT_REQUEST_OMITTED_PLUS_UNIQUE_VISUAL_GEOMETRY",
+      "rotationEvidence": "COM_READBACK_ONLY",
+      "renderedRotation": "NOT_INDEPENDENTLY_VERIFIED",
+      "barcodeFootprint": {
+        "widthMm": 5.417312,
+        "heightMm": 5.417312,
+        "rows": 16,
+        "columns": 16
+      }
+    }
+  ],
+  "overlaps": [
+    {
+      "ids": [
+        "ROT90",
+        "ROT180"
+      ],
+      "expectedAreaMm2": 0,
+      "actualAreaMm2": 0,
+      "unexpected": false
+    },
+    {
+      "ids": [
+        "ROT90",
+        "ROT270"
+      ],
+      "expectedAreaMm2": 0,
+      "actualAreaMm2": 0,
+      "unexpected": false
+    },
+    {
+      "ids": [
+        "ROT90",
+        "BAR90"
+      ],
+      "expectedAreaMm2": 0,
+      "actualAreaMm2": 0,
+      "unexpected": false
+    },
+    {
+      "ids": [
+        "ROT90",
+        "DM270"
+      ],
+      "expectedAreaMm2": 0,
+      "actualAreaMm2": 0,
+      "unexpected": false
+    },
+    {
+      "ids": [
+        "ROT180",
+        "ROT270"
+      ],
+      "expectedAreaMm2": 0,
+      "actualAreaMm2": 0,
+      "unexpected": false
+    },
+    {
+      "ids": [
+        "ROT180",
+        "BAR90"
+      ],
+      "expectedAreaMm2": 0,
+      "actualAreaMm2": 0,
+      "unexpected": false
+    },
+    {
+      "ids": [
+        "ROT180",
+        "DM270"
+      ],
+      "expectedAreaMm2": 0,
+      "actualAreaMm2": 0,
+      "unexpected": false
+    },
+    {
+      "ids": [
+        "ROT270",
+        "BAR90"
+      ],
+      "expectedAreaMm2": 0,
+      "actualAreaMm2": 0,
+      "unexpected": false
+    },
+    {
+      "ids": [
+        "ROT270",
+        "DM270"
+      ],
+      "expectedAreaMm2": 0,
+      "actualAreaMm2": 0,
+      "unexpected": false
+    },
+    {
+      "ids": [
+        "BAR90",
+        "DM270"
+      ],
+      "expectedAreaMm2": 0,
+      "actualAreaMm2": 0,
+      "unexpected": false
+    }
+  ],
+  "quietZones": [],
+  "opticalRotation": {
+    "status": "PASS",
+    "objects": [
+      {
+        "id": "ROT90",
+        "status": "PASS",
+        "policy": "BIDIRECTIONAL_INK_DISTANCE_1PX_IDENTICAL_EXTENT_UNIQUE_ANGLE",
+        "angle": 90,
+        "tolerancePx": 1,
+        "toleranceMmAt600Dpi": 0.042333333333333334,
+        "exactMaskEqual": false,
+        "ambiguousAngles": [],
+        "within": true,
+        "differingPixels": 1,
+        "unmatchedPixels": 0,
+        "expectedPx": [
+          74,
+          533
+        ],
+        "actualPx": [
+          74,
+          533
+        ]
+      },
+      {
+        "id": "ROT180",
+        "status": "PASS",
+        "policy": "BIDIRECTIONAL_INK_DISTANCE_1PX_IDENTICAL_EXTENT_UNIQUE_ANGLE",
+        "angle": 180,
+        "tolerancePx": 1,
+        "toleranceMmAt600Dpi": 0.042333333333333334,
+        "exactMaskEqual": false,
+        "ambiguousAngles": [],
+        "within": true,
+        "differingPixels": 3,
+        "unmatchedPixels": 0,
+        "expectedPx": [
+          589,
+          74
+        ],
+        "actualPx": [
+          589,
+          74
+        ]
+      },
+      {
+        "id": "ROT270",
+        "status": "PASS",
+        "policy": "BIDIRECTIONAL_INK_DISTANCE_1PX_IDENTICAL_EXTENT_UNIQUE_ANGLE",
+        "angle": 270,
+        "tolerancePx": 1,
+        "toleranceMmAt600Dpi": 0.042333333333333334,
+        "exactMaskEqual": false,
+        "ambiguousAngles": [],
+        "within": true,
+        "differingPixels": 5,
+        "unmatchedPixels": 0,
+        "expectedPx": [
+          74,
+          589
+        ],
+        "actualPx": [
+          74,
+          589
+        ]
+      },
+      {
+        "id": "BAR90",
+        "status": "PASS",
+        "policy": "EXACT_DARK_MASK_ROTATION_UNIQUE_ANGLE",
+        "angle": 90,
+        "tolerancePx": 0,
+        "toleranceMmAt600Dpi": 0,
+        "exactMaskEqual": true,
+        "ambiguousAngles": [],
+        "within": true,
+        "differingPixels": 0,
+        "unmatchedPixels": 0,
+        "expectedPx": [
+          188,
+          474
+        ],
+        "actualPx": [
+          188,
+          474
+        ]
+      },
+      {
+        "id": "DM270",
+        "status": "PASS",
+        "policy": "EXACT_DARK_MASK_ROTATION_UNIQUE_ANGLE",
+        "angle": 270,
+        "tolerancePx": 0,
+        "toleranceMmAt600Dpi": 0,
+        "exactMaskEqual": true,
+        "ambiguousAngles": [],
+        "within": true,
+        "differingPixels": 0,
+        "unmatchedPixels": 0,
+        "expectedPx": [
+          128,
+          128
+        ],
+        "actualPx": [
+          128,
+          128
+        ]
+      }
+    ]
+  }
+}
