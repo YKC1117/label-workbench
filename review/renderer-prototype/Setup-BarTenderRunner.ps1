@@ -7,9 +7,9 @@ param(
     [switch]$NoRun
 )
 
-Set-StrictMode -Version 2
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
+$SetupRevision = '20261103.4'
 
 function Write-Step([string]$Text) {
     Write-Host ("`n==> " + $Text) -ForegroundColor Cyan
@@ -18,6 +18,8 @@ function Write-Step([string]$Text) {
 function Fail([string]$Message) {
     throw $Message
 }
+
+Write-Host ('Label Workbench Runner Setup ' + $SetupRevision) -ForegroundColor Green
 
 Write-Step 'Checking Windows host'
 if ($env:OS -ne 'Windows_NT') { Fail 'This setup must run on Windows.' }
@@ -31,33 +33,36 @@ $btType = [Type]::GetTypeFromProgID('BarTender.Application', $false)
 if ($null -eq $btType) { Fail 'BarTender.Application COM ProgID is not registered. Confirm BarTender 2022 is installed for this Windows account.' }
 Write-Host 'BarTender.Application: REGISTERED'
 
-$programFilesX86 = [Environment]::GetEnvironmentVariable('ProgramFiles(x86)')
-$barTenderCandidates = @()
+$standardBtPath = $null
 if ($env:ProgramFiles) {
     $candidate = Join-Path $env:ProgramFiles 'Seagull\BarTender 2022\BarTend.exe'
-    if (Test-Path -LiteralPath $candidate) { $barTenderCandidates += $candidate }
+    if (Test-Path -LiteralPath $candidate) { $standardBtPath = $candidate }
 }
-if ($programFilesX86) {
-    $candidate = Join-Path $programFilesX86 'Seagull\BarTender 2022\BarTend.exe'
-    if (Test-Path -LiteralPath $candidate) { $barTenderCandidates += $candidate }
+if ($null -eq $standardBtPath) {
+    $pf86 = [Environment]::GetEnvironmentVariable('ProgramFiles(x86)')
+    if ($pf86) {
+        $candidate = Join-Path $pf86 'Seagull\BarTender 2022\BarTend.exe'
+        if (Test-Path -LiteralPath $candidate) { $standardBtPath = $candidate }
+    }
 }
-$firstBarTender = $barTenderCandidates | Select-Object -First 1
-if ($null -ne $firstBarTender -and -not [string]::IsNullOrWhiteSpace([string]$firstBarTender)) {
-    Write-Host ('BarTender executable: ' + [string]$firstBarTender)
+if ($standardBtPath) {
+    Write-Host ('BarTender executable: ' + $standardBtPath)
 } else {
     Write-Warning 'BarTender COM is registered, but the standard BarTend.exe path was not found. Runtime validation will rely on COM registration.'
 }
 
-$existing = @(Get-Process -Name BarTend -ErrorAction SilentlyContinue)
-if ($existing.Length -gt 0) {
-    Write-Warning 'BarTender is currently open. Close it before triggering the renderer probe; the workflow intentionally refuses to take ownership of an existing BarTend.exe.'
+$existingBt = Get-Process -Name BarTend -ErrorAction SilentlyContinue | Select-Object -First 1
+if ($null -ne $existingBt) {
+    Write-Warning 'BarTender is currently open. Close it before triggering the renderer probe; the workflow refuses to take ownership of an existing BarTend.exe.'
 }
 
 Write-Step 'Preparing dedicated GitHub Actions Runner directory'
 if (-not (Test-Path -LiteralPath $RunnerRoot)) {
     New-Item -ItemType Directory -Path $RunnerRoot -Force | Out-Null
 }
-$RunnerRoot = (Resolve-Path -LiteralPath $RunnerRoot).Path
+$resolvedRoot = Resolve-Path -LiteralPath $RunnerRoot
+if ($null -eq $resolvedRoot) { Fail 'Could not resolve runner directory.' }
+$RunnerRoot = [string]$resolvedRoot.Path
 Write-Host ('Runner root: ' + $RunnerRoot)
 
 $runnerConfig = Join-Path $RunnerRoot '.runner'
@@ -69,15 +74,16 @@ if (-not (Test-Path -LiteralPath $configCmd) -or -not (Test-Path -LiteralPath $r
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
     $headers = @{ 'User-Agent' = 'LabelWorkbench-BarTender-Runner-Setup' }
     $release = Invoke-RestMethod -Uri 'https://api.github.com/repos/actions/runner/releases/latest' -Headers $headers
+    if ($null -eq $release -or [string]::IsNullOrWhiteSpace([string]$release.tag_name)) { Fail 'GitHub Runner release metadata was empty.' }
     $tag = [string]$release.tag_name
     if ($tag -notmatch '^v\d+\.\d+\.\d+$') { Fail ('Unexpected GitHub Actions Runner release tag: ' + $tag) }
     $version = $tag.Substring(1)
     $assetName = 'actions-runner-win-x64-' + $version + '.zip'
-    $asset = @($release.assets | Where-Object { $_.name -eq $assetName })
-    if ($asset.Length -ne 1) { Fail ('Could not resolve exactly one runner asset: ' + $assetName) }
+    $asset = $release.assets | Where-Object { $_.name -eq $assetName } | Select-Object -First 1
+    if ($null -eq $asset -or [string]::IsNullOrWhiteSpace([string]$asset.browser_download_url)) { Fail ('Could not resolve runner asset: ' + $assetName) }
 
     $zip = Join-Path $env:TEMP $assetName
-    Invoke-WebRequest -Uri $asset[0].browser_download_url -Headers $headers -OutFile $zip -UseBasicParsing
+    Invoke-WebRequest -Uri ([string]$asset.browser_download_url) -Headers $headers -OutFile $zip -UseBasicParsing
     try {
         Expand-Archive -LiteralPath $zip -DestinationPath $RunnerRoot -Force
     } finally {
@@ -101,7 +107,7 @@ if (-not (Test-Path -LiteralPath $runnerConfig)) {
         if ($LASTEXITCODE -ne 0) { Fail ('config.cmd failed with exit code ' + $LASTEXITCODE) }
     } finally {
         Pop-Location
-        $RegistrationToken = $null
+        $RegistrationToken = ''
     }
 } else {
     Write-Host 'Runner is already configured in this dedicated directory; registration skipped.'
@@ -109,13 +115,14 @@ if (-not (Test-Path -LiteralPath $runnerConfig)) {
 
 Write-Step 'Final local readiness check'
 $summary = [ordered]@{
+    setupRevision = $SetupRevision
     repository = $RepositoryUrl
     runnerRoot = $RunnerRoot
     runnerName = $RunnerName
     requiredLabels = @('self-hosted','windows','x64','bartender')
     powershell = $PSVersionTable.PSVersion.ToString()
     bartenderCom = 'REGISTERED'
-    configured = (Test-Path -LiteralPath $runnerConfig)
+    configured = [bool](Test-Path -LiteralPath $runnerConfig)
     nodeProvisioning = 'WORKFLOW_SETUP_NODE_22'
 }
 $summary | ConvertTo-Json -Depth 4 | Write-Host
