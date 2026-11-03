@@ -32,20 +32,24 @@ if ($null -eq $btType) { Fail 'BarTender.Application COM ProgID is not registere
 Write-Host 'BarTender.Application: REGISTERED'
 
 $programFilesX86 = [Environment]::GetEnvironmentVariable('ProgramFiles(x86)')
-$barTenderCandidates = @(
-    @(
-        $(if ($env:ProgramFiles) { Join-Path $env:ProgramFiles 'Seagull\BarTender 2022\BarTend.exe' }),
-        $(if ($programFilesX86) { Join-Path $programFilesX86 'Seagull\BarTender 2022\BarTend.exe' })
-    ) | Where-Object { $_ -and (Test-Path -LiteralPath $_) }
-)
-if ($barTenderCandidates.Count -gt 0) {
-    Write-Host ('BarTender executable: ' + $barTenderCandidates[0])
+$barTenderCandidates = @()
+if ($env:ProgramFiles) {
+    $candidate = Join-Path $env:ProgramFiles 'Seagull\BarTender 2022\BarTend.exe'
+    if (Test-Path -LiteralPath $candidate) { $barTenderCandidates += $candidate }
+}
+if ($programFilesX86) {
+    $candidate = Join-Path $programFilesX86 'Seagull\BarTender 2022\BarTend.exe'
+    if (Test-Path -LiteralPath $candidate) { $barTenderCandidates += $candidate }
+}
+$firstBarTender = $barTenderCandidates | Select-Object -First 1
+if ($null -ne $firstBarTender -and -not [string]::IsNullOrWhiteSpace([string]$firstBarTender)) {
+    Write-Host ('BarTender executable: ' + [string]$firstBarTender)
 } else {
     Write-Warning 'BarTender COM is registered, but the standard BarTend.exe path was not found. Runtime validation will rely on COM registration.'
 }
 
 $existing = @(Get-Process -Name BarTend -ErrorAction SilentlyContinue)
-if ($existing.Count -gt 0) {
+if ($existing.Length -gt 0) {
     Write-Warning 'BarTender is currently open. Close it before triggering the renderer probe; the workflow intentionally refuses to take ownership of an existing BarTend.exe.'
 }
 
@@ -70,7 +74,7 @@ if (-not (Test-Path -LiteralPath $configCmd) -or -not (Test-Path -LiteralPath $r
     $version = $tag.Substring(1)
     $assetName = 'actions-runner-win-x64-' + $version + '.zip'
     $asset = @($release.assets | Where-Object { $_.name -eq $assetName })
-    if ($asset.Count -ne 1) { Fail ('Could not resolve exactly one runner asset: ' + $assetName) }
+    if ($asset.Length -ne 1) { Fail ('Could not resolve exactly one runner asset: ' + $assetName) }
 
     $zip = Join-Path $env:TEMP $assetName
     Invoke-WebRequest -Uri $asset[0].browser_download_url -Headers $headers -OutFile $zip -UseBasicParsing
