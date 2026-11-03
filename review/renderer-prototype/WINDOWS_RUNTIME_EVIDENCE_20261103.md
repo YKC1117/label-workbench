@@ -76,11 +76,56 @@ All workflow stages passed:
 
 Code 128 and Data Matrix placement/ink-size residuals were within the current runtime gates. Data Matrix used the installed fixed path `Barcodes\Common Bar Codes\Data Matrix.btc`.
 
+## Multi-Text stress progression
+
+### Run #36 — exposed parked-donor false isolation failure
+
+- Run ID: `41586576762`
+- Trigger: `060bbd94c6deb1d1c33cde35860ae9e82695dbad`
+- Fixture: 8 Text + Code 128 + Data Matrix
+- Result: **FAILURE in real Hybrid renderer**
+- Error: `Hybrid payload import modified peer XML: 條碼 1`
+- Evidence showed the failing peer was a parked donor object (`DoNotPrint=true`) that would be deleted before final barcode insertion, not a retained output object.
+- Global EmbeddedDataSource-ID collision checking remained valid and was not the cause.
+
+### Run #37 — guarded runtime proof
+
+- Run ID: `41586947004`
+- Result: **SUCCESS**
+- The only runtime proof change was to limit exact XML/value peer snapshots to already-enabled retained objects while continuing to scan every donor object for source-ID collisions.
+- 8 Text + Code 128 + Data Matrix completed Save/Reopen and 600 dpi dual-render QA.
+
+### Run #38 — tracked core, no runtime patch
+
+- Run ID: `41587283586`
+- Trigger: `b73861be1dbed399d3abf6f21ee3a1f2ab4ec4ee`
+- Result: **SUCCESS**
+- Artifact: `bartender-renderer-evidence-41587283586`
+- Artifact ID: `13209165158`
+- Artifact SHA-256: `f1f018fc31d91e4ce485df1b6a2ea0999c84f4d2f7ffb5380311d8c0b34d5057`
+- Formal tracked fix is in `HybridPool.psm1`; the temporary proof script was removed before this run.
+- Object count: **10**
+- 8 Text + Code 128 + Data Matrix: **PASS**
+- All 10 objects reopened with `PAYLOAD_GEOMETRY_STYLE_PERSISTED`.
+- Unused donor objects deleted: **33**
+- Save/Reopen: **PASS**
+- Verified output SHA-256: `E014E4CCE11909871222C1237861CA8C47CE489B8E65C9F40E5CCABE6437E527`
+- 600 dpi BarTender visual evidence: **PASS**
+- Candidate SHA before/after visual capture: identical
+- Dual renderer QA: `PASS_PLACEMENT_AND_SIZE`
+- Failed object checks: **0**
+- Unexpected overlap pairs: **0**
+- `productAcceptance`: `NOT_RUN`
+
+The retained-peer rule now has a real-machine basis: exact XML/value isolation protects objects that have already been enabled and will remain in the candidate; parked donor objects are excluded from that exact-snapshot gate because they are deleted before final barcode insertion. Source-ID collision checks still inspect all donor objects, so source isolation is not relaxed.
+
 ## Important runtime conclusion
 
 Real BarTender evidence showed that Text objects returned by hidden `DesignObjects.Create(5)` expose a restricted Automation view on this machine: direct Automation writes such as FontName / FontSize / X / Y / RotationAngle returned `0x8000FFFF`.
 
 Therefore Create(5) Text is retired from the Hybrid primary path. Hybrid Text uses the fixed-SHA Designer-authored pool; barcodes use deterministic BTC insertion.
+
+The Designer-authored pool has now also passed a tracked 8-Text stress case, so the engineering evidence is no longer limited to the original 2-Text fixture.
 
 ## Remaining unsupported / uncertified capabilities
 
@@ -102,6 +147,7 @@ These must remain `CAPABILITY_UNSUPPORTED` until separately implemented and runt
 ## Acceptance status
 
 - Engineering four-object Hybrid runtime gate: **PASS**
+- Engineering 10-object / 8-Text stress gate: **PASS**
 - Formal `Build-NativeLayout.ps1` Auto/Hybrid route: **PASS**
 - Save/Reopen/editability evidence: **PASS**
 - BarTender 600 dpi visual evidence: **PASS**
