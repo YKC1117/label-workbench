@@ -1,7 +1,7 @@
 {
   "enabled": true,
-  "purpose": "Retry Windows BarTender 2022 renderer probe with XML-only FontName transaction after real runtime restriction evidence.",
-  "requestedAt": "2026-11-03T10:22:00+08:00",
+  "purpose": "Retry Windows BarTender 2022 renderer probe after aligning 23-case native FontName regression with XML-only real runtime contract.",
+  "requestedAt": "2026-11-03T10:27:00+08:00",
   "requestedBy": "YKC1117",
   "target": "experiment/com-renderer-prototype"
 }
