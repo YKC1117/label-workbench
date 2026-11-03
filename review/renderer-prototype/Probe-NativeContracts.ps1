@@ -1,16 +1,16 @@
 [CmdletBinding()]
-param()
+param([switch]$DesignerBase)
 Set-StrictMode -Version 2
 $ErrorActionPreference='Stop'
 $root=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..'))
 $base=Join-Path $root 'native\Label_Workbench_Native_Layout_ENGINE_V1\program'
-$out=Join-Path $PSScriptRoot 'runner-evidence\contracts'
+$out=Join-Path $PSScriptRoot $(if($DesignerBase){'runner-evidence\contracts-designer'}else{'runner-evidence\contracts'})
 [void][IO.Directory]::CreateDirectory($out)
 Import-Module (Join-Path $base 'Com.psm1') -Force
 Import-Module (Join-Path $base 'NativeLayoutEngine.psm1') -Force
 Import-Module (Join-Path $base 'HybridPayload.psm1') -Force
 Add-Type -Path (Join-Path $base 'ComMetadata.cs')
-$result=[ordered]@{schema='lwb-native-contract-discovery-v1';commit=$env:GITHUB_SHA;productAcceptance='NOT_RUN';status='STARTED';runtime=[ordered]@{};enum=@();objects=@();hri=@();persistence=@();errors=@()}
+$result=[ordered]@{schema='lwb-native-contract-discovery-v2';designerBase=[bool]$DesignerBase;commit=$env:GITHUB_SHA;productAcceptance='NOT_RUN';status='STARTED';runtime=[ordered]@{};enum=@();objects=@();hri=@();persistence=@();errors=@()}
 $app=$null;$formats=$null;$doc=$null;$objects=$null;$wd=$null
 $script:ownedPids=@()
 $existing=@(Get-Process -Name BarTend -ErrorAction SilentlyContinue|Select-Object -ExpandProperty Id)
@@ -55,7 +55,14 @@ try{
  $groups=@($enums|Group-Object TypeName|Where-Object{@($_.Group|Where-Object{$_.Value -eq 4 -and $_.Name -match 'BarCode'}).Count -eq 1 -and @($_.Group|Where-Object{$_.Value -eq 5 -and $_.Name -match 'Text'}).Count -eq 1})
  if($groups.Count -ne 1){throw 'No unique installed creation enum matches proven Barcode=4 / Text=5.'}
  $types=@($groups[0].Group);Save-J $types (Join-Path $out 'creation-types.json')
- $doc=Com\Invoke-ComMethod $formats 'Add' @();Com\Write-Property $doc 'MeasurementUnits' 3
+ if($DesignerBase){
+  $pool=Join-Path $out 'designer-source.btw';$node=(Get-Command node.exe -CommandType Application).Source
+  & $node (Join-Path $root 'renderer\materialize-text-pool.cjs') $pool
+  if($LASTEXITCODE -ne 0 -or (Get-FileHash $pool -Algorithm SHA256).Hash -cne '73E620EC2154D18AF3E279B4438A3775BE85D2A71F5BD8AFAAF664B31F03198B'){throw 'Designer source materialization/hash failed.'}
+  $doc=Com\Invoke-ComMethod $formats 'Open' @($pool,$false,'')
+  $objs=Com\Read-Property $doc 'Objects';try{foreach($name in @((Get-Peers $objs '').Keys)){if(-not [bool](Com\Invoke-ComMethod $objs 'Delete' @($name))){throw 'Could not remove unused source object.'}}}finally{Release-C $objs}
+ }else{$doc=Com\Invoke-ComMethod $formats 'Add' @()}
+ Com\Write-Property $doc 'MeasurementUnits' 3
  # Use the existing page implementation, without modifying renderer core.
  & (Get-Module NativeLayoutEngine) {param($doc) [void](Set-NativePage $doc ([pscustomobject]@{widthMm=100;heightMm=70;printerName=$null}))} $doc
  $objects=Com\Read-Property $doc 'Objects'
@@ -67,7 +74,7 @@ try{
   try{
    if($matches.Count -ne 1){throw ('No unique deterministic creation type for '+$kind)}
    $row.enum=$matches[0];$o=Com\Invoke-ComMethod $objects 'Create' @([int]$matches[0].Value);if($null -eq $o){throw 'Create returned null.'}
-   $row.name=[string](Com\Read-Property $o 'Name');$row.type=[int](Com\Read-Property $o 'Type');if($row.type -ne $matches[0].Value){throw 'Created type differs from installed enum.'}
+   $row.name=[string](Com\Read-Property $o 'Name');Release-C $o;$o=$null;Release-C $objects;$objects=Com\Read-Property $doc 'Objects';$o=Com\Invoke-ComMethod $objects 'Find' @([string]$row.name);$row.type=[int](Com\Read-Property $o 'Type');if($row.type -ne $matches[0].Value){throw 'Created type differs from installed enum.'}
    (Get-X $o)|Set-Content -LiteralPath (Join-Path $out ($kind+'-baseline.xml')) -Encoding UTF8
    $peers=Get-Peers $objects $row.name
    $props=[ordered]@{}
@@ -82,10 +89,16 @@ try{
    }
    foreach($key in $props.Keys){
     $p=[ordered]@{name=$key;requested=$props[$key];status='NOT_RUN';actual=$null;error=$null}
-    try{Com\Write-Property $o $key $props[$key];$p.actual=Com\Read-Property $o $key;$p.status='READBACK_CAPTURED'}catch{$p.status='FAIL';$p.error=$_.Exception.ToString()}
+    try{Com\Write-Property $o $key $props[$key];$p.actual=Com\Read-Property $o $key;$p.status='READBACK_CAPTURED'}catch{
+     $p.status='FAIL';$p.error=$_.Exception.ToString()
+     try{
+      $value=if($props[$key] -is [double]){([double]$props[$key]).ToString('R',[Globalization.CultureInfo]::InvariantCulture)}else{[string]$props[$key]}
+      [void](Com\Invoke-ComMethod $o 'SetProperty' @([string]$key,$value));$p.actual=Com\Invoke-ComMethod $o 'GetProperty' @([string]$key);$p.status='DYNAMIC_READBACK_CAPTURED'
+     }catch{$p['dynamicError']=$_.Exception.ToString()}
+    }
     $row.properties+=,$p
    }
-   Com\Write-Property $o 'DoNotPrint' $false;Capture $o ($kind+'-presave');Assert-Peers $objects $peers $kind
+   try{Com\Write-Property $o 'DoNotPrint' $false}catch{$row['doNotPrintError']=$_.Exception.ToString()};Capture $o ($kind+'-presave');Assert-Peers $objects $peers $kind
    $row.status=if(@($row.properties|Where-Object{$_.status -eq 'FAIL'}).Count){'PROPERTY_CAPABILITY_FAILURE'}else{'WRITES_AND_RENDER_CAPTURED_NOT_CERTIFIED'}
   }catch{$row.status='FAIL_OR_UNAVAILABLE';$row.error=$_.Exception.ToString()}finally{Release-C $o;$result.objects+=,$row;$offset+=32;Save-J $result (Join-Path $out 'contract-report.json')}
  }
@@ -105,7 +118,7 @@ try{
     foreach($value in @('AB12','987654321012')){
      Set-Payload $objects $o $value ('hri-'+$mode);$hr=[string](Com\Read-Property $o 'HumanReadableValue')
      $row.values+=,[ordered]@{value=$value;humanReadableValue=$hr;matches=($hr -ceq $value)}
-     Com\Write-Property $o 'Height' ([double]9);Capture $o ('hri-'+$mode+'-'+$value)
+     try{Com\Write-Property $o 'Height' ([double]9)}catch{$row['heightError']=$_.Exception.ToString()};Capture $o ('hri-'+$mode+'-'+$value)
     }
     $row.status=if(@($row.values|Where-Object{-not $_.matches}).Count){'CAPTION_NOT_BOUND_TO_MAIN_VALUE'}else{'PAYLOAD_AND_HRI_MATCHED_RENDER_PENDING'}
    }catch{$row.status='FAIL';$row.error=$_.Exception.ToString()}finally{$result.hri+=,$row;Save-J $result (Join-Path $out 'contract-report.json')}

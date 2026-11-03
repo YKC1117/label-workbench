@@ -1,0 +1,1493 @@
+﻿{
+    "schema":  "lwb-native-contract-discovery-v1",
+    "commit":  "bf2cfff8b4b5c1dca17e09464cdeabf529d2bee6",
+    "productAcceptance":  "NOT_RUN",
+    "status":  "DISCOVERY_COMPLETE_NOT_RENDERER_ACCEPTANCE",
+    "runtime":  {
+                    "FullVersion":  "2022 R2",
+                    "Version":  "11.3",
+                    "Edition":  "Automation",
+                    "BuildNumber":  184527,
+                    "powershell":  "5.1.26100.9711"
+                },
+    "enum":  [
+                 {
+                     "TypeName":  "BtVersion",
+                     "Name":  "btLatest",
+                     "Value":  0
+                 },
+                 {
+                     "TypeName":  "BtVersion",
+                     "Name":  "bt610",
+                     "Value":  610
+                 },
+                 {
+                     "TypeName":  "BtVersion",
+                     "Name":  "bt620",
+                     "Value":  620
+                 },
+                 {
+                     "TypeName":  "BtVersion",
+                     "Name":  "bt700",
+                     "Value":  700
+                 },
+                 {
+                     "TypeName":  "BtVersion",
+                     "Name":  "bt710",
+                     "Value":  710
+                 },
+                 {
+                     "TypeName":  "BtVersion",
+                     "Name":  "bt750",
+                     "Value":  750
+                 },
+                 {
+                     "TypeName":  "BtVersion",
+                     "Name":  "bt770",
+                     "Value":  770
+                 },
+                 {
+                     "TypeName":  "BtVersion",
+                     "Name":  "bt772",
+                     "Value":  772
+                 },
+                 {
+                     "TypeName":  "BtVersion",
+                     "Name":  "bt773",
+                     "Value":  773
+                 },
+                 {
+                     "TypeName":  "BtVersion",
+                     "Name":  "bt774",
+                     "Value":  774
+                 },
+                 {
+                     "TypeName":  "BtVersion",
+                     "Name":  "bt775",
+                     "Value":  775
+                 },
+                 {
+                     "TypeName":  "BtVersion",
+                     "Name":  "bt800",
+                     "Value":  800
+                 },
+                 {
+                     "TypeName":  "BtVersion",
+                     "Name":  "bt801",
+                     "Value":  801
+                 },
+                 {
+                     "TypeName":  "BtVersion",
+                     "Name":  "bt901",
+                     "Value":  901
+                 },
+                 {
+                     "TypeName":  "BtVersion",
+                     "Name":  "bt910",
+                     "Value":  910
+                 },
+                 {
+                     "TypeName":  "BtVersion",
+                     "Name":  "bt920",
+                     "Value":  920
+                 },
+                 {
+                     "TypeName":  "BtVersion",
+                     "Name":  "bt921",
+                     "Value":  921
+                 },
+                 {
+                     "TypeName":  "BtVersion",
+                     "Name":  "bt930",
+                     "Value":  930
+                 },
+                 {
+                     "TypeName":  "BtVersion",
+                     "Name":  "bt940",
+                     "Value":  940
+                 },
+                 {
+                     "TypeName":  "BtVersion",
+                     "Name":  "bt1000",
+                     "Value":  1000
+                 },
+                 {
+                     "TypeName":  "BtVersion",
+                     "Name":  "bt1010",
+                     "Value":  1010
+                 },
+                 {
+                     "TypeName":  "BtVersion",
+                     "Name":  "bt1100",
+                     "Value":  1100
+                 },
+                 {
+                     "TypeName":  "BtVersion",
+                     "Name":  "bt1110",
+                     "Value":  1110
+                 },
+                 {
+                     "TypeName":  "BtVersion",
+                     "Name":  "bt1120",
+                     "Value":  1120
+                 },
+                 {
+                     "TypeName":  "BtVersion",
+                     "Name":  "bt1130",
+                     "Value":  1130
+                 },
+                 {
+                     "TypeName":  "BtSaveOptions",
+                     "Name":  "btPromptSave",
+                     "Value":  0
+                 },
+                 {
+                     "TypeName":  "BtSaveOptions",
+                     "Name":  "btDoNotSaveChanges",
+                     "Value":  1
+                 },
+                 {
+                     "TypeName":  "BtSaveOptions",
+                     "Name":  "btSaveChanges",
+                     "Value":  2
+                 },
+                 {
+                     "TypeName":  "BtInputDataFile",
+                     "Name":  "btTextFile",
+                     "Value":  0
+                 },
+                 {
+                     "TypeName":  "BtInputDataFile",
+                     "Name":  "btODBC",
+                     "Value":  1
+                 },
+                 {
+                     "TypeName":  "BtInputDataFile",
+                     "Name":  "btSAPIDoc",
+                     "Value":  2
+                 },
+                 {
+                     "TypeName":  "BtInputDataFile",
+                     "Name":  "btOLEDB",
+                     "Value":  3
+                 },
+                 {
+                     "TypeName":  "BtInputDataFile",
+                     "Name":  "btSQLServer",
+                     "Value":  4
+                 },
+                 {
+                     "TypeName":  "BtInputDataFile",
+                     "Name":  "btAccess",
+                     "Value":  5
+                 },
+                 {
+                     "TypeName":  "BtInputDataFile",
+                     "Name":  "btExcel",
+                     "Value":  6
+                 },
+                 {
+                     "TypeName":  "BtInputDataFile",
+                     "Name":  "btInformix",
+                     "Value":  7
+                 },
+                 {
+                     "TypeName":  "BtInputDataFile",
+                     "Name":  "btOracle",
+                     "Value":  8
+                 },
+                 {
+                     "TypeName":  "BtInputDataFile",
+                     "Name":  "btAzure",
+                     "Value":  9
+                 },
+                 {
+                     "TypeName":  "BtInputDataFile",
+                     "Name":  "btMySQL",
+                     "Value":  10
+                 },
+                 {
+                     "TypeName":  "BtInputDataFile",
+                     "Name":  "btFirebird",
+                     "Value":  11
+                 },
+                 {
+                     "TypeName":  "BtInputDataFile",
+                     "Name":  "btDB2",
+                     "Value":  12
+                 },
+                 {
+                     "TypeName":  "BtInputDataFile",
+                     "Name":  "btPostgreSQL",
+                     "Value":  13
+                 },
+                 {
+                     "TypeName":  "BtInputDataFile",
+                     "Name":  "btXML",
+                     "Value":  14
+                 },
+                 {
+                     "TypeName":  "BtInputDataFile",
+                     "Name":  "btMariaDB",
+                     "Value":  15
+                 },
+                 {
+                     "TypeName":  "BtInputDataFile",
+                     "Name":  "btDataBuilder",
+                     "Value":  16
+                 },
+                 {
+                     "TypeName":  "BtInputDataFile",
+                     "Name":  "btJSON",
+                     "Value":  17
+                 },
+                 {
+                     "TypeName":  "BtInputDataFile",
+                     "Name":  "btGoogleSheets",
+                     "Value":  18
+                 },
+                 {
+                     "TypeName":  "BtInputDataFile",
+                     "Name":  "btExcelOnline",
+                     "Value":  19
+                 },
+                 {
+                     "TypeName":  "BtInputDataFile",
+                     "Name":  "btQuickBooks",
+                     "Value":  20
+                 },
+                 {
+                     "TypeName":  "BtInputDataFile",
+                     "Name":  "btSAPHANA",
+                     "Value":  21
+                 },
+                 {
+                     "TypeName":  "BtTextFileDelimitation",
+                     "Name":  "btDelimMixedQuoteAndComma",
+                     "Value":  0
+                 },
+                 {
+                     "TypeName":  "BtTextFileDelimitation",
+                     "Name":  "btDelimQuoteAndComma",
+                     "Value":  1
+                 },
+                 {
+                     "TypeName":  "BtTextFileDelimitation",
+                     "Name":  "btDelimComma",
+                     "Value":  2
+                 },
+                 {
+                     "TypeName":  "BtTextFileDelimitation",
+                     "Name":  "btDelimTab",
+                     "Value":  3
+                 },
+                 {
+                     "TypeName":  "BtTextFileDelimitation",
+                     "Name":  "btDelimCustom",
+                     "Value":  4
+                 },
+                 {
+                     "TypeName":  "BtWindowState",
+                     "Name":  "btNormal",
+                     "Value":  0
+                 },
+                 {
+                     "TypeName":  "BtWindowState",
+                     "Name":  "btMaximize",
+                     "Value":  1
+                 },
+                 {
+                     "TypeName":  "BtWindowState",
+                     "Name":  "btMinimize",
+                     "Value":  2
+                 },
+                 {
+                     "TypeName":  "BtSubStringType",
+                     "Name":  "btSubStringScreenData",
+                     "Value":  0
+                 },
+                 {
+                     "TypeName":  "BtSubStringType",
+                     "Name":  "btSubStringDate",
+                     "Value":  1
+                 },
+                 {
+                     "TypeName":  "BtSubStringType",
+                     "Name":  "btSubStringTime",
+                     "Value":  2
+                 },
+                 {
+                     "TypeName":  "BtSubStringType",
+                     "Name":  "btSubStringVBScript",
+                     "Value":  3
+                 },
+                 {
+                     "TypeName":  "BtSubStringType",
+                     "Name":  "btSubStringDatabase",
+                     "Value":  4
+                 },
+                 {
+                     "TypeName":  "BtSubStringType",
+                     "Name":  "btSubStringDiskWizard",
+                     "Value":  5
+                 },
+                 {
+                     "TypeName":  "BtSubStringType",
+                     "Name":  "btSubStringTemplateField",
+                     "Value":  6
+                 },
+                 {
+                     "TypeName":  "BtSubStringType",
+                     "Name":  "btSubStringLabelObject",
+                     "Value":  7
+                 },
+                 {
+                     "TypeName":  "BtSubStringType",
+                     "Name":  "btSubStringPrintJobField",
+                     "Value":  8
+                 },
+                 {
+                     "TypeName":  "BtSubStringType",
+                     "Name":  "btSubStringGlobalDataField",
+                     "Value":  9
+                 },
+                 {
+                     "TypeName":  "BtSubStringType",
+                     "Name":  "btSubStringTableDataField",
+                     "Value":  10
+                 },
+                 {
+                     "TypeName":  "BtSubStringType",
+                     "Name":  "btSubStringExternalFileDs",
+                     "Value":  11
+                 },
+                 {
+                     "TypeName":  "BtObjectType",
+                     "Name":  "btObjectError",
+                     "Value":  -1
+                 },
+                 {
+                     "TypeName":  "BtObjectType",
+                     "Name":  "btObjectLine",
+                     "Value":  2
+                 },
+                 {
+                     "TypeName":  "BtObjectType",
+                     "Name":  "btObjectBox",
+                     "Value":  3
+                 },
+                 {
+                     "TypeName":  "BtObjectType",
+                     "Name":  "btObjectBarcode",
+                     "Value":  4
+                 },
+                 {
+                     "TypeName":  "BtObjectType",
+                     "Name":  "btObjectText",
+                     "Value":  5
+                 },
+                 {
+                     "TypeName":  "BtObjectType",
+                     "Name":  "btObjectPicture",
+                     "Value":  6
+                 },
+                 {
+                     "TypeName":  "BtObjectType",
+                     "Name":  "btObjectRFID",
+                     "Value":  7
+                 },
+                 {
+                     "TypeName":  "BtObjectType",
+                     "Name":  "btObjectEllipse",
+                     "Value":  8
+                 },
+                 {
+                     "TypeName":  "BtObjectType",
+                     "Name":  "btObjectRichText",
+                     "Value":  9
+                 },
+                 {
+                     "TypeName":  "BtObjectType",
+                     "Name":  "btObjectShape",
+                     "Value":  10
+                 },
+                 {
+                     "TypeName":  "BtObjectType",
+                     "Name":  "btObjectMagneticStripe",
+                     "Value":  11
+                 },
+                 {
+                     "TypeName":  "BtObjectType",
+                     "Name":  "btObjectGridLayout",
+                     "Value":  12
+                 },
+                 {
+                     "TypeName":  "BtObjectType",
+                     "Name":  "btObjectTable",
+                     "Value":  13
+                 },
+                 {
+                     "TypeName":  "BtColors",
+                     "Name":  "btColorsMono",
+                     "Value":  0
+                 },
+                 {
+                     "TypeName":  "BtColors",
+                     "Name":  "btColors16",
+                     "Value":  1
+                 },
+                 {
+                     "TypeName":  "BtColors",
+                     "Name":  "btColors256",
+                     "Value":  2
+                 },
+                 {
+                     "TypeName":  "BtColors",
+                     "Name":  "btColors24Bit",
+                     "Value":  4
+                 },
+                 {
+                     "TypeName":  "BtColors",
+                     "Name":  "btColors32Bit",
+                     "Value":  5
+                 },
+                 {
+                     "TypeName":  "BtResolution",
+                     "Name":  "btResolutionScreen",
+                     "Value":  0
+                 },
+                 {
+                     "TypeName":  "BtResolution",
+                     "Name":  "btResolutionPrinter",
+                     "Value":  1
+                 },
+                 {
+                     "TypeName":  "BtShape",
+                     "Name":  "btSquare",
+                     "Value":  1
+                 },
+                 {
+                     "TypeName":  "BtShape",
+                     "Name":  "btRectangle",
+                     "Value":  2
+                 },
+                 {
+                     "TypeName":  "BtShape",
+                     "Name":  "btRound",
+                     "Value":  3
+                 },
+                 {
+                     "TypeName":  "BtShape",
+                     "Name":  "btEllipse",
+                     "Value":  4
+                 },
+                 {
+                     "TypeName":  "BtUnits",
+                     "Name":  "btUnitsCurrent",
+                     "Value":  0
+                 },
+                 {
+                     "TypeName":  "BtUnits",
+                     "Name":  "btUnitsInches",
+                     "Value":  1
+                 },
+                 {
+                     "TypeName":  "BtUnits",
+                     "Name":  "btUnitsCentimeters",
+                     "Value":  2
+                 },
+                 {
+                     "TypeName":  "BtUnits",
+                     "Name":  "btUnitsMillimeters",
+                     "Value":  3
+                 },
+                 {
+                     "TypeName":  "BtOrientation",
+                     "Name":  "btPortrait",
+                     "Value":  0
+                 },
+                 {
+                     "TypeName":  "BtOrientation",
+                     "Name":  "btLandscape",
+                     "Value":  1
+                 },
+                 {
+                     "TypeName":  "BtOrientation",
+                     "Name":  "btPortrait180",
+                     "Value":  2
+                 },
+                 {
+                     "TypeName":  "BtOrientation",
+                     "Name":  "btLandscape180",
+                     "Value":  3
+                 },
+                 {
+                     "TypeName":  "BtTextPrintMethod",
+                     "Name":  "btTextRasterGraphics",
+                     "Value":  0
+                 },
+                 {
+                     "TypeName":  "BtTextPrintMethod",
+                     "Name":  "btTextOutput",
+                     "Value":  1
+                 },
+                 {
+                     "TypeName":  "BtBarCodePrintMethod",
+                     "Name":  "btBarCodeRasterGraphics",
+                     "Value":  0
+                 },
+                 {
+                     "TypeName":  "BtBarCodePrintMethod",
+                     "Name":  "btBarCodeDeviceLines",
+                     "Value":  1
+                 },
+                 {
+                     "TypeName":  "BtBarCodePrintMethod",
+                     "Name":  "btBarCodeAuto",
+                     "Value":  2
+                 },
+                 {
+                     "TypeName":  "BtLinePrintMethod",
+                     "Name":  "btLineRasterGraphics",
+                     "Value":  0
+                 },
+                 {
+                     "TypeName":  "BtLinePrintMethod",
+                     "Name":  "btLineDeviceLines",
+                     "Value":  1
+                 },
+                 {
+                     "TypeName":  "BtLinePrintMethod",
+                     "Name":  "btLineAuto",
+                     "Value":  2
+                 },
+                 {
+                     "TypeName":  "BtBoxPrintMethod",
+                     "Name":  "btBoxRasterGraphics",
+                     "Value":  0
+                 },
+                 {
+                     "TypeName":  "BtBoxPrintMethod",
+                     "Name":  "btBoxDeviceLines",
+                     "Value":  1
+                 },
+                 {
+                     "TypeName":  "BtBoxPrintMethod",
+                     "Name":  "btBoxDeviceBox",
+                     "Value":  2
+                 },
+                 {
+                     "TypeName":  "BtBoxPrintMethod",
+                     "Name":  "btBoxAuto",
+                     "Value":  3
+                 },
+                 {
+                     "TypeName":  "BtCacheFlushInterval",
+                     "Name":  "btCacheFlushPerSession",
+                     "Value":  0
+                 },
+                 {
+                     "TypeName":  "BtCacheFlushInterval",
+                     "Name":  "btCacheFlushDaily",
+                     "Value":  1
+                 },
+                 {
+                     "TypeName":  "BtCacheFlushInterval",
+                     "Name":  "btCacheFlushWeekly",
+                     "Value":  2
+                 },
+                 {
+                     "TypeName":  "BtCacheFlushInterval",
+                     "Name":  "btCacheFlushMonthly",
+                     "Value":  3
+                 },
+                 {
+                     "TypeName":  "BtCacheFlushInterval",
+                     "Name":  "btCacheFlushNever",
+                     "Value":  4
+                 },
+                 {
+                     "TypeName":  "BtFormatIdValueType",
+                     "Name":  "btFormatIdConstant",
+                     "Value":  0
+                 },
+                 {
+                     "TypeName":  "BtFormatIdValueType",
+                     "Name":  "btFormatIdFromTemplateField",
+                     "Value":  1
+                 },
+                 {
+                     "TypeName":  "BtFormatIdValueType",
+                     "Name":  "btFormatIdSetByDriver",
+                     "Value":  2
+                 },
+                 {
+                     "TypeName":  "BtFormatIdValueType",
+                     "Name":  "btFormatIdNotSupported",
+                     "Value":  3
+                 },
+                 {
+                     "TypeName":  "BtPrinterCopiesValueType",
+                     "Name":  "btPrinterCopiesConstant",
+                     "Value":  0
+                 },
+                 {
+                     "TypeName":  "BtPrinterCopiesValueType",
+                     "Name":  "btPrinterCopiesFromTemplateField",
+                     "Value":  1
+                 },
+                 {
+                     "TypeName":  "BtPrinterCopiesValueType",
+                     "Name":  "btPrinterCopiesFromPrintDialogCopies",
+                     "Value":  2
+                 },
+                 {
+                     "TypeName":  "BtPrinterCopiesValueType",
+                     "Name":  "btPrinterCopiesNotSupported",
+                     "Value":  3
+                 },
+                 {
+                     "TypeName":  "BtPrinterSerializedCopiesValueType",
+                     "Name":  "btPrinterSerializedCopiesConstant",
+                     "Value":  0
+                 },
+                 {
+                     "TypeName":  "BtPrinterSerializedCopiesValueType",
+                     "Name":  "btPrinterSerializedCopiesFromTemplateField",
+                     "Value":  1
+                 },
+                 {
+                     "TypeName":  "BtPrinterSerializedCopiesValueType",
+                     "Name":  "btPrinterSerializedCopiesFromPrintDialogCopies",
+                     "Value":  2
+                 },
+                 {
+                     "TypeName":  "BtPrinterSerializedCopiesValueType",
+                     "Name":  "btPrinterSerializedCopiesNotSupported",
+                     "Value":  3
+                 },
+                 {
+                     "TypeName":  "BtPrinterBatchCopiesValueType",
+                     "Name":  "btPrinterBatchCopiesConstant",
+                     "Value":  0
+                 },
+                 {
+                     "TypeName":  "BtPrinterBatchCopiesValueType",
+                     "Name":  "btPrinterBatchCopiesFromTemplateField",
+                     "Value":  1
+                 },
+                 {
+                     "TypeName":  "BtPrinterBatchCopiesValueType",
+                     "Name":  "btPrinterBatchCopiesFromPrintDialogCopies",
+                     "Value":  2
+                 },
+                 {
+                     "TypeName":  "BtPrinterBatchCopiesValueType",
+                     "Name":  "btPrinterBatchCopiesNotSupported",
+                     "Value":  3
+                 },
+                 {
+                     "TypeName":  "BtMsgType",
+                     "Name":  "btMsgTypeMiscellaneous",
+                     "Value":  0
+                 },
+                 {
+                     "TypeName":  "BtMsgType",
+                     "Name":  "btMsgTypeVBScripting",
+                     "Value":  1
+                 },
+                 {
+                     "TypeName":  "BtMsgType",
+                     "Name":  "btMsgTypePrinter",
+                     "Value":  2
+                 },
+                 {
+                     "TypeName":  "BtMsgType",
+                     "Name":  "btMsgTypeDatabase",
+                     "Value":  3
+                 },
+                 {
+                     "TypeName":  "BtMsgType",
+                     "Name":  "btMsgTypeFile",
+                     "Value":  4
+                 },
+                 {
+                     "TypeName":  "BtMsgType",
+                     "Name":  "btMsgTypeCommandLine",
+                     "Value":  5
+                 },
+                 {
+                     "TypeName":  "BtMsgType",
+                     "Name":  "btMsgTypeNetworkTrace",
+                     "Value":  6
+                 },
+                 {
+                     "TypeName":  "BtMsgType",
+                     "Name":  "btMsgTypeLicensing",
+                     "Value":  7
+                 },
+                 {
+                     "TypeName":  "BtMsgType",
+                     "Name":  "btMsgTypeEmail",
+                     "Value":  8
+                 },
+                 {
+                     "TypeName":  "BtMsgType",
+                     "Name":  "btMsgTypeService",
+                     "Value":  9
+                 },
+                 {
+                     "TypeName":  "BtMsgType",
+                     "Name":  "btMsgTypeVerification",
+                     "Value":  10
+                 },
+                 {
+                     "TypeName":  "BtMsgType",
+                     "Name":  "btMsgTypeAutomation",
+                     "Value":  11
+                 },
+                 {
+                     "TypeName":  "BtMsgType",
+                     "Name":  "btMsgTypeXMLScript",
+                     "Value":  12
+                 },
+                 {
+                     "TypeName":  "BtMsgType",
+                     "Name":  "btMsgTypeCluster",
+                     "Value":  13
+                 },
+                 {
+                     "TypeName":  "BtMsgType",
+                     "Name":  "btMsgTypeLogToDatabase",
+                     "Value":  14
+                 },
+                 {
+                     "TypeName":  "BtMsgType",
+                     "Name":  "btMsgTypePrinting",
+                     "Value":  15
+                 },
+                 {
+                     "TypeName":  "BtMsgSeverity",
+                     "Name":  "btMsgSeverityInformation",
+                     "Value":  0
+                 },
+                 {
+                     "TypeName":  "BtMsgSeverity",
+                     "Name":  "btMsgSeverityWarning",
+                     "Value":  1
+                 },
+                 {
+                     "TypeName":  "BtMsgSeverity",
+                     "Name":  "btMsgSeverityError",
+                     "Value":  2
+                 },
+                 {
+                     "TypeName":  "BtPctExportType",
+                     "Name":  "btPctExportSeparate",
+                     "Value":  0
+                 },
+                 {
+                     "TypeName":  "BtPctExportType",
+                     "Name":  "btPctExportCombined",
+                     "Value":  1
+                 },
+                 {
+                     "TypeName":  "BtPctExportType",
+                     "Name":  "btPctExportToPort",
+                     "Value":  2
+                 },
+                 {
+                     "TypeName":  "BtNameType",
+                     "Name":  "btUsedNamedSubStrings",
+                     "Value":  0
+                 },
+                 {
+                     "TypeName":  "BtNameType",
+                     "Name":  "btUsedDatabaseFields",
+                     "Value":  1
+                 },
+                 {
+                     "TypeName":  "BtNameType",
+                     "Name":  "btUsedTemplateFields",
+                     "Value":  2
+                 },
+                 {
+                     "TypeName":  "BtUsedNamesSampleDataType",
+                     "Name":  "btUsedDatabaseFieldsSampleData",
+                     "Value":  0
+                 },
+                 {
+                     "TypeName":  "BtEllipsePrintMethod",
+                     "Name":  "btEllipseRasterGraphics",
+                     "Value":  0
+                 },
+                 {
+                     "TypeName":  "BtEllipsePrintMethod",
+                     "Name":  "btEllipseDevice",
+                     "Value":  1
+                 },
+                 {
+                     "TypeName":  "BtEllipsePrintMethod",
+                     "Name":  "btEllipseAuto",
+                     "Value":  2
+                 },
+                 {
+                     "TypeName":  "BtMediaHandlingAction",
+                     "Name":  "btMHDriverSettings",
+                     "Value":  0
+                 },
+                 {
+                     "TypeName":  "BtMediaHandlingAction",
+                     "Name":  "btMHPageBreak",
+                     "Value":  1
+                 },
+                 {
+                     "TypeName":  "BtMediaHandlingAction",
+                     "Name":  "btMHPause",
+                     "Value":  2
+                 },
+                 {
+                     "TypeName":  "BtMediaHandlingAction",
+                     "Name":  "btMHWaitForLabelTakenSensor",
+                     "Value":  3
+                 },
+                 {
+                     "TypeName":  "BtMediaHandlingAction",
+                     "Name":  "btMHCut",
+                     "Value":  4
+                 },
+                 {
+                     "TypeName":  "BtMediaHandlingAction",
+                     "Name":  "btMHCutAndPause",
+                     "Value":  5
+                 },
+                 {
+                     "TypeName":  "BtMediaHandlingAction",
+                     "Name":  "btMHPartialCut",
+                     "Value":  6
+                 },
+                 {
+                     "TypeName":  "BtMediaHandlingAction",
+                     "Name":  "btMHPartialCutAndPause",
+                     "Value":  7
+                 },
+                 {
+                     "TypeName":  "BtMediaHandlingOccurrence",
+                     "Name":  "btMHAtEndOfPrintJob",
+                     "Value":  0
+                 },
+                 {
+                     "TypeName":  "BtMediaHandlingOccurrence",
+                     "Name":  "btMHAfterEveryPage",
+                     "Value":  1
+                 },
+                 {
+                     "TypeName":  "BtMediaHandlingOccurrence",
+                     "Name":  "btMHAfterEveryRecord",
+                     "Value":  2
+                 },
+                 {
+                     "TypeName":  "BtMediaHandlingOccurrence",
+                     "Name":  "btMHAfterIdenticalCopies",
+                     "Value":  3
+                 },
+                 {
+                     "TypeName":  "BtMediaHandlingOccurrence",
+                     "Name":  "btMHAfterDataChange",
+                     "Value":  4
+                 },
+                 {
+                     "TypeName":  "BtMediaHandlingOccurrence",
+                     "Name":  "btMHAfterNumberOfLabels",
+                     "Value":  5
+                 },
+                 {
+                     "TypeName":  "BtMediaHandlingDataItemType",
+                     "Name":  "btMHDatabaseField",
+                     "Value":  0
+                 },
+                 {
+                     "TypeName":  "BtMediaHandlingDataItemType",
+                     "Name":  "btMHNamedSubstring",
+                     "Value":  1
+                 },
+                 {
+                     "TypeName":  "BtMediaHandlingDataItemType",
+                     "Name":  "btMHNamedObject",
+                     "Value":  2
+                 },
+                 {
+                     "TypeName":  "BtPctExportVersion",
+                     "Name":  "btPctExportVersion773AndEarlier",
+                     "Value":  0
+                 },
+                 {
+                     "TypeName":  "BtPctExportVersion",
+                     "Name":  "btPctExportVersionCurrent",
+                     "Value":  1
+                 },
+                 {
+                     "TypeName":  "BtXMLSourceType",
+                     "Name":  "btXMLScriptString",
+                     "Value":  0
+                 },
+                 {
+                     "TypeName":  "BtXMLSourceType",
+                     "Name":  "btXMLScriptFile",
+                     "Value":  1
+                 },
+                 {
+                     "TypeName":  "BtPrintResult",
+                     "Name":  "btSuccess",
+                     "Value":  0
+                 },
+                 {
+                     "TypeName":  "BtPrintResult",
+                     "Name":  "btTimeout",
+                     "Value":  1
+                 },
+                 {
+                     "TypeName":  "BtPrintResult",
+                     "Name":  "btFailure",
+                     "Value":  2
+                 },
+                 {
+                     "TypeName":  "BtPrintPreviewResult",
+                     "Name":  "btError",
+                     "Value":  0
+                 },
+                 {
+                     "TypeName":  "BtPrintPreviewResult",
+                     "Name":  "btCanceled",
+                     "Value":  1
+                 },
+                 {
+                     "TypeName":  "BtPrintPreviewResult",
+                     "Name":  "btClosed",
+                     "Value":  2
+                 },
+                 {
+                     "TypeName":  "BtPrintPreviewResult",
+                     "Name":  "btPrinted",
+                     "Value":  3
+                 },
+                 {
+                     "TypeName":  "BtVisibleWindows",
+                     "Name":  "btNone",
+                     "Value":  0
+                 },
+                 {
+                     "TypeName":  "BtVisibleWindows",
+                     "Name":  "btAll",
+                     "Value":  1
+                 },
+                 {
+                     "TypeName":  "BtVisibleWindows",
+                     "Name":  "btInteractiveDialogs",
+                     "Value":  2
+                 },
+                 {
+                     "TypeName":  "BtVisibleWindows",
+                     "Name":  "btStartingLabelDialogOnly",
+                     "Value":  3
+                 },
+                 {
+                     "TypeName":  "BtFontWeight",
+                     "Name":  "btFontWeightThin",
+                     "Value":  100
+                 },
+                 {
+                     "TypeName":  "BtFontWeight",
+                     "Name":  "btFontWeightExtraLight",
+                     "Value":  200
+                 },
+                 {
+                     "TypeName":  "BtFontWeight",
+                     "Name":  "btFontWeightLight",
+                     "Value":  300
+                 },
+                 {
+                     "TypeName":  "BtFontWeight",
+                     "Name":  "btFontWeightNormal",
+                     "Value":  400
+                 },
+                 {
+                     "TypeName":  "BtFontWeight",
+                     "Name":  "btFontWeightMedium",
+                     "Value":  500
+                 },
+                 {
+                     "TypeName":  "BtFontWeight",
+                     "Name":  "btFontWeightSemiBold",
+                     "Value":  600
+                 },
+                 {
+                     "TypeName":  "BtFontWeight",
+                     "Name":  "btFontWeightBold",
+                     "Value":  700
+                 },
+                 {
+                     "TypeName":  "BtFontWeight",
+                     "Name":  "btFontWeightExtraBold",
+                     "Value":  800
+                 },
+                 {
+                     "TypeName":  "BtFontWeight",
+                     "Name":  "btFontWeightHeavy",
+                     "Value":  900
+                 },
+                 {
+                     "TypeName":  "BtFontScript",
+                     "Name":  "btFontScriptArabic",
+                     "Value":  178
+                 },
+                 {
+                     "TypeName":  "BtFontScript",
+                     "Name":  "btFontScriptBaltic",
+                     "Value":  186
+                 },
+                 {
+                     "TypeName":  "BtFontScript",
+                     "Name":  "btFontScriptCentralEurope",
+                     "Value":  238
+                 },
+                 {
+                     "TypeName":  "BtFontScript",
+                     "Name":  "btFontScriptChineseGB2312",
+                     "Value":  134
+                 },
+                 {
+                     "TypeName":  "BtFontScript",
+                     "Name":  "btFontScriptChineseBig5",
+                     "Value":  136
+                 },
+                 {
+                     "TypeName":  "BtFontScript",
+                     "Name":  "btFontScriptCyrillic",
+                     "Value":  204
+                 },
+                 {
+                     "TypeName":  "BtFontScript",
+                     "Name":  "btFontScriptGreek",
+                     "Value":  161
+                 },
+                 {
+                     "TypeName":  "BtFontScript",
+                     "Name":  "btFontScriptHebrew",
+                     "Value":  177
+                 },
+                 {
+                     "TypeName":  "BtFontScript",
+                     "Name":  "btFontScriptJapanese",
+                     "Value":  128
+                 },
+                 {
+                     "TypeName":  "BtFontScript",
+                     "Name":  "btFontScriptKoreanHangul",
+                     "Value":  129
+                 },
+                 {
+                     "TypeName":  "BtFontScript",
+                     "Name":  "btFontScriptKoreanJohab",
+                     "Value":  130
+                 },
+                 {
+                     "TypeName":  "BtFontScript",
+                     "Name":  "btFontScriptMac",
+                     "Value":  77
+                 },
+                 {
+                     "TypeName":  "BtFontScript",
+                     "Name":  "btFontScriptOEM",
+                     "Value":  255
+                 },
+                 {
+                     "TypeName":  "BtFontScript",
+                     "Name":  "btFontScriptSymbol",
+                     "Value":  2
+                 },
+                 {
+                     "TypeName":  "BtFontScript",
+                     "Name":  "btFontScriptThai",
+                     "Value":  222
+                 },
+                 {
+                     "TypeName":  "BtFontScript",
+                     "Name":  "btFontScriptTurkish",
+                     "Value":  162
+                 },
+                 {
+                     "TypeName":  "BtFontScript",
+                     "Name":  "btFontScriptVietnamese",
+                     "Value":  163
+                 },
+                 {
+                     "TypeName":  "BtFontScript",
+                     "Name":  "btFontScriptWestern",
+                     "Value":  0
+                 },
+                 {
+                     "TypeName":  "BtStartingCorner",
+                     "Name":  "btTopLeft",
+                     "Value":  0
+                 },
+                 {
+                     "TypeName":  "BtStartingCorner",
+                     "Name":  "btTopRight",
+                     "Value":  1
+                 },
+                 {
+                     "TypeName":  "BtStartingCorner",
+                     "Name":  "btBottomLeft",
+                     "Value":  2
+                 },
+                 {
+                     "TypeName":  "BtStartingCorner",
+                     "Name":  "btBottomRight",
+                     "Value":  3
+                 },
+                 {
+                     "TypeName":  "BtStartingPositionDirection",
+                     "Name":  "btHorizontal",
+                     "Value":  0
+                 },
+                 {
+                     "TypeName":  "BtStartingPositionDirection",
+                     "Name":  "btVertical",
+                     "Value":  1
+                 },
+                 {
+                     "TypeName":  "BtStartingPositionDirection",
+                     "Name":  "btHorizontalAlternating",
+                     "Value":  2
+                 },
+                 {
+                     "TypeName":  "BtStartingPositionDirection",
+                     "Name":  "btVerticalAlternating",
+                     "Value":  3
+                 },
+                 {
+                     "TypeName":  "BtHorizontalAlignment",
+                     "Name":  "btHorizontalAlignmentLeft",
+                     "Value":  0
+                 },
+                 {
+                     "TypeName":  "BtHorizontalAlignment",
+                     "Name":  "btHorizontalAlignmentCenter",
+                     "Value":  1
+                 },
+                 {
+                     "TypeName":  "BtHorizontalAlignment",
+                     "Name":  "btHorizontalAlignmentRight",
+                     "Value":  2
+                 },
+                 {
+                     "TypeName":  "BtToolbarPosition",
+                     "Name":  "btToolbarPositionTop",
+                     "Value":  0
+                 },
+                 {
+                     "TypeName":  "BtToolbarPosition",
+                     "Name":  "btToolbarPositionBottom",
+                     "Value":  1
+                 },
+                 {
+                     "TypeName":  "BtToolbarIconSize",
+                     "Name":  "btToolbarIconSizeSmall",
+                     "Value":  0
+                 },
+                 {
+                     "TypeName":  "BtToolbarIconSize",
+                     "Name":  "btToolbarIconSizeLarge",
+                     "Value":  1
+                 },
+                 {
+                     "TypeName":  "BtPasswordProtectedActions",
+                     "Name":  "btOpenDocument",
+                     "Value":  0
+                 },
+                 {
+                     "TypeName":  "BtPasswordProtectedActions",
+                     "Name":  "btSaveDocument",
+                     "Value":  1
+                 },
+                 {
+                     "TypeName":  "BtPasswordProtectedActions",
+                     "Name":  "btSaveCopyOfDocument",
+                     "Value":  2
+                 },
+                 {
+                     "TypeName":  "BtPasswordProtectedActions",
+                     "Name":  "btPrint",
+                     "Value":  3
+                 },
+                 {
+                     "TypeName":  "BtPasswordProtectedActions",
+                     "Name":  "btModifyTemplateDesign",
+                     "Value":  4
+                 },
+                 {
+                     "TypeName":  "BtPasswordProtectedActions",
+                     "Name":  "btModifyProtectedVBScript",
+                     "Value":  5
+                 },
+                 {
+                     "TypeName":  "BtPasswordProtectedActions",
+                     "Name":  "btModifyPrintDialogOptions",
+                     "Value":  6
+                 },
+                 {
+                     "TypeName":  "BtPasswordProtectedActions",
+                     "Name":  "btModifyPageSetup",
+                     "Value":  7
+                 },
+                 {
+                     "TypeName":  "BtPasswordProtectedActions",
+                     "Name":  "btModifyDatabaseSetup",
+                     "Value":  8
+                 },
+                 {
+                     "TypeName":  "BtPasswordProtectedActions",
+                     "Name":  "btModifyLayers",
+                     "Value":  9
+                 },
+                 {
+                     "TypeName":  "BtStartingPositionSelectionMethod",
+                     "Name":  "btLabelNumber",
+                     "Value":  0
+                 },
+                 {
+                     "TypeName":  "BtStartingPositionSelectionMethod",
+                     "Name":  "btRowColumn",
+                     "Value":  1
+                 }
+             ],
+    "objects":  [
+                    {
+                        "kind":  "line",
+                        "status":  "FAIL_OR_UNAVAILABLE",
+                        "enum":  {
+                                     "TypeName":  "BtObjectType",
+                                     "Name":  "btObjectLine",
+                                     "Value":  2
+                                 },
+                        "name":  "線條 1",
+                        "properties":  [
+                                           {
+                                               "name":  "LineStartX",
+                                               "requested":  5.08,
+                                               "status":  "FAIL",
+                                               "actual":  null,
+                                               "error":  "System.Management.Automation.MethodInvocationException: Exception calling \"Set\" with \"3\" argument(s): \"COM LineStartX(System.Double) failed: System.Reflection.TargetInvocationException HResult=0x80131604: Exception has been thrown by the target of an invocation. -\u003e System.Runtime.InteropServices.COMException HResult=0x8000FFFF: 並無支援物件屬性。僅在執行文件事件指令檔時允許此屬性。\" ---\u003e System.InvalidOperationException: COM LineStartX(System.Double) failed: System.Reflection.TargetInvocationException HResult=0x80131604: Exception has been thrown by the target of an invocation. -\u003e System.Runtime.InteropServices.COMException HResult=0x8000FFFF: 並無支援物件屬性。僅在執行文件事件指令檔時允許此屬性。 ---\u003e System.Reflection.TargetInvocationException: Exception has been thrown by the target of an invocation. ---\u003e System.Runtime.InteropServices.COMException: 並無支援物件屬性。僅在執行文件事件指令檔時允許此屬性。\r\n   --- End of inner exception stack trace ---\r\n   at System.RuntimeType.InvokeDispMethod(String name, BindingFlags invokeAttr, Object target, Object[] args, Boolean[] byrefModifiers, Int32 culture, String[] namedParameters)\r\n   at System.RuntimeType.InvokeMember(String name, BindingFlags bindingFlags, Binder binder, Object target, Object[] providedArgs, ParameterModifier[] modifiers, CultureInfo culture, String[] namedParams)\r\n   at LabelWorkbench.ComBridge.Invoke(Object target, String name, BindingFlags flags, Object[] arguments)\r\n   --- End of inner exception stack trace ---\r\n   at LabelWorkbench.ComBridge.Invoke(Object target, String name, BindingFlags flags, Object[] arguments)\r\n   at CallSite.Target(Closure , CallSite , Type , Object , String , Object[] )\r\n   --- End of inner exception stack trace ---\r\n   at System.Management.Automation.ExceptionHandlingOps.CheckActionPreference(FunctionContext funcContext, Exception exception)\r\n   at System.Management.Automation.Interpreter.ActionCallInstruction`2.Run(InterpretedFrame frame)\r\n   at System.Management.Automation.Interpreter.EnterTryCatchFinallyInstruction.Run(InterpretedFrame frame)\r\n   at System.Management.Automation.Interpreter.EnterTryCatchFinallyInstruction.Run(InterpretedFrame frame)"
+                                           },
+                                           {
+                                               "name":  "LineStartY",
+                                               "requested":  55.88,
+                                               "status":  "FAIL",
+                                               "actual":  null,
+                                               "error":  "System.Management.Automation.MethodInvocationException: Exception calling \"Set\" with \"3\" argument(s): \"COM LineStartY(System.Double) failed: System.Reflection.TargetInvocationException HResult=0x80131604: Exception has been thrown by the target of an invocation. -\u003e System.Runtime.InteropServices.COMException HResult=0x8000FFFF: 並無支援物件屬性。僅在執行文件事件指令檔時允許此屬性。\" ---\u003e System.InvalidOperationException: COM LineStartY(System.Double) failed: System.Reflection.TargetInvocationException HResult=0x80131604: Exception has been thrown by the target of an invocation. -\u003e System.Runtime.InteropServices.COMException HResult=0x8000FFFF: 並無支援物件屬性。僅在執行文件事件指令檔時允許此屬性。 ---\u003e System.Reflection.TargetInvocationException: Exception has been thrown by the target of an invocation. ---\u003e System.Runtime.InteropServices.COMException: 並無支援物件屬性。僅在執行文件事件指令檔時允許此屬性。\r\n   --- End of inner exception stack trace ---\r\n   at System.RuntimeType.InvokeDispMethod(String name, BindingFlags invokeAttr, Object target, Object[] args, Boolean[] byrefModifiers, Int32 culture, String[] namedParameters)\r\n   at System.RuntimeType.InvokeMember(String name, BindingFlags bindingFlags, Binder binder, Object target, Object[] providedArgs, ParameterModifier[] modifiers, CultureInfo culture, String[] namedParams)\r\n   at LabelWorkbench.ComBridge.Invoke(Object target, String name, BindingFlags flags, Object[] arguments)\r\n   --- End of inner exception stack trace ---\r\n   at LabelWorkbench.ComBridge.Invoke(Object target, String name, BindingFlags flags, Object[] arguments)\r\n   at CallSite.Target(Closure , CallSite , Type , Object , String , Object[] )\r\n   --- End of inner exception stack trace ---\r\n   at System.Management.Automation.ExceptionHandlingOps.CheckActionPreference(FunctionContext funcContext, Exception exception)\r\n   at System.Management.Automation.Interpreter.ActionCallInstruction`2.Run(InterpretedFrame frame)\r\n   at System.Management.Automation.Interpreter.EnterTryCatchFinallyInstruction.Run(InterpretedFrame frame)\r\n   at System.Management.Automation.Interpreter.EnterTryCatchFinallyInstruction.Run(InterpretedFrame frame)"
+                                           },
+                                           {
+                                               "name":  "LineEndX",
+                                               "requested":  35.56,
+                                               "status":  "FAIL",
+                                               "actual":  null,
+                                               "error":  "System.Management.Automation.MethodInvocationException: Exception calling \"Set\" with \"3\" argument(s): \"COM LineEndX(System.Double) failed: System.Reflection.TargetInvocationException HResult=0x80131604: Exception has been thrown by the target of an invocation. -\u003e System.Runtime.InteropServices.COMException HResult=0x8000FFFF: 並無支援物件屬性。僅在執行文件事件指令檔時允許此屬性。\" ---\u003e System.InvalidOperationException: COM LineEndX(System.Double) failed: System.Reflection.TargetInvocationException HResult=0x80131604: Exception has been thrown by the target of an invocation. -\u003e System.Runtime.InteropServices.COMException HResult=0x8000FFFF: 並無支援物件屬性。僅在執行文件事件指令檔時允許此屬性。 ---\u003e System.Reflection.TargetInvocationException: Exception has been thrown by the target of an invocation. ---\u003e System.Runtime.InteropServices.COMException: 並無支援物件屬性。僅在執行文件事件指令檔時允許此屬性。\r\n   --- End of inner exception stack trace ---\r\n   at System.RuntimeType.InvokeDispMethod(String name, BindingFlags invokeAttr, Object target, Object[] args, Boolean[] byrefModifiers, Int32 culture, String[] namedParameters)\r\n   at System.RuntimeType.InvokeMember(String name, BindingFlags bindingFlags, Binder binder, Object target, Object[] providedArgs, ParameterModifier[] modifiers, CultureInfo culture, String[] namedParams)\r\n   at LabelWorkbench.ComBridge.Invoke(Object target, String name, BindingFlags flags, Object[] arguments)\r\n   --- End of inner exception stack trace ---\r\n   at LabelWorkbench.ComBridge.Invoke(Object target, String name, BindingFlags flags, Object[] arguments)\r\n   at CallSite.Target(Closure , CallSite , Type , Object , String , Object[] )\r\n   --- End of inner exception stack trace ---\r\n   at System.Management.Automation.ExceptionHandlingOps.CheckActionPreference(FunctionContext funcContext, Exception exception)\r\n   at System.Management.Automation.Interpreter.ActionCallInstruction`2.Run(InterpretedFrame frame)\r\n   at System.Management.Automation.Interpreter.EnterTryCatchFinallyInstruction.Run(InterpretedFrame frame)\r\n   at System.Management.Automation.Interpreter.EnterTryCatchFinallyInstruction.Run(InterpretedFrame frame)"
+                                           },
+                                           {
+                                               "name":  "LineEndY",
+                                               "requested":  60.96,
+                                               "status":  "FAIL",
+                                               "actual":  null,
+                                               "error":  "System.Management.Automation.MethodInvocationException: Exception calling \"Set\" with \"3\" argument(s): \"COM LineEndY(System.Double) failed: System.Reflection.TargetInvocationException HResult=0x80131604: Exception has been thrown by the target of an invocation. -\u003e System.Runtime.InteropServices.COMException HResult=0x8000FFFF: 並無支援物件屬性。僅在執行文件事件指令檔時允許此屬性。\" ---\u003e System.InvalidOperationException: COM LineEndY(System.Double) failed: System.Reflection.TargetInvocationException HResult=0x80131604: Exception has been thrown by the target of an invocation. -\u003e System.Runtime.InteropServices.COMException HResult=0x8000FFFF: 並無支援物件屬性。僅在執行文件事件指令檔時允許此屬性。 ---\u003e System.Reflection.TargetInvocationException: Exception has been thrown by the target of an invocation. ---\u003e System.Runtime.InteropServices.COMException: 並無支援物件屬性。僅在執行文件事件指令檔時允許此屬性。\r\n   --- End of inner exception stack trace ---\r\n   at System.RuntimeType.InvokeDispMethod(String name, BindingFlags invokeAttr, Object target, Object[] args, Boolean[] byrefModifiers, Int32 culture, String[] namedParameters)\r\n   at System.RuntimeType.InvokeMember(String name, BindingFlags bindingFlags, Binder binder, Object target, Object[] providedArgs, ParameterModifier[] modifiers, CultureInfo culture, String[] namedParams)\r\n   at LabelWorkbench.ComBridge.Invoke(Object target, String name, BindingFlags flags, Object[] arguments)\r\n   --- End of inner exception stack trace ---\r\n   at LabelWorkbench.ComBridge.Invoke(Object target, String name, BindingFlags flags, Object[] arguments)\r\n   at CallSite.Target(Closure , CallSite , Type , Object , String , Object[] )\r\n   --- End of inner exception stack trace ---\r\n   at System.Management.Automation.ExceptionHandlingOps.CheckActionPreference(FunctionContext funcContext, Exception exception)\r\n   at System.Management.Automation.Interpreter.ActionCallInstruction`2.Run(InterpretedFrame frame)\r\n   at System.Management.Automation.Interpreter.EnterTryCatchFinallyInstruction.Run(InterpretedFrame frame)\r\n   at System.Management.Automation.Interpreter.EnterTryCatchFinallyInstruction.Run(InterpretedFrame frame)"
+                                           },
+                                           {
+                                               "name":  "LineThickness",
+                                               "requested":  0.508,
+                                               "status":  "FAIL",
+                                               "actual":  null,
+                                               "error":  "System.Management.Automation.MethodInvocationException: Exception calling \"Set\" with \"3\" argument(s): \"COM LineThickness(System.Double) failed: System.Reflection.TargetInvocationException HResult=0x80131604: Exception has been thrown by the target of an invocation. -\u003e System.Runtime.InteropServices.COMException HResult=0x8000FFFF: 並無支援物件屬性。僅在執行文件事件指令檔時允許此屬性。\" ---\u003e System.InvalidOperationException: COM LineThickness(System.Double) failed: System.Reflection.TargetInvocationException HResult=0x80131604: Exception has been thrown by the target of an invocation. -\u003e System.Runtime.InteropServices.COMException HResult=0x8000FFFF: 並無支援物件屬性。僅在執行文件事件指令檔時允許此屬性。 ---\u003e System.Reflection.TargetInvocationException: Exception has been thrown by the target of an invocation. ---\u003e System.Runtime.InteropServices.COMException: 並無支援物件屬性。僅在執行文件事件指令檔時允許此屬性。\r\n   --- End of inner exception stack trace ---\r\n   at System.RuntimeType.InvokeDispMethod(String name, BindingFlags invokeAttr, Object target, Object[] args, Boolean[] byrefModifiers, Int32 culture, String[] namedParameters)\r\n   at System.RuntimeType.InvokeMember(String name, BindingFlags bindingFlags, Binder binder, Object target, Object[] providedArgs, ParameterModifier[] modifiers, CultureInfo culture, String[] namedParams)\r\n   at LabelWorkbench.ComBridge.Invoke(Object target, String name, BindingFlags flags, Object[] arguments)\r\n   --- End of inner exception stack trace ---\r\n   at LabelWorkbench.ComBridge.Invoke(Object target, String name, BindingFlags flags, Object[] arguments)\r\n   at CallSite.Target(Closure , CallSite , Type , Object , String , Object[] )\r\n   --- End of inner exception stack trace ---\r\n   at System.Management.Automation.ExceptionHandlingOps.CheckActionPreference(FunctionContext funcContext, Exception exception)\r\n   at System.Management.Automation.Interpreter.ActionCallInstruction`2.Run(InterpretedFrame frame)\r\n   at System.Management.Automation.Interpreter.EnterTryCatchFinallyInstruction.Run(InterpretedFrame frame)\r\n   at System.Management.Automation.Interpreter.EnterTryCatchFinallyInstruction.Run(InterpretedFrame frame)"
+                                           }
+                                       ],
+                        "error":  "System.Management.Automation.MethodInvocationException: Exception calling \"Set\" with \"3\" argument(s): \"COM DoNotPrint(System.Boolean) failed: System.Reflection.TargetInvocationException HResult=0x80131604: Exception has been thrown by the target of an invocation. -\u003e System.Runtime.InteropServices.COMException HResult=0x8000FFFF: 並無支援物件屬性。僅在執行文件事件指令檔時允許此屬性。\" ---\u003e System.InvalidOperationException: COM DoNotPrint(System.Boolean) failed: System.Reflection.TargetInvocationException HResult=0x80131604: Exception has been thrown by the target of an invocation. -\u003e System.Runtime.InteropServices.COMException HResult=0x8000FFFF: 並無支援物件屬性。僅在執行文件事件指令檔時允許此屬性。 ---\u003e System.Reflection.TargetInvocationException: Exception has been thrown by the target of an invocation. ---\u003e System.Runtime.InteropServices.COMException: 並無支援物件屬性。僅在執行文件事件指令檔時允許此屬性。\r\n   --- End of inner exception stack trace ---\r\n   at System.RuntimeType.InvokeDispMethod(String name, BindingFlags invokeAttr, Object target, Object[] args, Boolean[] byrefModifiers, Int32 culture, String[] namedParameters)\r\n   at System.RuntimeType.InvokeMember(String name, BindingFlags bindingFlags, Binder binder, Object target, Object[] providedArgs, ParameterModifier[] modifiers, CultureInfo culture, String[] namedParams)\r\n   at LabelWorkbench.ComBridge.Invoke(Object target, String name, BindingFlags flags, Object[] arguments)\r\n   --- End of inner exception stack trace ---\r\n   at LabelWorkbench.ComBridge.Invoke(Object target, String name, BindingFlags flags, Object[] arguments)\r\n   at CallSite.Target(Closure , CallSite , Type , Object , String , Object[] )\r\n   --- End of inner exception stack trace ---\r\n   at System.Management.Automation.ExceptionHandlingOps.CheckActionPreference(FunctionContext funcContext, Exception exception)\r\n   at System.Management.Automation.Interpreter.ActionCallInstruction`2.Run(InterpretedFrame frame)\r\n   at System.Management.Automation.Interpreter.EnterTryCatchFinallyInstruction.Run(InterpretedFrame frame)\r\n   at System.Management.Automation.Interpreter.EnterTryCatchFinallyInstruction.Run(InterpretedFrame frame)",
+                        "type":  2
+                    },
+                    {
+                        "kind":  "box",
+                        "status":  "FAIL_OR_UNAVAILABLE",
+                        "enum":  {
+                                     "TypeName":  "BtObjectType",
+                                     "Name":  "btObjectBox",
+                                     "Value":  3
+                                 },
+                        "name":  "矩形 1",
+                        "properties":  [
+                                           {
+                                               "name":  "X",
+                                               "requested":  37,
+                                               "status":  "FAIL",
+                                               "actual":  null,
+                                               "error":  "System.Management.Automation.MethodInvocationException: Exception calling \"Set\" with \"3\" argument(s): \"COM X(System.Double) failed: System.Reflection.TargetInvocationException HResult=0x80131604: Exception has been thrown by the target of an invocation. -\u003e System.Runtime.InteropServices.COMException HResult=0x8000FFFF: 並無支援物件屬性。僅在執行文件事件指令檔時允許此屬性。\" ---\u003e System.InvalidOperationException: COM X(System.Double) failed: System.Reflection.TargetInvocationException HResult=0x80131604: Exception has been thrown by the target of an invocation. -\u003e System.Runtime.InteropServices.COMException HResult=0x8000FFFF: 並無支援物件屬性。僅在執行文件事件指令檔時允許此屬性。 ---\u003e System.Reflection.TargetInvocationException: Exception has been thrown by the target of an invocation. ---\u003e System.Runtime.InteropServices.COMException: 並無支援物件屬性。僅在執行文件事件指令檔時允許此屬性。\r\n   --- End of inner exception stack trace ---\r\n   at System.RuntimeType.InvokeDispMethod(String name, BindingFlags invokeAttr, Object target, Object[] args, Boolean[] byrefModifiers, Int32 culture, String[] namedParameters)\r\n   at System.RuntimeType.InvokeMember(String name, BindingFlags bindingFlags, Binder binder, Object target, Object[] providedArgs, ParameterModifier[] modifiers, CultureInfo culture, String[] namedParams)\r\n   at LabelWorkbench.ComBridge.Invoke(Object target, String name, BindingFlags flags, Object[] arguments)\r\n   --- End of inner exception stack trace ---\r\n   at LabelWorkbench.ComBridge.Invoke(Object target, String name, BindingFlags flags, Object[] arguments)\r\n   at CallSite.Target(Closure , CallSite , Type , Object , String , Object[] )\r\n   --- End of inner exception stack trace ---\r\n   at System.Management.Automation.ExceptionHandlingOps.CheckActionPreference(FunctionContext funcContext, Exception exception)\r\n   at System.Management.Automation.Interpreter.ActionCallInstruction`2.Run(InterpretedFrame frame)\r\n   at System.Management.Automation.Interpreter.EnterTryCatchFinallyInstruction.Run(InterpretedFrame frame)\r\n   at System.Management.Automation.Interpreter.EnterTryCatchFinallyInstruction.Run(InterpretedFrame frame)"
+                                           },
+                                           {
+                                               "name":  "Y",
+                                               "requested":  10.16,
+                                               "status":  "FAIL",
+                                               "actual":  null,
+                                               "error":  "System.Management.Automation.MethodInvocationException: Exception calling \"Set\" with \"3\" argument(s): \"COM Y(System.Double) failed: System.Reflection.TargetInvocationException HResult=0x80131604: Exception has been thrown by the target of an invocation. -\u003e System.Runtime.InteropServices.COMException HResult=0x8000FFFF: 並無支援物件屬性。僅在執行文件事件指令檔時允許此屬性。\" ---\u003e System.InvalidOperationException: COM Y(System.Double) failed: System.Reflection.TargetInvocationException HResult=0x80131604: Exception has been thrown by the target of an invocation. -\u003e System.Runtime.InteropServices.COMException HResult=0x8000FFFF: 並無支援物件屬性。僅在執行文件事件指令檔時允許此屬性。 ---\u003e System.Reflection.TargetInvocationException: Exception has been thrown by the target of an invocation. ---\u003e System.Runtime.InteropServices.COMException: 並無支援物件屬性。僅在執行文件事件指令檔時允許此屬性。\r\n   --- End of inner exception stack trace ---\r\n   at System.RuntimeType.InvokeDispMethod(String name, BindingFlags invokeAttr, Object target, Object[] args, Boolean[] byrefModifiers, Int32 culture, String[] namedParameters)\r\n   at System.RuntimeType.InvokeMember(String name, BindingFlags bindingFlags, Binder binder, Object target, Object[] providedArgs, ParameterModifier[] modifiers, CultureInfo culture, String[] namedParams)\r\n   at LabelWorkbench.ComBridge.Invoke(Object target, String name, BindingFlags flags, Object[] arguments)\r\n   --- End of inner exception stack trace ---\r\n   at LabelWorkbench.ComBridge.Invoke(Object target, String name, BindingFlags flags, Object[] arguments)\r\n   at CallSite.Target(Closure , CallSite , Type , Object , String , Object[] )\r\n   --- End of inner exception stack trace ---\r\n   at System.Management.Automation.ExceptionHandlingOps.CheckActionPreference(FunctionContext funcContext, Exception exception)\r\n   at System.Management.Automation.Interpreter.ActionCallInstruction`2.Run(InterpretedFrame frame)\r\n   at System.Management.Automation.Interpreter.EnterTryCatchFinallyInstruction.Run(InterpretedFrame frame)\r\n   at System.Management.Automation.Interpreter.EnterTryCatchFinallyInstruction.Run(InterpretedFrame frame)"
+                                           },
+                                           {
+                                               "name":  "Width",
+                                               "requested":  25.4,
+                                               "status":  "FAIL",
+                                               "actual":  null,
+                                               "error":  "System.Management.Automation.MethodInvocationException: Exception calling \"Set\" with \"3\" argument(s): \"COM Width(System.Double) failed: System.Reflection.TargetInvocationException HResult=0x80131604: Exception has been thrown by the target of an invocation. -\u003e System.Runtime.InteropServices.COMException HResult=0x8000FFFF: 並無支援物件屬性。僅在執行文件事件指令檔時允許此屬性。\" ---\u003e System.InvalidOperationException: COM Width(System.Double) failed: System.Reflection.TargetInvocationException HResult=0x80131604: Exception has been thrown by the target of an invocation. -\u003e System.Runtime.InteropServices.COMException HResult=0x8000FFFF: 並無支援物件屬性。僅在執行文件事件指令檔時允許此屬性。 ---\u003e System.Reflection.TargetInvocationException: Exception has been thrown by the target of an invocation. ---\u003e System.Runtime.InteropServices.COMException: 並無支援物件屬性。僅在執行文件事件指令檔時允許此屬性。\r\n   --- End of inner exception stack trace ---\r\n   at System.RuntimeType.InvokeDispMethod(String name, BindingFlags invokeAttr, Object target, Object[] args, Boolean[] byrefModifiers, Int32 culture, String[] namedParameters)\r\n   at System.RuntimeType.InvokeMember(String name, BindingFlags bindingFlags, Binder binder, Object target, Object[] providedArgs, ParameterModifier[] modifiers, CultureInfo culture, String[] namedParams)\r\n   at LabelWorkbench.ComBridge.Invoke(Object target, String name, BindingFlags flags, Object[] arguments)\r\n   --- End of inner exception stack trace ---\r\n   at LabelWorkbench.ComBridge.Invoke(Object target, String name, BindingFlags flags, Object[] arguments)\r\n   at CallSite.Target(Closure , CallSite , Type , Object , String , Object[] )\r\n   --- End of inner exception stack trace ---\r\n   at System.Management.Automation.ExceptionHandlingOps.CheckActionPreference(FunctionContext funcContext, Exception exception)\r\n   at System.Management.Automation.Interpreter.ActionCallInstruction`2.Run(InterpretedFrame frame)\r\n   at System.Management.Automation.Interpreter.EnterTryCatchFinallyInstruction.Run(InterpretedFrame frame)\r\n   at System.Management.Automation.Interpreter.EnterTryCatchFinallyInstruction.Run(InterpretedFrame frame)"
+                                           },
+                                           {
+                                               "name":  "Height",
+                                               "requested":  12.7,
+                                               "status":  "FAIL",
+                                               "actual":  null,
+                                               "error":  "System.Management.Automation.MethodInvocationException: Exception calling \"Set\" with \"3\" argument(s): \"COM Height(System.Double) failed: System.Reflection.TargetInvocationException HResult=0x80131604: Exception has been thrown by the target of an invocation. -\u003e System.Runtime.InteropServices.COMException HResult=0x8000FFFF: 並無支援物件屬性。僅在執行文件事件指令檔時允許此屬性。\" ---\u003e System.InvalidOperationException: COM Height(System.Double) failed: System.Reflection.TargetInvocationException HResult=0x80131604: Exception has been thrown by the target of an invocation. -\u003e System.Runtime.InteropServices.COMException HResult=0x8000FFFF: 並無支援物件屬性。僅在執行文件事件指令檔時允許此屬性。 ---\u003e System.Reflection.TargetInvocationException: Exception has been thrown by the target of an invocation. ---\u003e System.Runtime.InteropServices.COMException: 並無支援物件屬性。僅在執行文件事件指令檔時允許此屬性。\r\n   --- End of inner exception stack trace ---\r\n   at System.RuntimeType.InvokeDispMethod(String name, BindingFlags invokeAttr, Object target, Object[] args, Boolean[] byrefModifiers, Int32 culture, String[] namedParameters)\r\n   at System.RuntimeType.InvokeMember(String name, BindingFlags bindingFlags, Binder binder, Object target, Object[] providedArgs, ParameterModifier[] modifiers, CultureInfo culture, String[] namedParams)\r\n   at LabelWorkbench.ComBridge.Invoke(Object target, String name, BindingFlags flags, Object[] arguments)\r\n   --- End of inner exception stack trace ---\r\n   at LabelWorkbench.ComBridge.Invoke(Object target, String name, BindingFlags flags, Object[] arguments)\r\n   at CallSite.Target(Closure , CallSite , Type , Object , String , Object[] )\r\n   --- End of inner exception stack trace ---\r\n   at System.Management.Automation.ExceptionHandlingOps.CheckActionPreference(FunctionContext funcContext, Exception exception)\r\n   at System.Management.Automation.Interpreter.ActionCallInstruction`2.Run(InterpretedFrame frame)\r\n   at System.Management.Automation.Interpreter.EnterTryCatchFinallyInstruction.Run(InterpretedFrame frame)\r\n   at System.Management.Automation.Interpreter.EnterTryCatchFinallyInstruction.Run(InterpretedFrame frame)"
+                                           },
+                                           {
+                                               "name":  "RotationAngle",
+                                               "requested":  0,
+                                               "status":  "FAIL",
+                                               "actual":  null,
+                                               "error":  "System.Management.Automation.MethodInvocationException: Exception calling \"Set\" with \"3\" argument(s): \"COM RotationAngle(System.Int32) failed: System.Reflection.TargetInvocationException HResult=0x80131604: Exception has been thrown by the target of an invocation. -\u003e System.Runtime.InteropServices.COMException HResult=0x8000FFFF: 並無支援物件屬性。僅在執行文件事件指令檔時允許此屬性。\" ---\u003e System.InvalidOperationException: COM RotationAngle(System.Int32) failed: System.Reflection.TargetInvocationException HResult=0x80131604: Exception has been thrown by the target of an invocation. -\u003e System.Runtime.InteropServices.COMException HResult=0x8000FFFF: 並無支援物件屬性。僅在執行文件事件指令檔時允許此屬性。 ---\u003e System.Reflection.TargetInvocationException: Exception has been thrown by the target of an invocation. ---\u003e System.Runtime.InteropServices.COMException: 並無支援物件屬性。僅在執行文件事件指令檔時允許此屬性。\r\n   --- End of inner exception stack trace ---\r\n   at System.RuntimeType.InvokeDispMethod(String name, BindingFlags invokeAttr, Object target, Object[] args, Boolean[] byrefModifiers, Int32 culture, String[] namedParameters)\r\n   at System.RuntimeType.InvokeMember(String name, BindingFlags bindingFlags, Binder binder, Object target, Object[] providedArgs, ParameterModifier[] modifiers, CultureInfo culture, String[] namedParams)\r\n   at LabelWorkbench.ComBridge.Invoke(Object target, String name, BindingFlags flags, Object[] arguments)\r\n   --- End of inner exception stack trace ---\r\n   at LabelWorkbench.ComBridge.Invoke(Object target, String name, BindingFlags flags, Object[] arguments)\r\n   at CallSite.Target(Closure , CallSite , Type , Object , String , Object[] )\r\n   --- End of inner exception stack trace ---\r\n   at System.Management.Automation.ExceptionHandlingOps.CheckActionPreference(FunctionContext funcContext, Exception exception)\r\n   at System.Management.Automation.Interpreter.ActionCallInstruction`2.Run(InterpretedFrame frame)\r\n   at System.Management.Automation.Interpreter.EnterTryCatchFinallyInstruction.Run(InterpretedFrame frame)\r\n   at System.Management.Automation.Interpreter.EnterTryCatchFinallyInstruction.Run(InterpretedFrame frame)"
+                                           },
+                                           {
+                                               "name":  "LineThickness",
+                                               "requested":  0.508,
+                                               "status":  "FAIL",
+                                               "actual":  null,
+                                               "error":  "System.Management.Automation.MethodInvocationException: Exception calling \"Set\" with \"3\" argument(s): \"COM LineThickness(System.Double) failed: System.Reflection.TargetInvocationException HResult=0x80131604: Exception has been thrown by the target of an invocation. -\u003e System.Runtime.InteropServices.COMException HResult=0x8000FFFF: 並無支援物件屬性。僅在執行文件事件指令檔時允許此屬性。\" ---\u003e System.InvalidOperationException: COM LineThickness(System.Double) failed: System.Reflection.TargetInvocationException HResult=0x80131604: Exception has been thrown by the target of an invocation. -\u003e System.Runtime.InteropServices.COMException HResult=0x8000FFFF: 並無支援物件屬性。僅在執行文件事件指令檔時允許此屬性。 ---\u003e System.Reflection.TargetInvocationException: Exception has been thrown by the target of an invocation. ---\u003e System.Runtime.InteropServices.COMException: 並無支援物件屬性。僅在執行文件事件指令檔時允許此屬性。\r\n   --- End of inner exception stack trace ---\r\n   at System.RuntimeType.InvokeDispMethod(String name, BindingFlags invokeAttr, Object target, Object[] args, Boolean[] byrefModifiers, Int32 culture, String[] namedParameters)\r\n   at System.RuntimeType.InvokeMember(String name, BindingFlags bindingFlags, Binder binder, Object target, Object[] providedArgs, ParameterModifier[] modifiers, CultureInfo culture, String[] namedParams)\r\n   at LabelWorkbench.ComBridge.Invoke(Object target, String name, BindingFlags flags, Object[] arguments)\r\n   --- End of inner exception stack trace ---\r\n   at LabelWorkbench.ComBridge.Invoke(Object target, String name, BindingFlags flags, Object[] arguments)\r\n   at CallSite.Target(Closure , CallSite , Type , Object , String , Object[] )\r\n   --- End of inner exception stack trace ---\r\n   at System.Management.Automation.ExceptionHandlingOps.CheckActionPreference(FunctionContext funcContext, Exception exception)\r\n   at System.Management.Automation.Interpreter.ActionCallInstruction`2.Run(InterpretedFrame frame)\r\n   at System.Management.Automation.Interpreter.EnterTryCatchFinallyInstruction.Run(InterpretedFrame frame)\r\n   at System.Management.Automation.Interpreter.EnterTryCatchFinallyInstruction.Run(InterpretedFrame frame)"
+                                           }
+                                       ],
+                        "error":  "System.Management.Automation.MethodInvocationException: Exception calling \"Set\" with \"3\" argument(s): \"COM DoNotPrint(System.Boolean) failed: System.Reflection.TargetInvocationException HResult=0x80131604: Exception has been thrown by the target of an invocation. -\u003e System.Runtime.InteropServices.COMException HResult=0x8000FFFF: 並無支援物件屬性。僅在執行文件事件指令檔時允許此屬性。\" ---\u003e System.InvalidOperationException: COM DoNotPrint(System.Boolean) failed: System.Reflection.TargetInvocationException HResult=0x80131604: Exception has been thrown by the target of an invocation. -\u003e System.Runtime.InteropServices.COMException HResult=0x8000FFFF: 並無支援物件屬性。僅在執行文件事件指令檔時允許此屬性。 ---\u003e System.Reflection.TargetInvocationException: Exception has been thrown by the target of an invocation. ---\u003e System.Runtime.InteropServices.COMException: 並無支援物件屬性。僅在執行文件事件指令檔時允許此屬性。\r\n   --- End of inner exception stack trace ---\r\n   at System.RuntimeType.InvokeDispMethod(String name, BindingFlags invokeAttr, Object target, Object[] args, Boolean[] byrefModifiers, Int32 culture, String[] namedParameters)\r\n   at System.RuntimeType.InvokeMember(String name, BindingFlags bindingFlags, Binder binder, Object target, Object[] providedArgs, ParameterModifier[] modifiers, CultureInfo culture, String[] namedParams)\r\n   at LabelWorkbench.ComBridge.Invoke(Object target, String name, BindingFlags flags, Object[] arguments)\r\n   --- End of inner exception stack trace ---\r\n   at LabelWorkbench.ComBridge.Invoke(Object target, String name, BindingFlags flags, Object[] arguments)\r\n   at CallSite.Target(Closure , CallSite , Type , Object , String , Object[] )\r\n   --- End of inner exception stack trace ---\r\n   at System.Management.Automation.ExceptionHandlingOps.CheckActionPreference(FunctionContext funcContext, Exception exception)\r\n   at System.Management.Automation.Interpreter.ActionCallInstruction`2.Run(InterpretedFrame frame)\r\n   at System.Management.Automation.Interpreter.EnterTryCatchFinallyInstruction.Run(InterpretedFrame frame)\r\n   at System.Management.Automation.Interpreter.EnterTryCatchFinallyInstruction.Run(InterpretedFrame frame)",
+                        "type":  3
+                    },
+                    {
+                        "kind":  "image",
+                        "status":  "FAIL_OR_UNAVAILABLE",
+                        "enum":  {
+                                     "TypeName":  "BtObjectType",
+                                     "Name":  "btObjectPicture",
+                                     "Value":  6
+                                 },
+                        "name":  "圖片 1",
+                        "properties":  [
+                                           {
+                                               "name":  "PicturePath",
+                                               "requested":  "C:\\Users\\FTUSER5\\actions-runner-label-workbench\\_work\\label-workbench\\label-workbench\\review\\renderer-prototype\\runner-evidence\\contracts\\source.png",
+                                               "status":  "FAIL",
+                                               "actual":  null,
+                                               "error":  "System.Management.Automation.MethodInvocationException: Exception calling \"Set\" with \"3\" argument(s): \"COM PicturePath(System.String) failed: System.Reflection.TargetInvocationException HResult=0x80131604: Exception has been thrown by the target of an invocation. -\u003e System.Runtime.InteropServices.COMException HResult=0x8000FFFF: 並無支援物件屬性。僅在執行文件事件指令檔時允許此屬性。\" ---\u003e System.InvalidOperationException: COM PicturePath(System.String) failed: System.Reflection.TargetInvocationException HResult=0x80131604: Exception has been thrown by the target of an invocation. -\u003e System.Runtime.InteropServices.COMException HResult=0x8000FFFF: 並無支援物件屬性。僅在執行文件事件指令檔時允許此屬性。 ---\u003e System.Reflection.TargetInvocationException: Exception has been thrown by the target of an invocation. ---\u003e System.Runtime.InteropServices.COMException: 並無支援物件屬性。僅在執行文件事件指令檔時允許此屬性。\r\n   --- End of inner exception stack trace ---\r\n   at System.RuntimeType.InvokeDispMethod(String name, BindingFlags invokeAttr, Object target, Object[] args, Boolean[] byrefModifiers, Int32 culture, String[] namedParameters)\r\n   at System.RuntimeType.InvokeMember(String name, BindingFlags bindingFlags, Binder binder, Object target, Object[] providedArgs, ParameterModifier[] modifiers, CultureInfo culture, String[] namedParams)\r\n   at LabelWorkbench.ComBridge.Invoke(Object target, String name, BindingFlags flags, Object[] arguments)\r\n   --- End of inner exception stack trace ---\r\n   at LabelWorkbench.ComBridge.Invoke(Object target, String name, BindingFlags flags, Object[] arguments)\r\n   at CallSite.Target(Closure , CallSite , Type , Object , String , Object[] )\r\n   --- End of inner exception stack trace ---\r\n   at System.Management.Automation.ExceptionHandlingOps.CheckActionPreference(FunctionContext funcContext, Exception exception)\r\n   at System.Management.Automation.Interpreter.ActionCallInstruction`2.Run(InterpretedFrame frame)\r\n   at System.Management.Automation.Interpreter.EnterTryCatchFinallyInstruction.Run(InterpretedFrame frame)\r\n   at System.Management.Automation.Interpreter.EnterTryCatchFinallyInstruction.Run(InterpretedFrame frame)"
+                                           },
+                                           {
+                                               "name":  "PreserveAspectRatio",
+                                               "requested":  false,
+                                               "status":  "FAIL",
+                                               "actual":  null,
+                                               "error":  "System.Management.Automation.MethodInvocationException: Exception calling \"Set\" with \"3\" argument(s): \"COM PreserveAspectRatio(System.Boolean) failed: System.Reflection.TargetInvocationException HResult=0x80131604: Exception has been thrown by the target of an invocation. -\u003e System.Runtime.InteropServices.COMException HResult=0x8000FFFF: 並無支援物件屬性。僅在執行文件事件指令檔時允許此屬性。\" ---\u003e System.InvalidOperationException: COM PreserveAspectRatio(System.Boolean) failed: System.Reflection.TargetInvocationException HResult=0x80131604: Exception has been thrown by the target of an invocation. -\u003e System.Runtime.InteropServices.COMException HResult=0x8000FFFF: 並無支援物件屬性。僅在執行文件事件指令檔時允許此屬性。 ---\u003e System.Reflection.TargetInvocationException: Exception has been thrown by the target of an invocation. ---\u003e System.Runtime.InteropServices.COMException: 並無支援物件屬性。僅在執行文件事件指令檔時允許此屬性。\r\n   --- End of inner exception stack trace ---\r\n   at System.RuntimeType.InvokeDispMethod(String name, BindingFlags invokeAttr, Object target, Object[] args, Boolean[] byrefModifiers, Int32 culture, String[] namedParameters)\r\n   at System.RuntimeType.InvokeMember(String name, BindingFlags bindingFlags, Binder binder, Object target, Object[] providedArgs, ParameterModifier[] modifiers, CultureInfo culture, String[] namedParams)\r\n   at LabelWorkbench.ComBridge.Invoke(Object target, String name, BindingFlags flags, Object[] arguments)\r\n   --- End of inner exception stack trace ---\r\n   at LabelWorkbench.ComBridge.Invoke(Object target, String name, BindingFlags flags, Object[] arguments)\r\n   at CallSite.Target(Closure , CallSite , Type , Object , String , Object[] )\r\n   --- End of inner exception stack trace ---\r\n   at System.Management.Automation.ExceptionHandlingOps.CheckActionPreference(FunctionContext funcContext, Exception exception)\r\n   at System.Management.Automation.Interpreter.ActionCallInstruction`2.Run(InterpretedFrame frame)\r\n   at System.Management.Automation.Interpreter.EnterTryCatchFinallyInstruction.Run(InterpretedFrame frame)\r\n   at System.Management.Automation.Interpreter.EnterTryCatchFinallyInstruction.Run(InterpretedFrame frame)"
+                                           },
+                                           {
+                                               "name":  "X",
+                                               "requested":  69,
+                                               "status":  "FAIL",
+                                               "actual":  null,
+                                               "error":  "System.Management.Automation.MethodInvocationException: Exception calling \"Set\" with \"3\" argument(s): \"COM X(System.Double) failed: System.Reflection.TargetInvocationException HResult=0x80131604: Exception has been thrown by the target of an invocation. -\u003e System.Runtime.InteropServices.COMException HResult=0x8000FFFF: 並無支援物件屬性。僅在執行文件事件指令檔時允許此屬性。\" ---\u003e System.InvalidOperationException: COM X(System.Double) failed: System.Reflection.TargetInvocationException HResult=0x80131604: Exception has been thrown by the target of an invocation. -\u003e System.Runtime.InteropServices.COMException HResult=0x8000FFFF: 並無支援物件屬性。僅在執行文件事件指令檔時允許此屬性。 ---\u003e System.Reflection.TargetInvocationException: Exception has been thrown by the target of an invocation. ---\u003e System.Runtime.InteropServices.COMException: 並無支援物件屬性。僅在執行文件事件指令檔時允許此屬性。\r\n   --- End of inner exception stack trace ---\r\n   at System.RuntimeType.InvokeDispMethod(String name, BindingFlags invokeAttr, Object target, Object[] args, Boolean[] byrefModifiers, Int32 culture, String[] namedParameters)\r\n   at System.RuntimeType.InvokeMember(String name, BindingFlags bindingFlags, Binder binder, Object target, Object[] providedArgs, ParameterModifier[] modifiers, CultureInfo culture, String[] namedParams)\r\n   at LabelWorkbench.ComBridge.Invoke(Object target, String name, BindingFlags flags, Object[] arguments)\r\n   --- End of inner exception stack trace ---\r\n   at LabelWorkbench.ComBridge.Invoke(Object target, String name, BindingFlags flags, Object[] arguments)\r\n   at CallSite.Target(Closure , CallSite , Type , Object , String , Object[] )\r\n   --- End of inner exception stack trace ---\r\n   at System.Management.Automation.ExceptionHandlingOps.CheckActionPreference(FunctionContext funcContext, Exception exception)\r\n   at System.Management.Automation.Interpreter.ActionCallInstruction`2.Run(InterpretedFrame frame)\r\n   at System.Management.Automation.Interpreter.EnterTryCatchFinallyInstruction.Run(InterpretedFrame frame)\r\n   at System.Management.Automation.Interpreter.EnterTryCatchFinallyInstruction.Run(InterpretedFrame frame)"
+                                           },
+                                           {
+                                               "name":  "Y",
+                                               "requested":  10.16,
+                                               "status":  "FAIL",
+                                               "actual":  null,
+                                               "error":  "System.Management.Automation.MethodInvocationException: Exception calling \"Set\" with \"3\" argument(s): \"COM Y(System.Double) failed: System.Reflection.TargetInvocationException HResult=0x80131604: Exception has been thrown by the target of an invocation. -\u003e System.Runtime.InteropServices.COMException HResult=0x8000FFFF: 並無支援物件屬性。僅在執行文件事件指令檔時允許此屬性。\" ---\u003e System.InvalidOperationException: COM Y(System.Double) failed: System.Reflection.TargetInvocationException HResult=0x80131604: Exception has been thrown by the target of an invocation. -\u003e System.Runtime.InteropServices.COMException HResult=0x8000FFFF: 並無支援物件屬性。僅在執行文件事件指令檔時允許此屬性。 ---\u003e System.Reflection.TargetInvocationException: Exception has been thrown by the target of an invocation. ---\u003e System.Runtime.InteropServices.COMException: 並無支援物件屬性。僅在執行文件事件指令檔時允許此屬性。\r\n   --- End of inner exception stack trace ---\r\n   at System.RuntimeType.InvokeDispMethod(String name, BindingFlags invokeAttr, Object target, Object[] args, Boolean[] byrefModifiers, Int32 culture, String[] namedParameters)\r\n   at System.RuntimeType.InvokeMember(String name, BindingFlags bindingFlags, Binder binder, Object target, Object[] providedArgs, ParameterModifier[] modifiers, CultureInfo culture, String[] namedParams)\r\n   at LabelWorkbench.ComBridge.Invoke(Object target, String name, BindingFlags flags, Object[] arguments)\r\n   --- End of inner exception stack trace ---\r\n   at LabelWorkbench.ComBridge.Invoke(Object target, String name, BindingFlags flags, Object[] arguments)\r\n   at CallSite.Target(Closure , CallSite , Type , Object , String , Object[] )\r\n   --- End of inner exception stack trace ---\r\n   at System.Management.Automation.ExceptionHandlingOps.CheckActionPreference(FunctionContext funcContext, Exception exception)\r\n   at System.Management.Automation.Interpreter.ActionCallInstruction`2.Run(InterpretedFrame frame)\r\n   at System.Management.Automation.Interpreter.EnterTryCatchFinallyInstruction.Run(InterpretedFrame frame)\r\n   at System.Management.Automation.Interpreter.EnterTryCatchFinallyInstruction.Run(InterpretedFrame frame)"
+                                           },
+                                           {
+                                               "name":  "Width",
+                                               "requested":  25.4,
+                                               "status":  "FAIL",
+                                               "actual":  null,
+                                               "error":  "System.Management.Automation.MethodInvocationException: Exception calling \"Set\" with \"3\" argument(s): \"COM Width(System.Double) failed: System.Reflection.TargetInvocationException HResult=0x80131604: Exception has been thrown by the target of an invocation. -\u003e System.Runtime.InteropServices.COMException HResult=0x8000FFFF: 並無支援物件屬性。僅在執行文件事件指令檔時允許此屬性。\" ---\u003e System.InvalidOperationException: COM Width(System.Double) failed: System.Reflection.TargetInvocationException HResult=0x80131604: Exception has been thrown by the target of an invocation. -\u003e System.Runtime.InteropServices.COMException HResult=0x8000FFFF: 並無支援物件屬性。僅在執行文件事件指令檔時允許此屬性。 ---\u003e System.Reflection.TargetInvocationException: Exception has been thrown by the target of an invocation. ---\u003e System.Runtime.InteropServices.COMException: 並無支援物件屬性。僅在執行文件事件指令檔時允許此屬性。\r\n   --- End of inner exception stack trace ---\r\n   at System.RuntimeType.InvokeDispMethod(String name, BindingFlags invokeAttr, Object target, Object[] args, Boolean[] byrefModifiers, Int32 culture, String[] namedParameters)\r\n   at System.RuntimeType.InvokeMember(String name, BindingFlags bindingFlags, Binder binder, Object target, Object[] providedArgs, ParameterModifier[] modifiers, CultureInfo culture, String[] namedParams)\r\n   at LabelWorkbench.ComBridge.Invoke(Object target, String name, BindingFlags flags, Object[] arguments)\r\n   --- End of inner exception stack trace ---\r\n   at LabelWorkbench.ComBridge.Invoke(Object target, String name, BindingFlags flags, Object[] arguments)\r\n   at CallSite.Target(Closure , CallSite , Type , Object , String , Object[] )\r\n   --- End of inner exception stack trace ---\r\n   at System.Management.Automation.ExceptionHandlingOps.CheckActionPreference(FunctionContext funcContext, Exception exception)\r\n   at System.Management.Automation.Interpreter.ActionCallInstruction`2.Run(InterpretedFrame frame)\r\n   at System.Management.Automation.Interpreter.EnterTryCatchFinallyInstruction.Run(InterpretedFrame frame)\r\n   at System.Management.Automation.Interpreter.EnterTryCatchFinallyInstruction.Run(InterpretedFrame frame)"
+                                           },
+                                           {
+                                               "name":  "Height",
+                                               "requested":  12.7,
+                                               "status":  "FAIL",
+                                               "actual":  null,
+                                               "error":  "System.Management.Automation.MethodInvocationException: Exception calling \"Set\" with \"3\" argument(s): \"COM Height(System.Double) failed: System.Reflection.TargetInvocationException HResult=0x80131604: Exception has been thrown by the target of an invocation. -\u003e System.Runtime.InteropServices.COMException HResult=0x8000FFFF: 並無支援物件屬性。僅在執行文件事件指令檔時允許此屬性。\" ---\u003e System.InvalidOperationException: COM Height(System.Double) failed: System.Reflection.TargetInvocationException HResult=0x80131604: Exception has been thrown by the target of an invocation. -\u003e System.Runtime.InteropServices.COMException HResult=0x8000FFFF: 並無支援物件屬性。僅在執行文件事件指令檔時允許此屬性。 ---\u003e System.Reflection.TargetInvocationException: Exception has been thrown by the target of an invocation. ---\u003e System.Runtime.InteropServices.COMException: 並無支援物件屬性。僅在執行文件事件指令檔時允許此屬性。\r\n   --- End of inner exception stack trace ---\r\n   at System.RuntimeType.InvokeDispMethod(String name, BindingFlags invokeAttr, Object target, Object[] args, Boolean[] byrefModifiers, Int32 culture, String[] namedParameters)\r\n   at System.RuntimeType.InvokeMember(String name, BindingFlags bindingFlags, Binder binder, Object target, Object[] providedArgs, ParameterModifier[] modifiers, CultureInfo culture, String[] namedParams)\r\n   at LabelWorkbench.ComBridge.Invoke(Object target, String name, BindingFlags flags, Object[] arguments)\r\n   --- End of inner exception stack trace ---\r\n   at LabelWorkbench.ComBridge.Invoke(Object target, String name, BindingFlags flags, Object[] arguments)\r\n   at CallSite.Target(Closure , CallSite , Type , Object , String , Object[] )\r\n   --- End of inner exception stack trace ---\r\n   at System.Management.Automation.ExceptionHandlingOps.CheckActionPreference(FunctionContext funcContext, Exception exception)\r\n   at System.Management.Automation.Interpreter.ActionCallInstruction`2.Run(InterpretedFrame frame)\r\n   at System.Management.Automation.Interpreter.EnterTryCatchFinallyInstruction.Run(InterpretedFrame frame)\r\n   at System.Management.Automation.Interpreter.EnterTryCatchFinallyInstruction.Run(InterpretedFrame frame)"
+                                           },
+                                           {
+                                               "name":  "RotationAngle",
+                                               "requested":  0,
+                                               "status":  "FAIL",
+                                               "actual":  null,
+                                               "error":  "System.Management.Automation.MethodInvocationException: Exception calling \"Set\" with \"3\" argument(s): \"COM RotationAngle(System.Int32) failed: System.Reflection.TargetInvocationException HResult=0x80131604: Exception has been thrown by the target of an invocation. -\u003e System.Runtime.InteropServices.COMException HResult=0x8000FFFF: 並無支援物件屬性。僅在執行文件事件指令檔時允許此屬性。\" ---\u003e System.InvalidOperationException: COM RotationAngle(System.Int32) failed: System.Reflection.TargetInvocationException HResult=0x80131604: Exception has been thrown by the target of an invocation. -\u003e System.Runtime.InteropServices.COMException HResult=0x8000FFFF: 並無支援物件屬性。僅在執行文件事件指令檔時允許此屬性。 ---\u003e System.Reflection.TargetInvocationException: Exception has been thrown by the target of an invocation. ---\u003e System.Runtime.InteropServices.COMException: 並無支援物件屬性。僅在執行文件事件指令檔時允許此屬性。\r\n   --- End of inner exception stack trace ---\r\n   at System.RuntimeType.InvokeDispMethod(String name, BindingFlags invokeAttr, Object target, Object[] args, Boolean[] byrefModifiers, Int32 culture, String[] namedParameters)\r\n   at System.RuntimeType.InvokeMember(String name, BindingFlags bindingFlags, Binder binder, Object target, Object[] providedArgs, ParameterModifier[] modifiers, CultureInfo culture, String[] namedParams)\r\n   at LabelWorkbench.ComBridge.Invoke(Object target, String name, BindingFlags flags, Object[] arguments)\r\n   --- End of inner exception stack trace ---\r\n   at LabelWorkbench.ComBridge.Invoke(Object target, String name, BindingFlags flags, Object[] arguments)\r\n   at CallSite.Target(Closure , CallSite , Type , Object , String , Object[] )\r\n   --- End of inner exception stack trace ---\r\n   at System.Management.Automation.ExceptionHandlingOps.CheckActionPreference(FunctionContext funcContext, Exception exception)\r\n   at System.Management.Automation.Interpreter.ActionCallInstruction`2.Run(InterpretedFrame frame)\r\n   at System.Management.Automation.Interpreter.EnterTryCatchFinallyInstruction.Run(InterpretedFrame frame)\r\n   at System.Management.Automation.Interpreter.EnterTryCatchFinallyInstruction.Run(InterpretedFrame frame)"
+                                           }
+                                       ],
+                        "error":  "System.Management.Automation.MethodInvocationException: Exception calling \"Set\" with \"3\" argument(s): \"COM DoNotPrint(System.Boolean) failed: System.Reflection.TargetInvocationException HResult=0x80131604: Exception has been thrown by the target of an invocation. -\u003e System.Runtime.InteropServices.COMException HResult=0x8000FFFF: 並無支援物件屬性。僅在執行文件事件指令檔時允許此屬性。\" ---\u003e System.InvalidOperationException: COM DoNotPrint(System.Boolean) failed: System.Reflection.TargetInvocationException HResult=0x80131604: Exception has been thrown by the target of an invocation. -\u003e System.Runtime.InteropServices.COMException HResult=0x8000FFFF: 並無支援物件屬性。僅在執行文件事件指令檔時允許此屬性。 ---\u003e System.Reflection.TargetInvocationException: Exception has been thrown by the target of an invocation. ---\u003e System.Runtime.InteropServices.COMException: 並無支援物件屬性。僅在執行文件事件指令檔時允許此屬性。\r\n   --- End of inner exception stack trace ---\r\n   at System.RuntimeType.InvokeDispMethod(String name, BindingFlags invokeAttr, Object target, Object[] args, Boolean[] byrefModifiers, Int32 culture, String[] namedParameters)\r\n   at System.RuntimeType.InvokeMember(String name, BindingFlags bindingFlags, Binder binder, Object target, Object[] providedArgs, ParameterModifier[] modifiers, CultureInfo culture, String[] namedParams)\r\n   at LabelWorkbench.ComBridge.Invoke(Object target, String name, BindingFlags flags, Object[] arguments)\r\n   --- End of inner exception stack trace ---\r\n   at LabelWorkbench.ComBridge.Invoke(Object target, String name, BindingFlags flags, Object[] arguments)\r\n   at CallSite.Target(Closure , CallSite , Type , Object , String , Object[] )\r\n   --- End of inner exception stack trace ---\r\n   at System.Management.Automation.ExceptionHandlingOps.CheckActionPreference(FunctionContext funcContext, Exception exception)\r\n   at System.Management.Automation.Interpreter.ActionCallInstruction`2.Run(InterpretedFrame frame)\r\n   at System.Management.Automation.Interpreter.EnterTryCatchFinallyInstruction.Run(InterpretedFrame frame)\r\n   at System.Management.Automation.Interpreter.EnterTryCatchFinallyInstruction.Run(InterpretedFrame frame)",
+                        "type":  6
+                    }
+                ],
+    "hri":  [
+                {
+                    "mode":  "default-visible",
+                    "status":  "FAIL",
+                    "values":  [
+                                   {
+                                       "value":  "AB12",
+                                       "humanReadableValue":  "AB12",
+                                       "matches":  true
+                                   }
+                               ],
+                    "error":  "System.Management.Automation.MethodInvocationException: Exception calling \"Set\" with \"3\" argument(s): \"COM Height(System.Double) failed: System.Reflection.TargetInvocationException HResult=0x80131604: Exception has been thrown by the target of an invocation. -\u003e System.Runtime.InteropServices.COMException HResult=0x8000FFFF: 並無支援物件屬性。僅在執行文件事件指令檔時允許此屬性。\" ---\u003e System.InvalidOperationException: COM Height(System.Double) failed: System.Reflection.TargetInvocationException HResult=0x80131604: Exception has been thrown by the target of an invocation. -\u003e System.Runtime.InteropServices.COMException HResult=0x8000FFFF: 並無支援物件屬性。僅在執行文件事件指令檔時允許此屬性。 ---\u003e System.Reflection.TargetInvocationException: Exception has been thrown by the target of an invocation. ---\u003e System.Runtime.InteropServices.COMException: 並無支援物件屬性。僅在執行文件事件指令檔時允許此屬性。\r\n   --- End of inner exception stack trace ---\r\n   at System.RuntimeType.InvokeDispMethod(String name, BindingFlags invokeAttr, Object target, Object[] args, Boolean[] byrefModifiers, Int32 culture, String[] namedParameters)\r\n   at System.RuntimeType.InvokeMember(String name, BindingFlags bindingFlags, Binder binder, Object target, Object[] providedArgs, ParameterModifier[] modifiers, CultureInfo culture, String[] namedParams)\r\n   at LabelWorkbench.ComBridge.Invoke(Object target, String name, BindingFlags flags, Object[] arguments)\r\n   --- End of inner exception stack trace ---\r\n   at LabelWorkbench.ComBridge.Invoke(Object target, String name, BindingFlags flags, Object[] arguments)\r\n   at CallSite.Target(Closure , CallSite , Type , Object , String , Object[] )\r\n   --- End of inner exception stack trace ---\r\n   at System.Management.Automation.ExceptionHandlingOps.CheckActionPreference(FunctionContext funcContext, Exception exception)\r\n   at System.Management.Automation.Interpreter.ActionCallInstruction`2.Run(InterpretedFrame frame)\r\n   at System.Management.Automation.Interpreter.EnterTryCatchFinallyInstruction.Run(InterpretedFrame frame)\r\n   at System.Management.Automation.Interpreter.EnterTryCatchFinallyInstruction.Run(InterpretedFrame frame)"
+                },
+                {
+                    "mode":  "without-caption-transform",
+                    "status":  "FAIL",
+                    "values":  [
+                                   {
+                                       "value":  "AB12",
+                                       "humanReadableValue":  "AB12",
+                                       "matches":  true
+                                   }
+                               ],
+                    "error":  "System.Management.Automation.MethodInvocationException: Exception calling \"Set\" with \"3\" argument(s): \"COM Height(System.Double) failed: System.Reflection.TargetInvocationException HResult=0x80131604: Exception has been thrown by the target of an invocation. -\u003e System.Runtime.InteropServices.COMException HResult=0x8000FFFF: 並無支援物件屬性。僅在執行文件事件指令檔時允許此屬性。\" ---\u003e System.InvalidOperationException: COM Height(System.Double) failed: System.Reflection.TargetInvocationException HResult=0x80131604: Exception has been thrown by the target of an invocation. -\u003e System.Runtime.InteropServices.COMException HResult=0x8000FFFF: 並無支援物件屬性。僅在執行文件事件指令檔時允許此屬性。 ---\u003e System.Reflection.TargetInvocationException: Exception has been thrown by the target of an invocation. ---\u003e System.Runtime.InteropServices.COMException: 並無支援物件屬性。僅在執行文件事件指令檔時允許此屬性。\r\n   --- End of inner exception stack trace ---\r\n   at System.RuntimeType.InvokeDispMethod(String name, BindingFlags invokeAttr, Object target, Object[] args, Boolean[] byrefModifiers, Int32 culture, String[] namedParameters)\r\n   at System.RuntimeType.InvokeMember(String name, BindingFlags bindingFlags, Binder binder, Object target, Object[] providedArgs, ParameterModifier[] modifiers, CultureInfo culture, String[] namedParams)\r\n   at LabelWorkbench.ComBridge.Invoke(Object target, String name, BindingFlags flags, Object[] arguments)\r\n   --- End of inner exception stack trace ---\r\n   at LabelWorkbench.ComBridge.Invoke(Object target, String name, BindingFlags flags, Object[] arguments)\r\n   at CallSite.Target(Closure , CallSite , Type , Object , String , Object[] )\r\n   --- End of inner exception stack trace ---\r\n   at System.Management.Automation.ExceptionHandlingOps.CheckActionPreference(FunctionContext funcContext, Exception exception)\r\n   at System.Management.Automation.Interpreter.ActionCallInstruction`2.Run(InterpretedFrame frame)\r\n   at System.Management.Automation.Interpreter.EnterTryCatchFinallyInstruction.Run(InterpretedFrame frame)\r\n   at System.Management.Automation.Interpreter.EnterTryCatchFinallyInstruction.Run(InterpretedFrame frame)"
+                }
+            ],
+    "persistence":  [
+                        {
+                            "name":  "線條 1",
+                            "kind":  "line",
+                            "type":  2,
+                            "sourceFileExists":  false,
+                            "status":  "READBACK_AND_RENDER_CAPTURED_NOT_CERTIFIED"
+                        },
+                        {
+                            "name":  "矩形 1",
+                            "kind":  "box",
+                            "type":  3,
+                            "sourceFileExists":  false,
+                            "status":  "READBACK_AND_RENDER_CAPTURED_NOT_CERTIFIED"
+                        },
+                        {
+                            "name":  "圖片 1",
+                            "kind":  "image",
+                            "type":  6,
+                            "sourceFileExists":  false,
+                            "status":  "READBACK_AND_RENDER_CAPTURED_NOT_CERTIFIED"
+                        }
+                    ],
+    "errors":  [
+
+               ],
+    "candidateShaBefore":  "A7F2F2125F7BC20BE4B76560B6A922439C92550DEA4D899917C4AAC474A89847",
+    "candidateShaAfter":  "A7F2F2125F7BC20BE4B76560B6A922439C92550DEA4D899917C4AAC474A89847",
+    "ownedProcessIDs":  [
+                            8996,
+                            30504
+                        ]
+}
