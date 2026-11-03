@@ -1,7 +1,7 @@
 {
   "enabled": true,
-  "purpose": "Run four-object real BarTender renderer with disposable-candidate Text FontName/PointSize XML contract.",
-  "requestedAt": "2026-11-03T11:04:00+08:00",
+  "purpose": "Retry four-object real BarTender renderer after candidate Text patch guard correction.",
+  "requestedAt": "2026-11-03T11:09:00+08:00",
   "requestedBy": "YKC1117",
   "target": "experiment/com-renderer-prototype"
 }
