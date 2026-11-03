@@ -370,12 +370,7 @@ function Resolve-NativeDataMatrixComponent([string]$runDir) {
         $exact=Join-Path $root 'Barcodes\Common Bar Codes\Data Matrix.btc'
         if(Test-Path -LiteralPath $exact -PathType Leaf){return $exact}
     }
-    $candidates=@()
-    if(-not [string]::IsNullOrWhiteSpace($root)){$candidates=@(Get-ChildItem -LiteralPath $root -Recurse -File -Filter 'Data Matrix.btc' -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName)}
-    $candidates=@($candidates | Where-Object {$_ -notmatch 'GS1|HIBC'} | Sort-Object -Unique)
-    $candidates|ConvertTo-Json -Depth 3|Set-Content -LiteralPath (Join-Path $runDir 'datamatrix-component-candidates.json') -Encoding UTF8
-    if($candidates.Count -ne 1){throw ('Could not resolve exactly one standard Data Matrix.btc; candidates='+$candidates.Count)}
-    return [string]$candidates[0]
+    throw 'CAPABILITY_UNAVAILABLE_DATAMATRIX_BTC: expected Barcodes\Common Bar Codes\Data Matrix.btc under registered installation; no scan performed.'
 }
 function Insert-NativeComponent($document,[ref]$objectsRef,[string]$path,[string]$expectedRoot,$request,[string]$prefix) {
     $objects=$objectsRef.Value;$before=@(Get-NativeObjectNames $objects)
@@ -588,7 +583,7 @@ function Set-NativeTextFontName($obj,[string]$fontName,[string]$prefix='') {
 }
 function Set-NativeGeometry($obj,$request,[string]$prefix='') {
     $targets=[ordered]@{}
-    $result=[ordered]@{status='TARGET_GEOMETRY_WITHIN_TOLERANCE';properties=[ordered]@{}}
+    $result=[ordered]@{status='TARGET_GEOMETRY_WITHIN_TOLERANCE';properties=[ordered]@{};anchorContract='CANONICAL_UNROTATED_TOP_LEFT_TO_TOPLEFT_REFERENCE_POINT'}
     if($null -ne $request.PSObject.Properties['referencePoint']){
         $xml=Read-NativeXml ([string](Invoke-ComMethod $obj 'GetXML' @($true,$true)))
         $xml.DocumentElement.SetAttribute('ReferencePoint',[string]$request.referencePoint)
@@ -597,8 +592,15 @@ function Set-NativeGeometry($obj,$request,[string]$prefix='') {
         if($back.DocumentElement.GetAttribute('ReferencePoint') -cne $request.referencePoint){throw 'REFERENCE_POINT_UNPROVEN'}
     }
     if($request.type -eq 'text'){
+        $result['textFrame']=[ordered]@{widthMm=if($null -ne $request.PSObject.Properties['widthMm']){$request.widthMm}else{$null};heightMm=if($null -ne $request.PSObject.Properties['heightMm']){$request.heightMm}else{$null};mode='NORMAL_TEXT_CONTAINMENT_NOT_FORCED_DIMENSIONS'}
         $result.properties['FontName']=(Set-NativeTextFontName $obj ([string]$request.fontName) $(if($prefix){$prefix+'-font'}else{''}))
         $targets['FontSize']=[double]$request.fontSizePt
+        foreach($flag in @('bold','italic')){
+            if($null -ne $request.PSObject.Properties[$flag]){
+                $property=if($flag -eq 'bold'){'FontBold'}else{'FontItalic'}
+                $targets[$property]=[bool]$request.$flag
+            }
+        }
     }elseif($request.type -eq 'code128'){$targets['Height']=[double]$request.heightMm}
     $targets['RotationAngle']=[double]$request.rotationDeg;$targets['X']=[double]$request.xMm;$targets['Y']=[double]$request.yMm
     foreach($key in $targets.Keys){Write-Property $obj $key $targets[$key]}
@@ -688,6 +690,12 @@ function Invoke-NativeLayoutBuild($formats,$layout,[string]$runDir,[string]$base
                     Assert-NativeRaster $expectedState.raster
                     $entry['presaveRaster']=$expectedState.raster
                     if([math]::Abs($request.rotationDeg) -lt 0.001){Assert-NativeNear $expectedState.raster.inkWidthPx $entry.sizing.selected.raster.inkWidthPx 1 'Presave sizing width'}
+                }
+                foreach($flag in @('bold','italic')){
+                    if($null -ne $request.PSObject.Properties[$flag]){
+                        $prop=if($flag -eq 'bold'){'FontBold'}else{'FontItalic'}
+                        if([bool](Read-Property $obj $prop) -ne [bool]$request.$flag){throw ('Style readback mismatch: '+$prop)}
+                    }
                 }
                 $expectedState['xmlKey']=Get-NativeXmlKey $presaveXml
                 $physicalMap+=,[ordered]@{id=$request.id;name=$name;type=$request.type;request=$request;expected=$expectedState}

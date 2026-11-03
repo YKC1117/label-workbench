@@ -1,5 +1,7 @@
 # Label Workbench｜BarTender 2022 Renderer 交接
 
+本分支後續 BTC core 施工與目前入口見 [BTC_CORE_HANDOFF.md](review/renderer-prototype/BTC_CORE_HANDOFF.md)。本檔保留最初研究紀錄，四物件模型與路由以後續文件及目前 canonical.json 為準。
+
 基準 5ee1c6195d570e153e780573903f75c00452d8db。範圍為獨立工程原型，產品與 Windows 實測狀態均為 NOT RUN。
 
 ## 1　根因與證據層級

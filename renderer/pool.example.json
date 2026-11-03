@@ -1,0 +1,12 @@
+{
+  "schema": "lwb-object-pool-v1",
+  "createdBy": "BarTender Designer",
+  "file": "four-object-pool.btw",
+  "sha256": "REPLACE_WITH_REAL_DESIGNER_FILE_SHA256",
+  "slots": [
+    {"name":"TEXT_9","type":"text","referencePoint":"TopLeft","namedSubString":"TEXT_9_VALUE"},
+    {"name":"TEXT_18","type":"text","referencePoint":"TopLeft","namedSubString":"TEXT_18_VALUE"},
+    {"name":"CODE128_1","type":"code128","referencePoint":"TopLeft","namedSubString":"CODE128_1_VALUE"},
+    {"name":"DATAMATRIX_1","type":"datamatrix","referencePoint":"TopLeft","namedSubString":"DATAMATRIX_1_VALUE"}
+  ]
+}

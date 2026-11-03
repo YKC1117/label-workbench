@@ -1,0 +1,10 @@
+{
+  "platform": "Linux 6.18.57 x86_64",
+  "windows": "NOT_RUN",
+  "powershell51": "NOT_RUN",
+  "barTenderRuntime": "NOT_RUN",
+  "btcNativeInsertionThisRevision": "NOT_RUN",
+  "historicalCode128BtcEvidence": "PROVEN_IN_REPOSITORY",
+  "designerObjectPoolArtifact": "NOT_AVAILABLE",
+  "productAcceptance": "NOT_RUN"
+}

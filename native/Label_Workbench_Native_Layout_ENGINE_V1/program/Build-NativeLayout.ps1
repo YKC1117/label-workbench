@@ -1,5 +1,5 @@
 ﻿[CmdletBinding()]
-param([string]$LayoutPath='',[string]$BaseDirectory='',[string]$ResultRoot='',[switch]$OpenResults,[switch]$CaptureVisualEvidence)
+param([string]$LayoutPath='',[string]$BaseDirectory='',[string]$ResultRoot='',[switch]$OpenResults,[switch]$CaptureVisualEvidence,[string]$PoolManifestPath='',[ValidateSet('Auto','Btc','Pool')][string]$RendererMode='Auto')
 Set-StrictMode -Version 2
 $ErrorActionPreference='Stop'
 if([string]::IsNullOrWhiteSpace($BaseDirectory)){$BaseDirectory=[IO.Path]::GetDirectoryName($MyInvocation.MyCommand.Path)}
@@ -12,7 +12,7 @@ $package=Join-Path $BaseDirectory 'NATIVE_BUILD_RESULT.zip'
 $latest=Join-Path $BaseDirectory 'LATEST_NATIVE_OUTPUT.btw'
 $latestReport=Join-Path $BaseDirectory 'LATEST_NATIVE_REPORT.json'
 $app=$null;$formats=$null;$ownsBt=$false;$exitCode=1;$report=$null;$watchdog=$null
-$runtime=[ordered]@{revision='20261102-layout-rc2';os=[Environment]::OSVersion.VersionString;powerShell=$PSVersionTable.PSVersion.ToString();processBits=[IntPtr]::Size*8;barTender=[ordered]@{};cleanupErrors=@();status='STARTED'}
+$runtime=[ordered]@{revision='20261103-btc-core-v1';os=[Environment]::OSVersion.VersionString;powerShell=$PSVersionTable.PSVersion.ToString();processBits=[IntPtr]::Size*8;barTender=[ordered]@{};cleanupErrors=@();status='STARTED'}
 function Release-RunnerCom($target){if($null -ne $target -and [Runtime.InteropServices.Marshal]::IsComObject($target)){[void][Runtime.InteropServices.Marshal]::ReleaseComObject($target)}}
 function Get-RunnerRasterEvidence([string]$path,[int]$requestedDpi) {
     if(-not('LabelWorkbench.RasterEvidence' -as [type])){Add-Type -Path (Join-Path $BaseDirectory 'RasterEvidence.cs') -ErrorAction Stop}
@@ -25,7 +25,7 @@ function Get-RunnerRasterEvidence([string]$path,[int]$requestedDpi) {
 function Capture-RunnerVisualEvidence($formats,$report,$plan,[string]$runDir,[string]$baseDirectory) {
     if($null -eq $report -or [string]::IsNullOrWhiteSpace([string]$report.output) -or -not(Test-Path -LiteralPath $report.output)){throw 'Visual evidence requires a verified native output.'}
     $candidateHashBefore=(Get-FileHash -LiteralPath $report.output -Algorithm SHA256).Hash
-    $ev=[ordered]@{schema='lwb-native-visual-evidence-v1';revision='20261102-layout-rc2';status='STARTED';coordinateClaim='EVIDENCE_ONLY_NOT_IMAGE_TOP_LEFT_CERTIFIED';requestedDpi=600;candidateSha256Before=$candidateHashBefore;candidateSha256After=$null;page=[ordered]@{widthMm=[double]$plan.widthMm;heightMm=[double]$plan.heightMm};formatPreview=$null;objects=@();notes=@('BarTender X/Y are anchor coordinates, not automatically image top-left coordinates.','ReferencePoint is captured from object XML; an absent attribute is recorded as absent, not guessed.','Raster evidence is diagnostic only and does not change the V5 native build core.')}
+    $ev=[ordered]@{schema='lwb-native-visual-evidence-v1';revision=if($plan.schema -ceq 'lwb-native-layout-v1'){'20261103-btc-core-v1'}else{'20261102-layout-rc2'};status='STARTED';coordinateClaim='EVIDENCE_ONLY_NOT_IMAGE_TOP_LEFT_CERTIFIED';requestedDpi=600;candidateSha256Before=$candidateHashBefore;candidateSha256After=$null;page=[ordered]@{widthMm=[double]$plan.widthMm;heightMm=[double]$plan.heightMm};formatPreview=$null;objects=@();notes=@('BarTender X/Y are anchor coordinates, not automatically image top-left coordinates.','ReferencePoint is captured from object XML; an absent attribute is recorded as absent, not guessed.','Raster evidence is diagnostic only and does not change the V5 native build core.')}
     $doc=$null;$objs=$null;$failure=$null
     try{
         $doc=Com\Invoke-ComMethod $formats 'Open' @([string]$report.output,$false,'')
@@ -88,10 +88,18 @@ try{
     Import-Module (Join-Path $BaseDirectory 'Com.psm1') -Force
     Import-Module (Join-Path $BaseDirectory 'NativeLayoutEngine.psm1') -Force
     $layout=Get-Content -LiteralPath (Join-Path $runDir 'input-layout.json') -Raw -Encoding UTF8|ConvertFrom-Json
+    if($layout.schema -ceq 'lwb-canonical-v1'){
+        $nodePath=(Get-Command node.exe -CommandType Application -ErrorAction Stop).Source
+        $prepare=Join-Path $BaseDirectory '..\..\..\renderer\prepare.cjs'
+        & $nodePath $prepare (Join-Path $runDir 'input-layout.json') $runDir
+        if($LASTEXITCODE -ne 0){throw 'Canonical adapter failed. No geometry fallback was guessed.'}
+        $LayoutPath=Join-Path $runDir 'renderer-request.json'
+        $layout=Get-Content -LiteralPath $LayoutPath -Raw -Encoding UTF8|ConvertFrom-Json
+    }
     if($layout.schema -ceq 'renderer-probe-v1' -and -not $CaptureVisualEvidence){throw 'Prototype requires full-page capture.'}
     $production=($layout.schema -ceq 'lwb-production-review-v2')
     if($production){
-        if(-not $CaptureVisualEvidence -or $layout.revision -cne $runtime.revision -or $layout.layout.revision -cne $runtime.revision){throw 'RC2 evidence revision mismatch.'}
+        if(-not $CaptureVisualEvidence -or $layout.revision -cne '20261102-layout-rc2' -or $layout.layout.revision -cne '20261102-layout-rc2'){throw 'RC2 evidence revision mismatch.'}
         $plan=$layout.layout
         if(-not $plan.physicalSizeKnown -or $plan.objects.Count -lt 1 -or $plan.objects.Count -gt 200){throw 'Invalid production object list or paper size.'}
         $ids=@{};$names=@{}
@@ -123,10 +131,32 @@ try{
     $runtime['watchdog']='120-second stall / 600-second owned-run maximum; activation itself precedes watchdog'
     Com\Write-Property $app 'Visible' $false
     $formats=Com\Read-Property $app 'Formats'
-    if(-not $production){$report=Invoke-NativeLayoutBuild $formats $layout $runDir $BaseDirectory}
+    if(-not $production){
+        $usePool=($RendererMode -ceq 'Pool')
+        if(-not $usePool){
+            try{$report=Invoke-NativeLayoutBuild $formats $layout $runDir $BaseDirectory;$runtime['renderer']='btc';$report['renderer']='btc'}
+            catch{
+                if($RendererMode -cne 'Auto' -or [string]::IsNullOrWhiteSpace($PoolManifestPath) -or $_.Exception.Message -notmatch 'CAPABILITY_UNAVAILABLE|Create\(|InsertComponent|Could not resolve.*component'){throw}
+                $runtime['btcCapabilityFailure']=$_.Exception.ToString()
+                if(Test-Path -LiteralPath $reportPath){Copy-Item -LiteralPath $reportPath -Destination (Join-Path $runDir 'btc-attempt-report.json')}
+                $usePool=$true
+            }
+        }
+        if($usePool){
+            if([string]::IsNullOrWhiteSpace($PoolManifestPath)){throw 'No Designer-authored pool manifest provided.'}
+            $nodePath=(Get-Command node.exe -CommandType Application -ErrorAction Stop).Source
+            $selection=Join-Path $runDir 'pool-selection.json'
+            & $nodePath (Join-Path $BaseDirectory '..\..\..\renderer\pool-contract.cjs') $PoolManifestPath (Join-Path $runDir 'renderer-request.json') $selection
+            if($LASTEXITCODE -ne 0){throw 'Pool manifest validation failed.'}
+            Import-Module (Join-Path $BaseDirectory 'ObjectPool.psm1') -Force
+            $report=Invoke-ObjectPoolBuild $formats $plan $selection $runDir
+            $report|ConvertTo-Json -Depth 24|Set-Content -LiteralPath $reportPath -Encoding UTF8
+            $runtime['renderer']='object-pool'
+        }
+    }
     if($CaptureVisualEvidence){$runtime['visualEvidence']=Capture-RunnerVisualEvidence $formats $report $plan $runDir $BaseDirectory
         $checker=if($layout.schema -ceq 'renderer-probe-v1'){'probe-render.cjs'}else{'compare-render.cjs'}
-        & $nodePath (Join-Path $BaseDirectory $checker) $runDir (Join-Path $runDir 'input-layout.json')
+        & $nodePath (Join-Path $BaseDirectory $checker) $runDir $(if(Test-Path -LiteralPath (Join-Path $runDir 'renderer-request.json')){Join-Path $runDir 'renderer-request.json'}else{Join-Path $runDir 'input-layout.json'})
         if($LASTEXITCODE -ne 0){throw 'Render comparison unresolved or outside tolerance. See render-comparison.json.'}
     }
     if($production){$report|ConvertTo-Json -Depth 16|Set-Content -LiteralPath $reportPath -Encoding UTF8}

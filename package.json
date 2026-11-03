@@ -1,1 +1,12 @@
-{"name":"label-workbench-qa","private":true,"scripts":{"test:browser":"playwright test"},"devDependencies":{"@playwright/test":"1.55.1"}}
+{
+  "name": "label-workbench-qa",
+  "private": true,
+  "scripts": {
+    "test:browser": "playwright test",
+    "test:renderer": "node tests/renderer-core-smoke.cjs && node tests/renderer-visual-cli-smoke.cjs && node native/Label_Workbench_Native_Layout_ENGINE_V1/program/test-render.cjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.55.1",
+    "bwip-js": "4.8.0"
+  }
+}
