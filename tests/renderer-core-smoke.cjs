@@ -8,6 +8,8 @@ assert.deepEqual(validate(clone(canonical)),canonical);
 assert.equal(canonical.objects[0].fontSizePt,9);assert.equal(canonical.objects[1].fontSizePt,18);
 const original=clone(canonical),request=nativeRequest(canonical);assert.deepEqual(canonical,original);
 assert.equal(request.objects[2].heightMm,9);assert.equal(request.objects[0].fontName,'Arial');
+assert.equal(request.objects[0].referencePoint,undefined);assert.equal(request.objects[0].anchorPolicy,'BARTENDER_DOCUMENTED_DEFAULT_TOP_LEFT_VISUAL_GATE');
+assert.equal(request.objects[2].referencePoint,'TopLeft');assert.equal(request.objects[3].referencePoint,'TopLeft');
 assert.deepEqual(JSON.parse(JSON.stringify(request)),request);
 for(const dpi of [203,300,600])for(const mm of [0,.031,3.38582,24.8,100])assert.ok(Math.abs(G.dotsToMm(G.mmToDots(mm,dpi),dpi)-mm)<=25.4/dpi/2+1e-10);
 const box={xMm:10,yMm:20,widthMm:8,heightMm:4,rotation:90};
@@ -18,8 +20,12 @@ assert.throws(()=>G.anchor(box,'BASELINE'));
 const fp=footprint(canonical.objects[2]);assert.equal(fp.symbolWidthMm,20.066);assert.equal(fp.symbolHeightMm,9);
 const dm=footprint(canonical.objects[3]);assert.equal(dm.rows,10);assert.equal(dm.columns,10);assert.equal(dm.widthMm,canonical.objects[3].moduleMm*10);
 const numeric={...canonical.objects[2],value:'123456789012'};assert.ok(footprint(numeric).modules<11*(numeric.value.length+2)+13);
-const drawing=preview(canonical),actual=drawing.objects.map(o=>({id:o.id,status:'MEASURED',actual:clone(o.symbolBounds??o.bounds)})),readback=drawing.objects.map(o=>({id:o.id,rotationDeg:-o.rotation,referencePoint:'TopLeft'}));
+const drawing=preview(canonical),actual=drawing.objects.map(o=>({id:o.id,status:'MEASURED',actual:clone(o.symbolBounds??o.bounds)})),readback=drawing.objects.map(o=>({id:o.id,rotationDeg:-o.rotation,referencePoint:'TopLeft',referencePointPresent:true}));
 assert.equal(evaluate(drawing,actual,readback).status,'PASS_PLACEMENT_AND_SIZE');
+const documentedTextDefault=clone(readback);documentedTextDefault[0].referencePoint=null;documentedTextDefault[0].referencePointPresent=false;
+assert.equal(evaluate(drawing,actual,documentedTextDefault).status,'PASS_PLACEMENT_AND_SIZE');
+const missingBarcodeAnchor=clone(readback);missingBarcodeAnchor[2].referencePoint=null;missingBarcodeAnchor[2].referencePointPresent=false;
+assert.equal(evaluate(drawing,actual,missingBarcodeAnchor).status,'UNRESOLVED');
 for(const key of ['x','y','width','height']){
  const shifted=clone(actual);shifted[2].actual[key]+=2;
  assert.equal(evaluate(drawing,shifted,readback).status,'FAIL',key);
@@ -43,4 +49,4 @@ try{
  const alias=clone(manifest);alias.slots[1].namedSubString=alias.slots[0].namedSubString;assert.throws(()=>validatePool(alias,file,request));
  assert.throws(()=>validatePool({...manifest,slots:manifest.slots.slice(1)},file,request));
 }finally{fs.rmSync(dir,{recursive:true,force:true});}
-console.log('PASS canonical/schema, geometry, encoder footprint, four-object transform, two-renderer QA, pool contract; no BarTender execution');
+console.log('PASS canonical/schema, geometry, encoder footprint, four-object transform, documented Text default anchor guard, two-renderer QA, pool contract; no BarTender execution');
