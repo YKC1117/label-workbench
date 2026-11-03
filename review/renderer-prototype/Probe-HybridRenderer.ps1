@@ -56,6 +56,7 @@ try{
     $node=(Get-Command node.exe -CommandType Application -ErrorAction Stop).Source;$prepare=[IO.Path]::GetFullPath((Join-Path $program '..\..\..\renderer\prepare.cjs'))
     & $node $prepare (Join-Path $runDir 'input-canonical.json') $runDir;if($LASTEXITCODE -ne 0){throw 'Hybrid canonical adapter failed.'}
     Import-Module (Join-Path $program 'Com.psm1') -Force;Import-Module (Join-Path $program 'NativeLayoutEngine.psm1') -Force;Import-Module (Join-Path $program 'HybridPool.psm1') -Force
+    if(-not('LabelWorkbench.RasterEvidence' -as [type])){Add-Type -Path (Join-Path $program 'RasterEvidence.cs') -ErrorAction Stop}
     $layout=Get-Content -LiteralPath (Join-Path $runDir 'renderer-request.json') -Raw -Encoding UTF8|ConvertFrom-Json;$plan=Test-NativeLayoutInput $layout
     $existing=@(Get-Process -Name BarTend -ErrorAction SilentlyContinue|Select-Object -ExpandProperty Id);$app=New-Object -ComObject BarTender.Application;$pidBt=[int](Com\Read-Property $app 'ProcessID');$bt=Get-Process -Id $pidBt -ErrorAction Stop
     if($pidBt -in $existing -or $bt.ProcessName -ine 'BarTend'){throw 'Hybrid probe attached to pre-existing/unidentified BarTender process.'};$ownsBt=$true
