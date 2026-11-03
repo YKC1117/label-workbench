@@ -277,7 +277,7 @@ function Export-NativeMeasurement($obj,[string]$path,[int]$dpi) {
     $trust='UNTRUSTED_HEADER_DPI_INVALID'
     if($valid){if([math]::Abs($r.HeaderDpiX-$dpi) -le $tol -and [math]::Abs($r.HeaderDpiY-$dpi) -le $tol){$trust='TRUSTED_HEADER_MATCH'}else{$trust='UNTRUSTED_HEADER_DPI_MISMATCH'}}
     $trusted=($trust -ceq 'TRUSTED_HEADER_MATCH')
-    return [ordered]@{file=[IO.Path]::GetFileName($path);requestedDpi=$dpi;headerDpiX=$r.HeaderDpiX;headerDpiY=$r.HeaderDpiY;dpiTrust=$trust;physicalMmTrust=if($trusted){'TRUSTED'}else{'UNTRUSTED'};canvasWidthPx=$r.CanvasWidth;canvasHeightPx=$r.CanvasHeight;inkWidthPx=$r.InkWidth;inkHeightPx=$r.InkHeight;inkWidthMm=if($trusted){$r.InkWidth*25.4/$dpi}else{$null};inkHeightMm=if($trusted){$r.InkHeight*25.4/$dpi}else{$null};sha256=(Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash;symbolBounds='NOT_DECODER_CONFIRMED'}
+    return [ordered]@{file=[IO.Path]::GetFileName($path);requestedDpi=$dpi;headerDpiX=$r.HeaderDpiX;headerDpiY=$r.HeaderDpiY;dpiTrust=$trust;physicalMmTrust=if($trusted){'TRUSTED'}else{'UNTRUSTED'};canvasWidthPx=$r.CanvasWidth;canvasHeightPx=$r.CanvasHeight;inkLeftPx=$r.Left;inkTopPx=$r.Top;inkWidthPx=$r.InkWidth;inkHeightPx=$r.InkHeight;inkWidthMm=if($trusted){$r.InkWidth*25.4/$dpi}else{$null};inkHeightMm=if($trusted){$r.InkHeight*25.4/$dpi}else{$null};sha256=(Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash;symbolBounds='NOT_DECODER_CONFIRMED'}
 }
 function Get-NativeInkError($m,$request) {
     if($null -eq $m -or $m.physicalMmTrust -cne 'TRUSTED'){throw 'Raster physical-mm measurement is untrusted.'}

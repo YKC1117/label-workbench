@@ -6,7 +6,7 @@ $root=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..'))
 $program=Join-Path $root 'native\Label_Workbench_Native_Layout_ENGINE_V1\program'
 $results=Join-Path $program 'native-results'
 [void][IO.Directory]::CreateDirectory($results)
-$summary=[ordered]@{schema='lwb-general-suite-v1';revision='20261103-general-candidate-v1';commit=$env:GITHUB_SHA;productAcceptance='NOT_RUN';cases=@();status='STARTED'}
+$summary=[ordered]@{schema='lwb-general-suite-v1';revision='20261103-native-ink-origin-v2';commit=$env:GITHUB_SHA;productAcceptance='NOT_RUN';cases=@();status='STARTED'}
 $psExe=Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
 # Parse every changed PowerShell file before activating any COM runtime.
 foreach($file in @('NativeLayoutEngine.psm1','HybridPool.psm1','Build-NativeLayout.ps1')){

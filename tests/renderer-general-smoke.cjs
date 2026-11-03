@@ -42,3 +42,25 @@ const qmodel=clone(models[1]),qd=preview(qmodel),qa=qd.objects.map(p=>({id:p.id,
 qa[1].actual={x:5.1,y:5.1,width:1,height:3};assert.equal(evaluate(qd,qa,qr).quietZones.length,1);
 
 console.log('PASS general candidate: shared expansion/CLI parity, 8 styles/lines, three alignments, orthogonal transforms, modules/quiet zones, visual displacement rejection, optical geometry/angle ambiguity and exact barcode patterns, unsupported capabilities fail closed; NOT BarTender runtime evidence');
+const {textPlacement}=require('../renderer/text-placement.cjs');
+const ledger=require('../review/renderer-prototype/general-candidate/text-ink-origin-ledger.json');
+for(const c of ['A','C']){
+ const model=clone(models[c==='A'?0:2]);model.objects=model.objects.filter(o=>o.type==='text');
+ const drawing=preview(model),req=nativeRequest(model),predicted=[],readback=[];
+ for(const row of ledger.objects.filter(o=>o.case===c)){
+  const p=req.objects.find(o=>o.id===row.id),placement=textPlacement(p,row.measurement);
+  // Reproject the captured real ink using only the measured adapter translation.
+  // This is regression of the conversion, not a new runtime result.
+  predicted.push({id:p.id,status:'MEASURED',actual:{...row.actual,x:row.actual.x+placement.xMm-row.nativeAnchor.xMm,y:row.actual.y+placement.yMm-row.nativeAnchor.yMm}});
+  readback.push({id:p.id,rotationDeg:p.rotationDeg,referencePoint:'TopLeft',referencePointPresent:true});
+  assert.throws(()=>textPlacement(p,{...row.measurement,physicalMmTrust:'UNTRUSTED'}));
+  assert.throws(()=>textPlacement(p,{...row.measurement,headerDpiX:300}));
+  assert.throws(()=>textPlacement(p,{...row.measurement,inkLeftPx:-1}));
+  assert.throws(()=>textPlacement({...p,widthMm:1},row.measurement));
+ }
+ const result=evaluate(drawing,predicted,readback);assert.equal(result.status,'PASS_PLACEMENT_AND_SIZE');
+ assert.ok(result.objects.every(o=>Math.abs(o.alignmentErrorMm)<25.4/600));
+ if(c==='A')assert.ok(Math.abs(result.objects.find(o=>o.id==='BOTH24').alignmentErrorMm)<25.4/600);
+ const wrong=clone(predicted);wrong[0].actual.y+=2;assert.equal(evaluate(drawing,wrong,readback).status,'FAIL');
+}
+console.log('PASS actual Run44 ledger -> measured ink-origin transform, left/center/right and three rotations, tight X/Y anchor residuals; reprojected offline evidence only');

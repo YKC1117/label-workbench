@@ -23,7 +23,7 @@ function evaluate(preview,actual,readback){
     }
     const fail=policy==='SYMBOL_INK'
       ? Math.abs(delta.centerX)>TOLERANCE.centerMm||Math.abs(delta.centerY)>TOLERANCE.centerMm||Math.abs(delta.width)>TOLERANCE.sizeMm||Math.abs(delta.height)>TOLERANCE.sizeMm
-      : local ? Math.abs(alignmentError)>TOLERANCE.edgeMm||local.x < -TOLERANCE.edgeMm||local.y < -TOLERANCE.edgeMm||local.right>p.frame.widthMm+TOLERANCE.edgeMm||local.bottom>p.frame.heightMm+TOLERANCE.edgeMm
+      : local ? Math.abs(alignmentError)>TOLERANCE.edgeMm||local.x < -TOLERANCE.edgeMm||(p.textOriginPolicy==='NATIVE_INK_TOP_LEFT'&&Math.abs(local.y)>TOLERANCE.edgeMm)||local.y < -TOLERANCE.edgeMm||local.right>p.frame.widthMm+TOLERANCE.edgeMm||local.bottom>p.frame.heightMm+TOLERANCE.edgeMm
       : Math.abs(b.x-expected.x)>TOLERANCE.edgeMm||b.y<expected.y-TOLERANCE.edgeMm||b.x+b.width>expected.x+expected.width+TOLERANCE.edgeMm||b.y+b.height>expected.y+expected.height+TOLERANCE.edgeMm;
     const outside=G.outOfBounds(b,preview.label,TOLERANCE.edgeMm);
     const explicitTopLeft=r?.referencePoint==='TopLeft';

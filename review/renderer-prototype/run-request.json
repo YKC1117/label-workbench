@@ -1,7 +1,7 @@
 {
   "enabled": true,
-  "purpose": "Final consolidated A/B/C candidate: native inch-literal Text coordinates with unchanged .02mm readbacks; pretransaction full-format layout settlement, strict Density peer delta still blocking; independent optical geometry and exact barcode pattern comparison.",
-  "requestedAt": "2026-11-03T07:24:00Z",
+  "purpose": "Run44 B/C passed. Consolidated v2 candidate resolves A Text glyph-bearing anchor mismatch using measured per-object 600dpi ink origin, shared pure conversion, unchanged .5mm Visual QA and .02mm native readback; repeat A+B+C to prove complete candidate and rotated Text mapping.",
+  "requestedAt": "2026-11-03T07:47:25.438093+00:00",
   "requestedBy": "YKC1117",
   "target": "experiment/com-renderer-prototype"
 }

@@ -1,3 +1,5 @@
+> Update: Run44 is completed, not queued. B barcode and C rotation are PASS; A fails one 24pt bold/italic ink-origin alignment row (.503333 mm). See GENERAL_RENDERER_REVIEW.md and general-candidate/evidence/run44. A measured ink-origin conversion is now implemented with unchanged tolerances; the next consolidated probe must verify this new candidate. The queued-state text below is historical only.
+
 # General Renderer handoff — 2026-11-03
 
 Repository YKC1117/label-workbench; only experiment/com-renderer-prototype, Draft PR #35. Main/Pages/Release untouched. Entry baseline bbcaa6dcdc93249e1e9adb4730d636918619e05a; no rollback.

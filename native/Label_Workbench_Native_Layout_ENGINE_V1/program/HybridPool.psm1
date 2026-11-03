@@ -154,18 +154,22 @@ function Invoke-HybridPoolBuild($formats,$plan,[string]$textPoolPath,[string]$ru
                     $family=New-Object System.Drawing.FontFamily -ArgumentList ([string]$request.fontName)
                     try{if($family.Name -cne [string]$request.fontName){throw ('Font substitution is prohibited: '+$request.fontName)}}finally{$family.Dispose()}
                 }
-                if($request.alignment -cne 'left' -or $request.rotationDeg -ne 0){
+                if($isGeneralCandidate -or $request.alignment -cne 'left' -or $request.rotationDeg -ne 0){
                     foreach($key in @('FontName','FontSize','FontBold','FontItalic')){Write-Property $obj $key $targets[$key]}
                     Write-Property $obj 'RotationAngle' ([double]0)
                     $measure=Export-NativeMeasurement $obj ($prefix+'-upright.bmp') 600
                     if($measure.physicalMmTrust -cne 'TRUSTED'){throw 'Untrusted Text alignment measurement.'}
-                    $excess=[double]$request.widthMm-[double]$measure.inkWidthMm
-                    if($excess -lt -0.02){throw ('Text ink exceeds canonical frame: '+$request.id)}
-                    $shift=if($request.alignment -ceq 'center'){$excess/2}elseif($request.alignment -ceq 'right'){$excess}else{0.0}
-                    $radians=-[double]$request.rotationDeg*[math]::PI/180
-                    $targets.X=[double]$request.xMm+$shift*[math]::Cos($radians)
-                    $targets.Y=[double]$request.yMm+$shift*[math]::Sin($radians)
-                    $alignmentEvidence=[ordered]@{policy='CANONICAL_FRAME_ALIGNED_USING_NATIVE_INK';alignment=[string]$request.alignment;upright=$measure;shiftMm=$shift;targetX=$targets.X;targetY=$targets.Y}
+                    if($isGeneralCandidate){
+                        $placementInput=$prefix+'-text-placement-input.json';$placementOutput=$prefix+'-text-placement.json'
+                        Save-NativeJson ([ordered]@{request=$request;measurement=$measure}) $placementInput
+                        $node=(Get-Command node.exe -CommandType Application -ErrorAction Stop).Source
+                        $planner=Join-Path $baseDirectory '..\..\..\renderer\text-placement.cjs'
+                        & $node $planner $placementInput $placementOutput *> ($prefix+'-text-placement.log')
+                        if($LASTEXITCODE -ne 0 -or -not(Test-Path -LiteralPath $placementOutput)){throw ('Native ink anchor conversion failed: '+$request.id)}
+                        $placement=Get-Content -LiteralPath $placementOutput -Raw -Encoding UTF8|ConvertFrom-Json
+                        $targets.X=[double]$placement.xMm;$targets.Y=[double]$placement.yMm
+                        $alignmentEvidence=[ordered]@{policy=[string]$placement.policy;upright=$measure;placement=$placement}
+                    }else{throw 'Unsupported legacy Text alignment/rotation.'}
                 }
                 foreach($key in @($targets.Keys)){if(-not $isGeneralCandidate -or $key -notin @('X','Y')){Write-Property $obj $key $targets[$key]}}
                 $unquantized=@{}

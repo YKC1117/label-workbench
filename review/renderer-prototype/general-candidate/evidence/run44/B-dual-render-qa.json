@@ -1,0 +1,385 @@
+{
+  "schema": "lwb-dual-render-qa-v1",
+  "status": "PASS_PLACEMENT_AND_SIZE",
+  "tolerance": {
+    "centerMm": 0.5,
+    "sizeMm": 0.5,
+    "edgeMm": 0.5,
+    "rotationDeg": 0.1,
+    "overlapAreaMm2": 0.25
+  },
+  "productAcceptance": "NOT_RUN",
+  "scope": "orthogonal local-frame text alignment and containment, native pattern rotation gate consumed separately, placement, footprint, containment and API rotation; every native request explicitly asks for TopLeft; BarTender may omit that default in XML only when unique full-page visual geometry independently passes; no independent optical angle estimation",
+  "objects": [
+    {
+      "id": "CODE_SHORT",
+      "status": "PASS",
+      "policy": "SYMBOL_INK",
+      "expected": {
+        "x": 7.54,
+        "y": 5,
+        "width": 20.066,
+        "height": 7
+      },
+      "actual": {
+        "x": 7.535333333333334,
+        "y": 4.995333333333333,
+        "width": 20.066,
+        "height": 6.985
+      },
+      "localInk": null,
+      "alignmentErrorMm": null,
+      "delta": {
+        "centerX": -0.004666666666663488,
+        "centerY": -0.012166666666667325,
+        "width": 0,
+        "height": -0.01499999999999968,
+        "rotation": 0
+      },
+      "outOfBounds": false,
+      "referencePoint": null,
+      "referencePointPresent": false,
+      "anchorEvidence": "TOPLEFT_REQUEST_OMITTED_PLUS_UNIQUE_VISUAL_GEOMETRY",
+      "rotationEvidence": "COM_READBACK_ONLY",
+      "renderedRotation": "NOT_INDEPENDENTLY_VERIFIED",
+      "barcodeFootprint": {
+        "widthMm": 25.146,
+        "heightMm": 7,
+        "rows": null,
+        "columns": null
+      }
+    },
+    {
+      "id": "CODE_NUM",
+      "status": "PASS",
+      "policy": "SYMBOL_INK",
+      "expected": {
+        "x": 48.4,
+        "y": 5,
+        "width": 34.19678199999999,
+        "height": 15
+      },
+      "actual": {
+        "x": 48.387,
+        "y": 4.995333333333333,
+        "width": 34.205333333333336,
+        "height": 14.986
+      },
+      "localInk": null,
+      "alignmentErrorMm": null,
+      "delta": {
+        "centerX": -0.008724333333329781,
+        "centerY": -0.011666666666666714,
+        "width": 0.008551333333343791,
+        "height": -0.013999999999999346,
+        "rotation": 0
+      },
+      "outOfBounds": false,
+      "referencePoint": null,
+      "referencePointPresent": false,
+      "anchorEvidence": "TOPLEFT_REQUEST_OMITTED_PLUS_UNIQUE_VISUAL_GEOMETRY",
+      "rotationEvidence": "COM_READBACK_ONLY",
+      "renderedRotation": "NOT_INDEPENDENTLY_VERIFIED",
+      "barcodeFootprint": {
+        "widthMm": 40.996781999999996,
+        "heightMm": 15,
+        "rows": null,
+        "columns": null
+      }
+    },
+    {
+      "id": "CODE_LONG",
+      "status": "PASS",
+      "policy": "SYMBOL_INK",
+      "expected": {
+        "x": 5,
+        "y": 28,
+        "width": 36.83,
+        "height": 12
+      },
+      "actual": {
+        "x": 4.995333333333333,
+        "y": 27.982333333333333,
+        "width": 36.83,
+        "height": 11.980333333333334
+      },
+      "localInk": null,
+      "alignmentErrorMm": null,
+      "delta": {
+        "centerX": -0.0046666666666652645,
+        "centerY": -0.02750000000000341,
+        "width": 0,
+        "height": -0.019666666666665833,
+        "rotation": 0
+      },
+      "outOfBounds": false,
+      "referencePoint": null,
+      "referencePointPresent": false,
+      "anchorEvidence": "TOPLEFT_REQUEST_OMITTED_PLUS_UNIQUE_VISUAL_GEOMETRY",
+      "rotationEvidence": "COM_READBACK_ONLY",
+      "renderedRotation": "NOT_INDEPENDENTLY_VERIFIED",
+      "barcodeFootprint": {
+        "widthMm": 36.83,
+        "heightMm": 12,
+        "rows": null,
+        "columns": null
+      }
+    },
+    {
+      "id": "DM_SMALL",
+      "status": "PASS",
+      "policy": "SYMBOL_INK",
+      "expected": {
+        "x": 75,
+        "y": 30,
+        "width": 2.5400000000000063,
+        "height": 2.539999999999999
+      },
+      "actual": {
+        "x": 74.97233333333334,
+        "y": 30.014333333333333,
+        "width": 2.54,
+        "height": 2.54
+      },
+      "localInk": null,
+      "alignmentErrorMm": null,
+      "delta": {
+        "centerX": -0.027666666666668505,
+        "centerY": 0.014333333333333087,
+        "width": -6.217248937900877e-15,
+        "height": 8.881784197001252e-16,
+        "rotation": 0
+      },
+      "outOfBounds": false,
+      "referencePoint": null,
+      "referencePointPresent": false,
+      "anchorEvidence": "TOPLEFT_REQUEST_OMITTED_PLUS_UNIQUE_VISUAL_GEOMETRY",
+      "rotationEvidence": "COM_READBACK_ONLY",
+      "renderedRotation": "NOT_INDEPENDENTLY_VERIFIED",
+      "barcodeFootprint": {
+        "widthMm": 2.54,
+        "heightMm": 2.54,
+        "rows": 10,
+        "columns": 10
+      }
+    },
+    {
+      "id": "DM_MEDIUM",
+      "status": "PASS",
+      "policy": "SYMBOL_INK",
+      "expected": {
+        "x": 85,
+        "y": 30,
+        "width": 6.094476,
+        "height": 6.094476
+      },
+      "actual": {
+        "x": 85.00533333333334,
+        "y": 30.014333333333333,
+        "width": 6.096,
+        "height": 6.096
+      },
+      "localInk": null,
+      "alignmentErrorMm": null,
+      "delta": {
+        "centerX": 0.006095333333341557,
+        "centerY": 0.015095333333334793,
+        "width": 0.0015239999999998588,
+        "height": 0.0015239999999998588,
+        "rotation": 0
+      },
+      "outOfBounds": false,
+      "referencePoint": null,
+      "referencePointPresent": false,
+      "anchorEvidence": "TOPLEFT_REQUEST_OMITTED_PLUS_UNIQUE_VISUAL_GEOMETRY",
+      "rotationEvidence": "COM_READBACK_ONLY",
+      "renderedRotation": "NOT_INDEPENDENTLY_VERIFIED",
+      "barcodeFootprint": {
+        "widthMm": 6.094476,
+        "heightMm": 6.094476,
+        "rows": 18,
+        "columns": 18
+      }
+    },
+    {
+      "id": "DM_LARGE",
+      "status": "PASS",
+      "policy": "SYMBOL_INK",
+      "expected": {
+        "x": 5,
+        "y": 52,
+        "width": 8.125968,
+        "height": 8.125968
+      },
+      "actual": {
+        "x": 4.995333333333333,
+        "y": 51.98533333333334,
+        "width": 8.128,
+        "height": 8.128
+      },
+      "localInk": null,
+      "alignmentErrorMm": null,
+      "delta": {
+        "centerX": -0.003650666666667135,
+        "centerY": -0.01365066666666337,
+        "width": 0.0020319999999998117,
+        "height": 0.0020319999999998117,
+        "rotation": 0
+      },
+      "outOfBounds": false,
+      "referencePoint": null,
+      "referencePointPresent": false,
+      "anchorEvidence": "TOPLEFT_REQUEST_OMITTED_PLUS_UNIQUE_VISUAL_GEOMETRY",
+      "rotationEvidence": "COM_READBACK_ONLY",
+      "renderedRotation": "NOT_INDEPENDENTLY_VERIFIED",
+      "barcodeFootprint": {
+        "widthMm": 8.125968,
+        "heightMm": 8.125968,
+        "rows": 24,
+        "columns": 24
+      }
+    }
+  ],
+  "overlaps": [
+    {
+      "ids": [
+        "CODE_SHORT",
+        "CODE_NUM"
+      ],
+      "expectedAreaMm2": 0,
+      "actualAreaMm2": 0,
+      "unexpected": false
+    },
+    {
+      "ids": [
+        "CODE_SHORT",
+        "CODE_LONG"
+      ],
+      "expectedAreaMm2": 0,
+      "actualAreaMm2": 0,
+      "unexpected": false
+    },
+    {
+      "ids": [
+        "CODE_SHORT",
+        "DM_SMALL"
+      ],
+      "expectedAreaMm2": 0,
+      "actualAreaMm2": 0,
+      "unexpected": false
+    },
+    {
+      "ids": [
+        "CODE_SHORT",
+        "DM_MEDIUM"
+      ],
+      "expectedAreaMm2": 0,
+      "actualAreaMm2": 0,
+      "unexpected": false
+    },
+    {
+      "ids": [
+        "CODE_SHORT",
+        "DM_LARGE"
+      ],
+      "expectedAreaMm2": 0,
+      "actualAreaMm2": 0,
+      "unexpected": false
+    },
+    {
+      "ids": [
+        "CODE_NUM",
+        "CODE_LONG"
+      ],
+      "expectedAreaMm2": 0,
+      "actualAreaMm2": 0,
+      "unexpected": false
+    },
+    {
+      "ids": [
+        "CODE_NUM",
+        "DM_SMALL"
+      ],
+      "expectedAreaMm2": 0,
+      "actualAreaMm2": 0,
+      "unexpected": false
+    },
+    {
+      "ids": [
+        "CODE_NUM",
+        "DM_MEDIUM"
+      ],
+      "expectedAreaMm2": 0,
+      "actualAreaMm2": 0,
+      "unexpected": false
+    },
+    {
+      "ids": [
+        "CODE_NUM",
+        "DM_LARGE"
+      ],
+      "expectedAreaMm2": 0,
+      "actualAreaMm2": 0,
+      "unexpected": false
+    },
+    {
+      "ids": [
+        "CODE_LONG",
+        "DM_SMALL"
+      ],
+      "expectedAreaMm2": 0,
+      "actualAreaMm2": 0,
+      "unexpected": false
+    },
+    {
+      "ids": [
+        "CODE_LONG",
+        "DM_MEDIUM"
+      ],
+      "expectedAreaMm2": 0,
+      "actualAreaMm2": 0,
+      "unexpected": false
+    },
+    {
+      "ids": [
+        "CODE_LONG",
+        "DM_LARGE"
+      ],
+      "expectedAreaMm2": 0,
+      "actualAreaMm2": 0,
+      "unexpected": false
+    },
+    {
+      "ids": [
+        "DM_SMALL",
+        "DM_MEDIUM"
+      ],
+      "expectedAreaMm2": 0,
+      "actualAreaMm2": 0,
+      "unexpected": false
+    },
+    {
+      "ids": [
+        "DM_SMALL",
+        "DM_LARGE"
+      ],
+      "expectedAreaMm2": 0,
+      "actualAreaMm2": 0,
+      "unexpected": false
+    },
+    {
+      "ids": [
+        "DM_MEDIUM",
+        "DM_LARGE"
+      ],
+      "expectedAreaMm2": 0,
+      "actualAreaMm2": 0,
+      "unexpected": false
+    }
+  ],
+  "quietZones": [],
+  "opticalRotation": {
+    "status": "PASS",
+    "objects": []
+  }
+}
