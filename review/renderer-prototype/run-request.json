@@ -1,7 +1,7 @@
 {
   "enabled": true,
-  "purpose": "Retry Windows BarTender 2022 renderer probe after workflow ExecutionPolicy fix.",
-  "requestedAt": "2026-11-03T10:04:00+08:00",
+  "purpose": "Retry Windows BarTender 2022 renderer probe after documented fresh Text default-anchor fix.",
+  "requestedAt": "2026-11-03T10:08:00+08:00",
   "requestedBy": "YKC1117",
   "target": "experiment/com-renderer-prototype"
 }
