@@ -6,7 +6,7 @@ $root=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..'));$base=Join-Path 
 Import-Module (Join-Path $base 'Com.psm1') -Force
 $report=Get-Content (Join-Path $RunDirectory 'native-build-report.json') -Raw -Encoding UTF8|ConvertFrom-Json
 $old=Get-Content (Join-Path $RunDirectory 'runtime.json') -Raw -Encoding UTF8|ConvertFrom-Json
-$target=Join-Path $RunDirectory 'native-output.btw';$before=(Get-FileHash $target -Algorithm SHA256).Hash
+$target=[string]$report.output;$before=(Get-FileHash $target -Algorithm SHA256).Hash
 $result=[ordered]@{schema='lwb-primitive-cold-reopen-v1';status='STARTED';candidateShaBefore=$before;candidateShaAfter=$null;buildProcessID=$old.barTender.ProcessID;coldProcessID=$null;sourceFilesHidden=@();objects=@();wholeFormatSame=$false;error=$null}
 $app=$null;$formats=$null;$doc=$null;$objects=$null;$wd=$null;$owns=$false
 $existing=@(Get-Process -Name BarTend -ErrorAction SilentlyContinue|Select-Object -ExpandProperty Id)
@@ -46,6 +46,15 @@ finally{
  if($null -ne $wd -and -not $wd.HasExited){$wd.Kill()}
  $result.candidateShaAfter=(Get-FileHash $target -Algorithm SHA256).Hash;if($result.candidateShaAfter -cne $before){$result.status='FAIL';$result.error='Cold proof altered candidate BTW.'}
  $result|ConvertTo-Json -Depth 16|Set-Content -LiteralPath (Join-Path $RunDirectory 'cold-reopen.json') -Encoding UTF8
+}
+if($result.status -ceq 'PASS'){
+ try{
+  $accepted=Join-Path $RunDirectory 'native-output.btw';Move-Item -LiteralPath $target -Destination $accepted -Force
+  $report.output=$accepted;$report.status='VERIFIED_CANDIDATE_AFTER_COLD_PASS';$report|ConvertTo-Json -Depth 24|Set-Content -LiteralPath (Join-Path $RunDirectory 'native-build-report.json') -Encoding UTF8
+  $old.status='VERIFIED_CANDIDATE_NOT_PRODUCT_ACCEPTANCE';$old|Add-Member -NotePropertyName coldProof -NotePropertyValue 'PASS' -Force;$old|ConvertTo-Json -Depth 24|Set-Content -LiteralPath (Join-Path $RunDirectory 'runtime.json') -Encoding UTF8
+  Copy-Item -LiteralPath $accepted -Destination (Join-Path $base 'LATEST_NATIVE_OUTPUT.btw') -Force
+  Copy-Item -LiteralPath (Join-Path $RunDirectory 'native-build-report.json') -Destination (Join-Path $base 'LATEST_NATIVE_REPORT.json') -Force
+ }catch{$result.status='FAIL';$result.error=$_.Exception.ToString();$result|ConvertTo-Json -Depth 16|Set-Content -LiteralPath (Join-Path $RunDirectory 'cold-reopen.json') -Encoding UTF8}
 }
 Write-Host ('Primitive cold-process proof: '+$result.status)
 if($result.status -cne 'PASS'){exit 1}

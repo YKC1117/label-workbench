@@ -1,0 +1,500 @@
+﻿{
+    "schema":  "lwb-hybrid-pool-build-report-v1",
+    "status":  "VERIFIED_CANDIDATE_VISUAL_PENDING",
+    "renderer":  "hybrid-text-pool-btc",
+    "productAcceptance":  "NOT_RUN",
+    "textPool":  {
+                     "path":  "C:\\Users\\FTUSER5\\actions-runner-label-workbench\\_work\\label-workbench\\label-workbench\\native\\Label_Workbench_Native_Layout_ENGINE_V1\\program\\native-results\\D\\r-c32ebaf0c3b2\\hybrid-text-pool.btw",
+                     "sha256":  "73E620EC2154D18AF3E279B4438A3775BE85D2A71F5BD8AFAAF664B31F03198B"
+                 },
+    "page":  {
+                 "printer":  "Argox CP-3140 PPLA",
+                 "LabelColumns":  1,
+                 "LabelRows":  1,
+                 "PaperWidth":  119.98999786376953,
+                 "PaperHeight":  80.010002136230469,
+                 "LabelWidth":  119.98999786376953,
+                 "LabelHeight":  80.010002136230469,
+                 "MarginLeft":  0,
+                 "MarginRight":  0,
+                 "MarginTop":  0,
+                 "MarginBottom":  0
+             },
+    "objects":  [
+                    {
+                        "id":  "TITLE",
+                        "type":  "text",
+                        "physicalName":  "文字 1",
+                        "nativeType":  5,
+                        "referencePointXml":  null,
+                        "geometry":  {
+                                         "anchor":  {
+                                                        "status":  "PASS_VISUAL_PENDING",
+                                                        "mode":  "BARTENDER_DEFAULT_TOPLEFT_OMITTED",
+                                                        "serialized":  null
+                                                    },
+                                         "payload":  {
+                                                         "root":  "Text",
+                                                         "sourceId":  "{6E1B676D-8F75-4730-9296-8F59D6DFC18A}",
+                                                         "value":  "NATIVE MIXED LABEL",
+                                                         "sourceCount":  1,
+                                                         "transforms":  0
+                                                     },
+                                         "properties":  {
+                                                            "FontName":  {
+                                                                             "requested":  "Arial",
+                                                                             "actual":  "Arial",
+                                                                             "unquantized":  null
+                                                                         },
+                                                            "FontSize":  {
+                                                                             "requested":  14,
+                                                                             "actual":  14,
+                                                                             "unquantized":  null
+                                                                         },
+                                                            "FontBold":  {
+                                                                             "requested":  true,
+                                                                             "actual":  true,
+                                                                             "unquantized":  null
+                                                                         },
+                                                            "FontItalic":  {
+                                                                               "requested":  false,
+                                                                               "actual":  false,
+                                                                               "unquantized":  null
+                                                                           },
+                                                            "RotationAngle":  {
+                                                                                  "requested":  0,
+                                                                                  "actual":  0,
+                                                                                  "unquantized":  null
+                                                                              },
+                                                            "X":  {
+                                                                      "requested":  5.6133999999999995,
+                                                                      "actual":  5.6133999999999995,
+                                                                      "unquantized":  5.619
+                                                                  },
+                                                            "Y":  {
+                                                                      "requested":  5.9436,
+                                                                      "actual":  5.9436,
+                                                                      "unquantized":  5.9416666666666664
+                                                                  }
+                                                        },
+                                         "anchorAfterProperties":  "BARTENDER_DEFAULT_TOPLEFT_OMITTED",
+                                         "alignmentEvidence":  {
+                                                                   "policy":  "MEASURED_INK_ORIGIN_TO_CANONICAL_FRAME",
+                                                                   "upright":  {
+                                                                                   "file":  "hybrid-TITLE-upright.bmp",
+                                                                                   "requestedDpi":  600,
+                                                                                   "headerDpiX":  599.9988,
+                                                                                   "headerDpiY":  599.9988,
+                                                                                   "dpiTrust":  "TRUSTED_HEADER_MATCH",
+                                                                                   "physicalMmTrust":  "TRUSTED",
+                                                                                   "canvasWidthPx":  1244,
+                                                                                   "canvasHeightPx":  139,
+                                                                                   "inkLeftPx":  9,
+                                                                                   "inkTopPx":  25,
+                                                                                   "inkWidthPx":  1228,
+                                                                                   "inkHeightPx":  83,
+                                                                                   "inkWidthMm":  51.98533333333333,
+                                                                                   "inkHeightMm":  3.5136666666666665,
+                                                                                   "sha256":  "3A9D16567BC4AE41F8776FB4AFAE58D60D193A96C7C67690C87FD6E7DF83FF48",
+                                                                                   "symbolBounds":  "NOT_DECODER_CONFIRMED"
+                                                                               },
+                                                                   "placement":  {
+                                                                                     "schema":  "lwb-native-text-placement-v1",
+                                                                                     "policy":  "MEASURED_INK_ORIGIN_TO_CANONICAL_FRAME",
+                                                                                     "xMm":  5.619,
+                                                                                     "yMm":  5.941666666666666,
+                                                                                     "frame":  {
+                                                                                                   "xMm":  6,
+                                                                                                   "yMm":  7,
+                                                                                                   "widthMm":  75,
+                                                                                                   "heightMm":  8
+                                                                                               },
+                                                                                     "alignment":  "left",
+                                                                                     "alignmentShiftMm":  0,
+                                                                                     "inkOffset":  {
+                                                                                                       "xMm":  0.381,
+                                                                                                       "yMm":  1.0583333333333333
+                                                                                                   },
+                                                                                     "localOffset":  {
+                                                                                                         "xMm":  -0.381,
+                                                                                                         "yMm":  -1.0583333333333333
+                                                                                                     },
+                                                                                     "inkWidthMm":  51.98533333333334,
+                                                                                     "inkHeightMm":  3.5136666666666665,
+                                                                                     "rotationCom":  0
+                                                                                 }
+                                                               }
+                                     },
+                        "reopenEditable":  "CHALLENGE_RESTORE_EXACT_XML_AND_PEER_ISOLATION_PASS"
+                    },
+                    {
+                        "id":  "CODE_1",
+                        "type":  "code128",
+                        "physicalName":  "Bar Code 1",
+                        "nativeType":  4,
+                        "humanReadable":  {
+                                              "status":  "HIDDEN_BY_SETXML",
+                                              "before":  "VISIBLE_DEFAULT_OR_UNSPECIFIED",
+                                              "after":  "None"
+                                          },
+                        "sizing":  {
+                                       "status":  "EXPLICIT_MODULE_READBACK",
+                                       "targetWidthMm":  20.066,
+                                       "targetHeightMm":  7,
+                                       "samples":  [
+
+                                                   ],
+                                       "selected":  {
+                                                        "xDimension":  {
+                                                                           "index":  2,
+                                                                           "mils":  10,
+                                                                           "millimeters":  0.25,
+                                                                           "indexMeaning":  "UNVERIFIED_ENUM_INDEX_NOT_DOTS"
+                                                                       },
+                                                        "raster":  {
+                                                                       "file":  "hybrid-CODE_1-size-module.bmp",
+                                                                       "requestedDpi":  600,
+                                                                       "headerDpiX":  599.9988,
+                                                                       "headerDpiY":  599.9988,
+                                                                       "dpiTrust":  "TRUSTED_HEADER_MATCH",
+                                                                       "physicalMmTrust":  "TRUSTED",
+                                                                       "canvasWidthPx":  476,
+                                                                       "canvasHeightPx":  167,
+                                                                       "inkLeftPx":  0,
+                                                                       "inkTopPx":  0,
+                                                                       "inkWidthPx":  474,
+                                                                       "inkHeightPx":  165,
+                                                                       "inkWidthMm":  20.066,
+                                                                       "inkHeightMm":  6.985,
+                                                                       "sha256":  "06DC8857C5A864BE00B0C8EB764800BE58D44B60C820F87F20FDBF8C81EF4A5B",
+                                                                       "symbolBounds":  "NOT_DECODER_CONFIRMED"
+                                                                   }
+                                                    },
+                                       "errorMm":  null,
+                                       "approximation":  "NOT_RUN",
+                                       "warning":  "Raster ink is a layout approximation, not decoder-confirmed symbol bounds."
+                                   },
+                        "geometry":  {
+                                         "status":  "TARGET_GEOMETRY_WITHIN_TOLERANCE_VISUAL_PENDING",
+                                         "anchor":  {
+                                                        "status":  "PASS_VISUAL_PENDING",
+                                                        "mode":  "BARTENDER_DEFAULT_TOPLEFT_OMITTED",
+                                                        "serialized":  null
+                                                    },
+                                         "properties":  {
+                                                            "Height":  {
+                                                                           "requested":  7,
+                                                                           "actual":  6.985,
+                                                                           "tolerance":  0.1
+                                                                       },
+                                                            "RotationAngle":  {
+                                                                                  "requested":  0,
+                                                                                  "actual":  0,
+                                                                                  "tolerance":  0.01
+                                                                              },
+                                                            "X":  {
+                                                                      "requested":  8.54,
+                                                                      "actual":  8.5344,
+                                                                      "tolerance":  0.05
+                                                                  },
+                                                            "Y":  {
+                                                                      "requested":  30,
+                                                                      "actual":  29.9974,
+                                                                      "tolerance":  0.05
+                                                                  }
+                                                        },
+                                         "xDimension":  {
+                                                            "index":  2,
+                                                            "mils":  10,
+                                                            "millimeters":  0.25,
+                                                            "indexMeaning":  "UNVERIFIED_ENUM_INDEX_NOT_DOTS"
+                                                        }
+                                     },
+                        "reopenEditable":  "CHALLENGE_RESTORE_EXACT_XML_AND_PEER_ISOLATION_PASS"
+                    },
+                    {
+                        "id":  "DM_1",
+                        "type":  "datamatrix",
+                        "physicalName":  "條碼 1",
+                        "nativeType":  4,
+                        "humanReadable":  {
+                                              "status":  "HIDDEN_BY_SETXML",
+                                              "before":  "VISIBLE_DEFAULT_OR_UNSPECIFIED",
+                                              "after":  "None"
+                                          },
+                        "sizing":  {
+                                       "status":  "EXPLICIT_MODULE_READBACK",
+                                       "targetWidthMm":  6.094476,
+                                       "targetHeightMm":  6.094476,
+                                       "samples":  [
+
+                                                   ],
+                                       "selected":  {
+                                                        "xDimension":  {
+                                                                           "index":  3,
+                                                                           "mils":  13.33,
+                                                                           "millimeters":  0.34,
+                                                                           "indexMeaning":  "UNVERIFIED_ENUM_INDEX_NOT_DOTS"
+                                                                       },
+                                                        "raster":  {
+                                                                       "file":  "hybrid-DM_1-size-module.bmp",
+                                                                       "requestedDpi":  600,
+                                                                       "headerDpiX":  599.9988,
+                                                                       "headerDpiY":  599.9988,
+                                                                       "dpiTrust":  "TRUSTED_HEADER_MATCH",
+                                                                       "physicalMmTrust":  "TRUSTED",
+                                                                       "canvasWidthPx":  146,
+                                                                       "canvasHeightPx":  146,
+                                                                       "inkLeftPx":  0,
+                                                                       "inkTopPx":  0,
+                                                                       "inkWidthPx":  144,
+                                                                       "inkHeightPx":  144,
+                                                                       "inkWidthMm":  6.096,
+                                                                       "inkHeightMm":  6.096,
+                                                                       "sha256":  "B0BD1E7C02CDDA346C915AD136B0DFD8BD2BA11745F5C17C8B557CD04D3DEE60",
+                                                                       "symbolBounds":  "NOT_DECODER_CONFIRMED"
+                                                                   }
+                                                    },
+                                       "errorMm":  null,
+                                       "approximation":  "NOT_RUN",
+                                       "warning":  "Raster ink is a layout approximation, not decoder-confirmed symbol bounds."
+                                   },
+                        "geometry":  {
+                                         "status":  "TARGET_GEOMETRY_WITHIN_TOLERANCE_VISUAL_PENDING",
+                                         "anchor":  {
+                                                        "status":  "PASS_VISUAL_PENDING",
+                                                        "mode":  "BARTENDER_DEFAULT_TOPLEFT_OMITTED",
+                                                        "serialized":  null
+                                                    },
+                                         "properties":  {
+                                                            "RotationAngle":  {
+                                                                                  "requested":  0,
+                                                                                  "actual":  0,
+                                                                                  "tolerance":  0.01
+                                                                              },
+                                                            "X":  {
+                                                                      "requested":  94,
+                                                                      "actual":  93.98,
+                                                                      "tolerance":  0.05
+                                                                  },
+                                                            "Y":  {
+                                                                      "requested":  31,
+                                                                      "actual":  30.987999999999996,
+                                                                      "tolerance":  0.05
+                                                                  }
+                                                        },
+                                         "xDimension":  {
+                                                            "index":  3,
+                                                            "mils":  13.33,
+                                                            "millimeters":  0.34,
+                                                            "indexMeaning":  "UNVERIFIED_ENUM_INDEX_NOT_DOTS"
+                                                        }
+                                     },
+                        "reopenEditable":  "CHALLENGE_RESTORE_EXACT_XML_AND_PEER_ISOLATION_PASS"
+                    },
+                    {
+                        "id":  "HRI_1",
+                        "type":  "code128",
+                        "physicalName":  "Bar Code 2",
+                        "nativeType":  4,
+                        "humanReadable":  {
+                                              "status":  "NATIVE_HRI_READBACK_VISUAL_PENDING",
+                                              "fontName":  "Arial",
+                                              "fontSizePt":  12,
+                                              "value":  "12345678"
+                                          },
+                        "sizing":  {
+                                       "status":  "EXPLICIT_MODULE_READBACK",
+                                       "targetWidthMm":  26.747978,
+                                       "targetHeightMm":  9,
+                                       "samples":  [
+
+                                                   ],
+                                       "selected":  {
+                                                        "xDimension":  {
+                                                                           "index":  3,
+                                                                           "mils":  13.33,
+                                                                           "millimeters":  0.34,
+                                                                           "indexMeaning":  "UNVERIFIED_ENUM_INDEX_NOT_DOTS"
+                                                                       },
+                                                        "raster":  {
+                                                                       "file":  "hybrid-HRI_1-size-module.bmp",
+                                                                       "requestedDpi":  600,
+                                                                       "headerDpiX":  599.9988,
+                                                                       "headerDpiY":  599.9988,
+                                                                       "dpiTrust":  "TRUSTED_HEADER_MATCH",
+                                                                       "physicalMmTrust":  "TRUSTED",
+                                                                       "canvasWidthPx":  634,
+                                                                       "canvasHeightPx":  215,
+                                                                       "inkLeftPx":  0,
+                                                                       "inkTopPx":  0,
+                                                                       "inkWidthPx":  632,
+                                                                       "inkHeightPx":  212,
+                                                                       "inkWidthMm":  26.754666666666665,
+                                                                       "inkHeightMm":  8.9746666666666659,
+                                                                       "sha256":  "42B327A337411F7A13D92F6E48412140AFB73174580D35B230460A3FBEE9D169",
+                                                                       "symbolBounds":  "NOT_DECODER_CONFIRMED"
+                                                                   }
+                                                    },
+                                       "errorMm":  null,
+                                       "approximation":  "NOT_RUN",
+                                       "warning":  "Raster ink is a layout approximation, not decoder-confirmed symbol bounds."
+                                   },
+                        "geometry":  {
+                                         "status":  "TARGET_GEOMETRY_WITHIN_TOLERANCE_VISUAL_PENDING",
+                                         "anchor":  {
+                                                        "status":  "PASS_VISUAL_PENDING",
+                                                        "mode":  "BARTENDER_DEFAULT_TOPLEFT_OMITTED",
+                                                        "serialized":  null
+                                                    },
+                                         "properties":  {
+                                                            "Height":  {
+                                                                           "requested":  9,
+                                                                           "actual":  8.9915999999999983,
+                                                                           "tolerance":  0.1
+                                                                       },
+                                                            "RotationAngle":  {
+                                                                                  "requested":  0,
+                                                                                  "actual":  0,
+                                                                                  "tolerance":  0.01
+                                                                              },
+                                                            "X":  {
+                                                                      "requested":  9.4,
+                                                                      "actual":  9.398,
+                                                                      "tolerance":  0.05
+                                                                  },
+                                                            "Y":  {
+                                                                      "requested":  50,
+                                                                      "actual":  49.987199999999994,
+                                                                      "tolerance":  0.05
+                                                                  }
+                                                        },
+                                         "xDimension":  {
+                                                            "index":  3,
+                                                            "mils":  13.33,
+                                                            "millimeters":  0.34,
+                                                            "indexMeaning":  "UNVERIFIED_ENUM_INDEX_NOT_DOTS"
+                                                        }
+                                     },
+                        "reopenEditable":  "CHALLENGE_RESTORE_EXACT_XML_AND_PEER_ISOLATION_PASS"
+                    },
+                    {
+                        "id":  "LOGO",
+                        "type":  "image",
+                        "physicalName":  "圖片 1",
+                        "nativeType":  6,
+                        "geometry":  {
+                                         "properties":  {
+                                                            "X":  {
+                                                                      "requested":  94,
+                                                                      "actual":  93.98
+                                                                  },
+                                                            "Y":  {
+                                                                      "requested":  7,
+                                                                      "actual":  6.985
+                                                                  },
+                                                            "Width":  {
+                                                                          "requested":  18,
+                                                                          "actual":  17.983199999999997
+                                                                      },
+                                                            "Height":  {
+                                                                           "requested":  9,
+                                                                           "actual":  8.9915999999999983
+                                                                       },
+                                                            "RotationAngle":  {
+                                                                                  "requested":  0,
+                                                                                  "actual":  0
+                                                                              }
+                                                        }
+                                     },
+                        "assetPath":  "C:\\Users\\FTUSER5\\actions-runner-label-workbench\\_work\\label-workbench\\label-workbench\\native\\Label_Workbench_Native_Layout_ENGINE_V1\\program\\native-results\\D\\r-c32ebaf0c3b2\\asset-LOGO.png",
+                        "reopenEditable":  "NATIVE_GEOMETRY_OR_IMAGE_CHALLENGE_EXACT_RESTORE_PASS"
+                    },
+                    {
+                        "id":  "RULE",
+                        "type":  "line",
+                        "physicalName":  "線條 1",
+                        "nativeType":  2,
+                        "geometry":  {
+                                         "properties":  {
+                                                            "LineStartX":  {
+                                                                               "requested":  6,
+                                                                               "actual":  5.9944
+                                                                           },
+                                                            "LineStartY":  {
+                                                                               "requested":  21,
+                                                                               "actual":  20.9804
+                                                                           },
+                                                            "LineEndX":  {
+                                                                             "requested":  114,
+                                                                             "actual":  113.99520000000001
+                                                                         },
+                                                            "LineEndY":  {
+                                                                             "requested":  21.001,
+                                                                             "actual":  20.9804
+                                                                         },
+                                                            "LineThickness":  {
+                                                                                  "requested":  0.254,
+                                                                                  "actual":  0.254
+                                                                              },
+                                                            "X":  {
+                                                                      "requested":  60,
+                                                                      "actual":  59.9948
+                                                                  },
+                                                            "Y":  {
+                                                                      "requested":  21.000500000000002,
+                                                                      "actual":  20.9804
+                                                                  }
+                                                        }
+                                     },
+                        "assetPath":  null,
+                        "reopenEditable":  "NATIVE_GEOMETRY_OR_IMAGE_CHALLENGE_EXACT_RESTORE_PASS"
+                    },
+                    {
+                        "id":  "BORDER",
+                        "type":  "box",
+                        "physicalName":  "矩形 1",
+                        "nativeType":  3,
+                        "geometry":  {
+                                         "properties":  {
+                                                            "X":  {
+                                                                      "requested":  3,
+                                                                      "actual":  2.9972
+                                                                  },
+                                                            "Y":  {
+                                                                      "requested":  3,
+                                                                      "actual":  2.9972
+                                                                  },
+                                                            "Width":  {
+                                                                          "requested":  114,
+                                                                          "actual":  113.99520000000001
+                                                                      },
+                                                            "Height":  {
+                                                                           "requested":  74,
+                                                                           "actual":  73.990199999999987
+                                                                       },
+                                                            "RotationAngle":  {
+                                                                                  "requested":  0,
+                                                                                  "actual":  0
+                                                                              },
+                                                            "LineThickness":  {
+                                                                                  "requested":  0.508,
+                                                                                  "actual":  0.508
+                                                                              }
+                                                        }
+                                     },
+                        "assetPath":  null,
+                        "reopenEditable":  "NATIVE_GEOMETRY_OR_IMAGE_CHALLENGE_EXACT_RESTORE_PASS"
+                    }
+                ],
+    "warnings":  [
+                     "Designer-authored Text slots are reused; unused donor objects are deleted from the disposable candidate copy before any payload assignment; the embedded donor source remains unchanged.",
+                     "An omitted ReferencePoint after an explicit TopLeft request is accepted only pending final unique full-page BMP Visual QA."
+                 ],
+    "output":  "C:\\Users\\FTUSER5\\actions-runner-label-workbench\\_work\\label-workbench\\label-workbench\\native\\Label_Workbench_Native_Layout_ENGINE_V1\\program\\native-results\\D\\r-c32ebaf0c3b2\\native-output.btw",
+    "outputSha256":  "897EA5E77E1D5C01584E9E59F477649FDD5EBC3EA0D832D41F994C901D566C8B",
+    "reopen":  "PASS",
+    "deletedUnusedDonorObjects":  40,
+    "dataMatrixComponent":  "C:\\Program Files\\Seagull\\BarTender 2022\\Barcodes\\Common Bar Codes\\Data Matrix.btc",
+    "layoutSettlement":  "FULL_FORMAT_RENDER_BEFORE_SAVE_AND_REOPEN_TRANSACTIONS"
+}

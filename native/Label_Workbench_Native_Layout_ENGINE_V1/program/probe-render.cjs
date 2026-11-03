@@ -26,8 +26,9 @@ if(require.main===module){
  const {mask}=require('./compare-render.cjs');
  for(const o of plan.objects.filter(p=>p.type==='code128'&&p.humanReadable!=='none')){
    const row=rows.find(r=>r.id===o.id),record=ev.objects.find(r=>r.id===o.id);if(!row.actual)continue;
-   const {split}=require('../../../renderer/hri-qa.cjs'),parts=split(mask(path.join(dir,'visual-'+o.id+'.bmp'))),u=25.4/ev.requestedDpi;
-   const convert=b=>({x:row.actual.x+(b.x-record.raster.inkLeftPx)*u,y:row.actual.y+(b.y-record.raster.inkTopPx)*u,width:b.width*u,height:b.height*u});
+   const {split}=require('../../../renderer/hri-qa.cjs'),page=mask(path.join(dir,'native-format-preview.bmp')),pb=row.pixelBounds;
+   const parts=split(page.slice(pb.y,pb.y+pb.height).map(r=>r.subarray(pb.x,pb.x+pb.width))),u=25.4/ev.requestedDpi;
+   const convert=b=>({x:row.actual.x+b.x*u,y:row.actual.y+b.y*u,width:b.width*u,height:b.height*u});
    row.symbolActual=convert(parts.symbol);row.captionActual=convert(parts.caption);
    if(record.humanReadableValue!==o.value)throw Error('Native HRI effective value mismatch');
  }

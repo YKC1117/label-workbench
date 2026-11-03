@@ -6,8 +6,9 @@ const request=nativeRequest(model),drawing=preview(model);assert.equal(request.o
 for(const [id,type,ref] of [['RULE',2,'Center'],['BORDER',3,'TopLeft'],['LOGO',6,'TopLeft']]){const p=request.objects.find(o=>o.id===id);assert.equal(p.nativeType,type);assert.equal(p.referencePoint,ref);}
 const border=drawing.objects.find(o=>o.id==='BORDER');assert.equal(border.bounds.x,3-.508/2);assert.equal(border.bounds.width,114+.508);
 const image=model.objects.find(o=>o.id==='LOGO'),source=png(image.dataUri);assert.equal(source.width,120);assert.equal(source.height,60);assert.equal(source.binary,true);assert.ok(/^[A-F0-9]{64}$/.test(source.sha256));
-assert.equal(check(image,source.rows,300).status,'PASS');assert.throws(()=>check(image,source.rows,203));
-const mirrored=source.rows.map(r=>Buffer.from(r).reverse());assert.equal(check(image,mirrored,300).status,'FAIL');assert.throws(()=>png('data:image/jpeg;base64,AA=='));assert.throws(()=>png('data:image/png;base64,AA=='));
+const rendered=Array.from({length:source.height*3},(_,y)=>Buffer.from(Array.from({length:source.width*3},(_,x)=>source.rows[Math.floor(y/3)][Math.floor(x/3)])));
+assert.equal(check(image,rendered,300).status,'PASS');assert.throws(()=>check(image,rendered,203));assert.throws(()=>check(image,source.rows,300));
+const mirrored=rendered.map(r=>Buffer.from(r).reverse());assert.equal(check(image,mirrored,300).status,'FAIL');assert.throws(()=>png('data:image/jpeg;base64,AA=='));assert.throws(()=>png('data:image/png;base64,AA=='));
 for(const edit of [m=>m.objects.find(o=>o.id==='LOGO').rotation=90,m=>m.objects.find(o=>o.id==='BORDER').strokeMm=100,m=>delete m.objects.find(o=>o.id==='HRI_1').caption,m=>m.objects.find(o=>o.id==='HRI_1').caption.fontSizePt=9]){const m=clone(model);edit(m);assert.throws(()=>nativeRequest(m));}
 const legacy=clone(model);legacy.runtimeProfile='candidate-general-v1';assert.throws(()=>nativeRequest(legacy));
 const actual=drawing.objects.map(o=>({id:o.id,status:'MEASURED',actual:clone(o.bounds)})),readback=request.objects.map(o=>({id:o.id,rotationDeg:o.rotationDeg,referencePoint:o.referencePoint,referencePointPresent:true}));
@@ -25,3 +26,11 @@ const broken=frame.map(r=>Buffer.from(r));broken[0][25]=0;const p2=Array.from({l
 assert.equal(check({type:'box',strokeMm:.08},frame).status,'PASS');assert.equal(check({type:'box',strokeMm:.08},frame.map(r=>Buffer.alloc(r.length,1))).status,'FAIL');
 const bar=Array.from({length:80},(_,y)=>Buffer.from(Array.from({length:60},(_,x)=>+(y<35?(x%5<2):y>=43&&y<52&&x>=12&&x<=48))));const parts=split(bar);assert.equal(parts.symbol.height,35);assert.equal(parts.caption.y,43);assert.throws(()=>split(Array.from({length:50},()=>Buffer.alloc(50))));
 console.log('PASS typed native primitive planner, PNG identity, stroke footprint, endpoint anchor, hollow overlay registration + ambiguity/missing-ink rejection, actual image pattern, segmented HRI + caption displacement, unsupported profiles fail closed; no BarTender execution');
+const {locateRaster}=require('../renderer/raster-registration.cjs');
+const glyph=Array.from({length:11},(_,y)=>Buffer.from(Array.from({length:23},(_,x)=>+(x===0||x===22||y===0||y===10||(x===4&&y<5)||(y===3&&x>=4&&x<=10)||(x===17&&y>7)))));
+const nativePage=Array.from({length:70},()=>Buffer.alloc(110));glyph.forEach((r,y)=>r.copy(nativePage[y+12],15));nativePage[15][15]=0;
+assert.deepEqual(locateRaster(nativePage,glyph,1),{x:15,y:12,width:23,height:11});
+glyph.forEach((r,y)=>r.copy(nativePage[y+40],70));assert.equal(locateRaster(nativePage,glyph,1),null);
+assert.throws(()=>locateRaster(nativePage,glyph,3));
+const damaged=rendered.map(r=>Buffer.from(r));for(let y=30;y<130;y++)for(let x=30;x<70;x++)damaged[y][x]=0;assert.equal(check(image,damaged,300).status,'FAIL');
+console.log('PASS global native-phase registration: unique actual bounding box, duplicate pattern rejection, bounded printer uncertainty; exact source interior reconstruction rejects content damage');

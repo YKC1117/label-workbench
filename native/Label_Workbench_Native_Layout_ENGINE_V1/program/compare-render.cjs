@@ -67,7 +67,13 @@ function compare(dir, ev, input) {
     const tile=mask(path.join(dir,'visual-'+o.id+'.bmp')).slice(r.inkTopPx,r.inkTopPx+r.inkHeightPx)
       .map(row=>row.subarray(r.inkLeftPx,r.inkLeftPx+r.inkWidthPx));
     const pos=mapped?(p.type==='box'?locateInk(page,tile):locate(page,tile)):null;
-    const actual=pos?{x:pos.x*u,y:pos.y*u,width:r.inkWidthPx*u,height:r.inkHeightPx*u}:null;
+    let pixels=pos?{x:pos.x,y:pos.y,width:r.inkWidthPx,height:r.inkHeightPx}:null;
+    let registration=p.type==='box'?'UNIQUE_ALL_INK_PIXELS':'UNIQUE_EXACT_TILE';
+    if(!pixels&&mapped&&plan.runtimeProfile==='candidate-primitives-v1'&&['text','line','image','code128'].includes(p.type)){
+      if(ev.printerResolution?.x!==300||ev.printerResolution?.y!==300)throw Error('Measured printer resolution required for native phase registration');
+      pixels=require('../../../renderer/raster-registration.cjs').locateRaster(page,tile,2);registration='GLOBAL_UNIQUE_NATIVE_INK_BIDIRECTIONAL_ONE_DRIVER_DOT';
+    }
+    const actual=pixels?{x:pixels.x*u,y:pixels.y*u,width:pixels.width*u,height:pixels.height*u}:null;
     const delta=actual?{dx:actual.x-expected.x,dy:actual.y-expected.y,
       dw:expected.width===null?null:actual.width-expected.width,
       dh:expected.height===null?null:actual.height-expected.height}:null;
@@ -85,7 +91,7 @@ function compare(dir, ev, input) {
       metrics['placement'+axis]={policy:!Number.isFinite(v)?'NOT_COMPARABLE':'COMPARABLE',value:v};
     }
     metrics.renderedRotation={policy:'NOT_COMPARABLE',value:null};
-    return {id:o.id,registration:p.type==='box'?'UNIQUE_ALL_INK_PIXELS':'UNIQUE_EXACT_TILE',metrics,status:pos?'MEASURED':'UNRESOLVED',expected,actual,delta,
+    return {id:o.id,registration,pixelBounds:pixels,metrics,status:pixels?'MEASURED':'UNRESOLVED',expected,actual,delta,
       rotationDeltaRendered:null,rotationDeltaCom:expected.rotation===null?null:((o.rotationDeg-expected.rotation+540)%360+360)%360-180};
   });
 }

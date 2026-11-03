@@ -1,0 +1,365 @@
+{
+  "sha256": "897EA5E77E1D5C01584E9E59F477649FDD5EBC3EA0D832D41F994C901D566C8B",
+  "productAcceptance": "NOT_RUN",
+  "objects": [
+    {
+      "id": "TITLE",
+      "registration": "UNIQUE_EXACT_TILE",
+      "metrics": {
+        "dx": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        },
+        "dy": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        },
+        "dw": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        },
+        "dh": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        },
+        "placementX": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        },
+        "placementY": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        },
+        "renderedRotation": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        }
+      },
+      "status": "UNRESOLVED",
+      "expected": {
+        "x": 6,
+        "y": 7,
+        "width": 75,
+        "height": 8,
+        "rotation": 0
+      },
+      "actual": null,
+      "delta": null,
+      "rotationDeltaRendered": null,
+      "rotationDeltaCom": 0,
+      "verdict": "CANONICAL_VISUAL_GATE_FAILED"
+    },
+    {
+      "id": "CODE_1",
+      "registration": "UNIQUE_EXACT_TILE",
+      "metrics": {
+        "dx": {
+          "policy": "DIAGNOSTIC_ONLY",
+          "value": 0.01133333333333475
+        },
+        "dy": {
+          "policy": "DIAGNOSTIC_ONLY",
+          "value": 0.014333333333333087
+        },
+        "dw": {
+          "policy": "DIAGNOSTIC_ONLY",
+          "value": 0
+        },
+        "dh": {
+          "policy": "DIAGNOSTIC_ONLY",
+          "value": -0.01499999999999968
+        },
+        "placementX": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        },
+        "placementY": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        },
+        "renderedRotation": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        }
+      },
+      "status": "MEASURED",
+      "expected": {
+        "x": 8.54,
+        "y": 30,
+        "width": 20.066,
+        "height": 7,
+        "rotation": 0
+      },
+      "actual": {
+        "x": 8.551333333333334,
+        "y": 30.014333333333333,
+        "width": 20.066,
+        "height": 6.985
+      },
+      "delta": {
+        "dx": 0.01133333333333475,
+        "dy": 0.014333333333333087,
+        "dw": 0,
+        "dh": -0.01499999999999968
+      },
+      "rotationDeltaRendered": null,
+      "rotationDeltaCom": 0,
+      "verdict": "WITHIN_FIXTURE_TOLERANCE"
+    },
+    {
+      "id": "DM_1",
+      "registration": "UNIQUE_EXACT_TILE",
+      "metrics": {
+        "dx": {
+          "policy": "DIAGNOSTIC_ONLY",
+          "value": -0.01999999999999602
+        },
+        "dy": {
+          "policy": "DIAGNOSTIC_ONLY",
+          "value": -0.012000000000000455
+        },
+        "dw": {
+          "policy": "DIAGNOSTIC_ONLY",
+          "value": 0.0015239999999998588
+        },
+        "dh": {
+          "policy": "DIAGNOSTIC_ONLY",
+          "value": 0.0015239999999998588
+        },
+        "placementX": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        },
+        "placementY": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        },
+        "renderedRotation": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        }
+      },
+      "status": "MEASURED",
+      "expected": {
+        "x": 94,
+        "y": 31,
+        "width": 6.094476,
+        "height": 6.094476,
+        "rotation": 0
+      },
+      "actual": {
+        "x": 93.98,
+        "y": 30.988,
+        "width": 6.096,
+        "height": 6.096
+      },
+      "delta": {
+        "dx": -0.01999999999999602,
+        "dy": -0.012000000000000455,
+        "dw": 0.0015239999999998588,
+        "dh": 0.0015239999999998588
+      },
+      "rotationDeltaRendered": null,
+      "rotationDeltaCom": 0,
+      "verdict": "WITHIN_FIXTURE_TOLERANCE"
+    },
+    {
+      "id": "HRI_1",
+      "registration": "UNIQUE_EXACT_TILE",
+      "metrics": {
+        "dx": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        },
+        "dy": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        },
+        "dw": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        },
+        "dh": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        },
+        "placementX": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        },
+        "placementY": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        },
+        "renderedRotation": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        }
+      },
+      "status": "UNRESOLVED",
+      "expected": {
+        "x": 9.4,
+        "y": 50,
+        "width": 26.747978,
+        "height": 9,
+        "rotation": 0
+      },
+      "actual": null,
+      "delta": null,
+      "rotationDeltaRendered": null,
+      "rotationDeltaCom": 0,
+      "verdict": "CANONICAL_VISUAL_GATE_FAILED"
+    },
+    {
+      "id": "LOGO",
+      "registration": "UNIQUE_EXACT_TILE",
+      "metrics": {
+        "dx": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        },
+        "dy": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        },
+        "dw": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        },
+        "dh": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        },
+        "placementX": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        },
+        "placementY": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        },
+        "renderedRotation": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        }
+      },
+      "status": "UNRESOLVED",
+      "expected": {
+        "x": 94,
+        "y": 7,
+        "width": 18,
+        "height": 9,
+        "rotation": 0
+      },
+      "actual": null,
+      "delta": null,
+      "rotationDeltaRendered": null,
+      "rotationDeltaCom": 0,
+      "verdict": "CANONICAL_VISUAL_GATE_FAILED"
+    },
+    {
+      "id": "RULE",
+      "registration": "UNIQUE_EXACT_TILE",
+      "metrics": {
+        "dx": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        },
+        "dy": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        },
+        "dw": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        },
+        "dh": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        },
+        "placementX": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        },
+        "placementY": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        },
+        "renderedRotation": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        }
+      },
+      "status": "UNRESOLVED",
+      "expected": {
+        "x": 6,
+        "y": 21,
+        "width": 108,
+        "height": 0.001,
+        "rotation": 359.99946948352306
+      },
+      "actual": null,
+      "delta": null,
+      "rotationDeltaRendered": null,
+      "rotationDeltaCom": 0.0005305164769424664,
+      "verdict": "CANONICAL_VISUAL_GATE_FAILED"
+    },
+    {
+      "id": "BORDER",
+      "registration": "UNIQUE_ALL_INK_PIXELS",
+      "metrics": {
+        "dx": {
+          "policy": "DIAGNOSTIC_ONLY",
+          "value": -0.24833333333333307
+        },
+        "dy": {
+          "policy": "DIAGNOSTIC_ONLY",
+          "value": -0.24833333333333307
+        },
+        "dw": {
+          "policy": "DIAGNOSTIC_ONLY",
+          "value": 0.5116666666666703
+        },
+        "dh": {
+          "policy": "DIAGNOSTIC_ONLY",
+          "value": 0.5066666666666606
+        },
+        "placementX": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        },
+        "placementY": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        },
+        "renderedRotation": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        }
+      },
+      "status": "MEASURED",
+      "expected": {
+        "x": 3,
+        "y": 3,
+        "width": 114,
+        "height": 74,
+        "rotation": 0
+      },
+      "actual": {
+        "x": 2.751666666666667,
+        "y": 2.751666666666667,
+        "width": 114.51166666666667,
+        "height": 74.50666666666666
+      },
+      "delta": {
+        "dx": -0.24833333333333307,
+        "dy": -0.24833333333333307,
+        "dw": 0.5116666666666703,
+        "dh": 0.5066666666666606
+      },
+      "rotationDeltaRendered": null,
+      "rotationDeltaCom": 0,
+      "verdict": "WITHIN_FIXTURE_TOLERANCE"
+    }
+  ]
+}

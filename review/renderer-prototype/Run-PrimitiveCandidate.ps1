@@ -16,7 +16,7 @@ $run=@(Get-ChildItem -LiteralPath $evidence -Directory|Where-Object{$_.Name -lik
 $coldCode=$LASTEXITCODE
 if($coldCode -ne 0){
  foreach($alias in @('LATEST_NATIVE_OUTPUT.btw','LATEST_NATIVE_REPORT.json')){$p=Join-Path $base $alias;if(Test-Path -LiteralPath $p){Remove-Item -LiteralPath $p -Force}}
- $file=Join-Path $run 'native-output.btw';if(Test-Path -LiteralPath $file){Move-Item -LiteralPath $file -Destination ($file+'.COLD_FAILED') -Force}
+ foreach($name in @('native-output.btw','candidate.cold-pending.btw')){$file=Join-Path $run $name;if(Test-Path -LiteralPath $file){Move-Item -LiteralPath $file -Destination ($file+'.COLD_FAILED') -Force}}
  Compress-Archive -Path (Join-Path $run '*') -DestinationPath (Join-Path $base 'NATIVE_BUILD_RESULT.zip') -CompressionLevel Optimal -Force
  exit 1
 }

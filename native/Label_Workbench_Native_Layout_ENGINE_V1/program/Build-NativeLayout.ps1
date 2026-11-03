@@ -211,9 +211,15 @@ try{
     if($null -ne $watchdog){try{if(-not $watchdog.HasExited){$watchdog.Kill()}}catch{}}
     try{
         if($exitCode -eq 0 -and $null -ne $report -and $report.reopen -ceq 'PASS'){
-            Copy-Item -LiteralPath $report.output -Destination $latest
-            Copy-Item -LiteralPath $reportPath -Destination $latestReport
-            $runtime.status='VERIFIED_CANDIDATE_NOT_PRODUCT_ACCEPTANCE'
+            if(@($plan.objects|Where-Object{$_.type -ceq 'image'}).Count){
+                $pending=Join-Path $runDir 'candidate.cold-pending.btw';Move-Item -LiteralPath $report.output -Destination $pending -Force
+                $report.output=$pending;$report.status='HOT_VERIFIED_COLD_IMAGE_PENDING';$report|ConvertTo-Json -Depth 24|Set-Content -LiteralPath $reportPath -Encoding UTF8
+                $runtime.status='HOT_VERIFIED_COLD_IMAGE_PENDING'
+            }else{
+                Copy-Item -LiteralPath $report.output -Destination $latest
+                Copy-Item -LiteralPath $reportPath -Destination $latestReport
+                $runtime.status='VERIFIED_CANDIDATE_NOT_PRODUCT_ACCEPTANCE'
+            }
         }else{
             $runtime.status='FAILED_OR_BLOCKED'
             foreach($name in @('candidate.unverified.btw','native-output.btw')){
