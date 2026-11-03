@@ -1,7 +1,7 @@
 {
   "enabled": true,
-  "purpose": "Retry Hybrid Renderer with guarded barcode default-TopLeft omission handling while preserving DataSources/HRI/XDimension; require Save/Reopen and 600dpi BMP Visual QA.",
-  "requestedAt": "2026-11-03T11:56:00+08:00",
+  "purpose": "Retry Hybrid Renderer after aligning X/Y COM and reopen tolerance to 0.05 mm BarTender coordinate quantization; keep 600dpi BMP Visual QA unchanged.",
+  "requestedAt": "2026-11-03T12:00:00+08:00",
   "requestedBy": "YKC1117",
   "target": "experiment/com-renderer-prototype"
 }
