@@ -1,7 +1,7 @@
 {
   "enabled": true,
-  "purpose": "Verify formal Build-NativeLayout Auto route after Hybrid/Legacy self-check profile split: exact four-object candidate, Save/Reopen, stable SHA and unique 600dpi Visual QA.",
-  "requestedAt": "2026-11-03T13:37:00+08:00",
+  "purpose": "Stress-test the already-passing formal Hybrid route with six independent Designer Text slots plus Code128 and Data Matrix; require Save/Reopen, source isolation, stable SHA and 600dpi Visual QA.",
+  "requestedAt": "2026-11-03T13:55:00+08:00",
   "requestedBy": "YKC1117",
   "target": "experiment/com-renderer-prototype"
 }
