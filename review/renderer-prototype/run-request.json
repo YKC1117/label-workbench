@@ -1,7 +1,7 @@
 {
   "enabled": true,
-  "purpose": "Retry four-object real BarTender renderer after formal candidate Text persistence regression update.",
-  "requestedAt": "2026-11-03T11:27:00+08:00",
+  "purpose": "Capture real Text X/Y/RotationAngle capability matrix before changing geometry contract.",
+  "requestedAt": "2026-11-03T11:35:00+08:00",
   "requestedBy": "YKC1117",
   "target": "experiment/com-renderer-prototype"
 }
