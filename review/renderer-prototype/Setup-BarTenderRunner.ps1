@@ -9,7 +9,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
-$SetupRevision = '20261103.4'
+$SetupRevision = '20261103.5'
 
 function Write-Step([string]$Text) {
     Write-Host ("`n==> " + $Text) -ForegroundColor Cyan
@@ -17,6 +17,38 @@ function Write-Step([string]$Text) {
 
 function Fail([string]$Message) {
     throw $Message
+}
+
+function Read-HiddenLine([string]$Prompt) {
+    $secure = Read-Host $Prompt -AsSecureString
+    $ptr = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secure)
+    try {
+        return [Runtime.InteropServices.Marshal]::PtrToStringBSTR($ptr)
+    } finally {
+        if ($ptr -ne [IntPtr]::Zero) {
+            [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($ptr)
+        }
+    }
+}
+
+function Normalize-RegistrationToken([string]$InputText) {
+    if ([string]::IsNullOrWhiteSpace($InputText)) { return '' }
+    $value = $InputText.Trim()
+
+    # Accept either the raw token or the entire GitHub-generated config.cmd line.
+    $match = [regex]::Match($value, '(?i)(?:^|\s)--token\s+["'']?([^\s"'']+)')
+    if ($match.Success) {
+        $value = $match.Groups[1].Value.Trim()
+    }
+
+    # A registration token must be one opaque value, never a command line.
+    if ($value -match '\s' -or $value -match '^(?:\.|\\|/)?config\.cmd$' -or $value -match '--(?:url|token|name|labels)') {
+        Fail 'Could not isolate a GitHub runner registration token from the pasted text. Generate a fresh token and paste either the token itself or the complete config.cmd line.'
+    }
+    if ($value.Length -lt 20 -or $value.Length -gt 512) {
+        Fail 'The parsed GitHub runner registration token has an unexpected length. Generate a fresh token and try again.'
+    }
+    return $value
 }
 
 Write-Host ('Label Workbench Runner Setup ' + $SetupRevision) -ForegroundColor Green
@@ -96,8 +128,9 @@ if (-not (Test-Path -LiteralPath $configCmd) -or -not (Test-Path -LiteralPath $r
 
 if (-not (Test-Path -LiteralPath $runnerConfig)) {
     if ([string]::IsNullOrWhiteSpace($RegistrationToken)) {
-        $RegistrationToken = Read-Host 'Paste the one-time GitHub self-hosted runner registration token'
+        $RegistrationToken = Read-HiddenLine 'Paste a NEW GitHub runner token OR the complete config.cmd line (input is hidden)'
     }
+    $RegistrationToken = Normalize-RegistrationToken $RegistrationToken
     if ([string]::IsNullOrWhiteSpace($RegistrationToken)) { Fail 'A GitHub runner registration token is required.' }
 
     Write-Step 'Registering runner with the dedicated bartender label'
