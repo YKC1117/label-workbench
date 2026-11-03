@@ -1,7 +1,7 @@
 {
   "enabled": true,
-  "purpose": "Retry four-object real BarTender renderer after line-oriented candidate Text patch correction.",
-  "requestedAt": "2026-11-03T11:14:00+08:00",
+  "purpose": "Retry four-object real BarTender renderer after geometry-font-reset regression alignment.",
+  "requestedAt": "2026-11-03T11:18:00+08:00",
   "requestedBy": "YKC1117",
   "target": "experiment/com-renderer-prototype"
 }
