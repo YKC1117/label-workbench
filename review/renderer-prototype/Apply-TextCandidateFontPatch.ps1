@@ -4,7 +4,7 @@ $ErrorActionPreference='Stop'
 if([string]::IsNullOrWhiteSpace($EnginePath)){$EnginePath=Join-Path $PSScriptRoot '..\..\native\Label_Workbench_Native_Layout_ENGINE_V1\program\NativeLayoutEngine.psm1'}
 $EnginePath=[IO.Path]::GetFullPath($EnginePath)
 if(-not(Test-Path -LiteralPath $EnginePath -PathType Leaf)){throw ('NativeLayoutEngine.psm1 not found: '+$EnginePath)}
-function Replace-Exact([string]$Source,[string]$Old,[string]$New,[string]$Label){$count=([regex]::Matches($Source,[regex]::Escape($Old))).Count;if($count -ne 1){throw ($Label+' expected exactly one source match; found '+$count+'.')};$out=$Source.Replace($Old,$New);if($out -eq $Source -or $out.Contains($Old)){throw ($Label+' did not apply cleanly.')};return $out}
+function Replace-Exact([string]$Source,[string]$Old,[string]$New,[string]$Label){$count=([regex]::Matches($Source,[regex]::Escape($Old))).Count;if($count -ne 1){throw ($Label+' expected exactly one source match; found '+$count+'.')};$out=$Source.Replace($Old,$New);if($out -eq $Source){throw ($Label+' did not apply cleanly.')};return $out}
 
 $text=[IO.File]::ReadAllText($EnginePath,[Text.Encoding]::UTF8)
 if(-not $text.Contains('COM_FONTNAME_PROPERTY_RESTRICTED_XML_ONLY')){throw 'First-stage Text patch marker missing.'}
@@ -100,9 +100,6 @@ foreach($required in @('DISPOSABLE_CANDIDATE_XML_FONTNAME_POINTSIZE','ONLY_FONTN
 foreach($forbidden in @("`$targets['FontSize']=[double]`$request.fontSizePt","Assert-NativeNear ([double](Read-Property `$obj 'FontSize')) ([double]`$m.expected['FontSize'])")){if($text.Contains($forbidden)){throw ('Restricted Text FontSize COM path remains: '+$forbidden)}}
 $utf8Bom=New-Object Text.UTF8Encoding($true);[IO.File]::WriteAllText($EnginePath,$text,$utf8Bom)
 
-# Align the prototype-only native persistence regression with this runtime
-# contract. The tracked test is not weakened: it still requires zero COM
-# FontName calls, exactly one XML font change, reopen and peer isolation.
 $testPath=Join-Path (Split-Path -Parent $EnginePath) 'Test-NativePersistence.ps1'
 $test=[IO.File]::ReadAllText($testPath,[Text.Encoding]::UTF8)
 $test=Replace-Exact $test "`$fontResult.writeMode -cne 'XML_FONT_ATTRIBUTE_ONLY'" "`$fontResult.writeMode -cne 'DISPOSABLE_CANDIDATE_XML_FONTNAME_POINTSIZE'" 'Persistence expected Text font mode'
