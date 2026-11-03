@@ -1,7 +1,7 @@
 {
   "enabled": true,
-  "purpose": "Retry real BarTender FontName binding diagnostic using production ComBridge setup lifecycle.",
-  "requestedAt": "2026-11-03T10:49:00+08:00",
+  "purpose": "Run disposable Text XML normalization diagnostic on real BarTender before changing renderer contract.",
+  "requestedAt": "2026-11-03T10:53:00+08:00",
   "requestedBy": "YKC1117",
   "target": "experiment/com-renderer-prototype"
 }
