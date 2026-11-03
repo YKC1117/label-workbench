@@ -69,9 +69,4 @@ $text=Replace-Exact $text $oldReopen $newReopen 'Reopen Text PointSize XML readb
 foreach($required in @('DISPOSABLE_CANDIDATE_XML_FONTNAME_POINTSIZE','ONLY_FONTNAME_POINTSIZE_AND_BARTENDER_DERIVED_CHARACTERSET_HEIGHT')){if(-not $text.Contains($required)){throw ('Candidate Text patch marker missing: '+$required)}}
 if($text.Contains("`$targets['FontSize']=[double]`$request.fontSizePt")){throw 'Restricted Text FontSize COM write remains.'}
 $utf8Bom=New-Object Text.UTF8Encoding($true);[IO.File]::WriteAllText($EnginePath,$text,$utf8Bom)
-
-$testPath=Join-Path (Split-Path -Parent $EnginePath) 'Test-NativePersistence.ps1'
-$test=[IO.File]::ReadAllText($testPath,[Text.Encoding]::UTF8)
-$test=Replace-Exact $test "`$fontResult.writeMode -cne 'XML_FONT_ATTRIBUTE_ONLY'" "`$fontResult.writeMode -cne 'DISPOSABLE_CANDIDATE_XML_FONTNAME_POINTSIZE'" 'Persistence expected Text font mode'
-[IO.File]::WriteAllText($testPath,$test,$utf8Bom)
 Write-Host 'Prototype disposable-candidate Text FontName/PointSize XML patch applied.' -ForegroundColor Green
