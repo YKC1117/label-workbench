@@ -15,9 +15,13 @@ function evaluate(preview,actual,readback){
     const fail=policy==='SYMBOL_INK'
       ? Math.abs(delta.centerX)>TOLERANCE.centerMm||Math.abs(delta.centerY)>TOLERANCE.centerMm||Math.abs(delta.width)>TOLERANCE.sizeMm||Math.abs(delta.height)>TOLERANCE.sizeMm
       : Math.abs(b.x-expected.x)>TOLERANCE.edgeMm||b.y<expected.y-TOLERANCE.edgeMm||b.x+b.width>expected.x+expected.width+TOLERANCE.edgeMm||b.y+b.height>expected.y+expected.height+TOLERANCE.edgeMm;
-    const outside=G.outOfBounds(b,preview.label,TOLERANCE.edgeMm),anchor=r?.referencePoint==='TopLeft';
+    const outside=G.outOfBounds(b,preview.label,TOLERANCE.edgeMm);
+    const explicitTopLeft=r?.referencePoint==='TopLeft';
+    const documentedTextDefault=p.type==='text'&&r?.referencePointPresent===false&&r?.referencePoint==null;
+    const anchor=explicitTopLeft||documentedTextDefault;
+    const anchorEvidence=explicitTopLeft?'EXPLICIT_XML_TOP_LEFT':documentedTextDefault?'BARTENDER_DOCUMENTED_DEFAULT_TOP_LEFT_PLUS_VISUAL_GEOMETRY':'UNPROVEN';
     const supported=p.quality!=='DIAGNOSTIC_ONLY';
-    return {id:p.id,status:!supported||delta.rotation===null||!anchor?'UNRESOLVED':fail||outside||Math.abs(delta.rotation)>TOLERANCE.rotationDeg?'FAIL':'PASS',policy,expected,actual:b,delta,outOfBounds:outside,referencePoint:r?.referencePoint??null,rotationEvidence:'COM_READBACK_ONLY',renderedRotation:'NOT_INDEPENDENTLY_VERIFIED',barcodeFootprint:p.footprint};
+    return {id:p.id,status:!supported||delta.rotation===null||!anchor?'UNRESOLVED':fail||outside||Math.abs(delta.rotation)>TOLERANCE.rotationDeg?'FAIL':'PASS',policy,expected,actual:b,delta,outOfBounds:outside,referencePoint:r?.referencePoint??null,referencePointPresent:r?.referencePointPresent??null,anchorEvidence,rotationEvidence:'COM_READBACK_ONLY',renderedRotation:'NOT_INDEPENDENTLY_VERIFIED',barcodeFootprint:p.footprint};
   });
   const overlaps=[];
   for(let i=0;i<objects.length;i++)for(let j=i+1;j<objects.length;j++){
@@ -26,6 +30,6 @@ function evaluate(preview,actual,readback){
     overlaps.push({ids:[a.id,b.id],expectedAreaMm2:expected,actualAreaMm2:actualArea,unexpected:actualArea>expected+TOLERANCE.overlapAreaMm2});
   }
   const status=objects.some(o=>o.status==='UNRESOLVED')?'UNRESOLVED':objects.some(o=>o.status==='FAIL')||overlaps.some(o=>o.unexpected)?'FAIL':'PASS_PLACEMENT_AND_SIZE';
-  return {schema:'lwb-dual-render-qa-v1',status,tolerance:TOLERANCE,productAcceptance:'NOT_RUN',scope:'upright placement, footprint, containment and API rotation; no independent optical angle estimation',objects,overlaps};
+  return {schema:'lwb-dual-render-qa-v1',status,tolerance:TOLERANCE,productAcceptance:'NOT_RUN',scope:'upright placement, footprint, containment and API rotation; fresh normal Text may use BarTender documented default Top Left only when XML omits ReferencePoint and full-page visual geometry passes; no independent optical angle estimation',objects,overlaps};
 }
 module.exports={evaluate,TOLERANCE};
