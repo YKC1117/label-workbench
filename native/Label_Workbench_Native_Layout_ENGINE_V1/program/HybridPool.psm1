@@ -47,8 +47,16 @@ function Invoke-HybridPoolBuild($formats,$plan,[string]$textPoolPath,[string]$ru
                     $properties=[ordered]@{}
                     foreach($property in @('Name','Type','X','Y','RotationAngle','DoNotPrint')){$properties[$property]=Read-Property $peer $property}
                     if([int]$properties.Type -eq 4){$properties['Height']=Read-Property $peer 'Height'}
+                    if([int]$properties.Type -in @(3,6)){foreach($property in @('Width','Height')){$properties[$property]=Read-Property $peer $property}}
+                    if([int]$properties.Type -eq 2){foreach($property in @('LineStartX','LineStartY','LineEndX','LineEndY','LineThickness')){$properties[$property]=Read-Property $peer $property}}
                     if([int]$properties.Type -eq 5){foreach($property in @('FontName','FontSize','FontBold','FontItalic')){$properties[$property]=Read-Property $peer $property}}
-                    $rows[$peerName]=[ordered]@{xml=$xmlText;xmlKey=Get-NativeXmlKey (Read-NativeXml $xmlText);properties=$properties;valueReadable=$valueReadable;value=$value}
+                    $raster=$null
+                    if([int]$properties.Type -eq 6){
+                        foreach($property in @('PicturePath','PreserveAspectRatio')){$properties[$property]=Read-Property $peer $property}
+                        $raster=Export-NativeMeasurement $peer (Join-Path $runDir ('peer-'+[guid]::NewGuid().ToString('N').Substring(0,12)+'.bmp')) 600
+                    }
+                    if([int]$properties.Type -eq 4 -and (Get-NativeHumanReadableVisibility (Read-NativeXml $xmlText)) -cne 'None'){$properties['HumanReadableValue']=Read-Property $peer 'HumanReadableValue'}
+                    $rows[$peerName]=[ordered]@{imageRaster=$raster;xml=$xmlText;xmlKey=Get-NativeXmlKey (Read-NativeXml $xmlText);properties=$properties;valueReadable=$valueReadable;value=$value}
                 }finally{Release-NativeCom $peer}
             }
             return $rows
@@ -67,8 +75,10 @@ function Invoke-HybridPoolBuild($formats,$plan,[string]$textPoolPath,[string]$ru
                         if([string]$actual -cne [string]$before.properties[$property]){$propertyChanges+=,[ordered]@{property=$property;before=$before.properties[$property];after=$actual}}
                     }
                     $actualValue=if($before.valueReadable){[string](Read-Property $peer 'Value')}else{$null}
-                    $changed=($now -cne $before.xmlKey -or $propertyChanges.Count -gt 0 -or ($before.valueReadable -and $actualValue -cne $before.value))
-                    $audit+=,[ordered]@{name=$peerName;status=if($changed){'FAIL'}else{'PASS'};strictXmlEqual=($now -ceq $before.xmlKey);propertiesEqual=($propertyChanges.Count -eq 0);originalRetainedPeer=(-not [bool]$before.properties.DoNotPrint);valueEqual=if($before.valueReadable){$actualValue -ceq $before.value}else{$null}}
+                    $imageEqual=$true;$afterRaster=$null
+                    if($null -ne $before.imageRaster){$afterRaster=Export-NativeMeasurement $peer (Join-Path $runDir ('peer-'+[guid]::NewGuid().ToString('N').Substring(0,12)+'.bmp')) 600;$imageEqual=($afterRaster.sha256 -ceq $before.imageRaster.sha256)}
+                    $changed=(-not $imageEqual -or $now -cne $before.xmlKey -or $propertyChanges.Count -gt 0 -or ($before.valueReadable -and $actualValue -cne $before.value))
+                    $audit+=,[ordered]@{name=$peerName;imageRasterEqual=$imageEqual;imageRasterBefore=$before.imageRaster;imageRasterAfter=$afterRaster;status=if($changed){'FAIL'}else{'PASS'};strictXmlEqual=($now -ceq $before.xmlKey);propertiesEqual=($propertyChanges.Count -eq 0);originalRetainedPeer=(-not [bool]$before.properties.DoNotPrint);valueEqual=if($before.valueReadable){$actualValue -ceq $before.value}else{$null}}
                     if($changed){
                         $stem=$prefix+'-peer-'+$index
                         $before.xml|Set-Content -LiteralPath ($stem+'-before.xml') -Encoding UTF8
@@ -110,6 +120,7 @@ function Invoke-HybridPoolBuild($formats,$plan,[string]$textPoolPath,[string]$ru
             $readText=[string](Invoke-ComMethod $obj 'GetXML' @($true,$true));if($prefix){$readText|Set-Content -LiteralPath ($prefix+'-payload-readback.xml') -Encoding UTF8}
             $read=Read-NativeXml $readText;$state=Get-NativeLiteralState $read $expectedRoot
             if($state.value -cne $payload -or [string](Read-Property $obj 'Value') -cne $payload){throw 'Hybrid target payload readback mismatch.'}
+            if($expectedRoot -ceq 'BarCode-Code-128' -and (Get-NativeHumanReadableVisibility $read) -cne 'None' -and [string](Read-Property $obj 'HumanReadableValue') -cne $payload){throw 'Native visible HRI did not track challenge payload.'}
             if($state.sourceId -cne $id){throw 'Hybrid target source identity changed.'}
             $expectedTarget=Read-NativeXml $beforeText
             $expectedTarget.SelectSingleNode('/*/*[local-name()="DataSources"]/*/*[local-name()="Value"]').InnerText=$payload
@@ -275,6 +286,59 @@ function Invoke-HybridPoolBuild($formats,$plan,[string]$textPoolPath,[string]$ru
             return $name
         }
 
+        function Assert-HybridAngle([double]$actual,[double]$expected,[string]$name){
+            $delta=(($actual-$expected+540)%360+360)%360-180
+            Assert-NativeNear $delta 0 0.01 $name
+        }
+        function Show-HybridNativeHri($obj,$request,[string]$prefix){
+            $before=Read-NativeXml ([string](Invoke-ComMethod $obj 'GetXML' @($true,$true)))
+            $write=Read-NativeXml $before.OuterXml;$h=$write.SelectSingleNode('/*/HumanReadable');$font=$h.SelectSingleNode('./BarCodeTextData/Font')
+            if($null -eq $font -or $font.GetAttribute('FontName') -cne 'Arial' -or [double]::Parse($font.GetAttribute('PointSize'),[Globalization.CultureInfo]::InvariantCulture) -ne 12){throw 'Native HRI font contract not Arial12.'}
+            if($request.caption.fontFamily -cne 'Arial' -or $request.caption.fontSizePt -ne 12 -or $request.caption.alignment -cne 'center' -or $request.caption.gapMm -ne 1.1){throw 'Unsupported native HRI request.'}
+            $h.RemoveAttribute('Visibility');[void](Invoke-ComMethod $obj 'SetXML' @($write.OuterXml))
+            $after=Read-NativeXml ([string](Invoke-ComMethod $obj 'GetXML' @($true,$true)))
+            if((Get-NativeXmlKey $before.SelectSingleNode('/*/DataSources')) -cne (Get-NativeXmlKey $after.SelectSingleNode('/*/DataSources'))){throw 'HRI write changed main DataSources.'}
+            if((Get-NativeHumanReadableVisibility $after) -ceq 'None' -or [string](Read-Property $obj 'HumanReadableValue') -cne [string]$request.value){throw 'Native HRI value/visibility mismatch.'}
+            $after.OuterXml|Set-Content -LiteralPath ($prefix+'-hri-presave.xml') -Encoding UTF8
+            return [ordered]@{status='NATIVE_HRI_READBACK_VISUAL_PENDING';fontName='Arial';fontSizePt=12;value=[string](Read-Property $obj 'HumanReadableValue')}
+        }
+        function New-HybridPrimitive($document,[ref]$objectsRef,$request,[string]$prefix){
+            $objects=$objectsRef.Value;$expectedType=if($request.type -ceq 'line'){2}elseif($request.type -ceq 'box'){3}else{6};$root=if($expectedType -eq 2){'Line'}elseif($expectedType -eq 3){'Box'}else{'Picture'}
+            $beforeNames=@(Get-NativeObjectNames $objects);$peers=Get-HybridPeerSnapshot $objects ''
+            $created=Invoke-ComMethod $objects 'Create' @([int]$expectedType);if($null -eq $created){throw 'Primitive Create returned null.'}
+            $name=[string](Read-Property $created 'Name');Release-NativeCom $created;Release-NativeCom $objects;$objects=Read-Property $document 'Objects';$objectsRef.Value=$objects
+            $delta=@(Get-NativeNameDelta $beforeNames @(Get-NativeObjectNames $objects));if($delta.Count -ne 1 -or $delta[0] -cne $name){throw 'Primitive creation identity delta mismatch.'}
+            $obj=Find-NativeObject $objects $name
+            try{
+                $xml=Read-NativeXml ([string](Invoke-ComMethod $obj 'GetXML' @($true,$true)))
+                if([int](Read-Property $obj 'Type') -ne $expectedType -or $xml.DocumentElement.LocalName -cne $root){throw 'Primitive creation type/root mismatch.'}
+                $xml.DocumentElement.SetAttribute('ReferencePoint',[string]$request.referencePoint);[void](Invoke-ComMethod $obj 'SetXML' @($xml.OuterXml))
+                $targets=[ordered]@{};$asset=$null
+                if($request.type -ceq 'line'){
+                    $targets.LineStartX=[double]$request.startX;$targets.LineStartY=[double]$request.startY;$targets.LineEndX=[double]$request.endX;$targets.LineEndY=[double]$request.endY;$targets.LineThickness=[double]$request.strokeMm
+                }else{
+                    if($request.type -ceq 'image'){
+                        $asset=Join-Path $runDir ('asset-'+$request.id+'.png');[IO.File]::WriteAllBytes($asset,[Convert]::FromBase64String(([string]$request.dataUri).Substring(22)))
+                        if((Get-FileHash $asset -Algorithm SHA256).Hash -cne [string]$request.assetSha256){throw 'Image asset SHA mismatch.'}
+                        Write-Property $obj 'PicturePath' $asset;Write-Property $obj 'PreserveAspectRatio' $false
+                    }
+                    $targets.X=[double]$request.xMm;$targets.Y=[double]$request.yMm;$targets.Width=[double]$request.widthMm;$targets.Height=[double]$request.heightMm;$targets.RotationAngle=[double]$request.rotationDeg
+                    if($request.type -ceq 'box'){$targets.LineThickness=[double]$request.strokeMm;Write-Property $obj 'CornerRadius' ([double]0)}
+                }
+                foreach($key in $targets.Keys){Write-Property $obj $key $targets[$key]}
+                $properties=[ordered]@{}
+                foreach($key in $targets.Keys){$actual=[double](Read-Property $obj $key);Assert-NativeNear $actual ([double]$targets[$key]) 0.05 ('Primitive '+$request.id+'.'+$key);$properties[$key]=[ordered]@{requested=[double]$targets[$key];actual=$actual}}
+                if($request.type -ceq 'line'){
+                    $properties.X=[ordered]@{requested=([double]$request.startX+[double]$request.endX)/2;actual=[double](Read-Property $obj 'X')};$properties.Y=[ordered]@{requested=([double]$request.startY+[double]$request.endY)/2;actual=[double](Read-Property $obj 'Y')}
+                    Assert-HybridAngle ([double](Read-Property $obj 'RotationAngle')) ([double]$request.rotationDeg) 'Primitive line rotation'
+                }
+                Write-Property $obj 'DoNotPrint' $false;$after=Read-NativeXml ([string](Invoke-ComMethod $obj 'GetXML' @($true,$true)))
+                $ref=[string]$after.DocumentElement.GetAttribute('ReferencePoint');if($ref -cne [string]$request.referencePoint -and -not($request.referencePoint -ceq 'TopLeft' -and -not $ref)){throw 'Primitive anchor readback mismatch.'}
+                Assert-HybridPeerSnapshot $objects $peers ($prefix+'-creation')
+                $after.OuterXml|Set-Content -LiteralPath ($prefix+'-presave.xml') -Encoding UTF8
+                return [ordered]@{id=[string]$request.id;type=[string]$request.type;physicalName=$name;nativeType=$expectedType;geometry=[ordered]@{properties=$properties};assetPath=$asset;reopenEditable='NOT_RUN'}
+            }finally{Release-NativeCom $obj}
+        }
         function Capture-HybridLegacyDiagnostic {
             $diagDir=Join-Path $runDir 'legacy-payload-diagnostic';[void][IO.Directory]::CreateDirectory($diagDir)
             $doc=$null;$objs=$null;$summary=[ordered]@{diagnosticOnly=$true;candidatePublication='PROHIBITED';imports=@();status='STARTED'}
@@ -302,7 +366,7 @@ function Invoke-HybridPoolBuild($formats,$plan,[string]$textPoolPath,[string]$ru
         }
         # One bounded legacy replay in this engineering stress run captures the
         # previously missing peer delta; the production transaction stays strict.
-        $isGeneralCandidate=($null -ne $plan.PSObject.Properties['runtimeProfile'] -and $plan.runtimeProfile -ceq 'candidate-general-v1')
+        $isGeneralCandidate=($null -ne $plan.PSObject.Properties['runtimeProfile'] -and $plan.runtimeProfile -cin @('candidate-general-v1','candidate-primitives-v1'))
         if(-not $isGeneralCandidate -and @($plan.objects|Where-Object{$_.type -eq 'text'}).Count -ge 3){Capture-HybridLegacyDiagnostic}
 
         $candidate=Join-Path $runDir 'candidate.unverified.btw';$accepted=Join-Path $runDir 'native-output.btw'
@@ -341,7 +405,7 @@ function Invoke-HybridPoolBuild($formats,$plan,[string]$textPoolPath,[string]$ru
             if(@($plan.objects|Where-Object{$_.type -eq 'code128'}).Count -gt 0){if(-not(Test-Path -LiteralPath $codeComponent -PathType Leaf)){throw 'Bundled proven-code128.btc is missing.'};$h=(Get-FileHash -LiteralPath $codeComponent -Algorithm SHA256).Hash;if($h -cne '0B1E2481BCDE6E5CF1D084599F822DC3027AB19215530B7776296B40A59899F2'){throw 'Code128 component hash mismatch.'}}
             $dmComponent=$null;if(@($plan.objects|Where-Object{$_.type -eq 'datamatrix'}).Count -gt 0){$dmComponent=Resolve-NativeDataMatrixComponent $runDir;$report['dataMatrixComponent']=$dmComponent}
             $dpi=600
-            foreach($request in @($plan.objects|Where-Object{$_.type -ne 'text'})){
+            foreach($request in @($plan.objects|Where-Object{$_.type -in @('code128','datamatrix')})){
                 $root=if($request.type -eq 'code128'){'BarCode-Code-128'}else{'BarCode-DataMatrix'};$component=if($request.type -eq 'code128'){$codeComponent}else{$dmComponent}
                 $prefix=Join-Path $runDir ('hybrid-'+$request.id);$ref=[ref]$objects
                 $name=Insert-HybridComponent $document $ref $component $root $request $prefix;$objects=$ref.Value
@@ -354,12 +418,16 @@ function Invoke-HybridPoolBuild($formats,$plan,[string]$textPoolPath,[string]$ru
                     $sizing=Fit-NativeXDimensionNearest $obj $request ($prefix+'-size') $dpi
                     if($request.rotationDeg -ne 0){[void](Export-NativeMeasurement $obj ($prefix+'-upright.bmp') 600)}
                     $geometry=Set-HybridBarcodeGeometry $obj $request $root $prefix
+                    if($request.humanReadable -cne 'none'){$human=Show-HybridNativeHri $obj $request $prefix}
                     Assert-HybridPeerSnapshot $objects $geometryPeers ($prefix+'-geometry')
                     Write-Property $obj 'DoNotPrint' $false;if([bool](Read-Property $obj 'DoNotPrint')){throw 'Hybrid barcode remained DoNotPrint.'}
                     $report.objects+=,[ordered]@{id=[string]$request.id;type=[string]$request.type;physicalName=$name;nativeType=4;humanReadable=$human;sizing=$sizing;geometry=$geometry;reopenEditable='NOT_RUN'}
                 }finally{Release-NativeCom $obj}
             }
 
+            foreach($request in @($plan.objects|Where-Object{$_.type -in @('line','box','image')}|Sort-Object @{Expression={if($_.type -ceq 'box'){1}else{0}}})){
+                $ref=[ref]$objects;$entry=New-HybridPrimitive $document $ref $request (Join-Path $runDir ('hybrid-'+$request.id));$objects=$ref.Value;$report.objects+=,$entry
+            }
             if($isGeneralCandidate){
                 [void](Invoke-ComMethod $document 'ExportToFile' @((Join-Path $runDir 'settled-presave.bmp'),'BMP',[int]0,[int]600,[int]2))
                 if(-not(Test-Path -LiteralPath (Join-Path $runDir 'settled-presave.bmp'))){throw 'Pre-save layout settlement render missing.'}
@@ -382,13 +450,15 @@ function Invoke-HybridPoolBuild($formats,$plan,[string]$textPoolPath,[string]$ru
             foreach($request in @($plan.objects)){
                 $entry=@($report.objects|Where-Object{$_.id -ceq $request.id})[0];$obj=Find-NativeObject $reopenObjects ([string]$entry.physicalName)
                 try{
-                    $expectedType=if($request.type -eq 'text'){5}else{4};if([int](Read-Property $obj 'Type') -ne $expectedType){throw ('Hybrid reopen Type mismatch: '+$request.id)}
-                    if([string](Read-Property $obj 'Value') -cne [string]$request.value){throw ('Hybrid reopen payload mismatch: '+$request.id)}
+                    $primitive=($request.type -in @('line','box','image'));$expectedType=if($request.type -eq 'text'){5}elseif($request.type -eq 'line'){2}elseif($request.type -eq 'box'){3}elseif($request.type -eq 'image'){6}else{4};if([int](Read-Property $obj 'Type') -ne $expectedType){throw ('Hybrid reopen Type mismatch: '+$request.id)}
+                    if(-not $primitive -and [string](Read-Property $obj 'Value') -cne [string]$request.value){throw ('Hybrid reopen payload mismatch: '+$request.id)}
                     Assert-NativeNear ([double](Read-Property $obj 'X')) ([double]$entry.geometry.properties.X.requested) 0.05 ('Hybrid reopen X '+$request.id)
                     Assert-NativeNear ([double](Read-Property $obj 'Y')) ([double]$entry.geometry.properties.Y.requested) 0.05 ('Hybrid reopen Y '+$request.id)
-                    Assert-NativeNear ([double](Read-Property $obj 'RotationAngle')) ([double]$request.rotationDeg) 0.01 ('Hybrid reopen Rotation '+$request.id)
+                    Assert-HybridAngle ([double](Read-Property $obj 'RotationAngle')) ([double]$request.rotationDeg) ('Hybrid reopen Rotation '+$request.id)
                     if([bool](Read-Property $obj 'DoNotPrint')){throw ('Hybrid reopen object hidden: '+$request.id)}
-                    if($request.type -eq 'text'){
+                    if($primitive){
+                        foreach($key in $entry.geometry.properties.Keys){Assert-NativeNear ([double](Read-Property $obj $key)) ([double]$entry.geometry.properties[$key].requested) 0.05 ('Primitive reopen '+$key)}
+                    }elseif($request.type -eq 'text'){
                         if([string](Read-Property $obj 'FontName') -cne [string]$request.fontName){throw ('Hybrid reopen FontName mismatch: '+$request.id)}
                         Assert-NativeNear ([double](Read-Property $obj 'FontSize')) ([double]$request.fontSizePt) 0.02 ('Hybrid reopen FontSize '+$request.id)
                         foreach($flag in @('bold','italic')){
@@ -398,7 +468,10 @@ function Invoke-HybridPoolBuild($formats,$plan,[string]$textPoolPath,[string]$ru
                         }
                         $a=Get-HybridAnchorState $obj;if(-not $a.accepted){throw ('Hybrid reopen Text anchor mismatch: '+$request.id)}
                     }else{
-                        $xml=Read-NativeXml ([string](Invoke-ComMethod $obj 'GetXML' @($true,$true)));if((Get-NativeHumanReadableVisibility $xml) -cne 'None'){throw ('Hybrid reopen caption visible: '+$request.id)}
+                        $xml=Read-NativeXml ([string](Invoke-ComMethod $obj 'GetXML' @($true,$true)))
+                        if($request.humanReadable -ceq 'none'){if((Get-NativeHumanReadableVisibility $xml) -cne 'None'){throw ('Hybrid reopen caption visible: '+$request.id)}}
+                        elseif((Get-NativeHumanReadableVisibility $xml) -ceq 'None' -or [string](Read-Property $obj 'HumanReadableValue') -cne [string]$request.value){throw 'Reopen native HRI mismatch.'}
+                        if($request.humanReadable -cne 'none'){$font=$xml.SelectSingleNode('/*/HumanReadable/BarCodeTextData/Font');if($font.GetAttribute('FontName') -cne 'Arial' -or (Parse-NativeDouble $font.GetAttribute('PointSize') 'HRI PointSize') -ne 12){throw 'Reopen native HRI font mismatch.'}}
                         $reopenedX=Get-NativeXDimension $xml
                         if($reopenedX.index -ne $request.moduleIndex){throw ('Hybrid reopen module index mismatch: '+$request.id)}
                         Assert-NativeNear ([double]$reopenedX.mils*0.0254) ([double]$request.moduleMm) 0.001 ('Hybrid reopen module '+$request.id)
@@ -406,7 +479,29 @@ function Invoke-HybridPoolBuild($formats,$plan,[string]$textPoolPath,[string]$ru
                         $a=Get-HybridAnchorState $obj;if(-not $a.accepted){throw ('Hybrid reopen barcode anchor mismatch: '+$request.id)}
                     }
                     $entry.reopenEditable='PAYLOAD_GEOMETRY_STYLE_PERSISTED'
-                    if($isGeneralCandidate){
+                    if($isGeneralCandidate -and $primitive){
+                        $beforeChallenge=[string](Invoke-ComMethod $obj 'GetXML' @($true,$true));$peers=Get-HybridPeerSnapshot $reopenObjects ([string]$entry.physicalName)
+                        $prefix=Join-Path $runDir ('editable-'+$request.id);$beforeBmp=Export-NativeMeasurement $obj ($prefix+'-before.bmp') 600
+                        if($request.type -ceq 'image'){
+                            $changed=$false;$attempt=0
+                            foreach($fixture in @('challenge.png','asymmetric.png')){
+                                $attempt++;$challenge=Join-Path $runDir ('image-challenge-'+$attempt+'.png');Copy-Item -LiteralPath (Join-Path $baseDirectory ('..\..\..\review\renderer-prototype\primitive-candidate\'+$fixture)) -Destination $challenge -Force
+                                Write-Property $obj 'PicturePath' $challenge;$changedBmp=Export-NativeMeasurement $obj ($prefix+'-challenge-'+$attempt+'.bmp') 600
+                                if($changedBmp.sha256 -cne $beforeBmp.sha256){$changed=$true;break}
+                            }
+                            if(-not $changed){throw 'Image challenge did not change native bitmap.'}
+                            Assert-HybridPeerSnapshot $reopenObjects $peers ($prefix+'-challenge')
+                            Write-Property $obj 'PicturePath' ([string]$entry.assetPath)
+                        }else{
+                            $old=[double](Read-Property $obj 'LineThickness');Write-Property $obj 'LineThickness' ($old*1.5)
+                            $changedBmp=Export-NativeMeasurement $obj ($prefix+'-challenge.bmp') 600;if($changedBmp.sha256 -ceq $beforeBmp.sha256){throw 'Primitive edit did not change native bitmap.'}
+                            Assert-HybridPeerSnapshot $reopenObjects $peers ($prefix+'-challenge');Write-Property $obj 'LineThickness' $old
+                        }
+                        Assert-HybridPeerSnapshot $reopenObjects $peers ($prefix+'-restore')
+                        $afterBmp=Export-NativeMeasurement $obj ($prefix+'-restore.bmp') 600
+                        if($afterBmp.sha256 -cne $beforeBmp.sha256 -or (Get-NativeXmlKey (Read-NativeXml $beforeChallenge)) -cne (Get-NativeXmlKey (Read-NativeXml ([string](Invoke-ComMethod $obj 'GetXML' @($true,$true)))))){throw 'Primitive exact XML/bitmap restore failed.'}
+                        $entry.reopenEditable='NATIVE_GEOMETRY_OR_IMAGE_CHALLENGE_EXACT_RESTORE_PASS'
+                    }elseif($isGeneralCandidate){
                         $beforeChallenge=[string](Invoke-ComMethod $obj 'GetXML' @($true,$true))
                         $root=if($request.type -ceq 'text'){'Text'}elseif($request.type -ceq 'code128'){'BarCode-Code-128'}else{'BarCode-DataMatrix'}
                         $prefix=Join-Path $runDir ('editable-'+$request.id)
@@ -414,6 +509,7 @@ function Invoke-HybridPoolBuild($formats,$plan,[string]$textPoolPath,[string]$ru
                         [void](Set-HybridPayload $reopenObjects $obj ([string]$request.value) $root ($prefix+'-restore'))
                         $afterChallenge=[string](Invoke-ComMethod $obj 'GetXML' @($true,$true))
                         if((Get-NativeXmlKey (Read-NativeXml $beforeChallenge)) -cne (Get-NativeXmlKey (Read-NativeXml $afterChallenge))){throw ('Editability roundtrip did not restore exact object XML: '+$request.id)}
+                        if($request.type -ceq 'code128' -and $request.humanReadable -cne 'none' -and [string](Read-Property $obj 'HumanReadableValue') -cne [string]$request.value){throw 'Restored native HRI payload mismatch.'}
                         $entry.reopenEditable='CHALLENGE_RESTORE_EXACT_XML_AND_PEER_ISOLATION_PASS'
                     }
                 }finally{Release-NativeCom $obj}

@@ -43,6 +43,14 @@ function Capture-RunnerVisualEvidence($formats,$report,$plan,[string]$runDir,[st
         if(-not(Test-Path -LiteralPath $preview) -or (Get-Item -LiteralPath $preview).Length -le 0){throw 'Format preview export produced no BMP.'}
         $ev.formatPreview=Get-RunnerRasterEvidence $preview 600
         if($ev.formatPreview.dpiTrust -cne 'TRUSTED_HEADER_MATCH'){throw 'Format preview DPI is untrusted.'}
+        if(@($plan.objects|Where-Object{$_.type -ceq 'image'}).Count){
+            Add-Type -AssemblyName System.Drawing
+            $settings=New-Object System.Drawing.Printing.PrinterSettings;$settings.PrinterName=[string]$report.page.printer
+            if(-not $settings.IsValid){throw 'Image requires valid printer resolution evidence.'}
+            $resolution=$settings.DefaultPageSettings.PrinterResolution
+            if($resolution.X -ne 300 -or $resolution.Y -ne 300){throw 'Image PNG profile requires measured 300x300 dpi driver resolution.'}
+            $ev['printerResolution']=[ordered]@{printer=$settings.PrinterName;x=$resolution.X;y=$resolution.Y;source='WINDOWS_PRINTER_SETTINGS_DEFAULT_PAGE';imagePixelPolicy='ONE_NATIVE_PRINTER_DOT'}
+        }
         $objs=Com\Read-Property $doc 'Objects'
         foreach($entry in @($report.objects)){
             $obj=$null
@@ -58,7 +66,8 @@ function Capture-RunnerVisualEvidence($formats,$report,$plan,[string]$runDir,[st
                 if(-not(Test-Path -LiteralPath $objBmp) -or (Get-Item -LiteralPath $objBmp).Length -le 0){throw ('Object preview export produced no BMP: '+$entry.id)}
                 $rr=Get-RunnerRasterEvidence $objBmp 600
                 if($rr.dpiTrust -cne 'TRUSTED_HEADER_MATCH'){throw ('Object preview DPI is untrusted: '+$entry.id)}
-                $ev.objects+=,[ordered]@{id=[string]$entry.id;type=[string]$entry.type;physicalName=[string]$entry.physicalName;nativeType=[int](Com\Read-Property $obj 'Type');xMm=[double](Com\Read-Property $obj 'X');yMm=[double](Com\Read-Property $obj 'Y');rotationDeg=[double](Com\Read-Property $obj 'RotationAngle');referencePointPresent=[bool]$hasRef;referencePoint=if($hasRef){[string]$xml.DocumentElement.GetAttribute('ReferencePoint')}else{$null};xmlRoot=[string]$xml.DocumentElement.LocalName;raster=$rr}
+                $hriValue=$null;if($entry.type -ceq 'code128'){$req=@($plan.objects|Where-Object{$_.id -ceq $entry.id})[0];if($req.humanReadable -cne 'none'){$hriValue=[string](Com\Read-Property $obj 'HumanReadableValue')}}
+                $ev.objects+=,[ordered]@{humanReadableValue=$hriValue;id=[string]$entry.id;type=[string]$entry.type;physicalName=[string]$entry.physicalName;nativeType=[int](Com\Read-Property $obj 'Type');xMm=[double](Com\Read-Property $obj 'X');yMm=[double](Com\Read-Property $obj 'Y');rotationDeg=[double](Com\Read-Property $obj 'RotationAngle');referencePointPresent=[bool]$hasRef;referencePoint=if($hasRef){[string]$xml.DocumentElement.GetAttribute('ReferencePoint')}else{$null};xmlRoot=[string]$xml.DocumentElement.LocalName;raster=$rr}
             }finally{Release-RunnerCom $obj}
         }
         if(@($ev.objects).Count -ne @($report.objects).Count){throw 'Visual evidence object count mismatch.'}

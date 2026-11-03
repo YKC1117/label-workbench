@@ -33,11 +33,11 @@ function comparePattern(upright,actual,angle,text=false){
   return {status:result.within&&!alternatives.length?'PASS':'FAIL',policy:text?'BIDIRECTIONAL_INK_DISTANCE_1PX_IDENTICAL_EXTENT_UNIQUE_ANGLE':'EXACT_DARK_MASK_ROTATION_UNIQUE_ANGLE',angle,tolerancePx:radius,toleranceMmAt600Dpi:radius*25.4/600,exactMaskEqual:result.differingPixels===0,ambiguousAngles:alternatives,...result,expectedPx:[expected[0].length,expected.length],actualPx:[got[0].length,got.length]};
 }
 function checkRotations(dir,plan){
-  const objects=plan.objects.filter(o=>o.rotationDeg!==0).map(o=>{
+  const objects=plan.objects.filter(o=>o.rotationDeg!==0&&!['line','box','image'].includes(o.type)).map(o=>{
     const upright=path.join(dir,'hybrid-'+o.id+'-upright.bmp'),actual=path.join(dir,'visual-'+o.id+'.bmp');
     if(!fs.existsSync(upright)||!fs.existsSync(actual))return {id:o.id,status:'FAIL',reason:'MISSING_INDEPENDENT_UPRIGHT_PATTERN'};
     return {id:o.id,...comparePattern(mask(upright),mask(actual),(-o.rotationDeg%360+360)%360,o.type==='text')};
   });
   return {status:objects.every(o=>o.status==='PASS')?'PASS':'FAIL',objects};
 }
-module.exports={crop,rotate,comparePattern,checkRotations};
+module.exports={crop,rotate,distance,comparePattern,checkRotations};

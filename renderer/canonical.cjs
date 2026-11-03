@@ -5,7 +5,7 @@ function string(v,name){if(typeof v!=='string'||!v.length||/[\x00-\x08\x0b\x0c\x
 function flag(v,name){if(typeof v!=='boolean')throw Error('Invalid '+name);}
 function validate(model){
   if(model?.schema!=='lwb-canonical-v1'||!Array.isArray(model.objects)||model.objects.length<1||model.objects.length>200)throw Error('Invalid canonical schema or object count');
-  if(model.runtimeProfile!==undefined&&!['upright-v1','candidate-general-v1'].includes(model.runtimeProfile))throw Error('Invalid runtime profile');
+  if(model.runtimeProfile!==undefined&&!['upright-v1','candidate-general-v1','candidate-primitives-v1'].includes(model.runtimeProfile))throw Error('Invalid runtime profile');
   for(const k of ['widthMm','heightMm'])number(model.label?.[k],k,5);
   number(model.label.dpi,'dpi',72,2400);
   const ids=new Set();

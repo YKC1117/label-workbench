@@ -80,6 +80,12 @@ function Assert-NativeSourceIsolation($objects) {
         $obj=Find-NativeObject $objects $name
         try{
             $xml=Read-NativeXml ([string](Invoke-ComMethod $obj 'GetXML' @($true,$true)))
+            $type=[int](Read-Property $obj 'Type')
+            if($type -in @(2,3,6)){
+                $root=if($type -eq 2){'Line'}elseif($type -eq 3){'Box'}else{'Picture'}
+                if($xml.DocumentElement.LocalName -cne $root -or @($xml.SelectNodes('//*[contains(local-name(),"DataSource")]')).Count -ne 0){throw 'Primitive type/root or zero-data-source contract violated.'}
+                continue
+            }
             $state=Get-NativeLiteralState $xml $xml.DocumentElement.LocalName
             if(-not $seen.Add([string]$state.sourceId)){throw 'Different objects share an EmbeddedDataSource ID.'}
         }finally{Release-NativeCom $obj}
@@ -410,9 +416,21 @@ function Test-NativeLayoutInput($layout) {
     foreach($k in @('schema','widthMm','heightMm','objects')){if($null -eq $layout.PSObject.Properties[$k]){throw ('Missing layout.'+$k)}}
     if($layout.schema -ceq 'renderer-probe-v1'){
         # Reuse existing scalar/type validation, then retain the canonical targets intact.
-        $candidateProfile=($null -ne $layout.PSObject.Properties['runtimeProfile'] -and $layout.runtimeProfile -ceq 'candidate-general-v1')
+        $primitiveProfile=($null -ne $layout.PSObject.Properties['runtimeProfile'] -and $layout.runtimeProfile -ceq 'candidate-primitives-v1')
+        $candidateProfile=($primitiveProfile -or ($null -ne $layout.PSObject.Properties['runtimeProfile'] -and $layout.runtimeProfile -ceq 'candidate-general-v1'))
+        $allIds=New-Object 'System.Collections.Generic.HashSet[string]' ([StringComparer]::Ordinal)
         $converted=@()
         foreach($o in $layout.objects){
+            if($o.id -cnotmatch '^[A-Z0-9_\-]{1,64}$' -or -not $allIds.Add([string]$o.id)){throw 'Invalid/duplicate renderer object ID.'}
+            if($o.type -in @('line','box','image')){
+                if(-not $primitiveProfile){throw 'Native primitive profile required.'}
+                foreach($k in @('xMm','yMm')){[void](Test-NativeNumber $o.$k 0 1000 $k)}
+                foreach($k in @('widthMm','heightMm')){[void](Test-NativeNumber $o.$k 0.001 1000 $k)}
+                if($o.type -eq 'line'){if($o.referencePoint -cne 'Center'){throw 'Line requires explicit endpoint-derived Center anchor.'}}elseif($o.referencePoint -cne 'TopLeft' -or $o.rotationDeg -ne 0){throw 'Only upright TopLeft primitive supported.'}
+                if($o.type -in @('line','box')){[void](Test-NativeNumber $o.strokeMm 0.001 100 'strokeMm')}
+                else{if($o.assetSha256 -cnotmatch '^[A-F0-9]{64}$' -or $o.dataUri -cnotmatch '^data:image/png;base64,[A-Za-z0-9+/]+=*$'){throw 'Embedded PNG payload/hash required.'}}
+                continue
+            }
             if($o.referencePoint -cne 'TopLeft' -or ($o.rotationDeg -ne 0 -and (-not $candidateProfile -or $o.rotationDeg -notin @(90,180,270)))){throw 'Unsupported prototype anchor or angle.'}
             $v=[ordered]@{id=$o.id;type=$o.type;value=$o.value;xMm=$o.xMm;yMm=$o.yMm;rotationDeg=$o.rotationDeg}
             [void](Test-NativeNumber $o.widthMm 0.01 1000 'frame width')
@@ -422,7 +440,7 @@ function Test-NativeLayoutInput($layout) {
                 if($candidateProfile){foreach($flag in @('bold','italic')){if($o.$flag -isnot [bool]){throw ('Invalid Text '+$flag)}}}
                 $v.fontName=$o.fontName;$v.fontSizePt=$o.fontSizePt
             }else{
-                if($o.humanReadable -cne 'none'){throw 'Unsupported caption mode.'}
+                if($o.humanReadable -cne 'none' -and (-not $primitiveProfile -or $o.type -cne 'code128' -or $o.humanReadable -cne 'native-arial12-center' -or $o.rotationDeg -ne 0)){throw 'Unsupported caption mode.'}
                 [void](Test-NativeNumber $o.moduleMm 0.001 10 'moduleMm')
                 [void](Test-NativeNumber $o.moduleIndex 0 255 'moduleIndex')
                 if([int]$o.moduleIndex -ne $o.moduleIndex){throw 'Invalid module index.'}
@@ -432,9 +450,9 @@ function Test-NativeLayoutInput($layout) {
             $converted+=,[pscustomobject]$v
         }
         $legacy=[pscustomobject]@{schema='lwb-native-layout-v1';widthMm=$layout.widthMm;heightMm=$layout.heightMm;objects=$converted}
-        $checked=Test-NativeLayoutInput $legacy
+        if($converted.Count){$checked=Test-NativeLayoutInput $legacy}else{$checked=[pscustomobject]@{schema='lwb-native-layout-v1';widthMm=(Test-NativeNumber $layout.widthMm 5 1000 'widthMm');heightMm=(Test-NativeNumber $layout.heightMm 5 1000 'heightMm');printerName=$null;objects=@()}}
         $checked.objects=$layout.objects
-        $checked|Add-Member -NotePropertyName runtimeProfile -NotePropertyValue $(if($candidateProfile){'candidate-general-v1'}else{'upright-v1'})
+        $checked|Add-Member -NotePropertyName runtimeProfile -NotePropertyValue $(if($primitiveProfile){'candidate-primitives-v1'}elseif($candidateProfile){'candidate-general-v1'}else{'upright-v1'})
         return $checked
     }
     if([string]$layout.schema -cne 'lwb-native-layout-v1'){throw 'Unsupported layout schema.'}

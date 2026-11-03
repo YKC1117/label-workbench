@@ -8,9 +8,9 @@ function evaluate(preview,actual,readback){
   const objects=preview.objects.map(p=>{
     const a=actual.find(x=>x.id===p.id),r=readback.find(x=>x.id===p.id),expected=p.symbolBounds??p.bounds;
     if(!a.actual||a.status!=='MEASURED')return {id:p.id,status:'UNRESOLVED',reason:'No unique full-page registration'};
-    const b=a.actual;
+    const total=a.actual,b=a.symbolActual??total;
     if(![b.x,b.y,b.width,b.height].every(Number.isFinite)||b.width<=0||b.height<=0)throw Error('Invalid rendered bounds');
-    const delta={centerX:b.x+b.width/2-expected.x-expected.width/2,centerY:b.y+b.height/2-expected.y-expected.height/2,width:b.width-expected.width,height:b.height-expected.height,rotation:r&&Number.isFinite(r.rotationDeg)?angleDelta(-r.rotationDeg,p.rotation):null};
+    const delta={centerX:b.x+b.width/2-expected.x-expected.width/2,centerY:b.y+b.height/2-expected.y-expected.height/2,width:b.width-expected.width,height:b.height-expected.height,rotation:r&&Number.isFinite(r.rotationDeg)?angleDelta(r.rotationDeg,p.expectedComRotationDeg??-p.rotation):null};
     const policy=p.quality==='TEXT_FRAME_NOT_FONT_INK'?'TEXT_CONTAINMENT':'SYMBOL_INK';
     // Compare text in its unrotated local frame. An AABB is reversible for
     // the certified candidate's orthogonal angles; arbitrary angles fail closed.
@@ -25,17 +25,24 @@ function evaluate(preview,actual,readback){
       ? Math.abs(delta.centerX)>TOLERANCE.centerMm||Math.abs(delta.centerY)>TOLERANCE.centerMm||Math.abs(delta.width)>TOLERANCE.sizeMm||Math.abs(delta.height)>TOLERANCE.sizeMm
       : local ? Math.abs(alignmentError)>TOLERANCE.edgeMm||local.x < -TOLERANCE.edgeMm||(p.textOriginPolicy==='NATIVE_INK_TOP_LEFT'&&Math.abs(local.y)>TOLERANCE.edgeMm)||local.y < -TOLERANCE.edgeMm||local.right>p.frame.widthMm+TOLERANCE.edgeMm||local.bottom>p.frame.heightMm+TOLERANCE.edgeMm
       : Math.abs(b.x-expected.x)>TOLERANCE.edgeMm||b.y<expected.y-TOLERANCE.edgeMm||b.x+b.width>expected.x+expected.width+TOLERANCE.edgeMm||b.y+b.height>expected.y+expected.height+TOLERANCE.edgeMm;
-    const outside=G.outOfBounds(b,preview.label,TOLERANCE.edgeMm);
-    const explicitTopLeft=r?.referencePoint==='TopLeft';
+    let caption=null;
+    if(p.captionFrame){
+      const f=p.captionFrame,c=a.captionActual;
+      const pass=c&&Math.abs(c.x+c.width/2-f.x-f.width/2)<=TOLERANCE.edgeMm&&Math.abs(c.y-f.y)<=TOLERANCE.edgeMm&&c.width<=f.width+TOLERANCE.edgeMm&&c.height<=f.height+TOLERANCE.edgeMm;
+      caption={status:pass?'PASS':'FAIL',expected:f,actual:c??null};
+    }
+    const outside=G.outOfBounds(total,preview.label,TOLERANCE.edgeMm);
+    const expectedAnchor=p.nativeReferencePoint??'TopLeft';
+    const explicitTopLeft=r?.referencePoint===expectedAnchor;
     // Current native requests explicitly set TopLeft for every supported object.
     // BarTender 2022 R2 may serialize that default by omitting ReferencePoint.
     // Omission is never sufficient by itself: this branch is reached only after
     // a unique full-page BMP registration supplied a measured rendered bound.
-    const omittedRequestedTopLeft=r?.referencePointPresent===false&&r?.referencePoint==null;
+    const omittedRequestedTopLeft=expectedAnchor==='TopLeft'&&r?.referencePointPresent===false&&r?.referencePoint==null;
     const anchor=explicitTopLeft||omittedRequestedTopLeft;
-    const anchorEvidence=explicitTopLeft?'EXPLICIT_XML_TOP_LEFT':omittedRequestedTopLeft?'TOPLEFT_REQUEST_OMITTED_PLUS_UNIQUE_VISUAL_GEOMETRY':'UNPROVEN';
+    const anchorEvidence=explicitTopLeft?'EXPLICIT_XML_'+expectedAnchor.toUpperCase():omittedRequestedTopLeft?'TOPLEFT_REQUEST_OMITTED_PLUS_UNIQUE_VISUAL_GEOMETRY':'UNPROVEN';
     const supported=p.quality!=='DIAGNOSTIC_ONLY';
-    return {id:p.id,status:!supported||delta.rotation===null||!anchor?'UNRESOLVED':fail||outside||Math.abs(delta.rotation)>TOLERANCE.rotationDeg?'FAIL':'PASS',policy,expected,actual:b,localInk:local,alignmentErrorMm:alignmentError,delta,outOfBounds:outside,referencePoint:r?.referencePoint??null,referencePointPresent:r?.referencePointPresent??null,anchorEvidence,rotationEvidence:'COM_READBACK_ONLY',renderedRotation:'NOT_INDEPENDENTLY_VERIFIED',barcodeFootprint:p.footprint};
+    return {id:p.id,status:!supported||delta.rotation===null||!anchor?'UNRESOLVED':fail||outside||caption?.status==='FAIL'||Math.abs(delta.rotation)>TOLERANCE.rotationDeg?'FAIL':'PASS',policy,expected:p.captionFrame?p.bounds:expected,actual:total,symbolActual:a.symbolActual??null,caption,localInk:local,alignmentErrorMm:alignmentError,delta,outOfBounds:outside,referencePoint:r?.referencePoint??null,referencePointPresent:r?.referencePointPresent??null,anchorEvidence,rotationEvidence:'COM_READBACK_ONLY',renderedRotation:'NOT_INDEPENDENTLY_VERIFIED',barcodeFootprint:p.footprint};
   });
   const overlaps=[];
   for(let i=0;i<objects.length;i++)for(let j=i+1;j<objects.length;j++){
@@ -47,7 +54,14 @@ function evaluate(preview,actual,readback){
   for(const p of preview.objects.filter(p=>p.type==='barcode1d')){
     const own=objects.find(o=>o.id===p.id);if(!own?.actual)continue;
     for(const other of objects.filter(o=>o.id!==p.id&&o.actual)){
-      const intrusion=G.intersection(p.bounds,other.actual)-G.intersection(p.symbolBounds,other.actual);
+      const otherPlan=preview.objects.find(o=>o.id===other.id);
+      let intrusion=G.intersection(p.bounds,other.actual)-G.intersection(p.symbolBounds,other.actual);
+      if(otherPlan.type==='box'){
+        // A hollow frame's interior is not ink. Primitive QA independently
+        // rejects filled frames; this uses the same .1mm stroke error bound.
+        const inset=otherPlan.strokeMm+.1,inner={x:other.actual.x+inset,y:other.actual.y+inset,width:Math.max(0,other.actual.width-2*inset),height:Math.max(0,other.actual.height-2*inset)};
+        intrusion-=G.intersection(p.bounds,inner)-G.intersection(p.symbolBounds,inner);
+      }
       if(intrusion>TOLERANCE.overlapAreaMm2)quietZones.push({id:p.id,intruder:other.id,areaMm2:intrusion,status:'FAIL'});
     }
   }

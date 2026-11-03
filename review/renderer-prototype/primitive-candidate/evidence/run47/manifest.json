@@ -1,0 +1,9 @@
+{
+  "run": 41601784133,
+  "number": 47,
+  "commit": "d56bd04c7528b9e40b919b974ffe1e1741935df4",
+  "artifactId": 13214906069,
+  "artifactSha256": "f320671a6c17246bf2316562b2ef6691fcfee96b1005d23ecb68f0ddd41b5775",
+  "capabilityFacts": "Designer source + reacquired Find: Line/Box/Picture direct properties work; two HRI payloads match; native presave/cold BMPs equal for graphics with original source PNG hidden; distinct PIDs 9892/32404. No full mixed renderer acceptance yet.",
+  "localZipSha256": "f320671a6c17246bf2316562b2ef6691fcfee96b1005d23ecb68f0ddd41b5775"
+}
