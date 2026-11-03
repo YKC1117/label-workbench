@@ -1,11 +1,10 @@
 @echo off
 setlocal
 cd /d "%~dp0"
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "review\renderer-prototype\Probe-TextGeometryBinding.ps1"
+if not exist "review\renderer-prototype\runner-evidence" mkdir "review\renderer-prototype\runner-evidence"
+node.exe "review\renderer-prototype\materialize-controlled-donor.cjs" "review\renderer-prototype\runner-evidence\controlled-donor.btw"
 if errorlevel 1 exit /b %ERRORLEVEL%
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "review\renderer-prototype\Apply-TextDefaultAnchorProbePatch.ps1"
+powershell.exe -STA -NoProfile -ExecutionPolicy Bypass -File "review\renderer-prototype\Probe-DonorTextAutomation.ps1" -DonorPath "%~dp0review\renderer-prototype\runner-evidence\controlled-donor.btw" -OutputPath "%~dp0review\renderer-prototype\runner-evidence\donor-text-automation-diagnostic.json"
 if errorlevel 1 exit /b %ERRORLEVEL%
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "review\renderer-prototype\Apply-TextCandidateFontPatch.ps1"
-if errorlevel 1 exit /b %ERRORLEVEL%
-powershell.exe -STA -NoProfile -ExecutionPolicy Bypass -File "native\Label_Workbench_Native_Layout_ENGINE_V1\program\Build-NativeLayout.ps1" -LayoutPath "%~dp0canonical.json" -CaptureVisualEvidence
-exit /b %ERRORLEVEL%
+echo DIAGNOSTIC_ONLY: Designer-authored Text automation capability captured; renderer acceptance intentionally not run.
+exit /b 2
