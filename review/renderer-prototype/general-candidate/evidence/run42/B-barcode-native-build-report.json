@@ -1,0 +1,36 @@
+﻿{
+    "schema":  "lwb-hybrid-pool-build-report-v1",
+    "status":  "FAILED_OR_BLOCKED",
+    "renderer":  "hybrid-text-pool-btc",
+    "productAcceptance":  "NOT_RUN",
+    "textPool":  {
+                     "path":  "C:\\Users\\FTUSER5\\actions-runner-label-workbench\\_work\\label-workbench\\label-workbench\\native\\Label_Workbench_Native_Layout_ENGINE_V1\\program\\native-results\\general-candidate\\B-barcode\\20261103-150817-b4c864bf7e1c430cb3cb339731c02991\\hybrid-text-pool.btw",
+                     "sha256":  "73E620EC2154D18AF3E279B4438A3775BE85D2A71F5BD8AFAAF664B31F03198B"
+                 },
+    "page":  {
+                 "printer":  "Argox CP-3140 PPLA",
+                 "LabelColumns":  1,
+                 "LabelRows":  1,
+                 "PaperWidth":  119.98999786376953,
+                 "PaperHeight":  80.010002136230469,
+                 "LabelWidth":  119.98999786376953,
+                 "LabelHeight":  80.010002136230469,
+                 "MarginLeft":  0,
+                 "MarginRight":  0,
+                 "MarginTop":  0,
+                 "MarginBottom":  0
+             },
+    "objects":  [
+
+                ],
+    "warnings":  [
+                     "Designer-authored Text slots are reused; unused donor objects are deleted from the disposable candidate copy before any payload assignment; the embedded donor source remains unchanged.",
+                     "An omitted ReferencePoint after an explicit TopLeft request is accepted only pending final unique full-page BMP Visual QA."
+                 ],
+    "output":  null,
+    "outputSha256":  null,
+    "reopen":  "NOT_RUN",
+    "deletedUnusedDonorObjects":  41,
+    "dataMatrixComponent":  "C:\\Program Files\\Seagull\\BarTender 2022\\Barcodes\\Common Bar Codes\\Data Matrix.btc",
+    "error":  "System.Management.Automation.MethodInvocationException: Exception calling \"Read\" with \"1\" argument(s): \"Could not find file \u0027C:\\Users\\FTUSER5\\actions-runner-label-workbench\\_work\\label-workbench\\label-workbench\\native\\Label_Workbench_Native_Layout_ENGINE_V1\\program\\native-results\\general-candidate\\B-barcode\\20261103-150817-b4c864bf7e1c430cb3cb339731c02991\\hybrid-CODE_SHORT-size-module.bmp\u0027.\" ---\u003e System.IO.FileNotFoundException: Could not find file \u0027C:\\Users\\FTUSER5\\actions-runner-label-workbench\\_work\\label-workbench\\label-workbench\\native\\Label_Workbench_Native_Layout_ENGINE_V1\\program\\native-results\\general-candidate\\B-barcode\\20261103-150817-b4c864bf7e1c430cb3cb339731c02991\\hybrid-CODE_SHORT-size-module.bmp\u0027.\r\n   at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)\r\n   at System.IO.FileStream.Init(String path, FileMode mode, FileAccess access, Int32 rights, Boolean useRights, FileShare share, Int32 bufferSize, FileOptions options, SECURITY_ATTRIBUTES secAttrs, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)\r\n   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, FileOptions options, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)\r\n   at System.IO.File.InternalReadAllBytes(String path, Boolean checkHost)\r\n   at LabelWorkbench.RasterEvidence.Read(String path)\r\n   at CallSite.Target(Closure , CallSite , Type , String )\r\n   --- End of inner exception stack trace ---\r\n   at System.Management.Automation.ExceptionHandlingOps.CheckActionPreference(FunctionContext funcContext, Exception exception)\r\n   at System.Management.Automation.Interpreter.ActionCallInstruction`2.Run(InterpretedFrame frame)\r\n   at System.Management.Automation.Interpreter.EnterTryCatchFinallyInstruction.Run(InterpretedFrame frame)\r\n   at System.Management.Automation.Interpreter.EnterTryCatchFinallyInstruction.Run(InterpretedFrame frame)"
+}

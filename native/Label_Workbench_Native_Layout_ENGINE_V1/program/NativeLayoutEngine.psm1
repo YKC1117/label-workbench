@@ -413,7 +413,7 @@ function Test-NativeLayoutInput($layout) {
         $candidateProfile=($null -ne $layout.PSObject.Properties['runtimeProfile'] -and $layout.runtimeProfile -ceq 'candidate-general-v1')
         $converted=@()
         foreach($o in $layout.objects){
-            if($o.referencePoint -cne 'TopLeft' -or ($o.rotationDeg -ne 0 -and (-not $candidateProfile -or $o.rotationDeg -notin @(-90,-180,-270)))){throw 'Unsupported prototype anchor or angle.'}
+            if($o.referencePoint -cne 'TopLeft' -or ($o.rotationDeg -ne 0 -and (-not $candidateProfile -or $o.rotationDeg -notin @(90,180,270)))){throw 'Unsupported prototype anchor or angle.'}
             $v=[ordered]@{id=$o.id;type=$o.type;value=$o.value;xMm=$o.xMm;yMm=$o.yMm;rotationDeg=$o.rotationDeg}
             [void](Test-NativeNumber $o.widthMm 0.01 1000 'frame width')
             [void](Test-NativeNumber $o.heightMm 0.01 1000 'frame height')

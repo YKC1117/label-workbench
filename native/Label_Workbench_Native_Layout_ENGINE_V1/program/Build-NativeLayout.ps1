@@ -5,7 +5,7 @@ $ErrorActionPreference='Stop'
 if([string]::IsNullOrWhiteSpace($BaseDirectory)){$BaseDirectory=[IO.Path]::GetDirectoryName($MyInvocation.MyCommand.Path)}
 $BaseDirectory=[IO.Path]::GetFullPath($BaseDirectory)
 if([string]::IsNullOrWhiteSpace($ResultRoot)){$ResultRoot=Join-Path $BaseDirectory 'native-results'}
-$runDir=Join-Path ([IO.Path]::GetFullPath($ResultRoot)) ((Get-Date -Format 'yyyyMMdd-HHmmss')+'-'+[guid]::NewGuid().ToString('N'))
+$runDir=Join-Path ([IO.Path]::GetFullPath($ResultRoot)) ('r-'+[guid]::NewGuid().ToString('N').Substring(0,12))
 [void][IO.Directory]::CreateDirectory($runDir)
 $reportPath=Join-Path $runDir 'native-build-report.json'
 $package=Join-Path $BaseDirectory 'NATIVE_BUILD_RESULT.zip'
@@ -121,6 +121,9 @@ try{
         $plan=Test-NativeLayoutInput $layout
     }
     if($CaptureVisualEvidence){$nodePath=(Get-Command node.exe -CommandType Application -ErrorAction Stop).Source}
+    $runtime['inputSchema']=$layout.schema
+    if($null -ne $layout.PSObject.Properties['revision']){$runtime['requestRevision']=[string]$layout.revision}
+    if($null -ne $plan.PSObject.Properties['runtimeProfile']){$runtime['runtimeProfile']=[string]$plan.runtimeProfile}
     $runtime['objectCount']=$plan.objects.Count
     $existing=@(Get-Process -Name BarTend -ErrorAction SilentlyContinue|Select-Object -ExpandProperty Id)
     $app=New-Object -ComObject BarTender.Application

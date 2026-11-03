@@ -1,0 +1,20 @@
+﻿{
+    "revision":  "20261103-hybrid-core-v1",
+    "os":  "Microsoft Windows NT 10.0.26100.0",
+    "powerShell":  "5.1.26100.9711",
+    "processBits":  64,
+    "barTender":  {
+                      "FullVersion":  "2022 R2",
+                      "Version":  "11.3",
+                      "Edition":  "Automation",
+                      "BuildNumber":  "184527",
+                      "ProcessID":  15644
+                  },
+    "cleanupErrors":  [
+
+                      ],
+    "status":  "FAILED_OR_BLOCKED",
+    "productAcceptance":  "NOT_RUN",
+    "objectCount":  6,
+    "watchdog":  "120-second stall / 600-second owned-run maximum; activation itself precedes watchdog"
+}

@@ -168,13 +168,24 @@ function Invoke-HybridPoolBuild($formats,$plan,[string]$textPoolPath,[string]$ru
                     $alignmentEvidence=[ordered]@{policy='CANONICAL_FRAME_ALIGNED_USING_NATIVE_INK';alignment=[string]$request.alignment;upright=$measure;shiftMm=$shift;targetX=$targets.X;targetY=$targets.Y}
                 }
                 foreach($key in @($targets.Keys)){Write-Property $obj $key $targets[$key]}
+                $unquantized=@{}
+                if($isGeneralCandidate){
+                    if([double]$request.coordinateQuantumMm -ne 0.0254){throw 'Unknown native coordinate quantum.'}
+                    foreach($key in @('X','Y')){
+                        $unquantized[$key]=[double]$targets[$key]
+                        $targets[$key]=[math]::Round([double]$targets[$key]/0.0254,0,[MidpointRounding]::AwayFromZero)*0.0254
+                        Write-Property $obj $key $targets[$key]
+                    }
+                }
                 $properties=[ordered]@{}
                 foreach($key in @($targets.Keys)){
                     $actual=Read-Property $obj $key;$target=$targets[$key]
                     if($key -eq 'FontName'){if([string]$actual -cne [string]$target){throw 'Hybrid Text FontName mismatch.'}}
                     elseif($key -in @('FontBold','FontItalic')){if([bool]$actual -ne [bool]$target){throw ('Hybrid Text '+$key+' mismatch.')}}
                     else{$tol=if($key -in @('X','Y')){0.02}elseif($key -eq 'RotationAngle'){0.01}else{0.02};Assert-NativeNear ([double]$actual) ([double]$target) $tol ('Hybrid Text '+$key)}
-                    $properties[$key]=[ordered]@{requested=$target;actual=$actual}
+                    if($unquantized.ContainsKey($key)){Assert-NativeNear ([double]$actual) ([double]$unquantized[$key]) 0.02 ('Hybrid Text canonical anchor '+$key)}
+                    $properties[$key]=[ordered]@{requested=$target;actual=$actual;unquantized=if($unquantized.ContainsKey($key)){$unquantized[$key]}else{$null}}
+
                 }
                 Write-Property $obj 'DoNotPrint' $false;if([bool](Read-Property $obj 'DoNotPrint')){throw 'Hybrid Text remained DoNotPrint.'}
                 $afterAnchor=Get-HybridAnchorState $obj;if(-not $afterAnchor.accepted){throw 'Hybrid Text anchor changed after property writes.'}

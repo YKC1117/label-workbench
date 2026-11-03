@@ -22,7 +22,7 @@ function checkRotations(dir,plan){
   const objects=plan.objects.filter(o=>o.rotationDeg!==0).map(o=>{
     const upright=path.join(dir,'hybrid-'+o.id+'-upright.bmp'),actual=path.join(dir,'visual-'+o.id+'.bmp');
     if(!fs.existsSync(upright)||!fs.existsSync(actual))return {id:o.id,status:'FAIL',reason:'MISSING_INDEPENDENT_UPRIGHT_PATTERN'};
-    return {id:o.id,...comparePattern(mask(upright),mask(actual),-o.rotationDeg)};
+    return {id:o.id,...comparePattern(mask(upright),mask(actual),(-o.rotationDeg%360+360)%360)};
   });
   return {status:objects.every(o=>o.status==='PASS')?'PASS':'FAIL',objects};
 }

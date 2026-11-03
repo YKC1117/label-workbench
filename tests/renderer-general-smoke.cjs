@@ -23,7 +23,7 @@ for(const angle of [90,180,270]){const m=clone(models[0]);m.objects=[{...m.objec
 for(const mutate of [m=>delete m.objects.at(-1).lineHeightMm,m=>m.objects.at(-1).heightMm=4,m=>m.objects.at(-1).text='A\n\nB',m=>m.objects.push({...m.objects[0],id:'MULTI_L1'}),m=>m.objects[0].rotation=45,m=>m.objects[0].frameMode='fixed']){const m=clone(models[0]);mutate(m);assert.throws(()=>nativeRequest(m));}
 for(const m0 of models){const m=clone(m0);delete m.runtimeProfile;assert.throws(()=>nativeRequest(m));}
 const bars=nativeRequest(models[1]).objects;assert.equal(bars[0].xMm,7.54);assert.equal(bars[0].widthMm,20.066);
-const rotatedBar=nativeRequest(models[2]).objects[3];assert.equal(rotatedBar.xMm,30);assert.equal(rotatedBar.yMm,47.54);
+const rotatedBar=nativeRequest(models[2]).objects[3];assert.equal(rotatedBar.rotationDeg,270);assert.equal(rotatedBar.xMm,30);assert.equal(rotatedBar.yMm,47.54);
 for(const type of ['image','line','box']){const m=clone(models[0]);m.objects=[{...m.objects[0],type,strokeMm:.3,dataUri:'data:image/png;base64,AA=='}];assert.throws(()=>nativeRequest(m),/CAPABILITY_UNSUPPORTED/);}
 const hri=clone(models[1]);hri.objects[0].humanReadable=true;assert.throws(()=>nativeRequest(hri),/CAPABILITY_UNSUPPORTED/);
 const pattern=[[1,0,0],[1,1,0]].map(r=>Buffer.from(r));

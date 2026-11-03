@@ -4,7 +4,7 @@ Set-StrictMode -Version 2
 $ErrorActionPreference='Stop'
 $root=[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..'))
 $program=Join-Path $root 'native\Label_Workbench_Native_Layout_ENGINE_V1\program'
-$results=Join-Path $program 'native-results\general-candidate'
+$results=Join-Path $program 'native-results'
 [void][IO.Directory]::CreateDirectory($results)
 $summary=[ordered]@{schema='lwb-general-suite-v1';revision='20261103-general-candidate-v1';commit=$env:GITHUB_SHA;productAcceptance='NOT_RUN';cases=@();status='STARTED'}
 $psExe=Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
@@ -15,7 +15,7 @@ foreach($file in @('NativeLayoutEngine.psm1','HybridPool.psm1','Build-NativeLayo
     if($errors.Count){throw ('PowerShell parser failed: '+$file+' '+($errors -join '; '))}
 }
 foreach($name in @('A-text','B-barcode','C-rotation')){
-    $caseRoot=Join-Path $results $name
+    $caseRoot=Join-Path $results $name.Substring(0,1)
     [void][IO.Directory]::CreateDirectory($caseRoot)
     $layout=Join-Path $PSScriptRoot ('general-candidate\'+$name+'.json')
     Write-Host ('Starting consolidated candidate case '+$name)

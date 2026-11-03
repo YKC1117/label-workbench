@@ -1,7 +1,7 @@
 {
   "enabled": true,
-  "purpose": "Consolidated general renderer candidate: A Text style/fonts/alignment/explicit multiline; B Code128/DataMatrix module/payload/quiet-zone variations; C orthogonal rotation with exact independent native pattern comparison. Preserve strict peer, reopen editability and real 600dpi visual gates.",
-  "requestedAt": "2026-11-03T07:06:03.210591+00:00",
+  "purpose": "One consolidated A/B/C retry after Run42 evidence: representable inch coordinate write (unchanged .02 mm gates against quantized AND original targets), equivalent angle normalization, short runtime paths; no peer/visual/reopen gate relaxation.",
+  "requestedAt": "2026-11-03T07:16:00Z",
   "requestedBy": "YKC1117",
   "target": "experiment/com-renderer-prototype"
 }

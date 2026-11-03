@@ -1,0 +1,35 @@
+﻿{
+    "schema":  "lwb-hybrid-pool-build-report-v1",
+    "status":  "FAILED_OR_BLOCKED",
+    "renderer":  "hybrid-text-pool-btc",
+    "productAcceptance":  "NOT_RUN",
+    "textPool":  {
+                     "path":  "C:\\Users\\FTUSER5\\actions-runner-label-workbench\\_work\\label-workbench\\label-workbench\\native\\Label_Workbench_Native_Layout_ENGINE_V1\\program\\native-results\\general-candidate\\A-text\\20261103-150808-349bf23797714e208cd29ad66d5752b7\\hybrid-text-pool.btw",
+                     "sha256":  "73E620EC2154D18AF3E279B4438A3775BE85D2A71F5BD8AFAAF664B31F03198B"
+                 },
+    "page":  {
+                 "printer":  "Argox CP-3140 PPLA",
+                 "LabelColumns":  1,
+                 "LabelRows":  1,
+                 "PaperWidth":  119.98999786376953,
+                 "PaperHeight":  80.010002136230469,
+                 "LabelWidth":  119.98999786376953,
+                 "LabelHeight":  80.010002136230469,
+                 "MarginLeft":  0,
+                 "MarginRight":  0,
+                 "MarginTop":  0,
+                 "MarginBottom":  0
+             },
+    "objects":  [
+
+                ],
+    "warnings":  [
+                     "Designer-authored Text slots are reused; unused donor objects are deleted from the disposable candidate copy before any payload assignment; the embedded donor source remains unchanged.",
+                     "An omitted ReferencePoint after an explicit TopLeft request is accepted only pending final unique full-page BMP Visual QA."
+                 ],
+    "output":  null,
+    "outputSha256":  null,
+    "reopen":  "NOT_RUN",
+    "deletedUnusedDonorObjects":  33,
+    "error":  "System.Management.Automation.RuntimeException: Hybrid Text X mismatch: 4.9784 expected 5"
+}

@@ -8,11 +8,11 @@ function nativeRequest(model){
     if(o.rotation!==0&&(!candidate||![90,180,270].includes(o.rotation)))throw Error('CAPABILITY_UNSUPPORTED: rotated native anchor is not runtime-certified');
     if(!['text','barcode1d','barcode2d'].includes(o.type))throw Error('CAPABILITY_UNSUPPORTED: '+o.type);
     const pos=anchor(o,'TopLeft');
-    const common={id:o.id,type:o.type==='barcode1d'?'code128':o.type==='barcode2d'?'datamatrix':'text',value:o.text??o.value,xMm:pos.xMm,yMm:pos.yMm,widthMm:o.widthMm,heightMm:o.heightMm,rotationDeg:pos.rotationCom,printable:o.printable};
+    const common={id:o.id,type:o.type==='barcode1d'?'code128':o.type==='barcode2d'?'datamatrix':'text',value:o.text??o.value,xMm:pos.xMm,yMm:pos.yMm,widthMm:o.widthMm,heightMm:o.heightMm,rotationDeg:candidate?(pos.rotationCom%360+360)%360:pos.rotationCom,printable:o.printable};
     if(o.type==='text'){
       if(o.frameMode==='fixed'||(!candidate&&(o.parentId||o.alignment!=='left')))throw Error('CAPABILITY_UNSUPPORTED: fixed/paragraph/rich text requires certified component');
       if((o.bold||o.italic)&&!candidate)throw Error('CAPABILITY_UNSUPPORTED: bold/italic Text pool variants are not runtime-certified');
-      return {...common,referencePoint:'TopLeft',fontName:o.fontFamily,fontSizePt:o.fontSizePt,...(candidate?{bold:o.bold,italic:o.italic,parentId:o.parentId??null}:{}),alignment:o.alignment,anchorPolicy:'BARTENDER_DOCUMENTED_DEFAULT_TOP_LEFT_VISUAL_GATE',fontMutationPolicy:'DESIGNER_TEXT_POOL_AUTOMATION'};
+      return {...common,referencePoint:'TopLeft',fontName:o.fontFamily,fontSizePt:o.fontSizePt,...(candidate?{bold:o.bold,italic:o.italic,parentId:o.parentId??null,coordinateQuantumMm:.0254}:{}),alignment:o.alignment,anchorPolicy:'BARTENDER_DOCUMENTED_DEFAULT_TOP_LEFT_VISUAL_GATE',fontMutationPolicy:'DESIGNER_TEXT_POOL_AUTOMATION'};
     }
     if(o.moduleIndex===null)throw Error('CAPABILITY_UNSUPPORTED: explicit printer module profile required');
     if(o.type==='barcode1d'&&(o.humanReadable||(!candidate&&o.quietZoneMm!==0)))throw Error('CAPABILITY_UNSUPPORTED: caption/quiet-zone anchor requires runtime certification');

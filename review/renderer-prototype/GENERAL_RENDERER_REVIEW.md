@@ -35,3 +35,14 @@ No replay of the old contamination diagnostic or old 8-Text acceptance run in th
 Built-in Code128 HumanReadable/caption geometry remains rejected. Image, Line and Box remain canonical/preview representations only and are rejected by the native adapter; no Designer-authored primitive contract is available in this branch. Arbitrary rotations, fixed/Paragraph/Rich Text, automatic line wrapping, GS1 and rectangular matrices remain rejected. These are not completed native capabilities. No website integration or product-acceptance claim.
 
 Local Linux: BarTender runtime NOT RUN. Node/synthetic regression is offline evidence only. Windows result must be appended after the consolidated probe; never inferred from this document.
+
+
+## Run #42 — actual Windows findings, consolidated correction
+
+Real host LWB-FTUSER5; Windows PowerShell 5.1; BarTender 2022 R2 / 11.3 Automation build 184527. Run 41594235119 at 5022c891b9ad2064e6a237c87f059b358b24ac51: FAIL in all three cases, before Save/Reopen/Visual QA. Evidence under general-candidate/evidence/run42; artifact digest recorded there.
+
+Verified: A Text X write 5 mm read back 4.9784 mm (=0.196 in), outside unchanged .02 mm Text COM gate; object XML uses inch coordinates at 0.001 in precision. C requested -90° read back 270° (equivalent angle, not a rotation error). B ExportToFile produced no BMP at its 266-character path; no barcode visual result exists. Long Windows paths were also explicitly reported by checkout. Path length is the leading explanation for B, to be tested by shortened paths, not a proven barcode capability failure.
+
+Correction: canonical clockwise angles convert to equivalent COM [0,360) values; no anchor compensation. Candidate Text writes select the nearest serialized 0.001 inch coordinate quantum (0.0254 mm), and must pass BOTH unchanged .02 mm readback versus that native target AND .02 mm versus the original unquantized canonical/alignment target. There is no larger tolerance or empirical offset. The measured requested/actual/unquantized values are saved. Whether this explicit representable-unit write resolves BarTender's conversion remains a runtime hypothesis until the retry. Result directories use short UUID identifiers and a single-character case folder; no long-path support assumption. Runtime report now identifies request revision/profile.
+
+A single consolidated retry runs all three cases, not individual field probes. Original failed results remain evidence; they are not overwritten or called PASS.
