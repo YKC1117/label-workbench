@@ -1,7 +1,7 @@
 {
   "enabled": true,
-  "purpose": "Retry Hybrid Renderer after aligning X/Y COM and reopen tolerance to 0.05 mm BarTender coordinate quantization; keep 600dpi BMP Visual QA unchanged.",
-  "requestedAt": "2026-11-03T12:00:00+08:00",
+  "purpose": "Run clean four-object Hybrid candidate after deleting unused donor objects; require exact target object set, Save/Reopen, stable SHA and unique 600dpi full-page Visual QA.",
+  "requestedAt": "2026-11-03T12:05:00+08:00",
   "requestedBy": "YKC1117",
   "target": "experiment/com-renderer-prototype"
 }
