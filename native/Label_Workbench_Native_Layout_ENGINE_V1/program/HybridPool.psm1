@@ -37,6 +37,11 @@ function Invoke-HybridPoolBuild($formats,$plan,[string]$textPoolPath,[string]$ru
                 if($peerName -ceq $targetName){continue}
                 $peer=Find-NativeObject $objects $peerName
                 try{
+                    # Exact XML/value isolation protects retained objects only.
+                    # Every donor is parked DoNotPrint=true before assignment and
+                    # unused donors are deleted before barcode insertion. Source-ID
+                    # collision checks below still inspect every donor object.
+                    if([bool](Read-Property $peer 'DoNotPrint')){continue}
                     $xmlText=[string](Invoke-ComMethod $peer 'GetXML' @($true,$true))
                     $value=$null;$valueReadable=$false
                     try{$value=[string](Read-Property $peer 'Value');$valueReadable=$true}catch{}
