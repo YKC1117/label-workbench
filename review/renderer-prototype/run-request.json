@@ -1,7 +1,7 @@
 {
   "enabled": true,
-  "purpose": "Retry end-to-end Hybrid Renderer after explicit TopLeft Designer Text pool adapter contract; run Save/Reopen and BarTender BMP Visual QA.",
-  "requestedAt": "2026-11-03T11:49:00+08:00",
+  "purpose": "Retry end-to-end Hybrid Renderer after loading RasterEvidence before Code128/Data Matrix sizing; continue through Save/Reopen and BarTender BMP Visual QA.",
+  "requestedAt": "2026-11-03T11:52:00+08:00",
   "requestedBy": "YKC1117",
   "target": "experiment/com-renderer-prototype"
 }
