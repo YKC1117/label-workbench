@@ -1,7 +1,7 @@
 {
-  "enabled": false,
-  "purpose": "Placeholder only. A real Windows BarTender probe is triggered only by changing this file in a commit whose message contains [bartender-probe].",
-  "requestedAt": null,
-  "requestedBy": null,
+  "enabled": true,
+  "purpose": "Windows BarTender 2022 renderer probe requested after self-hosted runner registration.",
+  "requestedAt": "2026-11-03T10:00:00+08:00",
+  "requestedBy": "YKC1117",
   "target": "experiment/com-renderer-prototype"
 }
