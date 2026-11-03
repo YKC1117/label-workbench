@@ -1,7 +1,7 @@
 {
   "enabled": true,
-  "purpose": "Actual final 8-Text Windows BarTender verification for Codex multi-object peer-isolation fix, with PROBE explicitly pinned to canonical-stress-8text.json: target-only sparse payload import, strict all-peer XML/COM isolation, Save/Reopen editability, 600dpi Visual QA, and stable evidence SHA.",
-  "requestedAt": "2026-11-03T14:49:00+08:00",
+  "purpose": "Consolidated general renderer candidate: A Text style/fonts/alignment/explicit multiline; B Code128/DataMatrix module/payload/quiet-zone variations; C orthogonal rotation with exact independent native pattern comparison. Preserve strict peer, reopen editability and real 600dpi visual gates.",
+  "requestedAt": "2026-11-03T07:06:03.210591+00:00",
   "requestedBy": "YKC1117",
   "target": "experiment/com-renderer-prototype"
 }

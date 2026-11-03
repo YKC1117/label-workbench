@@ -5,6 +5,7 @@ function string(v,name){if(typeof v!=='string'||!v.length||/[\x00-\x08\x0b\x0c\x
 function flag(v,name){if(typeof v!=='boolean')throw Error('Invalid '+name);}
 function validate(model){
   if(model?.schema!=='lwb-canonical-v1'||!Array.isArray(model.objects)||model.objects.length<1||model.objects.length>200)throw Error('Invalid canonical schema or object count');
+  if(model.runtimeProfile!==undefined&&!['upright-v1','candidate-general-v1'].includes(model.runtimeProfile))throw Error('Invalid runtime profile');
   for(const k of ['widthMm','heightMm'])number(model.label?.[k],k,5);
   number(model.label.dpi,'dpi',72,2400);
   const ids=new Set();
@@ -16,6 +17,8 @@ function validate(model){
       string(o.text,'text');string(o.fontFamily,'fontFamily');number(o.fontSizePt,'fontSizePt',.5,3600);
       for(const k of ['bold','italic','multiline'])flag(o[k],k);
       if(!['left','center','right'].includes(o.alignment)||!['containment','fixed'].includes(o.frameMode))throw Error('Invalid text layout');
+      if(o.multiline&&o.lineHeightMm===undefined)throw Error('CAPABILITY_UNSUPPORTED: explicit multiline lineHeightMm required');
+      if(o.multiline)number(o.lineHeightMm,'lineHeightMm',.1,1000);
       if(!o.multiline&&/[\r\n]/.test(o.text))throw Error('Multiline disabled');
     }else if(o.type.startsWith('barcode')){
       string(o.value,'barcode value');number(o.moduleMm,'moduleMm',.001,10);
@@ -40,7 +43,7 @@ function fromAnalysis(label,styles,dpi){
     const b=r.sourceBox,s=styles[i];
     if(!b||![b.x,b.y,b.w,b.h].every(Number.isFinite)||b.x<0||b.y<0||b.w<=0||b.h<=0||b.x+b.w>1.000001||b.y+b.h>1.000001)throw Error('Invalid sourceBox');
     const base={id:'OBJECT_'+(i+1),type,xMm:b.x*g.widthMm,yMm:b.y*g.heightMm,widthMm:b.w*g.widthMm,heightMm:b.h*g.heightMm,rotation:s.rotationDeg,printable:s.printable??true};
-    if(type==='text')return {...base,text:r.text??r.value,fontFamily:s.fontName,fontSizePt:s.fontSizePt,bold:s.bold??false,italic:s.italic??false,alignment:s.alignment,multiline:s.multiline??false,frameMode:s.frameMode??'containment'};
+    if(type==='text')return {...base,text:r.text??r.value,fontFamily:s.fontName,fontSizePt:s.fontSizePt,bold:s.bold??false,italic:s.italic??false,alignment:s.alignment,multiline:s.multiline??false,...(s.multiline?{lineHeightMm:s.lineHeightMm}:{}),frameMode:s.frameMode??'containment'};
     return {...base,symbology:r.format==='Code 128'?'Code128':'DataMatrix',value:r.text??r.value,moduleMm:s.moduleMm,moduleIndex:s.moduleIndex??null,...(type==='barcode1d'?{barHeightMm:s.barHeightMm??base.heightMm,humanReadable:s.humanReadable!=='none',quietZoneMm:s.quietZoneMm??0}:{rows:s.rows??null,columns:s.columns??null,gs1:s.gs1??false})};
   })};
   return validate(model);

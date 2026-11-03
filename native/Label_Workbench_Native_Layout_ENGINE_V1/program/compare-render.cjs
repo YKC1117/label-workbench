@@ -97,4 +97,4 @@ if(require.main===module){
   fs.writeFileSync(path.join(dir,'render-comparison.json'),JSON.stringify({status,toleranceMm:1,productAcceptance:'NOT_RUN',units:'mm',revision:'20261102-layout-rc2',basis:'source bounding box vs unique page ink; placement compares intervals, size is diagnostic',objects},null,2));
   if(!['WITHIN_PLACEMENT_ENVELOPES','LEGACY_DIAGNOSTIC_ONLY'].includes(status))process.exitCode=2;
 }
-module.exports={locate,compare,assess};
+module.exports={mask,locate,compare,assess};

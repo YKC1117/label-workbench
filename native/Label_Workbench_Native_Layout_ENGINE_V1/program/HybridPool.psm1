@@ -120,6 +120,7 @@ function Invoke-HybridPoolBuild($formats,$plan,[string]$textPoolPath,[string]$ru
             return $state
         }
         function Get-HybridCleanTextSlots($objects,[int]$needed) {
+            if($needed -eq 0){return @()}
             $slots=@()
             foreach($name in @(Get-NativeObjectNames $objects)){
                 $obj=Find-NativeObject $objects $name
@@ -140,9 +141,32 @@ function Invoke-HybridPoolBuild($formats,$plan,[string]$textPoolPath,[string]$ru
             $obj=Find-NativeObject $objects $name
             try{
                 if([int](Read-Property $obj 'Type') -ne 5){throw 'Hybrid selected slot is not Text.'}
+                $stylePeers=Get-HybridPeerSnapshot $objects $name
                 $anchor=Set-HybridTopLeft $obj $prefix
                 $payload=Set-HybridPayload $objects $obj ([string]$request.value) 'Text' $prefix -DiagnosticFullImport:$DiagnosticFullImport
-                $targets=[ordered]@{FontName=[string]$request.fontName;FontSize=[double]$request.fontSizePt;FontBold=$false;FontItalic=$false;RotationAngle=[double]$request.rotationDeg;X=[double]$request.xMm;Y=[double]$request.yMm}
+                $bold=($null -ne $request.PSObject.Properties['bold'] -and [bool]$request.bold)
+                $italic=($null -ne $request.PSObject.Properties['italic'] -and [bool]$request.italic)
+                $targets=[ordered]@{FontName=[string]$request.fontName;FontSize=[double]$request.fontSizePt;FontBold=$bold;FontItalic=$italic;RotationAngle=[double]$request.rotationDeg;X=[double]$request.xMm;Y=[double]$request.yMm}
+                $alignmentEvidence=$null
+                Write-Property $obj 'DoNotPrint' $false
+                if($isGeneralCandidate){
+                    Add-Type -AssemblyName System.Drawing
+                    $family=New-Object System.Drawing.FontFamily -ArgumentList ([string]$request.fontName)
+                    try{if($family.Name -cne [string]$request.fontName){throw ('Font substitution is prohibited: '+$request.fontName)}}finally{$family.Dispose()}
+                }
+                if($request.alignment -cne 'left' -or $request.rotationDeg -ne 0){
+                    foreach($key in @('FontName','FontSize','FontBold','FontItalic')){Write-Property $obj $key $targets[$key]}
+                    Write-Property $obj 'RotationAngle' ([double]0)
+                    $measure=Export-NativeMeasurement $obj ($prefix+'-upright.bmp') 600
+                    if($measure.physicalMmTrust -cne 'TRUSTED'){throw 'Untrusted Text alignment measurement.'}
+                    $excess=[double]$request.widthMm-[double]$measure.inkWidthMm
+                    if($excess -lt -0.02){throw ('Text ink exceeds canonical frame: '+$request.id)}
+                    $shift=if($request.alignment -ceq 'center'){$excess/2}elseif($request.alignment -ceq 'right'){$excess}else{0.0}
+                    $radians=-[double]$request.rotationDeg*[math]::PI/180
+                    $targets.X=[double]$request.xMm+$shift*[math]::Cos($radians)
+                    $targets.Y=[double]$request.yMm+$shift*[math]::Sin($radians)
+                    $alignmentEvidence=[ordered]@{policy='CANONICAL_FRAME_ALIGNED_USING_NATIVE_INK';alignment=[string]$request.alignment;upright=$measure;shiftMm=$shift;targetX=$targets.X;targetY=$targets.Y}
+                }
                 foreach($key in @($targets.Keys)){Write-Property $obj $key $targets[$key]}
                 $properties=[ordered]@{}
                 foreach($key in @($targets.Keys)){
@@ -154,8 +178,9 @@ function Invoke-HybridPoolBuild($formats,$plan,[string]$textPoolPath,[string]$ru
                 }
                 Write-Property $obj 'DoNotPrint' $false;if([bool](Read-Property $obj 'DoNotPrint')){throw 'Hybrid Text remained DoNotPrint.'}
                 $afterAnchor=Get-HybridAnchorState $obj;if(-not $afterAnchor.accepted){throw 'Hybrid Text anchor changed after property writes.'}
+                Assert-HybridPeerSnapshot $objects $stylePeers ($prefix+'-style') -DiagnosticOnly:$DiagnosticFullImport
                 $xml=[string](Invoke-ComMethod $obj 'GetXML' @($true,$true));if($prefix){$xml|Set-Content -LiteralPath ($prefix+'-presave.xml') -Encoding UTF8}
-                return [ordered]@{anchor=$anchor;payload=$payload;properties=$properties;anchorAfterProperties=$afterAnchor.mode}
+                return [ordered]@{anchor=$anchor;payload=$payload;properties=$properties;anchorAfterProperties=$afterAnchor.mode;alignmentEvidence=$alignmentEvidence}
             }finally{Release-NativeCom $obj}
         }
         function Set-HybridBarcodeGeometry($obj,$request,[string]$root,[string]$prefix) {
@@ -247,7 +272,8 @@ function Invoke-HybridPoolBuild($formats,$plan,[string]$textPoolPath,[string]$ru
         }
         # One bounded legacy replay in this engineering stress run captures the
         # previously missing peer delta; the production transaction stays strict.
-        if(@($plan.objects|Where-Object{$_.type -eq 'text'}).Count -ge 3){Capture-HybridLegacyDiagnostic}
+        $isGeneralCandidate=($null -ne $plan.PSObject.Properties['runtimeProfile'] -and $plan.runtimeProfile -ceq 'candidate-general-v1')
+        if(-not $isGeneralCandidate -and @($plan.objects|Where-Object{$_.type -eq 'text'}).Count -ge 3){Capture-HybridLegacyDiagnostic}
 
         $candidate=Join-Path $runDir 'candidate.unverified.btw';$accepted=Join-Path $runDir 'native-output.btw'
         $document=$null;$objects=$null;$reopenDoc=$null;$reopenObjects=$null
@@ -291,11 +317,14 @@ function Invoke-HybridPoolBuild($formats,$plan,[string]$textPoolPath,[string]$ru
                 $name=Insert-HybridComponent $document $ref $component $root $request $prefix;$objects=$ref.Value
                 $obj=Find-NativeObject $objects $name
                 try{
+                    $geometryPeers=Get-HybridPeerSnapshot $objects $name
                     $human=Hide-NativeCode128HumanReadable $obj ($prefix+'-human-readable') $root
                     Write-Property $obj 'RotationAngle' ([double]0)
                     if($request.type -eq 'code128'){Write-Property $obj 'Height' ([double]$request.heightMm)}
                     $sizing=Fit-NativeXDimensionNearest $obj $request ($prefix+'-size') $dpi
+                    if($request.rotationDeg -ne 0){[void](Export-NativeMeasurement $obj ($prefix+'-upright.bmp') 600)}
                     $geometry=Set-HybridBarcodeGeometry $obj $request $root $prefix
+                    Assert-HybridPeerSnapshot $objects $geometryPeers ($prefix+'-geometry')
                     Write-Property $obj 'DoNotPrint' $false;if([bool](Read-Property $obj 'DoNotPrint')){throw 'Hybrid barcode remained DoNotPrint.'}
                     $report.objects+=,[ordered]@{id=[string]$request.id;type=[string]$request.type;physicalName=$name;nativeType=4;humanReadable=$human;sizing=$sizing;geometry=$geometry;reopenEditable='NOT_RUN'}
                 }finally{Release-NativeCom $obj}
@@ -316,19 +345,38 @@ function Invoke-HybridPoolBuild($formats,$plan,[string]$textPoolPath,[string]$ru
                 try{
                     $expectedType=if($request.type -eq 'text'){5}else{4};if([int](Read-Property $obj 'Type') -ne $expectedType){throw ('Hybrid reopen Type mismatch: '+$request.id)}
                     if([string](Read-Property $obj 'Value') -cne [string]$request.value){throw ('Hybrid reopen payload mismatch: '+$request.id)}
-                    Assert-NativeNear ([double](Read-Property $obj 'X')) ([double]$request.xMm) 0.05 ('Hybrid reopen X '+$request.id)
-                    Assert-NativeNear ([double](Read-Property $obj 'Y')) ([double]$request.yMm) 0.05 ('Hybrid reopen Y '+$request.id)
+                    Assert-NativeNear ([double](Read-Property $obj 'X')) ([double]$entry.geometry.properties.X.requested) 0.05 ('Hybrid reopen X '+$request.id)
+                    Assert-NativeNear ([double](Read-Property $obj 'Y')) ([double]$entry.geometry.properties.Y.requested) 0.05 ('Hybrid reopen Y '+$request.id)
                     Assert-NativeNear ([double](Read-Property $obj 'RotationAngle')) ([double]$request.rotationDeg) 0.01 ('Hybrid reopen Rotation '+$request.id)
                     if([bool](Read-Property $obj 'DoNotPrint')){throw ('Hybrid reopen object hidden: '+$request.id)}
                     if($request.type -eq 'text'){
                         if([string](Read-Property $obj 'FontName') -cne [string]$request.fontName){throw ('Hybrid reopen FontName mismatch: '+$request.id)}
                         Assert-NativeNear ([double](Read-Property $obj 'FontSize')) ([double]$request.fontSizePt) 0.02 ('Hybrid reopen FontSize '+$request.id)
-                        if([bool](Read-Property $obj 'FontBold') -or [bool](Read-Property $obj 'FontItalic')){throw ('Hybrid reopen text style mismatch: '+$request.id)}
+                        foreach($flag in @('bold','italic')){
+                            $expectedFlag=($null -ne $request.PSObject.Properties[$flag] -and [bool]$request.$flag)
+                            $property=if($flag -ceq 'bold'){'FontBold'}else{'FontItalic'}
+                            if([bool](Read-Property $obj $property) -ne $expectedFlag){throw ('Hybrid reopen text style mismatch: '+$request.id+'.'+$flag)}
+                        }
                         $a=Get-HybridAnchorState $obj;if(-not $a.accepted){throw ('Hybrid reopen Text anchor mismatch: '+$request.id)}
                     }else{
                         $xml=Read-NativeXml ([string](Invoke-ComMethod $obj 'GetXML' @($true,$true)));if((Get-NativeHumanReadableVisibility $xml) -cne 'None'){throw ('Hybrid reopen caption visible: '+$request.id)}
+                        $reopenedX=Get-NativeXDimension $xml
+                        if($reopenedX.index -ne $request.moduleIndex){throw ('Hybrid reopen module index mismatch: '+$request.id)}
+                        Assert-NativeNear ([double]$reopenedX.mils*0.0254) ([double]$request.moduleMm) 0.001 ('Hybrid reopen module '+$request.id)
+                        if($request.type -ceq 'code128'){Assert-NativeNear ([double](Read-Property $obj 'Height')) ([double]$request.heightMm) 0.10 ('Hybrid reopen bar height '+$request.id)}
+                        $a=Get-HybridAnchorState $obj;if(-not $a.accepted){throw ('Hybrid reopen barcode anchor mismatch: '+$request.id)}
                     }
                     $entry.reopenEditable='PAYLOAD_GEOMETRY_STYLE_PERSISTED'
+                    if($isGeneralCandidate){
+                        $beforeChallenge=[string](Invoke-ComMethod $obj 'GetXML' @($true,$true))
+                        $root=if($request.type -ceq 'text'){'Text'}elseif($request.type -ceq 'code128'){'BarCode-Code-128'}else{'BarCode-DataMatrix'}
+                        $prefix=Join-Path $runDir ('editable-'+$request.id)
+                        [void](Set-HybridPayload $reopenObjects $obj ('EDIT_'+$request.id) $root ($prefix+'-challenge'))
+                        [void](Set-HybridPayload $reopenObjects $obj ([string]$request.value) $root ($prefix+'-restore'))
+                        $afterChallenge=[string](Invoke-ComMethod $obj 'GetXML' @($true,$true))
+                        if((Get-NativeXmlKey (Read-NativeXml $beforeChallenge)) -cne (Get-NativeXmlKey (Read-NativeXml $afterChallenge))){throw ('Editability roundtrip did not restore exact object XML: '+$request.id)}
+                        $entry.reopenEditable='CHALLENGE_RESTORE_EXACT_XML_AND_PEER_ISOLATION_PASS'
+                    }
                 }finally{Release-NativeCom $obj}
             }
             Assert-NativeNameSet @($report.objects|ForEach-Object{[string]$_.physicalName}) @(Get-NativeObjectNames $reopenObjects)

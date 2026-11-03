@@ -410,14 +410,16 @@ function Test-NativeLayoutInput($layout) {
     foreach($k in @('schema','widthMm','heightMm','objects')){if($null -eq $layout.PSObject.Properties[$k]){throw ('Missing layout.'+$k)}}
     if($layout.schema -ceq 'renderer-probe-v1'){
         # Reuse existing scalar/type validation, then retain the canonical targets intact.
+        $candidateProfile=($null -ne $layout.PSObject.Properties['runtimeProfile'] -and $layout.runtimeProfile -ceq 'candidate-general-v1')
         $converted=@()
         foreach($o in $layout.objects){
-            if($o.referencePoint -cne 'TopLeft' -or $o.rotationDeg -ne 0){throw 'Unsupported prototype anchor or angle.'}
+            if($o.referencePoint -cne 'TopLeft' -or ($o.rotationDeg -ne 0 -and (-not $candidateProfile -or $o.rotationDeg -notin @(-90,-180,-270)))){throw 'Unsupported prototype anchor or angle.'}
             $v=[ordered]@{id=$o.id;type=$o.type;value=$o.value;xMm=$o.xMm;yMm=$o.yMm;rotationDeg=$o.rotationDeg}
             [void](Test-NativeNumber $o.widthMm 0.01 1000 'frame width')
             [void](Test-NativeNumber $o.heightMm 0.01 1000 'frame height')
             if($o.type -eq 'text'){
-                if($o.alignment -cne 'left'){throw 'Unsupported text alignment.'}
+                if($o.alignment -cne 'left' -and (-not $candidateProfile -or $o.alignment -cnotin @('center','right'))){throw 'Unsupported text alignment.'}
+                if($candidateProfile){foreach($flag in @('bold','italic')){if($o.$flag -isnot [bool]){throw ('Invalid Text '+$flag)}}}
                 $v.fontName=$o.fontName;$v.fontSizePt=$o.fontSizePt
             }else{
                 if($o.humanReadable -cne 'none'){throw 'Unsupported caption mode.'}
@@ -432,6 +434,7 @@ function Test-NativeLayoutInput($layout) {
         $legacy=[pscustomobject]@{schema='lwb-native-layout-v1';widthMm=$layout.widthMm;heightMm=$layout.heightMm;objects=$converted}
         $checked=Test-NativeLayoutInput $legacy
         $checked.objects=$layout.objects
+        $checked|Add-Member -NotePropertyName runtimeProfile -NotePropertyValue $(if($candidateProfile){'candidate-general-v1'}else{'upright-v1'})
         return $checked
     }
     if([string]$layout.schema -cne 'lwb-native-layout-v1'){throw 'Unsupported layout schema.'}

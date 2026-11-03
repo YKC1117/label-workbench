@@ -2,7 +2,7 @@
 const {validate}=require('./canonical.cjs'),G=require('./geometry.cjs'),{footprint}=require('./barcode.cjs');
 const escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]));
 function preview(model){
-  validate(model);const objects=[],elements=[];
+  validate(model);model=require('./text-layout.cjs').expand(model);const objects=[],elements=[];
   for(const o of model.objects.filter(o=>o.printable)){
     let body='',local={...o},quality='MODEL_FRAME',fp=null;
     if(o.type.startsWith('barcode')){
@@ -20,7 +20,7 @@ function preview(model){
     else if(o.type==='line')body='<line x2="'+o.widthMm+'" y2="'+o.heightMm+'" stroke="black" stroke-width="'+o.strokeMm+'"/>';
     else body='<image width="'+o.widthMm+'" height="'+o.heightMm+'" href="'+escape(o.dataUri)+'"/>';
     const bounds=G.bounds(local),offset=G.rotatePoint(fp?.quietZoneMm??0,0,o.rotation),symbol=fp?G.bounds({...o,xMm:o.xMm+offset.x,yMm:o.yMm+offset.y,widthMm:fp.symbolWidthMm,heightMm:fp.symbolHeightMm}):null;
-    objects.push({id:o.id,type:o.type,bounds,symbolBounds:symbol,rotation:o.rotation,quality,footprint:fp?{widthMm:fp.widthMm,heightMm:fp.heightMm,rows:fp.rows??null,columns:fp.columns??null}:null});
+    objects.push({id:o.id,type:o.type,frame:o.type==='text'?{xMm:o.xMm,yMm:o.yMm,widthMm:o.widthMm,heightMm:o.heightMm}:null,alignment:o.alignment??null,parentId:o.parentId??null,bounds,symbolBounds:symbol,rotation:o.rotation,quality,footprint:fp?{widthMm:fp.widthMm,heightMm:fp.heightMm,rows:fp.rows??null,columns:fp.columns??null}:null});
     elements.push('<g data-id="'+o.id+'" transform="translate('+o.xMm+' '+o.yMm+') rotate('+o.rotation+')">'+body+'</g>');
   }
   return {schema:'lwb-preview-v1',label:model.label,objects,svg:'<svg xmlns="http://www.w3.org/2000/svg" width="'+model.label.widthMm+'mm" height="'+model.label.heightMm+'mm" viewBox="0 0 '+model.label.widthMm+' '+model.label.heightMm+'">'+elements.join('')+'</svg>'};
