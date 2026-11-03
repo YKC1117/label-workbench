@@ -1,0 +1,119 @@
+name: BarTender Renderer Windows Probe
+
+on:
+  push:
+    branches:
+      - experiment/com-renderer-prototype
+    paths:
+      - review/renderer-prototype/run-request.json
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bartender-renderer-windows-probe
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    name: Windows + BarTender 2022 COM probe
+    if: >-
+      github.actor == 'YKC1117' &&
+      contains(github.event.head_commit.message, '[bartender-probe]')
+    runs-on: [self-hosted, windows, x64, bartender]
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout exact trigger commit
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          clean: true
+
+      - name: Preflight Windows / PowerShell 5.1 / BarTender COM
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $reportDir = Join-Path $env:GITHUB_WORKSPACE 'review\renderer-prototype\runner-evidence'
+          New-Item -ItemType Directory -Force -Path $reportDir | Out-Null
+
+          $rows = [ordered]@{
+            timestampUtc = [DateTime]::UtcNow.ToString('o')
+            machine = $env:COMPUTERNAME
+            os = [Environment]::OSVersion.VersionString
+            powershell = $PSVersionTable.PSVersion.ToString()
+            processBits = [IntPtr]::Size * 8
+            bartenderProgId = 'NOT_CHECKED'
+            existingBarTendProcesses = 0
+          }
+
+          if ($env:OS -ne 'Windows_NT') {
+            $rows | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath (Join-Path $reportDir 'preflight.json') -Encoding UTF8
+            throw 'This workflow requires a Windows self-hosted runner.'
+          }
+
+          if ($PSVersionTable.PSVersion.Major -ne 5) {
+            $rows | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath (Join-Path $reportDir 'preflight.json') -Encoding UTF8
+            throw ('Windows PowerShell 5.1 required; actual: ' + $PSVersionTable.PSVersion)
+          }
+
+          $btType = [Type]::GetTypeFromProgID('BarTender.Application', $false)
+          if ($null -eq $btType) {
+            $rows.bartenderProgId = 'MISSING'
+            $rows | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath (Join-Path $reportDir 'preflight.json') -Encoding UTF8
+            throw 'BarTender.Application COM ProgID is not registered on this machine.'
+          }
+          $rows.bartenderProgId = 'REGISTERED'
+
+          $existing = @(Get-Process -Name BarTend -ErrorAction SilentlyContinue)
+          $rows.existingBarTendProcesses = $existing.Count
+          $rows | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath (Join-Path $reportDir 'preflight.json') -Encoding UTF8
+
+          if ($existing.Count -gt 0) {
+            throw 'A pre-existing BarTend.exe is running. The prototype intentionally refuses to take ownership of an existing BarTender process.'
+          }
+
+      - name: Run canonical COM renderer probe
+        shell: cmd
+        run: call PROBE.cmd
+
+      - name: Collect compact result summary
+        if: always()
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Continue'
+          $program = Join-Path $env:GITHUB_WORKSPACE 'native\Label_Workbench_Native_Layout_ENGINE_V1\program'
+          $evidence = Join-Path $env:GITHUB_WORKSPACE 'review\renderer-prototype\runner-evidence'
+          New-Item -ItemType Directory -Force -Path $evidence | Out-Null
+
+          $summary = [ordered]@{
+            sha = $env:GITHUB_SHA
+            ref = $env:GITHUB_REF
+            resultZip = Test-Path -LiteralPath (Join-Path $program 'NATIVE_BUILD_RESULT.zip')
+            latestBtw = Test-Path -LiteralPath (Join-Path $program 'LATEST_NATIVE_OUTPUT.btw')
+            latestReport = Test-Path -LiteralPath (Join-Path $program 'LATEST_NATIVE_REPORT.json')
+          }
+          $summary | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath (Join-Path $evidence 'workflow-summary.json') -Encoding UTF8
+
+          '## BarTender Renderer Windows Probe' | Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY
+          ('- Commit: `' + $env:GITHUB_SHA + '`') | Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY
+          ('- NATIVE_BUILD_RESULT.zip: **' + $summary.resultZip + '**') | Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY
+          ('- LATEST_NATIVE_OUTPUT.btw: **' + $summary.latestBtw + '**') | Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY
+          ('- LATEST_NATIVE_REPORT.json: **' + $summary.latestReport + '**') | Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY
+
+      - name: Upload BarTender evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bartender-renderer-evidence-${{ github.run_id }}
+          if-no-files-found: warn
+          retention-days: 30
+          path: |
+            canonical.json
+            fixture.json
+            review/renderer-prototype/runner-evidence/**
+            native/Label_Workbench_Native_Layout_ENGINE_V1/program/NATIVE_BUILD_RESULT.zip
+            native/Label_Workbench_Native_Layout_ENGINE_V1/program/LATEST_NATIVE_OUTPUT.btw
+            native/Label_Workbench_Native_Layout_ENGINE_V1/program/LATEST_NATIVE_REPORT.json
+            native/Label_Workbench_Native_Layout_ENGINE_V1/program/native-results/**
