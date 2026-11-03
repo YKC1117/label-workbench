@@ -12,7 +12,11 @@ function verdict(o,p){
 }
 function anchorCertified(actual,p){
   if(actual.referencePoint==='TopLeft')return true;
-  return p.type==='text'&&p.anchorPolicy==='BARTENDER_DOCUMENTED_DEFAULT_TOP_LEFT_VISUAL_GATE'&&actual.referencePointPresent===false&&actual.referencePoint==null;
+  // Every supported native request must explicitly ask BarTender for TopLeft.
+  // BarTender 2022 R2 may omit that default when serializing GetXML. Omission
+  // is accepted here only after compare-render already produced a unique
+  // full-page BMP registration (verdict() otherwise returns UNRESOLVED).
+  return p.referencePoint==='TopLeft'&&actual.referencePointPresent===false&&actual.referencePoint==null;
 }
 if(require.main===module){
  const [dir,file]=process.argv.slice(2),plan=read(file),ev=read(path.join(dir,'native-visual-evidence.json'));
