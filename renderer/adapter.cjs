@@ -9,8 +9,8 @@ function nativeRequest(model){
     const common={id:o.id,type:o.type==='barcode1d'?'code128':o.type==='barcode2d'?'datamatrix':'text',value:o.text??o.value,xMm:pos.xMm,yMm:pos.yMm,widthMm:o.widthMm,heightMm:o.heightMm,rotationDeg:pos.rotationCom,printable:o.printable};
     if(o.type==='text'){
       if(o.multiline||o.alignment!=='left'||o.frameMode==='fixed')throw Error('CAPABILITY_UNSUPPORTED: fixed/paragraph/rich text requires certified component');
-      if(o.bold||o.italic)throw Error('CAPABILITY_UNSUPPORTED: bold/italic Text XML styling is not runtime-certified');
-      return {...common,fontName:o.fontFamily,fontSizePt:o.fontSizePt,alignment:o.alignment,anchorPolicy:'BARTENDER_DOCUMENTED_DEFAULT_TOP_LEFT_VISUAL_GATE',fontMutationPolicy:'DISPOSABLE_CANDIDATE_XML_FONTNAME_POINTSIZE'};
+      if(o.bold||o.italic)throw Error('CAPABILITY_UNSUPPORTED: bold/italic Text pool variants are not runtime-certified');
+      return {...common,referencePoint:'TopLeft',fontName:o.fontFamily,fontSizePt:o.fontSizePt,alignment:o.alignment,anchorPolicy:'BARTENDER_DOCUMENTED_DEFAULT_TOP_LEFT_VISUAL_GATE',fontMutationPolicy:'DESIGNER_TEXT_POOL_AUTOMATION'};
     }
     if(o.moduleIndex===null)throw Error('CAPABILITY_UNSUPPORTED: explicit printer module profile required');
     if(o.type==='barcode1d'&&(o.humanReadable||o.quietZoneMm!==0))throw Error('CAPABILITY_UNSUPPORTED: caption/quiet-zone anchor requires runtime certification');
@@ -20,6 +20,6 @@ function nativeRequest(model){
     return {...common,referencePoint:'TopLeft',heightMm:o.type==='barcode1d'?o.barHeightMm:o.heightMm,moduleMm:o.moduleMm,moduleIndex:o.moduleIndex,humanReadable:'none',rows:fp.rows??null,columns:fp.columns??null};
   });
   if(!objects.length)throw Error('No printable objects');
-  return {schema:'renderer-probe-v1',revision:'20261103-btc-core-v2',widthMm:model.label.widthMm,heightMm:model.label.heightMm,dpi:model.label.dpi,objects};
+  return {schema:'renderer-probe-v1',revision:'20261103-hybrid-text-pool-btc-v1',widthMm:model.label.widthMm,heightMm:model.label.heightMm,dpi:model.label.dpi,objects};
 }
 module.exports={nativeRequest};
