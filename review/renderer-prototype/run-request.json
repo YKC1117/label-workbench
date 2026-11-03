@@ -1,7 +1,7 @@
 {
   "enabled": true,
-  "purpose": "Certify Designer-authored Text pool payload/style/geometry/printability persistence using production EmbeddedDataSource mutation; anchor remains Visual QA pending.",
-  "requestedAt": "2026-11-03T11:36:00+08:00",
+  "purpose": "Run end-to-end canonical four-object Hybrid Renderer: Designer-authored Text pool plus fixed Code128/Data Matrix BTC, Save/Reopen and BarTender BMP Visual QA.",
+  "requestedAt": "2026-11-03T11:44:00+08:00",
   "requestedBy": "YKC1117",
   "target": "experiment/com-renderer-prototype"
 }
