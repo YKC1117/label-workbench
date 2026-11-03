@@ -1,8 +1,5 @@
 @echo off
 setlocal
 cd /d "%~dp0"
-if not exist "review\renderer-prototype\runner-evidence" mkdir "review\renderer-prototype\runner-evidence"
-node.exe "review\renderer-prototype\materialize-controlled-donor.cjs" "review\renderer-prototype\runner-evidence\controlled-donor.btw"
-if errorlevel 1 exit /b %ERRORLEVEL%
-powershell.exe -STA -NoProfile -ExecutionPolicy Bypass -File "review\renderer-prototype\Probe-HybridRenderer.ps1" -CanonicalPath "%~dp0canonical.json" -TextPoolPath "%~dp0review\renderer-prototype\runner-evidence\controlled-donor.btw"
+powershell.exe -STA -NoProfile -ExecutionPolicy Bypass -File "native\Label_Workbench_Native_Layout_ENGINE_V1\program\Build-NativeLayout.ps1" -LayoutPath "%~dp0canonical.json" -CaptureVisualEvidence -RendererMode Auto
 exit /b %ERRORLEVEL%
