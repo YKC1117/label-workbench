@@ -8,7 +8,7 @@ function New-Text($objects){$c=$null;try{$c=[LabelWorkbench.ComBridge]::Call($ob
 function Get-Font([string]$xml){$d=New-Object Xml.XmlDocument;$d.LoadXml($xml);$f=$d.SelectSingleNode('/*/*[local-name()="Font"]');return [ordered]@{FontName=[string]$f.GetAttribute('FontName');PointSize=[string]$f.GetAttribute('PointSize');CharacterSet=[string]$f.GetAttribute('CharacterSet');Height=[string]$f.GetAttribute('Height')}}
 function Set-Font([string]$xml,[string]$name,[double]$size){$d=New-Object Xml.XmlDocument;$d.PreserveWhitespace=$true;$d.LoadXml($xml);$f=$d.SelectSingleNode('/*/*[local-name()="Font"]');$f.SetAttribute('FontName',$name);$f.SetAttribute('PointSize',$size.ToString('0.000',[Globalization.CultureInfo]::InvariantCulture));return [string]$d.OuterXml}
 $result=[ordered]@{schema='lwb-text-geometry-binding-v1';status='STARTED';runtime=[ordered]@{};properties=[ordered]@{};combined=$null;cleanup=@()}
-$app=$null;$formats=$null;$format=$null;$objects=$null;$ownedPid=$null;$pre=@(Get-Process BarTend -ErrorAction SilentlyContinue|Select-Object -ExpandProperty Id)
+$app=$null;$formats=$null;$format=$null;$objects=$null;$ownedPid=$null;$pre=@(Get-Process -Name BarTend -ErrorAction SilentlyContinue|Select-Object -ExpandProperty Id)
 try{
  $bridge=Join-Path $PSScriptRoot '..\..\native\Label_Workbench_Native_Layout_ENGINE_V1\program\ComBridge.cs';if(-not('LabelWorkbench.ComBridge' -as [type])){Add-Type -Path ([IO.Path]::GetFullPath($bridge)) -ErrorAction Stop}
  $app=New-Object -ComObject BarTender.Application;$ownedPid=[int][LabelWorkbench.ComBridge]::Get($app,'ProcessID',[object[]]@());if($pre -contains $ownedPid){throw 'Diagnostic attached to pre-existing BarTender process.'}
@@ -20,8 +20,19 @@ try{
  }
  $o=$null;$c=[ordered]@{status='STARTED';error=$null}
  try{
-  $o=New-Text $objects;$before=[string][LabelWorkbench.ComBridge]::Call($o,'GetXML',[object[]]@($true,$true));$request=Set-Font $before 'Arial' 9.0;[void][LabelWorkbench.ComBridge]::Call($o,'SetXML',[object[]]@($request));$c.fontAfterCandidate=Get-Font ([string][LabelWorkbench.ComBridge]::Call($o,'GetXML',[object[]]@($true,$true))
-  [LabelWorkbench.ComBridge]::Set($o,'X',[object[]]@([double]4.0));[LabelWorkbench.ComBridge]::Set($o,'Y',[object[]]@([double]3.0));$c.X=[double][LabelWorkbench.ComBridge]::Get($o,'X',[object[]]@());$c.Y=[double][LabelWorkbench.ComBridge]::Get($o,'Y',[object[]]@());$c.fontAfterXY=Get-Font ([string][LabelWorkbench.ComBridge]::Call($o,'GetXML',[object[]]@($true,$true));$c.status='COMPLETE'
+  $o=New-Text $objects
+  $before=[string][LabelWorkbench.ComBridge]::Call($o,'GetXML',[object[]]@($true,$true))
+  $request=Set-Font $before 'Arial' 9.0
+  [void][LabelWorkbench.ComBridge]::Call($o,'SetXML',[object[]]@($request))
+  $candidateXml=[string][LabelWorkbench.ComBridge]::Call($o,'GetXML',[object[]]@($true,$true))
+  $c.fontAfterCandidate=Get-Font $candidateXml
+  [LabelWorkbench.ComBridge]::Set($o,'X',[object[]]@([double]4.0))
+  [LabelWorkbench.ComBridge]::Set($o,'Y',[object[]]@([double]3.0))
+  $c.X=[double][LabelWorkbench.ComBridge]::Get($o,'X',[object[]]@())
+  $c.Y=[double][LabelWorkbench.ComBridge]::Get($o,'Y',[object[]]@())
+  $afterXY=[string][LabelWorkbench.ComBridge]::Call($o,'GetXML',[object[]]@($true,$true))
+  $c.fontAfterXY=Get-Font $afterXY
+  $c.status='COMPLETE'
  }catch{$c.status='FAILED';$c.error=$_.Exception.ToString()}finally{Release-Com $o};$result.combined=$c;$result.status='COMPLETE'
 }catch{$result.status='FAILED';$result.error=$_.Exception.ToString()}finally{
  Release-Com $objects;if($null -ne $format){try{[void][LabelWorkbench.ComBridge]::Call($format,'Close',[object[]]@(1))}catch{};Release-Com $format};Release-Com $formats;if($null -ne $app){try{[void][LabelWorkbench.ComBridge]::Call($app,'Quit',[object[]]@(1))}catch{};Release-Com $app};Start-Sleep -Milliseconds 400
