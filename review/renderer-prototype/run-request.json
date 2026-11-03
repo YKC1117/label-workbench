@@ -1,7 +1,7 @@
 {
   "enabled": true,
-  "purpose": "Diagnose Designer-authored controlled-donor Text Automation capability before replacing hidden Create(5) Text renderer.",
-  "requestedAt": "2026-11-03T11:25:00+08:00",
+  "purpose": "Retry Designer-authored controlled-donor Text Automation capability after preserving COM collections as single PowerShell values.",
+  "requestedAt": "2026-11-03T11:27:00+08:00",
   "requestedBy": "YKC1117",
   "target": "experiment/com-renderer-prototype"
 }
