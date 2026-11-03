@@ -9,7 +9,10 @@ if([string]::IsNullOrWhiteSpace($OutputPath)){$OutputPath=Join-Path $PSScriptRoo
 $DonorPath=[IO.Path]::GetFullPath($DonorPath);$OutputPath=[IO.Path]::GetFullPath($OutputPath)
 New-Item -ItemType Directory -Force -Path (Split-Path -Parent $OutputPath)|Out-Null
 function Release-Com($v){if($null -ne $v -and [Runtime.InteropServices.Marshal]::IsComObject($v)){try{[void][Runtime.InteropServices.Marshal]::ReleaseComObject($v)}catch{}}}
-function Get-Com($o,[string]$n){return [LabelWorkbench.ComBridge]::Get($o,$n,[object[]]@())}
+# Preserve COM collection objects as single pipeline values. Without the unary
+# comma, an empty Formats collection becomes $null and a populated Objects
+# collection is flattened into its members by Windows PowerShell 5.1.
+function Get-Com($o,[string]$n){return ,([LabelWorkbench.ComBridge]::Get($o,$n,[object[]]@()))}
 function Set-Com($o,[string]$n,$v){[LabelWorkbench.ComBridge]::Set($o,$n,[object[]]@($v))}
 function Call-Com($o,[string]$n,[object[]]$a){return [LabelWorkbench.ComBridge]::Call($o,$n,$a)}
 function Snapshot-Xml($o){return [string](Call-Com $o 'GetXML' ([object[]]@($true,$true)))}
