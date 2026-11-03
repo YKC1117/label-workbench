@@ -37,7 +37,11 @@ $helper=@'
             foreach($key in @($targets.Keys)){
                 Write-Property $obj $key $targets[$key]
                 $actual=Read-Property $obj $key;$target=$targets[$key]
-                $tol=if($key -in @('X','Y')){0.02}elseif($key -eq 'Height'){0.10}else{0.01}
+                # BarTender stores coordinates on the active printer/grid quantum.
+                # Real CP-3140 evidence observed 70.000 -> 69.977 mm (0.023 mm),
+                # so 0.05 mm is a readback/quantization gate only. Independent
+                # 600dpi BMP registration remains the placement acceptance gate.
+                $tol=if($key -in @('X','Y')){0.05}elseif($key -eq 'Height'){0.10}else{0.01}
                 Assert-NativeNear ([double]$actual) ([double]$target) $tol ('Hybrid barcode '+$request.id+'.'+$key)
                 $properties[$key]=[ordered]@{requested=$target;actual=[double]$actual;tolerance=$tol}
             }
@@ -58,6 +62,12 @@ $old='$geometry=Set-NativeGeometry $obj $request $prefix'
 $new='$geometry=Set-HybridBarcodeGeometry $obj $request $root $prefix'
 if(([regex]::Matches($text,[regex]::Escape($old))).Count -ne 1){throw 'Expected exactly one Hybrid Set-NativeGeometry barcode call.'}
 $text=$text.Replace($old,$new)
+$reopenX="Assert-NativeNear ([double](Read-Property `$obj 'X')) ([double]`$request.xMm) 0.02 ('Hybrid reopen X '+`$request.id)"
+$reopenY="Assert-NativeNear ([double](Read-Property `$obj 'Y')) ([double]`$request.yMm) 0.02 ('Hybrid reopen Y '+`$request.id)"
+foreach($pair in @(@($reopenX,$reopenX.Replace(' 0.02 ',' 0.05 ')),@($reopenY,$reopenY.Replace(' 0.02 ',' 0.05 ')))){
+    if(([regex]::Matches($text,[regex]::Escape([string]$pair[0]))).Count -ne 1){throw ('Expected exactly one reopen coordinate tolerance source: '+[string]$pair[0])}
+    $text=$text.Replace([string]$pair[0],[string]$pair[1])
+}
 if(-not $text.Contains('TARGET_GEOMETRY_WITHIN_TOLERANCE_VISUAL_PENDING')){throw 'Hybrid barcode geometry patch marker missing after replacement.'}
 [IO.File]::WriteAllText($HybridModulePath,$text,(New-Object Text.UTF8Encoding($true)))
-Write-Host 'Prototype Hybrid barcode default-TopLeft geometry patch applied.' -ForegroundColor Green
+Write-Host 'Prototype Hybrid barcode default-TopLeft geometry + 0.05 mm coordinate quantization patch applied.' -ForegroundColor Green
