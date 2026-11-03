@@ -68,7 +68,7 @@ try {
   try{
    $layout=Get-Content -LiteralPath (Join-Path $base 'native-layout.multi.sample.json') -Raw -Encoding UTF8|ConvertFrom-Json
    # Force one text away from the fixture default so the regression exercises
-   # the real-runtime FontName COM failure -> Text XML fallback path.
+   # the real-runtime XML-only FontName transaction path.
    $layout.objects[0].fontName='Mock Alternate Font'
    $formats=New-Object NativeReviewFixture.Formats;$formats.Fault=$fault
    $failed=$false;$result=$null
@@ -79,8 +79,8 @@ try {
     if([object]::ReferenceEquals($formats.Added,$formats.Reopened)){throw 'Reopen must be a new instance.'}
     $fontResult=$result.objects[0].geometry.properties['FontName']
     $fontObject=$formats.Added.Objects.Data[0]
-    if($fontResult.writeMode -cne 'XML_FONT_ATTRIBUTE_FALLBACK' -or $fontResult.actual -cne 'Mock Alternate Font' -or $fontObject.FontNameSetCalls -ne 1 -or $fontObject.FontXmlChangeCalls -ne 1){throw 'Healthy mock did not execute exactly one rejected COM font setter and XML font change.'}
-    if($formats.Added.Objects.Data[1].FontNameSetCalls -ne 0){throw 'Already-matched font was unnecessarily written.'}
+    if($fontResult.writeMode -cne 'XML_FONT_ATTRIBUTE_ONLY' -or $fontResult.actual -cne 'Mock Alternate Font' -or $fontObject.FontNameSetCalls -ne 0 -or $fontObject.FontXmlChangeCalls -ne 1){throw 'Healthy mock did not execute exactly one XML-only font change without COM FontName access.'}
+    if($formats.Added.Objects.Data[1].FontNameSetCalls -ne 0){throw 'Already-matched font was unnecessarily written through COM.'}
 
     if(@($result.objects|Where-Object{$_.reopenEditable -cne 'SECOND_PAYLOAD_AND_PEER_ISOLATION_OK'}).Count){throw 'Editability/isolation missing.'}
    }else{
