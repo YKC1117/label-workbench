@@ -1,7 +1,7 @@
 {
   "enabled": true,
-  "purpose": "Run44 B/C passed. Consolidated v2 candidate resolves A Text glyph-bearing anchor mismatch using measured per-object 600dpi ink origin, shared pure conversion, unchanged .5mm Visual QA and .02mm native readback; repeat A+B+C to prove complete candidate and rotated Text mapping.",
-  "requestedAt": "2026-11-03T07:47:25.438093+00:00",
+  "purpose": "Bounded native contract discovery: installed creation enum anchored to proven Barcode4/Text5, at most one Line/Box/Image creation each, property/XML/BMP and cold-process source-hidden persistence; proven Code128 native HRI payload coupling. No rerun of solved 8Text, no mass BTC scan, not renderer acceptance.",
+  "requestedAt": "2026-11-03T08:07:22.375244+00:00",
   "requestedBy": "YKC1117",
   "target": "experiment/com-renderer-prototype"
 }
