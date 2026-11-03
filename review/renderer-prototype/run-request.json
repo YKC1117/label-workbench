@@ -1,7 +1,7 @@
 {
   "enabled": true,
-  "purpose": "Retry Windows BarTender 2022 renderer probe after aligning native persistence regression with XML-only FontName runtime contract.",
-  "requestedAt": "2026-11-03T10:31:00+08:00",
+  "purpose": "Run real BarTender FontName binding diagnostic before continuing renderer probe.",
+  "requestedAt": "2026-11-03T10:44:00+08:00",
   "requestedBy": "YKC1117",
   "target": "experiment/com-renderer-prototype"
 }
