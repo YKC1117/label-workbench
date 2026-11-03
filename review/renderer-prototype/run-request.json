@@ -1,7 +1,7 @@
 {
   "enabled": true,
-  "purpose": "Prove the Run #36 failure is caused only by exact-XML snapshots of parked donor objects: keep global source-ID collision checks, protect already-enabled retained peers, then require the full eight-Text + Code128 + Data Matrix Save/Reopen and 600dpi Visual QA gate.",
-  "requestedAt": "2026-11-03T14:08:00+08:00",
+  "purpose": "Verify the tracked HybridPool retained-peer isolation fix without any runtime patch: eight Designer Text objects plus Code128 and Data Matrix must pass source isolation, Save/Reopen, stable SHA and 600dpi dual-render Visual QA.",
+  "requestedAt": "2026-11-03T14:14:00+08:00",
   "requestedBy": "YKC1117",
   "target": "experiment/com-renderer-prototype"
 }
