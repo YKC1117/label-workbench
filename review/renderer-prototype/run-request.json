@@ -1,0 +1,7 @@
+{
+  "enabled": false,
+  "purpose": "Placeholder only. A real Windows BarTender probe is triggered only by changing this file in a commit whose message contains [bartender-probe].",
+  "requestedAt": null,
+  "requestedBy": null,
+  "target": "experiment/com-renderer-prototype"
+}
