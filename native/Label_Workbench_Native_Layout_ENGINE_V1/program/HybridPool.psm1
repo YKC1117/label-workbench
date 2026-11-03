@@ -113,7 +113,9 @@ function Invoke-HybridPoolBuild($formats,$plan,[string]$textPoolPath,[string]$ru
             if($state.sourceId -cne $id){throw 'Hybrid target source identity changed.'}
             $expectedTarget=Read-NativeXml $beforeText
             $expectedTarget.SelectSingleNode('/*/*[local-name()="DataSources"]/*/*[local-name()="Value"]').InnerText=$payload
-            if((Get-NativeXmlKey $read) -cne (Get-NativeXmlKey $expectedTarget)){throw 'Hybrid import changed protected target XML outside literal Value.'}
+            $expectedSources=$expectedTarget.SelectSingleNode('/*/*[local-name()="DataSources"]')
+            $actualSources=$read.SelectSingleNode('/*/*[local-name()="DataSources"]')
+            if((Get-NativeXmlKey $actualSources) -cne (Get-NativeXmlKey $expectedSources) -or $read.DocumentElement.GetAttribute('Name') -cne $before.DocumentElement.GetAttribute('Name')){throw 'Hybrid import changed protected target source or identity.'}
             Assert-HybridPeerSnapshot $objects $peers $prefix -DiagnosticOnly:$DiagnosticFullImport
             return $state
         }
