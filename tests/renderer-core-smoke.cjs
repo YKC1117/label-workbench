@@ -9,6 +9,7 @@ assert.equal(canonical.objects[0].fontSizePt,9);assert.equal(canonical.objects[1
 const original=clone(canonical),request=nativeRequest(canonical);assert.deepEqual(canonical,original);
 assert.equal(request.objects[2].heightMm,9);assert.equal(request.objects[0].fontName,'Arial');
 assert.equal(request.objects[0].referencePoint,undefined);assert.equal(request.objects[0].anchorPolicy,'BARTENDER_DOCUMENTED_DEFAULT_TOP_LEFT_VISUAL_GATE');
+assert.equal(request.objects[0].fontMutationPolicy,'DISPOSABLE_CANDIDATE_XML_FONTNAME_POINTSIZE');assert.equal(request.objects[0].bold,undefined);assert.equal(request.objects[0].italic,undefined);
 assert.equal(request.objects[2].referencePoint,'TopLeft');assert.equal(request.objects[3].referencePoint,'TopLeft');
 assert.deepEqual(JSON.parse(JSON.stringify(request)),request);
 for(const dpi of [203,300,600])for(const mm of [0,.031,3.38582,24.8,100])assert.ok(Math.abs(G.dotsToMm(G.mmToDots(mm,dpi),dpi)-mm)<=25.4/dpi/2+1e-10);
@@ -26,10 +27,7 @@ const documentedTextDefault=clone(readback);documentedTextDefault[0].referencePo
 assert.equal(evaluate(drawing,actual,documentedTextDefault).status,'PASS_PLACEMENT_AND_SIZE');
 const missingBarcodeAnchor=clone(readback);missingBarcodeAnchor[2].referencePoint=null;missingBarcodeAnchor[2].referencePointPresent=false;
 assert.equal(evaluate(drawing,actual,missingBarcodeAnchor).status,'UNRESOLVED');
-for(const key of ['x','y','width','height']){
- const shifted=clone(actual);shifted[2].actual[key]+=2;
- assert.equal(evaluate(drawing,shifted,readback).status,'FAIL',key);
-}
+for(const key of ['x','y','width','height']){const shifted=clone(actual);shifted[2].actual[key]+=2;assert.equal(evaluate(drawing,shifted,readback).status,'FAIL',key);}
 const badAngle=clone(readback);badAngle[2].rotationDeg=90;assert.equal(evaluate(drawing,actual,badAngle).status,'FAIL');
 assert.equal(evaluate(drawing,actual,[]).status,'UNRESOLVED');
 assert.throws(()=>evaluate(drawing,[actual[0],actual[0],...actual.slice(2)],readback));
@@ -39,7 +37,7 @@ const overlap=clone(actual);overlap[1].actual=clone(overlap[0].actual);assert.ok
 const textInk=clone(actual);textInk[0].actual.width=10;textInk[0].actual.height=3;assert.equal(evaluate(drawing,textInk,readback).status,'PASS_PLACEMENT_AND_SIZE');
 const hidden=clone(canonical);hidden.objects[0].printable=false;assert.equal(preview(hidden).objects.length,3);assert.equal(nativeRequest(hidden).objects.length,3);
 for(const edit of [m=>m.label.dpi=0,m=>m.objects[0].fontSizePt=NaN,m=>m.objects[2].moduleMm=0,m=>m.objects[3].rows=1,m=>m.objects[1].id=m.objects[0].id]){const m=clone(canonical);edit(m);assert.throws(()=>validate(m));}
-for(const edit of [m=>m.objects[0].multiline=true,m=>m.objects[0].frameMode='fixed',m=>m.objects[1].rotation=90,m=>m.objects[2].humanReadable=true]){const m=clone(canonical);edit(m);assert.throws(()=>nativeRequest(m),/CAPABILITY_UNSUPPORTED/);}
+for(const edit of [m=>m.objects[0].multiline=true,m=>m.objects[0].frameMode='fixed',m=>m.objects[0].bold=true,m=>m.objects[0].italic=true,m=>m.objects[1].rotation=90,m=>m.objects[2].humanReadable=true]){const m=clone(canonical);edit(m);assert.throws(()=>nativeRequest(m),/CAPABILITY_UNSUPPORTED/);}
 const dir=fs.mkdtempSync(path.join(os.tmpdir(),'lwb-pool-'));
 try{
  const file=path.join(dir,'pool.btw');fs.writeFileSync(file,'SYNTHETIC_CONTRACT_TEST_ONLY');
@@ -49,4 +47,4 @@ try{
  const alias=clone(manifest);alias.slots[1].namedSubString=alias.slots[0].namedSubString;assert.throws(()=>validatePool(alias,file,request));
  assert.throws(()=>validatePool({...manifest,slots:manifest.slots.slice(1)},file,request));
 }finally{fs.rmSync(dir,{recursive:true,force:true});}
-console.log('PASS canonical/schema, geometry, encoder footprint, four-object transform, documented Text default anchor guard, two-renderer QA, pool contract; no BarTender execution');
+console.log('PASS canonical/schema, geometry, encoder footprint, four-object transform, documented Text default anchor guard, disposable Text font XML policy, two-renderer QA, pool contract; no BarTender execution');
