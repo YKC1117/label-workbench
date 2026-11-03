@@ -4,7 +4,6 @@ param(
     [string]$RunnerRoot = "$env:USERPROFILE\actions-runner-label-workbench",
     [string]$RunnerName = ("LWB-" + $env:COMPUTERNAME),
     [string]$RegistrationToken = '',
-    [switch]$InstallNodeWithWinget,
     [switch]$NoRun
 )
 
@@ -20,43 +19,7 @@ function Fail([string]$Message) {
     throw $Message
 }
 
-function Get-CommandPath([string]$Name) {
-    $cmd = Get-Command $Name -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
-    if ($null -eq $cmd) { return $null }
-    return $cmd.Source
-}
-
-function Ensure-Node {
-    $node = Get-CommandPath 'node.exe'
-    $npm = Get-CommandPath 'npm.cmd'
-    if ($node -and $npm) {
-        $version = (& $node --version).Trim()
-        if ($version -notmatch '^v(\d+)\.') { Fail ('Cannot parse Node.js version: ' + $version) }
-        if ([int]$Matches[1] -lt 20) { Fail ('Node.js 20+ is required. Actual: ' + $version) }
-        Write-Host ('Node.js: ' + $version)
-        Write-Host ('npm: ' + ((& $npm --version).Trim()))
-        return
-    }
-
-    if (-not $InstallNodeWithWinget) {
-        Fail 'Node.js 20+ / npm is missing. Re-run this script with -InstallNodeWithWinget, or install Node.js LTS first.'
-    }
-
-    $winget = Get-CommandPath 'winget.exe'
-    if (-not $winget) { Fail 'winget.exe is unavailable; cannot install Node.js automatically.' }
-    Write-Step 'Installing Node.js LTS with winget'
-    & $winget install --id OpenJS.NodeJS.LTS --exact --accept-package-agreements --accept-source-agreements
-    if ($LASTEXITCODE -ne 0) { Fail ('winget Node.js install failed with exit code ' + $LASTEXITCODE) }
-
-    $env:PATH = [Environment]::GetEnvironmentVariable('PATH','Machine') + ';' + [Environment]::GetEnvironmentVariable('PATH','User')
-    $node = Get-CommandPath 'node.exe'
-    $npm = Get-CommandPath 'npm.cmd'
-    if (-not $node -or -not $npm) { Fail 'Node.js installation completed but node.exe/npm.cmd is still not visible. Sign out/in once, then re-run this script.' }
-    $version = (& $node --version).Trim()
-    if ($version -notmatch '^v(\d+)\.' -or [int]$Matches[1] -lt 20) { Fail ('Node.js 20+ is required. Actual: ' + $version) }
-}
-
-Write-Step 'Checking Windows environment'
+Write-Step 'Checking Windows host'
 if ($env:OS -ne 'Windows_NT') { Fail 'This setup must run on Windows.' }
 if (-not [Environment]::Is64BitOperatingSystem) { Fail 'Windows x64 is required.' }
 if ($PSVersionTable.PSVersion.Major -ne 5) { Fail ('Run with Windows PowerShell 5.1. Actual: ' + $PSVersionTable.PSVersion) }
@@ -65,23 +28,26 @@ Write-Host ('PowerShell: ' + $PSVersionTable.PSVersion)
 
 Write-Step 'Checking BarTender 2022 COM registration'
 $btType = [Type]::GetTypeFromProgID('BarTender.Application', $false)
-if ($null -eq $btType) { Fail 'BarTender.Application COM ProgID is not registered. Confirm BarTender 2022 is installed for this Windows machine.' }
+if ($null -eq $btType) { Fail 'BarTender.Application COM ProgID is not registered. Confirm BarTender 2022 is installed for this Windows account.' }
 Write-Host 'BarTender.Application: REGISTERED'
 
+$programFilesX86 = [Environment]::GetEnvironmentVariable('ProgramFiles(x86)')
 $barTenderCandidates = @(
-    "$env:ProgramFiles\Seagull\BarTender 2022\BarTend.exe",
-    "${env:ProgramFiles(x86)}\Seagull\BarTender 2022\BarTend.exe"
+    $(if ($env:ProgramFiles) { Join-Path $env:ProgramFiles 'Seagull\BarTender 2022\BarTend.exe' }),
+    $(if ($programFilesX86) { Join-Path $programFilesX86 'Seagull\BarTender 2022\BarTend.exe' })
 ) | Where-Object { $_ -and (Test-Path -LiteralPath $_) }
 if ($barTenderCandidates.Count -gt 0) {
     Write-Host ('BarTender executable: ' + $barTenderCandidates[0])
 } else {
-    Write-Warning 'BarTender COM is registered, but the standard BarTend.exe path was not found. The runtime probe will still rely on COM registration.'
+    Write-Warning 'BarTender COM is registered, but the standard BarTend.exe path was not found. Runtime validation will rely on COM registration.'
 }
 
-Write-Step 'Checking Node.js runtime used by renderer QA'
-Ensure-Node
+$existing = @(Get-Process -Name BarTend -ErrorAction SilentlyContinue)
+if ($existing.Count -gt 0) {
+    Write-Warning 'BarTender is currently open. Close it before triggering the renderer probe; the workflow intentionally refuses to take ownership of an existing BarTend.exe.'
+}
 
-Write-Step 'Preparing dedicated GitHub Actions runner directory'
+Write-Step 'Preparing dedicated GitHub Actions Runner directory'
 if (-not (Test-Path -LiteralPath $RunnerRoot)) {
     New-Item -ItemType Directory -Path $RunnerRoot -Force | Out-Null
 }
@@ -107,8 +73,7 @@ if (-not (Test-Path -LiteralPath $configCmd) -or -not (Test-Path -LiteralPath $r
     $zip = Join-Path $env:TEMP $assetName
     Invoke-WebRequest -Uri $asset[0].browser_download_url -Headers $headers -OutFile $zip -UseBasicParsing
     try {
-        Add-Type -AssemblyName System.IO.Compression.FileSystem
-        [IO.Compression.ZipFile]::ExtractToDirectory($zip, $RunnerRoot)
+        Expand-Archive -LiteralPath $zip -DestinationPath $RunnerRoot -Force
     } finally {
         Remove-Item -LiteralPath $zip -Force -ErrorAction SilentlyContinue
     }
@@ -123,7 +88,7 @@ if (-not (Test-Path -LiteralPath $runnerConfig)) {
     }
     if ([string]::IsNullOrWhiteSpace($RegistrationToken)) { Fail 'A GitHub runner registration token is required.' }
 
-    Write-Step 'Registering runner with guarded bartender label'
+    Write-Step 'Registering runner with the dedicated bartender label'
     Push-Location $RunnerRoot
     try {
         & $configCmd --unattended --url $RepositoryUrl --token $RegistrationToken --name $RunnerName --labels bartender --work _work
@@ -133,7 +98,7 @@ if (-not (Test-Path -LiteralPath $runnerConfig)) {
         $RegistrationToken = $null
     }
 } else {
-    Write-Host 'Runner is already configured; registration step skipped.'
+    Write-Host 'Runner is already configured in this dedicated directory; registration skipped.'
 }
 
 Write-Step 'Final local readiness check'
@@ -143,10 +108,9 @@ $summary = [ordered]@{
     runnerName = $RunnerName
     requiredLabels = @('self-hosted','windows','x64','bartender')
     powershell = $PSVersionTable.PSVersion.ToString()
-    node = ((& (Get-CommandPath 'node.exe') --version).Trim())
-    npm = ((& (Get-CommandPath 'npm.cmd') --version).Trim())
     bartenderCom = 'REGISTERED'
     configured = (Test-Path -LiteralPath $runnerConfig)
+    nodeProvisioning = 'WORKFLOW_SETUP_NODE_22'
 }
 $summary | ConvertTo-Json -Depth 4 | Write-Host
 
