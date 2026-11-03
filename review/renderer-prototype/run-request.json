@@ -1,7 +1,7 @@
 {
   "enabled": true,
-  "purpose": "Stress-test the formal Hybrid route with eight independent Designer Text slots plus Code128 and Data Matrix; require Save/Reopen, source isolation, stable SHA and 600dpi Visual QA.",
-  "requestedAt": "2026-11-03T14:00:00+08:00",
+  "purpose": "Prove the Run #36 failure is caused only by exact-XML snapshots of parked donor objects: keep global source-ID collision checks, protect already-enabled retained peers, then require the full eight-Text + Code128 + Data Matrix Save/Reopen and 600dpi Visual QA gate.",
+  "requestedAt": "2026-11-03T14:08:00+08:00",
   "requestedBy": "YKC1117",
   "target": "experiment/com-renderer-prototype"
 }
