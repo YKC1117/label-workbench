@@ -1,7 +1,7 @@
 {
   "enabled": true,
-  "purpose": "Verify tracked HybridPool core without any runtime source patch: exact four-object candidate, Save/Reopen, stable SHA and unique 600dpi full-page Visual QA.",
-  "requestedAt": "2026-11-03T12:10:00+08:00",
+  "purpose": "Verify formal Build-NativeLayout Auto route uses tracked Hybrid core end-to-end: exact four-object candidate, Save/Reopen, stable SHA and unique 600dpi Visual QA.",
+  "requestedAt": "2026-11-03T12:15:00+08:00",
   "requestedBy": "YKC1117",
   "target": "experiment/com-renderer-prototype"
 }
