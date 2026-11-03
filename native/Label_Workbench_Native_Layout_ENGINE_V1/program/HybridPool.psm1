@@ -136,6 +136,52 @@ function Invoke-HybridPoolBuild($formats,$plan,[string]$textPoolPath,[string]$ru
                 return [ordered]@{anchor=$anchor;payload=$payload;properties=$properties;anchorAfterProperties=$afterAnchor.mode}
             }finally{Release-NativeCom $obj}
         }
+        function Set-HybridBarcodeGeometry($obj,$request,[string]$root,[string]$prefix) {
+            $beforeText=[string](Invoke-ComMethod $obj 'GetXML' @($true,$true));$before=Read-NativeXml $beforeText
+            $literal=Get-NativeLiteralState $before $root
+            if((Get-NativeHumanReadableVisibility $before) -cne 'None'){throw 'Hybrid barcode caption must be None before geometry.'}
+            $beforeData=$before.SelectSingleNode('/*/*[local-name()="DataSources"]');if($null -eq $beforeData){throw 'Hybrid barcode DataSources missing before geometry.'}
+            $beforeX=Get-NativeXDimension $before
+            $write=Read-NativeXml $beforeText;$write.DocumentElement.SetAttribute('ReferencePoint','TopLeft')
+            if($prefix){$beforeText|Set-Content -LiteralPath ($prefix+'-anchor-before.xml') -Encoding UTF8;$write.OuterXml|Set-Content -LiteralPath ($prefix+'-anchor-request.xml') -Encoding UTF8}
+            [void](Invoke-ComMethod $obj 'SetXML' @($write.OuterXml))
+            $anchor=Get-HybridAnchorState $obj
+            if($prefix){$anchor.xml|Set-Content -LiteralPath ($prefix+'-anchor-readback.xml') -Encoding UTF8}
+            if(-not $anchor.accepted){throw ('Hybrid barcode TopLeft anchor not accepted: '+[string]$anchor.value)}
+            $afterAnchor=Read-NativeXml $anchor.xml;$afterLiteral=Get-NativeLiteralState $afterAnchor $root
+            if($afterLiteral.value -cne $literal.value){throw 'Hybrid barcode anchor write changed payload.'}
+            if((Get-NativeHumanReadableVisibility $afterAnchor) -cne 'None'){throw 'Hybrid barcode anchor write changed HumanReadable.'}
+            $afterData=$afterAnchor.SelectSingleNode('/*/*[local-name()="DataSources"]')
+            if($null -eq $afterData -or (Get-NativeXmlKey $beforeData) -cne (Get-NativeXmlKey $afterData)){throw 'Hybrid barcode anchor write changed DataSources.'}
+            $afterX=Get-NativeXDimension $afterAnchor
+            if($afterX.index -ne $beforeX.index){throw 'Hybrid barcode anchor write changed XDimension index.'}
+            Assert-NativeNear ([double]$afterX.mils) ([double]$beforeX.mils) 0.02 'Hybrid barcode anchor XDimension mils'
+
+            $targets=[ordered]@{}
+            if($request.type -eq 'code128'){$targets['Height']=[double]$request.heightMm}
+            $targets['RotationAngle']=[double]$request.rotationDeg;$targets['X']=[double]$request.xMm;$targets['Y']=[double]$request.yMm
+            $properties=[ordered]@{}
+            foreach($key in @($targets.Keys)){
+                Write-Property $obj $key $targets[$key]
+                $actual=Read-Property $obj $key;$target=$targets[$key]
+                # Real BarTender/Argox evidence quantizes coordinates: 70.000 ->
+                # 69.977 mm. 0.05 mm is only a COM readback gate; the 600dpi
+                # full-page BMP Visual QA remains the placement authority.
+                $tol=if($key -in @('X','Y')){0.05}elseif($key -eq 'Height'){0.10}else{0.01}
+                Assert-NativeNear ([double]$actual) ([double]$target) $tol ('Hybrid barcode '+$request.id+'.'+$key)
+                $properties[$key]=[ordered]@{requested=$target;actual=[double]$actual;tolerance=$tol}
+            }
+            $finalText=[string](Invoke-ComMethod $obj 'GetXML' @($true,$true));$final=Read-NativeXml $finalText
+            if($prefix){$finalText|Set-Content -LiteralPath ($prefix+'-geometry-presave.xml') -Encoding UTF8}
+            $finalLiteral=Get-NativeLiteralState $final $root
+            if($finalLiteral.value -cne $literal.value){throw 'Hybrid barcode geometry changed payload.'}
+            if((Get-NativeHumanReadableVisibility $final) -cne 'None'){throw 'Hybrid barcode geometry changed HumanReadable.'}
+            $finalX=Get-NativeXDimension $final
+            if($finalX.index -ne $beforeX.index){throw 'Hybrid barcode geometry changed selected XDimension index.'}
+            Assert-NativeNear ([double]$finalX.mils) ([double]$beforeX.mils) 0.02 'Hybrid barcode final XDimension mils'
+            $finalAnchor=Get-HybridAnchorState $obj;if(-not $finalAnchor.accepted){throw 'Hybrid barcode anchor changed after geometry writes.'}
+            return [ordered]@{status='TARGET_GEOMETRY_WITHIN_TOLERANCE_VISUAL_PENDING';anchor=[ordered]@{status='PASS_VISUAL_PENDING';mode=$finalAnchor.mode;serialized=$finalAnchor.value};properties=$properties;xDimension=$finalX}
+        }
         function Insert-HybridComponent($document,[ref]$objectsRef,[string]$path,[string]$expectedRoot,$request,[string]$prefix) {
             $objects=$objectsRef.Value;$before=@(Get-NativeObjectNames $objects)
             $ok=[bool](Invoke-ComMethod $document 'InsertComponent' @($path,[double]$request.xMm,[double]$request.yMm));if(-not $ok){throw ('Hybrid InsertComponent returned false: '+$path)}
@@ -154,7 +200,7 @@ function Invoke-HybridPoolBuild($formats,$plan,[string]$textPoolPath,[string]$ru
 
         $candidate=Join-Path $runDir 'candidate.unverified.btw';$accepted=Join-Path $runDir 'native-output.btw'
         $document=$null;$objects=$null;$reopenDoc=$null;$reopenObjects=$null
-        $report=[ordered]@{schema='lwb-hybrid-pool-build-report-v1';status='STARTED';renderer='hybrid-text-pool-btc';productAcceptance='NOT_RUN';textPool=[ordered]@{path=$textPoolPath;sha256=$poolHash};page=$null;objects=@();warnings=@('Designer-authored Text slots are reused; unused donor objects remain hidden with DoNotPrint.','An omitted Text ReferencePoint after explicit TopLeft request is treated as BarTender default TopLeft only pending final BMP Visual QA.');output=$null;outputSha256=$null;reopen='NOT_RUN'}
+        $report=[ordered]@{schema='lwb-hybrid-pool-build-report-v1';status='STARTED';renderer='hybrid-text-pool-btc';productAcceptance='NOT_RUN';textPool=[ordered]@{path=$textPoolPath;sha256=$poolHash};page=$null;objects=@();warnings=@('Designer-authored Text slots are reused; unused donor objects are deleted from the disposable candidate copy before barcode insertion; the embedded donor source remains unchanged.','An omitted ReferencePoint after an explicit TopLeft request is accepted only pending final unique full-page BMP Visual QA.');output=$null;outputSha256=$null;reopen='NOT_RUN'}
         try{
             $document=Invoke-ComMethod $formats 'Open' @($textPoolPath,$false,'');if($null -eq $document){throw 'Hybrid Formats.Open returned null.'}
             Write-Property $document 'MeasurementUnits' 3
@@ -173,6 +219,17 @@ function Invoke-HybridPoolBuild($formats,$plan,[string]$textPoolPath,[string]$ru
                 $report.objects+=,[ordered]@{id=[string]$request.id;type='text';physicalName=$name;nativeType=5;referencePointXml=$state.anchor.serialized;geometry=$state;reopenEditable='NOT_RUN'}
             }
 
+            $unusedNames=@($originalNames|Where-Object{-not $usedPool.Contains([string]$_)})
+            foreach($unusedName in $unusedNames){
+                $deleted=[bool](Invoke-ComMethod $objects 'Delete' @([string]$unusedName))
+                if(-not $deleted){throw ('Hybrid failed to delete unused donor object: '+$unusedName)}
+            }
+            Release-NativeCom $objects;$objects=$null;$objects=Read-Property $document 'Objects'
+            $expectedTextNames=@($textSlots|Where-Object{$usedPool.Contains([string]$_)})
+            Assert-NativeNameSet $expectedTextNames @(Get-NativeObjectNames $objects)
+            Assert-NativeSourceIsolation $objects
+            $report['deletedUnusedDonorObjects']=$unusedNames.Count
+
             $codeComponent=Join-Path $baseDirectory 'proven-code128.btc'
             if(@($plan.objects|Where-Object{$_.type -eq 'code128'}).Count -gt 0){if(-not(Test-Path -LiteralPath $codeComponent -PathType Leaf)){throw 'Bundled proven-code128.btc is missing.'};$h=(Get-FileHash -LiteralPath $codeComponent -Algorithm SHA256).Hash;if($h -cne '0B1E2481BCDE6E5CF1D084599F822DC3027AB19215530B7776296B40A59899F2'){throw 'Code128 component hash mismatch.'}}
             $dmComponent=$null;if(@($plan.objects|Where-Object{$_.type -eq 'datamatrix'}).Count -gt 0){$dmComponent=Resolve-NativeDataMatrixComponent $runDir;$report['dataMatrixComponent']=$dmComponent}
@@ -187,12 +244,14 @@ function Invoke-HybridPoolBuild($formats,$plan,[string]$textPoolPath,[string]$ru
                     Write-Property $obj 'RotationAngle' ([double]0)
                     if($request.type -eq 'code128'){Write-Property $obj 'Height' ([double]$request.heightMm)}
                     $sizing=Fit-NativeXDimensionNearest $obj $request ($prefix+'-size') $dpi
-                    $geometry=Set-NativeGeometry $obj $request $prefix
+                    $geometry=Set-HybridBarcodeGeometry $obj $request $root $prefix
                     Write-Property $obj 'DoNotPrint' $false;if([bool](Read-Property $obj 'DoNotPrint')){throw 'Hybrid barcode remained DoNotPrint.'}
                     $report.objects+=,[ordered]@{id=[string]$request.id;type=[string]$request.type;physicalName=$name;nativeType=4;humanReadable=$human;sizing=$sizing;geometry=$geometry;reopenEditable='NOT_RUN'}
                 }finally{Release-NativeCom $obj}
             }
 
+            Assert-NativeSourceIsolation $objects
+            Assert-NativeNameSet @($report.objects|ForEach-Object{[string]$_.physicalName}) @(Get-NativeObjectNames $objects)
             [void](Invoke-ComMethod $document 'SaveAs' @($candidate,$false))
             Release-NativeCom $objects;$objects=$null;[void](Invoke-ComMethod $document 'Close' @(1));Release-NativeCom $document;$document=$null
             if(-not(Test-Path -LiteralPath $candidate) -or (Get-Item -LiteralPath $candidate).Length -le 0){throw 'Hybrid SaveAs produced no candidate.'}
@@ -206,8 +265,8 @@ function Invoke-HybridPoolBuild($formats,$plan,[string]$textPoolPath,[string]$ru
                 try{
                     $expectedType=if($request.type -eq 'text'){5}else{4};if([int](Read-Property $obj 'Type') -ne $expectedType){throw ('Hybrid reopen Type mismatch: '+$request.id)}
                     if([string](Read-Property $obj 'Value') -cne [string]$request.value){throw ('Hybrid reopen payload mismatch: '+$request.id)}
-                    Assert-NativeNear ([double](Read-Property $obj 'X')) ([double]$request.xMm) 0.02 ('Hybrid reopen X '+$request.id)
-                    Assert-NativeNear ([double](Read-Property $obj 'Y')) ([double]$request.yMm) 0.02 ('Hybrid reopen Y '+$request.id)
+                    Assert-NativeNear ([double](Read-Property $obj 'X')) ([double]$request.xMm) 0.05 ('Hybrid reopen X '+$request.id)
+                    Assert-NativeNear ([double](Read-Property $obj 'Y')) ([double]$request.yMm) 0.05 ('Hybrid reopen Y '+$request.id)
                     Assert-NativeNear ([double](Read-Property $obj 'RotationAngle')) ([double]$request.rotationDeg) 0.01 ('Hybrid reopen Rotation '+$request.id)
                     if([bool](Read-Property $obj 'DoNotPrint')){throw ('Hybrid reopen object hidden: '+$request.id)}
                     if($request.type -eq 'text'){
@@ -221,7 +280,7 @@ function Invoke-HybridPoolBuild($formats,$plan,[string]$textPoolPath,[string]$ru
                     $entry.reopenEditable='PAYLOAD_GEOMETRY_STYLE_PERSISTED'
                 }finally{Release-NativeCom $obj}
             }
-            foreach($name in $originalNames){if($usedPool.Contains($name)){continue};$o=Find-NativeObject $reopenObjects $name;try{if(-not [bool](Read-Property $o 'DoNotPrint')){throw ('Hybrid unused donor object became printable: '+$name)}}finally{Release-NativeCom $o}}
+            Assert-NativeNameSet @($report.objects|ForEach-Object{[string]$_.physicalName}) @(Get-NativeObjectNames $reopenObjects)
             Release-NativeCom $reopenObjects;$reopenObjects=$null;[void](Invoke-ComMethod $reopenDoc 'Close' @(1));Release-NativeCom $reopenDoc;$reopenDoc=$null
             if((Get-FileHash -LiteralPath $candidate -Algorithm SHA256).Hash -cne $savedHash){throw 'Hybrid reopen verification changed candidate file.'}
             Move-Item -LiteralPath $candidate -Destination $accepted -Force
