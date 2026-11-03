@@ -1,7 +1,7 @@
 @echo off
 setlocal
 cd /d "%~dp0"
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "review\renderer-prototype\Probe-FontNameBinding.ps1"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "review\renderer-prototype\Probe-TextXmlNormalization.ps1"
 if errorlevel 1 exit /b %ERRORLEVEL%
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File "review\renderer-prototype\Apply-TextDefaultAnchorProbePatch.ps1"
 if errorlevel 1 exit /b %ERRORLEVEL%
