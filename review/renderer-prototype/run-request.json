@@ -1,7 +1,7 @@
 {
   "enabled": true,
-  "purpose": "Retry four-object real BarTender renderer after aligning native Text mock XML with runtime Font contract.",
-  "requestedAt": "2026-11-03T11:22:00+08:00",
+  "purpose": "Retry four-object real BarTender renderer after formal candidate Text persistence regression update.",
+  "requestedAt": "2026-11-03T11:27:00+08:00",
   "requestedBy": "YKC1117",
   "target": "experiment/com-renderer-prototype"
 }
