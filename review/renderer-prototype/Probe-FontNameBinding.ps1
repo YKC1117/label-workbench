@@ -12,78 +12,94 @@ $parent = Split-Path -Parent $OutputPath
 New-Item -ItemType Directory -Force -Path $parent | Out-Null
 
 $result = [ordered]@{
-    schema = 'lwb-fontname-binding-diagnostic-v1'
+    schema = 'lwb-fontname-binding-diagnostic-v2'
     status = 'STARTED'
     application = [ordered]@{}
-    object = [ordered]@{}
+    directObject = [ordered]@{}
+    bridgeObject = [ordered]@{}
     directPowerShell = [ordered]@{ get = 'NOT_RUN'; set = 'NOT_RUN'; readback = 'NOT_RUN'; error = $null }
     comBridge = [ordered]@{ get = 'NOT_RUN'; set = 'NOT_RUN'; readback = 'NOT_RUN'; error = $null }
-    xmlBefore = $null
-    xmlAfterDirect = $null
     cleanup = @()
 }
 
 $app = $null
+$formats = $null
 $format = $null
 $objects = $null
 $created = $null
-$found = $null
+$direct = $null
+$bridge = $null
 $ownedPid = $null
 $preExisting = @(Get-Process -Name BarTend -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Id)
+
+function Release-Com($value) {
+    if ($null -ne $value -and [Runtime.InteropServices.Marshal]::IsComObject($value)) {
+        try { [void][Runtime.InteropServices.Marshal]::ReleaseComObject($value) } catch {}
+    }
+}
 
 try {
     $bridgePath = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..\native\Label_Workbench_Native_Layout_ENGINE_V1\program\ComBridge.cs'))
     if (-not ('LabelWorkbench.ComBridge' -as [type])) { Add-Type -Path $bridgePath -ErrorAction Stop }
 
     $app = New-Object -ComObject BarTender.Application
-    try { $ownedPid = [int]$app.ProcessID } catch { $ownedPid = $null }
+    $ownedPid = [int][LabelWorkbench.ComBridge]::Get($app,'ProcessID',[object[]]@())
     $result.application.ProcessID = $ownedPid
     foreach ($p in @('FullVersion','Edition','BuildNumber')) {
-        try { $result.application[$p] = [string]$app.$p } catch { $result.application[$p] = 'ERROR: ' + $_.Exception.Message }
+        try { $result.application[$p] = [string][LabelWorkbench.ComBridge]::Get($app,$p,[object[]]@()) }
+        catch { $result.application[$p] = 'ERROR: ' + $_.Exception.Message }
     }
     if ($ownedPid -and $preExisting -contains $ownedPid) { throw 'Diagnostic attached to a pre-existing BarTender process; refusing to mutate it.' }
 
-    $formats = $app.Formats
-    $format = $formats.Add()
-    $objects = $format.Objects
-    $created = $objects.Create(5)
-    if ($null -eq $created) { throw 'DesignObjects.Create(5) returned null.' }
-    $name = [string]$created.Name
-    $result.object.createdName = $name
-    try { [void][Runtime.InteropServices.Marshal]::ReleaseComObject($created) } catch {}
-    $created = $null
+    $formats = [LabelWorkbench.ComBridge]::Get($app,'Formats',[object[]]@())
+    if ($null -eq $formats) { throw 'Application.Formats returned null through ComBridge.' }
+    $format = [LabelWorkbench.ComBridge]::Call($formats,'Add',[object[]]@())
+    if ($null -eq $format) { throw 'Formats.Add returned null through ComBridge.' }
+    $objects = [LabelWorkbench.ComBridge]::Get($format,'Objects',[object[]]@())
+    if ($null -eq $objects) { throw 'Format.Objects returned null through ComBridge.' }
 
-    $objects = $format.Objects
-    $found = $objects.Find($name)
-    if ($null -eq $found) { throw 'Find() did not return the created Text object.' }
-    $result.object.type = [int]$found.Type
-    $result.xmlBefore = [string]$found.GetXML($true,$true)
-
+    # Object A: setup through ComBridge, but FontName itself uses normal
+    # PowerShell COM property syntax.
+    $created = [LabelWorkbench.ComBridge]::Call($objects,'Create',[object[]]@(5))
+    if ($null -eq $created) { throw 'DesignObjects.Create(5) returned null for direct object.' }
+    $directName = [string][LabelWorkbench.ComBridge]::Get($created,'Name',[object[]]@())
+    Release-Com $created; $created = $null
+    $direct = [LabelWorkbench.ComBridge]::Call($objects,'Find',[object[]]@($directName))
+    if ($null -eq $direct) { throw 'Find() did not return direct Text object.' }
+    $result.directObject.name = $directName
+    $result.directObject.type = [int][LabelWorkbench.ComBridge]::Get($direct,'Type',[object[]]@())
+    $result.directObject.xmlBefore = [string][LabelWorkbench.ComBridge]::Call($direct,'GetXML',[object[]]@($true,$true))
     try {
-        $v = [string]$found.FontName
-        $result.directPowerShell.get = $v
-        $found.FontName = 'Arial'
+        $result.directPowerShell.get = [string]$direct.FontName
+        $direct.FontName = 'Arial'
         $result.directPowerShell.set = 'SUCCESS'
-        $result.directPowerShell.readback = [string]$found.FontName
-        $result.xmlAfterDirect = [string]$found.GetXML($true,$true)
+        $result.directPowerShell.readback = [string]$direct.FontName
+        $result.directObject.xmlAfter = [string][LabelWorkbench.ComBridge]::Call($direct,'GetXML',[object[]]@($true,$true))
     } catch {
-        $result.directPowerShell.error = $_.Exception.ToString()
         $result.directPowerShell.set = 'FAILED'
+        $result.directPowerShell.error = $_.Exception.ToString()
     }
 
-    # Use a freshly re-acquired object for the bridge path so both routes test
-    # the official DesignObjects.Find() view rather than the Create() return.
-    try { [void][Runtime.InteropServices.Marshal]::ReleaseComObject($found) } catch {}
-    $found = $objects.Find($name)
+    # Object B: same Create -> release -> Find lifecycle, FontName only through
+    # the production ComBridge path.
+    $created = [LabelWorkbench.ComBridge]::Call($objects,'Create',[object[]]@(5))
+    if ($null -eq $created) { throw 'DesignObjects.Create(5) returned null for bridge object.' }
+    $bridgeName = [string][LabelWorkbench.ComBridge]::Get($created,'Name',[object[]]@())
+    Release-Com $created; $created = $null
+    $bridge = [LabelWorkbench.ComBridge]::Call($objects,'Find',[object[]]@($bridgeName))
+    if ($null -eq $bridge) { throw 'Find() did not return bridge Text object.' }
+    $result.bridgeObject.name = $bridgeName
+    $result.bridgeObject.type = [int][LabelWorkbench.ComBridge]::Get($bridge,'Type',[object[]]@())
+    $result.bridgeObject.xmlBefore = [string][LabelWorkbench.ComBridge]::Call($bridge,'GetXML',[object[]]@($true,$true))
     try {
-        $v = [string][LabelWorkbench.ComBridge]::Get($found,'FontName',[object[]]@())
-        $result.comBridge.get = $v
-        [LabelWorkbench.ComBridge]::Set($found,'FontName',[object[]]@('Arial'))
+        $result.comBridge.get = [string][LabelWorkbench.ComBridge]::Get($bridge,'FontName',[object[]]@())
+        [LabelWorkbench.ComBridge]::Set($bridge,'FontName',[object[]]@('Arial'))
         $result.comBridge.set = 'SUCCESS'
-        $result.comBridge.readback = [string][LabelWorkbench.ComBridge]::Get($found,'FontName',[object[]]@())
+        $result.comBridge.readback = [string][LabelWorkbench.ComBridge]::Get($bridge,'FontName',[object[]]@())
+        $result.bridgeObject.xmlAfter = [string][LabelWorkbench.ComBridge]::Call($bridge,'GetXML',[object[]]@($true,$true))
     } catch {
-        $result.comBridge.error = $_.Exception.ToString()
         $result.comBridge.set = 'FAILED'
+        $result.comBridge.error = $_.Exception.ToString()
     }
 
     $result.status = 'COMPLETE'
@@ -91,14 +107,10 @@ try {
     $result.status = 'FAILED'
     $result.error = $_.Exception.ToString()
 } finally {
-    foreach ($x in @($found,$created,$objects,$format)) {
-        if ($null -ne $x -and [Runtime.InteropServices.Marshal]::IsComObject($x)) {
-            try { [void][Runtime.InteropServices.Marshal]::ReleaseComObject($x) } catch { $result.cleanup += $_.Exception.Message }
-        }
-    }
+    foreach ($x in @($bridge,$direct,$created,$objects,$format,$formats)) { Release-Com $x }
     if ($null -ne $app) {
-        try { $app.Quit(1) } catch { $result.cleanup += ('Quit: ' + $_.Exception.Message) }
-        try { if ([Runtime.InteropServices.Marshal]::IsComObject($app)) { [void][Runtime.InteropServices.Marshal]::ReleaseComObject($app) } } catch { $result.cleanup += $_.Exception.Message }
+        try { [void][LabelWorkbench.ComBridge]::Call($app,'Quit',[object[]]@(1)) } catch { $result.cleanup += ('Quit: ' + $_.Exception.Message) }
+        Release-Com $app
     }
     Start-Sleep -Milliseconds 500
     if ($ownedPid -and -not ($preExisting -contains $ownedPid)) {
