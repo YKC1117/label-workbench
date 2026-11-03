@@ -1,9 +1,12 @@
 [CmdletBinding()]
 param(
-    [string]$EnginePath = (Join-Path $PSScriptRoot '..\..\native\Label_Workbench_Native_Layout_ENGINE_V1\program\NativeLayoutEngine.psm1')
+    [string]$EnginePath = ''
 )
 
 $ErrorActionPreference = 'Stop'
+if ([string]::IsNullOrWhiteSpace($EnginePath)) {
+    $EnginePath = Join-Path $PSScriptRoot '..\..\native\Label_Workbench_Native_Layout_ENGINE_V1\program\NativeLayoutEngine.psm1'
+}
 $EnginePath = [IO.Path]::GetFullPath($EnginePath)
 if (-not (Test-Path -LiteralPath $EnginePath -PathType Leaf)) {
     throw ('NativeLayoutEngine.psm1 not found: ' + $EnginePath)
