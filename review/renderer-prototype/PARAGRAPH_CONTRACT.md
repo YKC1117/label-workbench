@@ -158,3 +158,8 @@ Workflow 只在 YKC1117 push 了 `run-request.json` 且 commit 訊息含 `[barte
 ## 10. Run51 候選：Text5 原生段落路線（2026-11-04，尚未實機）
 
 RichText9 在 Run50 中必要 setter 被拒、Value 為不透明佔位字串，沒有可驗證的寫入路線。下一輪改走 Text5：在已證實的 Designer Text pool 中，對真正的 Text5 寫入官方文件化的 typed `Width`，並以機械式條件判斷寬度是否真的控制原生換行。ROOT CAUSE、Probe 設計、判讀規則與決策表見 `NATIVE_PARAGRAPH_HANDOFF.md`。固定框、對齊、換行仍 NOT CERTIFIED。
+
+
+## 11. Run51 Windows result (2026-11-04)
+
+https://github.com/YKC1117/label-workbench/actions/runs/41760467332：DISCOVERY_FAILED_CLOSED. Existing single-line Text5 ignored typed Width (50.8 / 30.48 mm; getter 80.772 mm, 1 band), 27/27 peers EXACT. CRLF Value was Base64-encoded in GetXML, exposing a separate Test-CleanText parser limitation; save/cold NOT RUN. See NATIVE_PARAGRAPH_HANDOFF.md section 8. No native paragraph capability is certified.

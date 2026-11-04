@@ -3,7 +3,7 @@
 僅限 YKC1117/label-workbench／`experiment/com-renderer-prototype`／Draft PR #35。main、Pages、Release 未動。
 施工基準 HEAD：`9d6f66357a30b6a7d3e8481923135088a021018f`（Run50 判讀修正後）。
 
-**本輪尚未實機執行。** 固定框、原生左／中／右對齊、自動換行、超框裁切、自動縮字：**全部 NOT CERTIFIED**。
+**Run51 已實機執行：FAIL_CLOSED；見第 8 節。** 固定框、原生左／中／右對齊、自動換行、超框裁切、自動縮字：**全部 NOT CERTIFIED**。
 Run45、Run49、Run50 證據與 Renderer 核心、所有 Gate 均未修改。
 
 ## 1. ROOT CAUSE REVIEW
@@ -116,3 +116,17 @@ center／right 對齊只有在取得**實機觀察到的非預設欄位值**後�
 - 新增：`paragraph-root-cause/text-xml-census.json`、`Probe-NativeParagraph.ps1`、`paragraph-contract-verdict.cjs`、`paragraph-dryrun/{MockCom.psm1,Invoke-MockDryRun.ps1}`、`tests/paragraph-contract-verdict-smoke.cjs`、本文件。
 - 修改：`Invoke-ProbeDispatch.ps1` 新增 `native-paragraph` 分派；`package.json` 的 `test:renderer` 加入新 regression。
 - 觸發用 commit 只改 `run-request.json`（`probe: native-paragraph`），commit 訊息含 `[bartender-probe]`。
+
+
+## 8. Run51 Windows actual result — 2026-11-04
+
+**FAIL_CLOSED** — https://github.com/YKC1117/label-workbench/actions/runs/41760467332
+Evidence artifact: bartender-renderer-evidence-41760467332. Runner renderer regression passed (paragraph 36/36 and RichText 28/28), but real BarTender COM probe ended DISCOVERY_FAILED_CLOSED. Do not treat CI green as paragraph acceptance.
+
+- Text5 typed Width writes for 50.8 mm and 30.48 mm both reported WROTE but getter remained 80.772 mm; no new XML paragraph fields and raster remained one ink band at about 80.518 mm. The existing single-line Designer Text5 did NOT become native wrapped paragraph through this typed setter. This does not rule out a separately Designer-authored paragraph.
+- Height 5.08 mm WRITE_REFUSED (getter 3.2004 mm); FontName, FontSize, FontBold, FontItalic writes passed. All 27 peer audits were EXACT; Designer base SHA passed and owned PID was 14160.
+- CRLF edit readback in COM Value was correct. GetXML stored <Value Encoding="Base64"> with UTF-8 Base64 of FIRST PARAGRAPH LINE plus CRLF plus SECOND PARAGRAPH LINE. The local Test-CleanText logic compared the base64 text without decoding and triggered CHALLENGE_READBACK_MISMATCH:edit-two-paragraph. This is a probe parser bug separate from the Width limitation. Emergency restoration recorded restoreXmlExact=true; full bitmap restoration was not proven.
+- Save and distinct-PID cold reopen were NOT RUN. Do not claim persistence success. Fail-closed output must remain quarantined.
+- The installed template listing reached its 400 file cap entirely within barcode BTC files (400/400): NOT a valid paragraph donor search. Next discovery must use one bounded, named, SHA-locked Designer-authored paragraph candidate; do not repeat mass scanning.
+
+**Decision:** do not rerun identical Text5 Width writes. Fix Test-CleanText only against observed Base64 UTF-8 XML semantics (strict decode; reject other encodings), and independently obtain one real Designer Normal Wrapped Text/Paragraph donor or a single constrained donor creation path before further BarTender probe. Fixed frame, native justification, wrap stay NOT_CERTIFIED.
