@@ -1,8 +1,8 @@
 {
   "enabled": true,
-  "probe": "richtext-contract",
-  "purpose": "Bounded RichText9 native contract discovery in the proven fixed-SHA Designer context: installed enum, real XML/Value/data-source classification, documented typed geometry/font setters, strict Box3+Code128 peer isolation, Save/Quit and distinct-PID cold reopen with XML/Value/BMP/BTW SHA comparison. Discovery only; fixed frame, native justification and wrap remain NOT CERTIFIED; no alignment/wrap/sizing XML writes.",
-  "requestedAt": "2026-11-04T01:26:35.753469+00:00",
+  "probe": "native-paragraph",
+  "purpose": "Run51 Text5 native paragraph contract: documented typed Width on a Designer Text5 slot in the proven fixed-SHA Designer context, mechanical width-controlled wrap / default alignment / fixed-height evidence, exact edit restore, Text+Box3+Code128 peer isolation, distinct-PID cold reopen with XML/Value/BMP/BTW SHA comparison, read-only installed template listing. No SetXML, no dynamic property names, no Create(5), no BTC/BTW scan. Paragraph capabilities remain NOT CERTIFIED unless evidenced; renderer not modified.",
+  "requestedAt": "2026-11-04T02:15:24.770370+00:00",
   "requestedBy": "YKC1117",
   "target": "experiment/com-renderer-prototype"
 }
