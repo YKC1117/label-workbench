@@ -5,11 +5,12 @@
 // Usage: node tools/pdf-to-canonical.cjs <file.pdf> <outDir>
 const fs=require('node:fs');
 const path=require('node:path');
+const {pathToFileURL}=require('node:url');
 const Core=require('../assets/pdf-canonical.js');
 const ROOT=path.resolve(__dirname,'..');
 
 async function libs(){
-  const pdfjs=await import(path.join(ROOT,'node_modules/pdfjs-dist/legacy/build/pdf.mjs'));
+  const pdfjs=await import(pathToFileURL(path.join(ROOT,'node_modules/pdfjs-dist/legacy/build/pdf.mjs')).href);
   const zx=await import('zxing-wasm/reader');
   // Same binary as the site's zxing-wasm 3.1.3, loaded locally (no CDN fetch).
   zx.prepareZXingModule({overrides:{wasmBinary:fs.readFileSync(path.join(ROOT,'node_modules/zxing-wasm/dist/reader/zxing_reader.wasm'))},fireImmediately:true});
