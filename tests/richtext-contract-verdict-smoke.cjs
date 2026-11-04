@@ -27,6 +27,9 @@ t('value mutated by setter',()=>{const c=classify(plainInput({valueAfterSetters:
 // C: markup is preserved and skipped.
 t('markup',()=>{const c=classify(plainInput({value:{ok:true,text:'<b>x</b>'}}));assert.strictEqual(c.model,'MARKUP');assert.strictEqual(c.payloadPermitted,false);});
 t('verified plain only after verified readback origin',()=>{const c=classify(plainInput({origin:'VERIFIED_PAYLOAD_READBACK'}));assert.strictEqual(c.model,'PLAIN');assert.strictEqual(c.payloadPermitted,true);});
+// Run50 actual locale Value is an opaque placeholder, NOT a markup body.
+t('localized RTF placeholder is UNKNOWN not MARKUP',()=>{const c=classify(plainInput({value:{ok:true,text:'<RTF 資料>'},export:{rowCount:1,subStringCount:1,valueCount:1,literalOk:true,literal:'<RTF 資料>'},dataSources:[]}));assert.strictEqual(c.model,'UNKNOWN');assert.strictEqual(c.payloadPermitted,false);assert(c.reasons.includes('OPAQUE_RTF_PLACEHOLDER_NOT_FORMAT_EVIDENCE'));});
+t('English RTF placeholder is UNKNOWN not MARKUP',()=>{const c=classify(plainInput({value:{ok:true,text:'<RTF Data>'},export:{rowCount:1,subStringCount:1,valueCount:1,literalOk:true,literal:'<RTF Data>'},dataSources:[]}));assert.strictEqual(c.model,'UNKNOWN');assert.strictEqual(c.payloadPermitted,false);});
 // G: tolerance basis and raw delta are retained.
 t('mil quantum',()=>{const j=numericJudgement({status:'WROTE',property:'Width',requested:40,actual:40.0052});assert.strictEqual(j.judgement,'READBACK_WITHIN_DOCUMENTED_QUANTUM');assert.strictEqual(j.delta,0.0052);});
 t('beyond quantum is mismatch not hidden',()=>assert.strictEqual(numericJudgement({status:'WROTE',property:'Width',requested:40,actual:40.06}).judgement,'READBACK_MISMATCH'));

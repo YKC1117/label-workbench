@@ -23,6 +23,9 @@ const EPS=1e-9;
 
 const RTF=/^\s*\{\\rtf/;
 const MARKUP=/^\s*<\s*[A-Za-z!?\/]/;
+// Designer/BarTender may expose a localized opaque RTF placeholder as Value.
+// It is not the RTF body and must not be misclassified as real markup.
+const RTF_PLACEHOLDER=/^\s*<\s*RTF\s+(?:資料|Data)\s*>\s*$/i;
 const isText=v=>typeof v==='string';
 
 function classify(input){
@@ -36,13 +39,15 @@ function classify(input){
   const literal=ex.literalOk===true&&isText(ex.literal)?ex.literal:null;
   const candidates=[['value',v.text],['exportLiteral',literal],...ds.map((d,i)=>['dataSource'+i,d&&d.valueText])].filter(([,t])=>isText(t));
   for(const [where,t] of candidates){
-    if(RTF.test(t))out.signals.push('RTF_SIGNATURE:'+where);
+    if(RTF_PLACEHOLDER.test(t))out.signals.push('RTF_PLACEHOLDER:'+where);
+    else if(RTF.test(t))out.signals.push('RTF_SIGNATURE:'+where);
     else if(MARKUP.test(t))out.signals.push('MARKUP_SIGNATURE:'+where);
   }
   if(isText(input.xmlText)&&input.xmlText.includes('{\\rtf'))out.signals.push('RTF_SIGNATURE:objectXml');
   const mutated=(input.valueAfterSetters||[]).filter(s=>s&&s.mutated===true).map(s=>s.label);
   if(mutated.length)out.signals.push('VALUE_MUTATED_BY_STYLE_OR_GEOMETRY_SETTER:'+mutated.join(','));
-  if(out.signals.some(s=>s.startsWith('RTF_')))  {out.model='RTF';   return reason('RTF_EVIDENCE_SAVED_PAYLOAD_SKIPPED');}
+  if(out.signals.some(s=>s.startsWith('RTF_SIGNATURE:')))  {out.model='RTF';return reason('RTF_EVIDENCE_SAVED_PAYLOAD_SKIPPED');}
+  if(out.signals.some(s=>s.startsWith('RTF_PLACEHOLDER:')))return reason('OPAQUE_RTF_PLACEHOLDER_NOT_FORMAT_EVIDENCE');
   if(out.signals.some(s=>s.startsWith('MARKUP_'))){out.model='MARKUP';return reason('MARKUP_EVIDENCE_SAVED_PAYLOAD_SKIPPED');}
   if(v.text.trim()===''){out.model='EMPTY';return reason('EMPTY_VALUE_NOT_PLAIN');}
   if(!ds.length)return reason('DATA_SOURCE_MISSING');

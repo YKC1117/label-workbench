@@ -12,10 +12,10 @@ Run45（19 物件 Text／barcode）與 Run49（7 物件混合）仍是唯一已�
 | 項目 | 狀態 |
 |---|---|
 | 離線實作與檢查 | 完成（見第 6 節） |
-| Windows 實機 Probe | **NOT RUN**：施工環境沒有 GitHub 推送憑證，無法 push 或觸發 Runner |
-| 觸發方式 | 由 YKC1117 push 含 `[bartender-probe]` 的 run-request commit（見第 7 節） |
+| Windows 實機 Probe | **Run50 DISCOVERY_COMPLETE**：2026-11-04，[Windows Runner #41756559623](https://github.com/YKC1117/label-workbench/actions/runs/41756559623) |
+| 原始證據 | Run #41756559623 artifact `bartender-renderer-evidence-41756559623`，包含 BTW、XML、BMP、報告、peer audit |
 
-實機結果出來之前，本文件第 2～3 節的事實只來自 repo 既有證據，第 4 節全部是待驗證假設。
+第 2～3 節記錄 Run50 前的既有依據；第 4 節是當時待驗證假設。Run50 實機結果與判讀限制見第 9 節。
 
 ## 2. 已查證事實（repo 實機證據）
 
@@ -144,3 +144,12 @@ Workflow 只在 YKC1117 push 了 `run-request.json` 且 commit 訊息含 `[barte
 
 圖片、HRI、旋轉 primitive 的限定範圍見 `PRIMITIVE_RENDERER_HANDOFF.md`，本輪不變。
 任意客戶標籤產品 **NOT COMPLETE**。
+
+
+## 9. Run50 實機結果與離線判讀修正（2026-11-04）
+
+- **實機 PASS 限於原生物件建立與持久化**：`Create(9)` 成功，XML 根節點 `RichText`，Type=9；原生物件可保存成 BTW 並由不同 PID（7300 → 2572）冷重開。BTW SHA 前後同為 `83A3D32709A488AD36DB214FC54A90516072F64E0B6099C9B9E0FC2F5FA4F068`，物件和整頁 hot/cold BMP 均逐位元組一致。Box3／Code128 兩個 peer 共 20 筆 audit 全部 `EXACT`。
+- **實際 typed setter**：X／Y／Width 均寫入、讀回精確一致；Height 寫入被拒（`0x8000FFFF`）。FontName／FontSize／FontBold true／false 都被拒（`0x8000FFFF`）；`fontBoldRestore` 因兩次寫入被拒，結果為 `NOT_RUN`，不能標示 PASS。
+- **實際 Value 訊號**：`Value` 與 DataMerge Export literal 都回傳 ``<RTF 資料>``，但 RichText 物件 XML **沒有 DataSources 子節點**。``<RTF 資料>`` 看起來是 BarTender 本地化的 RTF 佔位標示，**不能直接推論真正 RTF 位元內容或 markup 模型**。
+- **判讀修正**：最初 Run50 工具把上述標示正規表示式命中為 `MARKUP`；此為 **format evidence 的誤分類**，已補回歸測試與保守規則：識別 ``<RTF 資料>``／``<RTF Data>`` 時回傳 `UNKNOWN`，記 `OPAQUE_RTF_PLACEHOLDER_NOT_FORMAT_EVIDENCE`，保留 `payloadPermitted=false`。既有 Run50 原始報告不改寫，修正只適用後續離線判讀或下一輪 Probe；本修正不需第二次 BarTender 實機操作。
+- **能力界線不變**：固定框、換行、原生水平對齊、縮字、超框裁切仍 `NOT_CERTIFIED`。不可因 Run50 workflow `SUCCESS` 便聲稱可還原任意客戶段落標籤。
