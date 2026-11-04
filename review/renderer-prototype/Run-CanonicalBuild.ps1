@@ -50,8 +50,17 @@ if($coldCode -ne 0){
 # Source comparison: original PDF vs the cold-reopened BarTender whole-format raster.
 $fmt=Join-Path $run 'cold-format.bmp';if(-not (Test-Path -LiteralPath $fmt)){$fmt=Join-Path $run 'native-format-preview.bmp'}
 $node=(Get-Command node.exe -CommandType Application -ErrorAction Stop).Source
-& $node (Join-Path $root 'tools\compare-source-native.cjs') (Join-Path $root 'tests\fixtures\vector-minimal.pdf') (Join-Path $root 'tests\fixtures\vector-minimal.canonical.json') $fmt (Join-Path $run 'source-comparison.json')
-$cmpCode=$LASTEXITCODE
+# pdf.js can emit harmless font-load warnings on native stderr even when
+# all numeric checks pass. Windows PowerShell 5.1 treats native stderr as an
+# ErrorRecord under Stop; preserve the entire log but judge Node by exit code.
+$comparisonReport=Join-Path $run 'source-comparison.json'
+$previousPreference=$ErrorActionPreference
+try{
+ $ErrorActionPreference='Continue'
+ & $node (Join-Path $root 'tools\compare-source-native.cjs') (Join-Path $root 'tests\fixtures\vector-minimal.pdf') (Join-Path $root 'tests\fixtures\vector-minimal.canonical.json') $fmt $comparisonReport 2>&1 | Tee-Object -FilePath (Join-Path $run 'source-comparison.log')
+ $cmpCode=$LASTEXITCODE
+}finally{$ErrorActionPreference=$previousPreference}
+if(-not (Test-Path -LiteralPath $comparisonReport -PathType Leaf)){$cmpCode=1}
 Copy-Item -LiteralPath (Join-Path $root 'tests\fixtures\vector-minimal.canonical.json') -Destination (Join-Path $run 'input.canonical.json') -Force
 if($cmpCode -ne 0){
  foreach($alias in @('LATEST_NATIVE_OUTPUT.btw','LATEST_NATIVE_REPORT.json')){

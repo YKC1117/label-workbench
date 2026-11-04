@@ -318,8 +318,20 @@ jobs:
           cache: npm
       - name: Install pinned Windows dependencies
         run: npm.cmd ci --ignore-scripts --no-audit --no-fund
-      - name: Windows V1 and renderer regression (no COM)
-        run: npm.cmd run test:renderer
+      - name: Windows PowerShell 5.1 canonical wrapper parser
+        shell: powershell
+        run: |
+          foreach ($f in @('review/renderer-prototype/Run-CanonicalBuild.ps1','review/renderer-prototype/Invoke-ProbeDispatch.ps1','review/renderer-prototype/Verify-PrimitiveColdReopen.ps1')) {
+            $t=$null;$errors=$null
+            [void][Management.Automation.Language.Parser]::ParseFile((Resolve-Path $f).Path,[ref]$t,[ref]$errors)
+            if ($errors.Count) { throw ('PowerShell 5.1 parser failed: '+$f+' '+($errors -join '; ')) }
+          }
+      - name: Windows PowerShell 5.1 native-stderr V1 regression (no COM)
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          & cmd.exe /d /s /c 'npm.cmd run test:renderer 2>&1' | Tee-Object -FilePath 'windows-v1-regression.log'
+          if ($LASTEXITCODE -ne 0) { throw ('Windows V1 regression failed with code '+$LASTEXITCODE) }
 
   browser-e2e:
     runs-on: ubuntu-24.04

@@ -53,7 +53,7 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           $evidence = Join-Path $env:GITHUB_WORKSPACE 'review\renderer-prototype\runner-evidence'
-          & npm.cmd run test:renderer 2>&1 | Tee-Object -FilePath (Join-Path $evidence 'renderer-offline-regression.log')
+          & cmd.exe /d /s /c 'npm.cmd run test:renderer 2>&1' | Tee-Object -FilePath (Join-Path $evidence 'renderer-offline-regression.log')
           if ($LASTEXITCODE -ne 0) { throw ('Renderer offline regression failed with exit code ' + $LASTEXITCODE) }
 
       - name: Preflight Windows / PowerShell 5.1 / BarTender COM
