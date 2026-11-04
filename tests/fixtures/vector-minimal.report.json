@@ -1,0 +1,210 @@
+{
+  "schema": "lwb-pdf-canonical-report-v1",
+  "build": "20261104-pdf-canonical-v1",
+  "status": "COMPLETE",
+  "source": "vector-minimal.pdf",
+  "page": {
+    "widthMm": 100,
+    "heightMm": 70,
+    "rotate": 0,
+    "userUnit": 1
+  },
+  "reasons": [],
+  "warnings": [],
+  "substitutions": [
+    "LiberationSans->Arial (metric-compatible)"
+  ],
+  "coverage": {
+    "textRuns": 6,
+    "shapes": 116,
+    "shapesInSupportedBarcodes": 116,
+    "ignoredWhiteFills": 0,
+    "images": 0,
+    "decodedBarcodes": 2,
+    "textObjects": 6
+  },
+  "objects": [
+    {
+      "id": "TEXT_001",
+      "source": {
+        "pdfFont": "LiberationSans-Bold",
+        "substitution": "LiberationSans->Arial (metric-compatible)",
+        "emBoxMm": {
+          "x": 6,
+          "y": 7.1677,
+          "w": 40.6838,
+          "h": 4.7294
+        },
+        "baselineMm": 11,
+        "inkMm": {
+          "x": 6.2653,
+          "y": 8.0433,
+          "w": 40.3013,
+          "h": 3.0057
+        }
+      }
+    },
+    {
+      "id": "TEXT_002",
+      "source": {
+        "pdfFont": "LiberationSans",
+        "substitution": "LiberationSans->Arial (metric-compatible)",
+        "emBoxMm": {
+          "x": 6,
+          "y": 15.4451,
+          "w": 13.3284,
+          "h": 3.153
+        },
+        "baselineMm": 18,
+        "inkMm": {
+          "x": 6.223,
+          "y": 16.0443,
+          "w": 12.827,
+          "h": 1.9897
+        }
+      }
+    },
+    {
+      "id": "TEXT_003",
+      "source": {
+        "pdfFont": "LiberationSans",
+        "substitution": "LiberationSans->Arial (metric-compatible)",
+        "emBoxMm": {
+          "x": 30,
+          "y": 15.4451,
+          "w": 15.0551,
+          "h": 3.153
+        },
+        "baselineMm": 18,
+        "inkMm": {
+          "x": 30.226,
+          "y": 16.0443,
+          "w": 14.6897,
+          "h": 1.9897
+        }
+      }
+    },
+    {
+      "id": "TEXT_004",
+      "source": {
+        "pdfFont": "LiberationSans",
+        "substitution": "LiberationSans->Arial (metric-compatible)",
+        "emBoxMm": {
+          "x": 6,
+          "y": 21.8064,
+          "w": 15.0981,
+          "h": 3.9412
+        },
+        "baselineMm": 25,
+        "inkMm": {
+          "x": 6.1807,
+          "y": 22.5213,
+          "w": 14.7743,
+          "h": 3.1327
+        }
+      }
+    },
+    {
+      "id": "TEXT_005",
+      "source": {
+        "pdfFont": "LiberationSans",
+        "substitution": "LiberationSans->Arial (metric-compatible)",
+        "emBoxMm": {
+          "x": 66,
+          "y": 22.4451,
+          "w": 17.7188,
+          "h": 3.153
+        },
+        "baselineMm": 25,
+        "inkMm": {
+          "x": 66.2517,
+          "y": 23.0293,
+          "w": 17.3143,
+          "h": 1.9897
+        }
+      }
+    },
+    {
+      "id": "TEXT_006",
+      "source": {
+        "pdfFont": "LiberationSans",
+        "substitution": "LiberationSans->Arial (metric-compatible)",
+        "emBoxMm": {
+          "x": 6,
+          "y": 41.4451,
+          "w": 15.0551,
+          "h": 3.153
+        },
+        "baselineMm": 44,
+        "inkMm": {
+          "x": 6.223,
+          "y": 42.037,
+          "w": 14.6897,
+          "h": 1.9897
+        }
+      }
+    },
+    {
+      "id": "DATAMATRIX_001",
+      "source": {
+        "symbology": "DataMatrix",
+        "value": "LWDM01",
+        "symbolMm": {
+          "x": 65.99999275207519,
+          "y": 29.9999905783081,
+          "w": 4.063000276353634,
+          "h": 4.062997584872775
+        },
+        "rects": 79,
+        "decodedBoxMm": {
+          "x": 66.00338696020322,
+          "y": 30.006045949214027,
+          "w": 4.064352243861134,
+          "h": 4.062877871825877
+        },
+        "decodedEdgeDeltaMm": [
+          0.0034,
+          0.0061,
+          0.0047,
+          0.0059
+        ],
+        "encoderModules": 12,
+        "modules": 12,
+        "measuredModuleMm": 0.3386,
+        "moduleMm": 0.338582,
+        "moduleIndex": 3
+      }
+    },
+    {
+      "id": "CODE128_001",
+      "source": {
+        "symbology": "Code128",
+        "value": "LW-ABC-77",
+        "symbolMm": {
+          "x": 5.999998583333333,
+          "y": 30.000000042846676,
+          "w": 34.036001184251575,
+          "h": 8.000001568264427
+        },
+        "rects": 37,
+        "decodedBoxMm": {
+          "x": 6.011854360711261,
+          "y": 30.04836759371221,
+          "w": 33.996613039796785,
+          "h": 7.871825876662635
+        },
+        "decodedEdgeDeltaMm": [
+          0.0119,
+          0.0484,
+          0.0275,
+          0.0798
+        ],
+        "encoderModules": 134,
+        "modules": 134,
+        "measuredModuleMm": 0.254,
+        "moduleMm": 0.254,
+        "moduleIndex": 2
+      }
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "testedCommit": "64b76281d573cd9caedc9a0cd4cfc5925035c3c7",
+  "runId": 41590028950,
+  "runNumber": 39,
+  "url": "https://github.com/YKC1117/label-workbench/actions/runs/41590028950",
+  "attempt1": {
+    "jobId": 125764391634,
+    "status": "INFRASTRUCTURE_INTERRUPTED",
+    "rendererStep": "cancelled",
+    "nodeRegression": "PASS",
+    "windowsPowerShellPreflight": "PASS",
+    "barTenderProgId": "REGISTERED",
+    "rootCause": "Runner received a shutdown signal while PROBE.cmd was executing",
+    "artifactCount": 0
+  },
+  "attempt2": {
+    "jobId": 125764984249,
+    "status": "QUEUED",
+    "sameCommit": true,
+    "scope": "previous fix commit, not the final handoff HEAD"
+  },
+  "newPowerShellPayloadTests": "NOT_RUN_TO_COMPLETION",
+  "stressRuntimeGate": "NOT_RUN_TO_COMPLETION",
+  "legacyPeerSemanticClassification": "PENDING_MISSING_CAPTURE",
+  "productAcceptance": "NOT_RUN / NOT_COMPLETE",
+  "checkedAt": "2026-11-03T14:32:00.217584+08:00",
+  "runnerOfflineConfirmedByUser": true
+}

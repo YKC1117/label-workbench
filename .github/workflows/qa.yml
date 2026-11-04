@@ -293,6 +293,46 @@ jobs:
       - name: BTW pending-field production safety gate
         run: node tests/btw-production-gate-smoke.cjs
 
+  pdf-canonical-v1:
+    name: Vector PDF canonical V1 and renderer regressions
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install pinned renderer dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Validate PDF canonical V1 plus existing renderer regressions
+        run: npm run test:renderer
+
+  pdf-canonical-windows:
+    name: Windows Node PDF canonical V1 (no BarTender)
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install pinned Windows dependencies
+        run: npm.cmd ci --ignore-scripts --no-audit --no-fund
+      - name: Windows PowerShell 5.1 canonical wrapper parser
+        shell: powershell
+        run: |
+          foreach ($f in @('review/renderer-prototype/Run-CanonicalBuild.ps1','review/renderer-prototype/Invoke-ProbeDispatch.ps1','review/renderer-prototype/Verify-PrimitiveColdReopen.ps1')) {
+            $t=$null;$errors=$null
+            [void][Management.Automation.Language.Parser]::ParseFile((Resolve-Path $f).Path,[ref]$t,[ref]$errors)
+            if ($errors.Count) { throw ('PowerShell 5.1 parser failed: '+$f+' '+($errors -join '; ')) }
+          }
+      - name: Windows PowerShell 5.1 native-stderr V1 regression (no COM)
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          & cmd.exe /d /s /c 'npm.cmd run test:renderer 2>&1' | Tee-Object -FilePath 'windows-v1-regression.log'
+          if ($LASTEXITCODE -ne 0) { throw ('Windows V1 regression failed with code '+$LASTEXITCODE) }
+
   browser-e2e:
     runs-on: ubuntu-24.04
     steps:

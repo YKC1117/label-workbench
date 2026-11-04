@@ -1,0 +1,144 @@
+{
+  "schema": "lwb-designer-multiline-candidates-v1",
+  "status": "CLUES_FOR_RUN52_NOT_CAPABILITY_EVIDENCE",
+  "generated": "2026-11-04 offline at d4e91c7",
+  "sources": {
+    "designerBase": {
+      "description": "Controlled Designer Text pool (renderer/materialize-text-pool.cjs)",
+      "sha256": "73E620EC2154D18AF3E279B4438A3775BE85D2A71F5BD8AFAAF664B31F03198B"
+    },
+    "originalTemplate": {
+      "path": "native/Label_Workbench_Native_Layout_ENGINE_V1/evidence/original-template.btw",
+      "sha256": "4CF9FDAD67CB27AA79AA57FF2BFF5912463608D8F509067112EB940BDEE49612"
+    },
+    "secondDonor": {
+      "path": "assets/btw-second-donor.js",
+      "sha256": "5B068A2241E89751EA3A4B960895B4808C89BCC7FAC76C1DAE02883731B0CB7C",
+      "note": "Text objects never read via GetXML on BarTender; same 文字 30 outlier record."
+    },
+    "seed2022r2": {
+      "path": "assets/btw-seed-2022r2.js",
+      "declaredSha256": "F3330541289256B0D1CE553E10234B4DC317E69BB207D587B8D34FDE3F1607B1",
+      "actualSha256": "A568B23D2B20792BE91FF432A43859E6CD5F2D38A670FE9D654263764D22DE51",
+      "usable": false,
+      "note": "Declared SHA does not match decoded bytes and container does not parse; not a SHA-locked source. Separate site defect: bytes() calls atob() on an array."
+    }
+  },
+  "candidates": [
+    {
+      "object": "文字 30",
+      "role": "read-only harvest target",
+      "dataMergeSubStrings": [
+        {
+          "position": "0",
+          "encoding": "base64",
+          "decodedUtf16le": "RoHS\r"
+        },
+        {
+          "position": "1",
+          "encoding": "base64",
+          "decodedUtf16le": "COMPLIANT"
+        }
+      ],
+      "binaryRecordBytes": 4782,
+      "designerPreview": {
+        "source": "originalTemplate PNG preview #1 (1188x1188 px, ~0.118 mm/px)",
+        "bands": [
+          {
+            "rowsPx": [
+              471,
+              496
+            ],
+            "colsPx": [
+              869,
+              961
+            ],
+            "centerPx": 915.0,
+            "widthPx": 93
+          },
+          {
+            "rowsPx": [
+              511,
+              523
+            ],
+            "colsPx": [
+              863,
+              968
+            ],
+            "centerPx": 915.5,
+            "widthPx": 106
+          }
+        ],
+        "spreads": {
+          "leftPx": 6,
+          "rightPx": 7,
+          "centerPx": 0.5
+        },
+        "suggests": "CENTER"
+      },
+      "editEligible": false,
+      "editIneligibleReason": "two DataMerge SubStrings; proven sparse import requires one"
+    },
+    {
+      "object": "文字 33",
+      "role": "read-only harvest target and edit-challenge target",
+      "dataMergeSubStrings": [
+        {
+          "position": "0",
+          "encoding": "base64",
+          "decodedUtf16le": "            120824\rC.K.   QA  ACC"
+        }
+      ],
+      "binaryRecordBytes": null,
+      "binaryRecordNote": "assets/btw-object-map.js mapContainer lists 32 texts and omits this object although its name and content strings are present: record structure differs from the 32 single-line texts.",
+      "designerPreview": {
+        "source": "originalTemplate PNG preview #1",
+        "bands": [
+          {
+            "rowsPx": [
+              684,
+              696
+            ],
+            "colsPx": [
+              1037,
+              1095
+            ],
+            "centerPx": 1066.0,
+            "widthPx": 59
+          },
+          {
+            "rowsPx": [
+              706,
+              719
+            ],
+            "colsPx": [
+              976,
+              1097
+            ],
+            "centerPx": 1036.5,
+            "widthPx": 122
+          }
+        ],
+        "spreads": {
+          "leftPx": 61,
+          "rightPx": 2,
+          "centerPx": 29.5
+        },
+        "suggests": "RIGHT (leading spaces in content are invisible under right alignment)"
+      },
+      "editEligible": "UNKNOWN_UNTIL_GETXML",
+      "editEligibilityRule": "Test-CleanTextXml: one EmbeddedDataSource, no transform, one Value"
+    }
+  ],
+  "references": [
+    "文字 1",
+    "文字 29",
+    "文字 31",
+    "文字 32"
+  ],
+  "limits": [
+    "Preview is a Designer render of originalTemplate, not of the SHA-locked base; it is a clue only.",
+    "Binary containers carry no property names; no field is inferred from bytes.",
+    "No paragraph (width-driven wrap) object exists in any committed donor; wrap remains unaddressed."
+  ]
+}

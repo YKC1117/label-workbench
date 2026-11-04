@@ -1,0 +1,454 @@
+{
+  "sha256": "D9551264B4495F4F0C8C6A12EEE9A85E116C9331A9525F4B3B14940DBF1996D7",
+  "productAcceptance": "NOT_RUN",
+  "objects": [
+    {
+      "id": "BOLD9",
+      "metrics": {
+        "dx": {
+          "policy": "DIAGNOSTIC_ONLY",
+          "value": 0.2493333333333334
+        },
+        "dy": {
+          "policy": "DIAGNOSTIC_ONLY",
+          "value": 0.7149999999999999
+        },
+        "dw": {
+          "policy": "DIAGNOSTIC_ONLY",
+          "value": -30.437333333333335
+        },
+        "dh": {
+          "policy": "DIAGNOSTIC_ONLY",
+          "value": -3.6293333333333333
+        },
+        "placementX": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        },
+        "placementY": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        },
+        "renderedRotation": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        }
+      },
+      "status": "MEASURED",
+      "expected": {
+        "x": 5,
+        "y": 5,
+        "width": 45,
+        "height": 6,
+        "rotation": 0
+      },
+      "actual": {
+        "x": 5.249333333333333,
+        "y": 5.715,
+        "width": 14.562666666666667,
+        "height": 2.3706666666666667
+      },
+      "delta": {
+        "dx": 0.2493333333333334,
+        "dy": 0.7149999999999999,
+        "dw": -30.437333333333335,
+        "dh": -3.6293333333333333
+      },
+      "rotationDeltaRendered": null,
+      "rotationDeltaCom": 0,
+      "verdict": "WITHIN_FIXTURE_TOLERANCE"
+    },
+    {
+      "id": "ITALIC18",
+      "metrics": {
+        "dx": {
+          "policy": "DIAGNOSTIC_ONLY",
+          "value": 0.3719999999999999
+        },
+        "dy": {
+          "policy": "DIAGNOSTIC_ONLY",
+          "value": 1.0536666666666665
+        },
+        "dw": {
+          "policy": "DIAGNOSTIC_ONLY",
+          "value": -33.156
+        },
+        "dh": {
+          "policy": "DIAGNOSTIC_ONLY",
+          "value": -5.301
+        },
+        "placementX": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        },
+        "placementY": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        },
+        "renderedRotation": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        }
+      },
+      "status": "MEASURED",
+      "expected": {
+        "x": 55,
+        "y": 5,
+        "width": 55,
+        "height": 10,
+        "rotation": 0
+      },
+      "actual": {
+        "x": 55.372,
+        "y": 6.0536666666666665,
+        "width": 21.844,
+        "height": 4.699
+      },
+      "delta": {
+        "dx": 0.3719999999999999,
+        "dy": 1.0536666666666665,
+        "dw": -33.156,
+        "dh": -5.301
+      },
+      "rotationDeltaRendered": null,
+      "rotationDeltaCom": 0,
+      "verdict": "WITHIN_FIXTURE_TOLERANCE"
+    },
+    {
+      "id": "BOTH24",
+      "metrics": {
+        "dx": {
+          "policy": "DIAGNOSTIC_ONLY",
+          "value": 0.5033333333333339
+        },
+        "dy": {
+          "policy": "DIAGNOSTIC_ONLY",
+          "value": 1.6323333333333352
+        },
+        "dw": {
+          "policy": "DIAGNOSTIC_ONLY",
+          "value": -33.334666666666664
+        },
+        "dh": {
+          "policy": "DIAGNOSTIC_ONLY",
+          "value": -4.083666666666667
+        },
+        "placementX": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        },
+        "placementY": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        },
+        "renderedRotation": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        }
+      },
+      "status": "MEASURED",
+      "expected": {
+        "x": 5,
+        "y": 20,
+        "width": 65,
+        "height": 12,
+        "rotation": 0
+      },
+      "actual": {
+        "x": 5.503333333333334,
+        "y": 21.632333333333335,
+        "width": 31.665333333333333,
+        "height": 7.916333333333333
+      },
+      "delta": {
+        "dx": 0.5033333333333339,
+        "dy": 1.6323333333333352,
+        "dw": -33.334666666666664,
+        "dh": -4.083666666666667
+      },
+      "rotationDeltaRendered": null,
+      "rotationDeltaCom": 0,
+      "verdict": "CANONICAL_VISUAL_GATE_FAILED"
+    },
+    {
+      "id": "CENTER",
+      "metrics": {
+        "dx": {
+          "policy": "DIAGNOSTIC_ONLY",
+          "value": 11.703333333333333
+        },
+        "dy": {
+          "policy": "DIAGNOSTIC_ONLY",
+          "value": 0.6483333333333334
+        },
+        "dw": {
+          "policy": "DIAGNOSTIC_ONLY",
+          "value": -22.902
+        },
+        "dh": {
+          "policy": "DIAGNOSTIC_ONLY",
+          "value": -5.290666666666667
+        },
+        "placementX": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        },
+        "placementY": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        },
+        "renderedRotation": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        }
+      },
+      "status": "MEASURED",
+      "expected": {
+        "x": 70,
+        "y": 22,
+        "width": 45,
+        "height": 8,
+        "rotation": 0
+      },
+      "actual": {
+        "x": 81.70333333333333,
+        "y": 22.648333333333333,
+        "width": 22.098,
+        "height": 2.7093333333333334
+      },
+      "delta": {
+        "dx": 11.703333333333333,
+        "dy": 0.6483333333333334,
+        "dw": -22.902,
+        "dh": -5.290666666666667
+      },
+      "rotationDeltaRendered": null,
+      "rotationDeltaCom": 0,
+      "verdict": "WITHIN_FIXTURE_TOLERANCE"
+    },
+    {
+      "id": "RIGHT",
+      "metrics": {
+        "dx": {
+          "policy": "DIAGNOSTIC_ONLY",
+          "value": 19.892
+        },
+        "dy": {
+          "policy": "DIAGNOSTIC_ONLY",
+          "value": 0.9363333333333372
+        },
+        "dw": {
+          "policy": "DIAGNOSTIC_ONLY",
+          "value": -19.811666666666667
+        },
+        "dh": {
+          "policy": "DIAGNOSTIC_ONLY",
+          "value": -4.079
+        },
+        "placementX": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        },
+        "placementY": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        },
+        "renderedRotation": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        }
+      },
+      "status": "MEASURED",
+      "expected": {
+        "x": 5,
+        "y": 40,
+        "width": 45,
+        "height": 7,
+        "rotation": 0
+      },
+      "actual": {
+        "x": 24.892,
+        "y": 40.93633333333334,
+        "width": 25.188333333333333,
+        "height": 2.9210000000000003
+      },
+      "delta": {
+        "dx": 19.892,
+        "dy": 0.9363333333333372,
+        "dw": -19.811666666666667,
+        "dh": -4.079
+      },
+      "rotationDeltaRendered": null,
+      "rotationDeltaCom": 0,
+      "verdict": "WITHIN_FIXTURE_TOLERANCE"
+    },
+    {
+      "id": "SMALL7",
+      "metrics": {
+        "dx": {
+          "policy": "DIAGNOSTIC_ONLY",
+          "value": 0.11333333333333684
+        },
+        "dy": {
+          "policy": "DIAGNOSTIC_ONLY",
+          "value": 0.47066666666666634
+        },
+        "dw": {
+          "policy": "DIAGNOSTIC_ONLY",
+          "value": -36.580333333333336
+        },
+        "dh": {
+          "policy": "DIAGNOSTIC_ONLY",
+          "value": -4.137333333333333
+        },
+        "placementX": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        },
+        "placementY": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        },
+        "renderedRotation": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        }
+      },
+      "status": "MEASURED",
+      "expected": {
+        "x": 60,
+        "y": 40,
+        "width": 50,
+        "height": 6,
+        "rotation": 0
+      },
+      "actual": {
+        "x": 60.11333333333334,
+        "y": 40.470666666666666,
+        "width": 13.419666666666666,
+        "height": 1.8626666666666667
+      },
+      "delta": {
+        "dx": 0.11333333333333684,
+        "dy": 0.47066666666666634,
+        "dw": -36.580333333333336,
+        "dh": -4.137333333333333
+      },
+      "rotationDeltaRendered": null,
+      "rotationDeltaCom": 0,
+      "verdict": "WITHIN_FIXTURE_TOLERANCE"
+    },
+    {
+      "id": "MULTI_L1",
+      "metrics": {
+        "dx": {
+          "policy": "DIAGNOSTIC_ONLY",
+          "value": 40.76233333333333
+        },
+        "dy": {
+          "policy": "DIAGNOSTIC_ONLY",
+          "value": 0.7953333333333319
+        },
+        "dw": {
+          "policy": "DIAGNOSTIC_ONLY",
+          "value": -80.82300000000001
+        },
+        "dh": {
+          "policy": "DIAGNOSTIC_ONLY",
+          "value": -4.867333333333333
+        },
+        "placementX": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        },
+        "placementY": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        },
+        "renderedRotation": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        }
+      },
+      "status": "MEASURED",
+      "expected": {
+        "x": 5,
+        "y": 55,
+        "width": 100,
+        "height": 8,
+        "rotation": 0
+      },
+      "actual": {
+        "x": 45.76233333333333,
+        "y": 55.79533333333333,
+        "width": 19.177,
+        "height": 3.1326666666666667
+      },
+      "delta": {
+        "dx": 40.76233333333333,
+        "dy": 0.7953333333333319,
+        "dw": -80.82300000000001,
+        "dh": -4.867333333333333
+      },
+      "rotationDeltaRendered": null,
+      "rotationDeltaCom": 0,
+      "verdict": "WITHIN_FIXTURE_TOLERANCE"
+    },
+    {
+      "id": "MULTI_L2",
+      "metrics": {
+        "dx": {
+          "policy": "DIAGNOSTIC_ONLY",
+          "value": 40.254333333333335
+        },
+        "dy": {
+          "policy": "DIAGNOSTIC_ONLY",
+          "value": 0.7963333333333367
+        },
+        "dw": {
+          "policy": "DIAGNOSTIC_ONLY",
+          "value": -79.807
+        },
+        "dh": {
+          "policy": "DIAGNOSTIC_ONLY",
+          "value": -4.867333333333333
+        },
+        "placementX": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        },
+        "placementY": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        },
+        "renderedRotation": {
+          "policy": "NOT_COMPARABLE",
+          "value": null
+        }
+      },
+      "status": "MEASURED",
+      "expected": {
+        "x": 5,
+        "y": 63,
+        "width": 100,
+        "height": 8,
+        "rotation": 0
+      },
+      "actual": {
+        "x": 45.254333333333335,
+        "y": 63.79633333333334,
+        "width": 20.193,
+        "height": 3.1326666666666667
+      },
+      "delta": {
+        "dx": 40.254333333333335,
+        "dy": 0.7963333333333367,
+        "dw": -79.807,
+        "dh": -4.867333333333333
+      },
+      "rotationDeltaRendered": null,
+      "rotationDeltaCom": 0,
+      "verdict": "WITHIN_FIXTURE_TOLERANCE"
+    }
+  ]
+}

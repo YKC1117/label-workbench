@@ -1,0 +1,72 @@
+{
+  "checks": [
+    {
+      "file": "tests/renderer-core-smoke.cjs",
+      "status": "PASS",
+      "output": "PASS canonical/schema, geometry, encoder footprint, explicit TopLeft Designer Text pool adapter, visual-gated omitted TopLeft readback for Text/barcode, two-renderer QA, pool contract; no BarTender execution\n"
+    },
+    {
+      "file": "tests/renderer-visual-cli-smoke.cjs",
+      "status": "PASS",
+      "output": "PASS synthetic BMP -> registration -> dual-render QA CLI; preview provenance mismatch rejected (not BarTender evidence)\n"
+    },
+    {
+      "file": "native/Label_Workbench_Native_Layout_ENGINE_V1/program/test-render.cjs",
+      "status": "PASS",
+      "output": "PASS: absolute placement, displacement and size residuals, wrong page scale, duplicate bitmap\n"
+    },
+    {
+      "file": "tests/analysis-geometry-smoke.cjs",
+      "status": "PASS",
+      "output": "PASS: known text fields, native barcode positions and barcode-overlap OCR suppression map to normalized source geometry\n"
+    },
+    {
+      "file": "tests/btw-layout-map-smoke.cjs",
+      "status": "PASS",
+      "output": "PASS: normalized source geometry maps deterministically into CEA native BTW coordinates while preserving source mm\n"
+    },
+    {
+      "file": "tests/text-collision-line-parking-smoke.cjs",
+      "status": "PASS",
+      "output": "[Label Workbench] BTW object map 20261001-btw-object-map-048-native-sizing\n[Label Workbench] controlled 5C128+1DM native generator 20261102-layout-rc2\nPASS: caption/value splitting, padded barcode avoidance, and native LineData endpoint parking\n"
+    },
+    {
+      "file": "tests/controlled-donor-code128-inventory.cjs",
+      "status": "PASS",
+      "output": "IDATE {\"type\":\"u16\",\"off\":610,\"vals\":[45,95,52,52,52]}\nCODE128_CANDIDATE {\"type\":\"u16\",\"off\":612,\"vals\":[95,95,53,53,53]}\nCODE128_CANDIDATE {\"type\":\"u16\",\"off\":614,\"vals\":[95,45,54,54,54]}\nCODE128_CANDIDATE {\"type\":\"u16\",\"off\":616,\"vals\":[95,95,55,55,55]}\nCODE128_CANDIDATE {\"type\":\"u16\",\"off\":618,\"vals\":[95,95,56,56,56]}\nCODE128_CANDIDATE {\"type\":\"u16\",\"off\":620,\"vals\":[18,95,57,57,57]}\nCODE128_CANDIDATE {\"type\":\"u16\",\"off\":668,\"vals\":[67,65,255,255,255]}\nCODE128_CANDIDATE {\"type\":\"u16\",\"off\":926,\"vals\":[97,255,49,49,49]}\nCODE128_CANDIDATE {\"type\":\"u16\",\"off\":984,\"vals\":[1033,48,255,255,255]}\n"
+    },
+    {
+      "file": "tests/controlled-donor-text-inventory.cjs",
+      "status": "PASS",
+      "output": "Y\":1012,\"owner\":\"\"}\nTEXT_INVENTORY {\"index\":35,\"name\":\"\u6587\u5b57 30\",\"x\":4246,\"y\":138,\"font\":\"Arial\",\"size\":0,\"root\":\"Root.MasterSelectedObject.Border\",\"value\":\"LWLWLWLWL\",\"valueEntry\":true,\"boxX\":3974,\"boxY\":134,\"owner\":\"\"}\nTEXT_INVENTORY {\"index\":36,\"name\":\"\u6587\u5b57 31\",\"x\":4258,\"y\":503,\"font\":\"Arial\",\"size\":0,\"root\":\"Root.MasterSelectedObject.Border\",\"value\":\"LW\",\"valueEntry\":true,\"boxX\":4081,\"boxY\":499,\"owner\":\"\"}\nTEXT_INVENTORY {\"index\":37,\"name\":\"\u6587\u5b57 32\",\"x\":5013,\"y\":926,\"font\":\"Arial\",\"size\":0,\"root\":\"Root.MasterSelectedObject.Border\",\"value\":\"Pb\",\"valueEntry\":true,\"boxX\":4708,\"boxY\":696,\"owner\":\"\"}\n"
+    },
+    {
+      "file": "tests/layout-restoration-smoke.cjs",
+      "status": "PASS",
+      "output": "PASS: photo crop, OCR dedupe/noise filtering, barcode crop coordinate restoration, and source-driven font sizing\n"
+    },
+    {
+      "file": "tests/analysis-core-v2-smoke.cjs",
+      "status": "PASS",
+      "output": " field consistency guard 20260911-field-consistency-110-conservative\n[Label Workbench] final confidence guard 20260918-v145-await-dom-no-version-write\n[Label Workbench] barcode cross-check 20260918-barcode-crosscheck-108-clear-stale-ocr\n[Label Workbench] BTW production safety gate 20260918-btw-production-gate-110-textobjects\n[Label Workbench] deterministic analysis core complete 20261102-layout-rc2 { files: 1, labels: 1 }\nPASS: \u7b2c\u4e00\u500b.pdf style result follows one deterministic analysis pipeline, corrects same-field barcode evidence, renders once, stages once, and excludes unresolved LOT from BTW\n"
+    },
+    {
+      "file": "tests/second-donor-generation-smoke.cjs",
+      "status": "PASS",
+      "output": "[Label Workbench] BTW object map 20261001-btw-object-map-048-native-sizing\n[Label Workbench] controlled 5C128+1DM native generator 20261102-layout-rc2\nPASS: generic 5C128+1DM layout restores normalized source geometry with Top-Left Text anchors at both 140x38mm and unrelated 96x54mm sizes, rejects missing geometry, while preserving the native donor object graph\n"
+    },
+    {
+      "file": "tests/btw-production-core-smoke.cjs",
+      "status": "PASS",
+      "output": "[Label Workbench] final confidence guard 20260918-v145-await-dom-no-version-write\n[Label Workbench] BTW production safety gate 20260918-btw-production-gate-110-textobjects\n[Label Workbench] deterministic BTW production core 20261102-layout-rc2\nPASS: deterministic BTW production core routes family -> second -> rich -> native while preserving the production safety gate\n"
+    },
+    {
+      "file": "tests/rc2-parity.cjs",
+      "status": "PASS",
+      "output": "[Label Workbench] BTW object map 20261001-btw-object-map-048-native-sizing\n[Label Workbench] controlled 5C128+1DM native generator 20261102-layout-rc2\n[Label Workbench] BTW production safety gate 20260918-btw-production-gate-110-textobjects\n[Label Workbench] deterministic BTW production core 20261102-layout-rc2\nPASS production download bytes, request and readback 140x38\nPASS production download bytes, request and readback 96x54\nPASS production download bytes, request and readback 45x55\n"
+    }
+  ],
+  "stressCanonicalConversion": "PASS",
+  "PowerShell51NewPayloadTests": "NOT_RUN",
+  "WindowsStressGate": "PENDING_OFFLINE_RUNNER"
+}

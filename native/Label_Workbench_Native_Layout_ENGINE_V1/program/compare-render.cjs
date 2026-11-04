@@ -40,6 +40,21 @@ function locate(page, tile) {
   }
   return found;
 }
+// Transparent outlines have no white interior to compare. Require every ink
+// pixel globally, retain unique registration, then independently validate the
+// native per-object outline against the canonical hollow geometry.
+function locateInk(page,tile){
+ let seed=null;
+ for(let y=0;y<tile.length;y++)for(let x=0;x<tile[0].length;){if(!tile[y][x]){x++;continue;}let end=x+1;while(end<tile[0].length&&tile[y][end])end++;if(!seed||end-x>seed.n)seed={x,y,n:end-x};x=end;}
+ if(!seed)return null;const run=Buffer.alloc(seed.n,1),spans=tile.map(r=>{const out=[];for(let x=0;x<r.length;){if(!r[x]){x++;continue;}let end=x+1;while(end<r.length&&r[end])end++;out.push([x,end]);x=end;}return out;});let found=null;
+ for(let y=0;y<=page.length-tile.length;y++){
+  const row=page[y+seed.y];for(let at=row.indexOf(run);at>=0;at=row.indexOf(run,at+1)){
+   const x=at-seed.x;if(x<0||x+tile[0].length>row.length)continue;
+   const equal=spans.every((runs,yy)=>runs.every(([start,end])=>{for(let xx=start;xx<end;xx++)if(!page[y+yy][x+xx])return false;return true;}));
+   if(equal){if(found)return null;found={x,y};}
+  }
+ }return found;
+}
 function compare(dir, ev, input) {
   const plan=input.layout??input;
   const page=mask(path.join(dir,'native-format-preview.bmp')), u=25.4/ev.requestedDpi;
@@ -51,8 +66,14 @@ function compare(dir, ev, input) {
     const expected=source??input.expected?.[o.id]??{x:p.xMm,y:p.yMm,width:p.widthMm??p.sizeMm??null,height:p.heightMm??p.sizeMm??null,rotation:p.rotationDeg??0};
     const tile=mask(path.join(dir,'visual-'+o.id+'.bmp')).slice(r.inkTopPx,r.inkTopPx+r.inkHeightPx)
       .map(row=>row.subarray(r.inkLeftPx,r.inkLeftPx+r.inkWidthPx));
-    const pos=mapped?locate(page,tile):null;
-    const actual=pos?{x:pos.x*u,y:pos.y*u,width:r.inkWidthPx*u,height:r.inkHeightPx*u}:null;
+    const pos=mapped?(p.type==='box'?locateInk(page,tile):locate(page,tile)):null;
+    let pixels=pos?{x:pos.x,y:pos.y,width:r.inkWidthPx,height:r.inkHeightPx}:null;
+    let registration=p.type==='box'?'UNIQUE_ALL_INK_PIXELS':'UNIQUE_EXACT_TILE';
+    if(!pixels&&mapped&&plan.runtimeProfile==='candidate-primitives-v1'&&['text','line','image','code128'].includes(p.type)){
+      if(ev.printerResolution?.x!==300||ev.printerResolution?.y!==300)throw Error('Measured printer resolution required for native phase registration');
+      pixels=require('../../../renderer/raster-registration.cjs').locateRaster(page,tile,2);registration='GLOBAL_UNIQUE_NATIVE_INK_BIDIRECTIONAL_ONE_DRIVER_DOT';
+    }
+    const actual=pixels?{x:pixels.x*u,y:pixels.y*u,width:pixels.width*u,height:pixels.height*u}:null;
     const delta=actual?{dx:actual.x-expected.x,dy:actual.y-expected.y,
       dw:expected.width===null?null:actual.width-expected.width,
       dh:expected.height===null?null:actual.height-expected.height}:null;
@@ -70,7 +91,7 @@ function compare(dir, ev, input) {
       metrics['placement'+axis]={policy:!Number.isFinite(v)?'NOT_COMPARABLE':'COMPARABLE',value:v};
     }
     metrics.renderedRotation={policy:'NOT_COMPARABLE',value:null};
-    return {id:o.id,metrics,status:pos?'MEASURED':'UNRESOLVED',expected,actual,delta,
+    return {id:o.id,registration,pixelBounds:pixels,metrics,status:pixels?'MEASURED':'UNRESOLVED',expected,actual,delta,
       rotationDeltaRendered:null,rotationDeltaCom:expected.rotation===null?null:((o.rotationDeg-expected.rotation+540)%360+360)%360-180};
   });
 }
@@ -97,4 +118,4 @@ if(require.main===module){
   fs.writeFileSync(path.join(dir,'render-comparison.json'),JSON.stringify({status,toleranceMm:1,productAcceptance:'NOT_RUN',units:'mm',revision:'20261102-layout-rc2',basis:'source bounding box vs unique page ink; placement compares intervals, size is diagnostic',objects},null,2));
   if(!['WITHIN_PLACEMENT_ENVELOPES','LEGACY_DIAGNOSTIC_ONLY'].includes(status))process.exitCode=2;
 }
-module.exports={locate,compare,assess};
+module.exports={mask,locate,locateInk,compare,assess};

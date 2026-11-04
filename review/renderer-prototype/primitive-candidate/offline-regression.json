@@ -1,0 +1,181 @@
+{
+  "checks": [
+    {
+      "file": "tests/renderer-core-smoke.cjs",
+      "status": "PASS",
+      "output": "PASS canonical/schema, geometry, encoder footprint, explicit TopLeft Designer Text pool adapter, visual-gated omitted TopLeft readback for Text/barcode, two-renderer QA, pool contract; no BarTender execution\n",
+      "stderr": ""
+    },
+    {
+      "file": "tests/renderer-visual-cli-smoke.cjs",
+      "status": "PASS",
+      "output": "PASS synthetic BMP -> registration -> dual-render QA CLI; preview provenance mismatch rejected (not BarTender evidence)\n",
+      "stderr": ""
+    },
+    {
+      "file": "native/Label_Workbench_Native_Layout_ENGINE_V1/program/test-render.cjs",
+      "status": "PASS",
+      "output": "PASS: absolute placement, displacement and size residuals, wrong page scale, duplicate bitmap\n",
+      "stderr": ""
+    },
+    {
+      "file": "tests/analysis-geometry-smoke.cjs",
+      "status": "PASS",
+      "output": "PASS: known text fields, native barcode positions and barcode-overlap OCR suppression map to normalized source geometry\n",
+      "stderr": ""
+    },
+    {
+      "file": "tests/btw-layout-map-smoke.cjs",
+      "status": "PASS",
+      "output": "PASS: normalized source geometry maps deterministically into CEA native BTW coordinates while preserving source mm\n",
+      "stderr": ""
+    },
+    {
+      "file": "tests/text-collision-line-parking-smoke.cjs",
+      "status": "PASS",
+      "output": "[Label Workbench] BTW object map 20261001-btw-object-map-048-native-sizing\n[Label Workbench] controlled 5C128+1DM native generator 20261102-layout-rc2\nPASS: caption/value splitting, padded barcode avoidance, and native LineData endpoint parking\n",
+      "stderr": ""
+    },
+    {
+      "file": "tests/controlled-donor-code128-inventory.cjs",
+      "status": "PASS",
+      "output": "\"u16\",\"off\":554,\"vals\":[57,4863,95,95,95]}\nCODE128_CANDIDATE {\"type\":\"u16\",\"off\":556,\"vals\":[57,40,95,95,95]}\nCODE128_CANDIDATE {\"type\":\"u16\",\"off\":558,\"vals\":[57,57,41,41,41]}\nCODE128_CANDIDATE {\"type\":\"u16\",\"off\":560,\"vals\":[41,57,32,32,32]}\nCODE128_CANDIDATE {\"type\":\"u16\",\"off\":562,\"vals\":[32,57,95,95,95]}\nCODE128_CANDIDATE {\"type\":\"u16\",\"off\":564,\"vals\":[48,41,95,95,95]}\nCODE128_CANDIDATE {\"type\":\"u16\",\"off\":566,\"vals\":[48,32,95,95,95]}\nCODE128_CANDIDATE {\"type\":\"u16\",\"off\":568,\"vals\":[48,48,45,45,45]}\nCODE128_CANDIDATE {\"type\":\"u16\",\"off\":570,\"vals\":[45,48,95,95,95]}\nCODE128_CANDIDATE {\"type\":\"u16\",\"off\":572,\"vals\":[48,48,95,95,95]}\nCODE128_CANDIDATE {\"type\":\"u16\",\"off\":574,\"vals\":[48,45,95,95,95]}\nCODE128_CANDIDATE {\"type\":\"u16\",\"off\":576,\"vals\":[48,48,95,95,95]}\nCODE128_CANDIDATE {\"type\":\"u16\",\"off\":578,\"vals\":[48,48,18,18,18]}\nCODE128_CANDIDATE {\"type\":\"u16\",\"off\":600,\"vals\":[41,95,3583,3583,3583]}\nCODE128_CANDIDATE {\"type\":\"u16\",\"off\":602,\"vals\":[32,95,48,48,48]}\nCODE128_CANDIDATE {\"type\":\"u16\",\"off\":604,\"vals\":[95,41,49,49,49]}\nCODE128_CANDIDATE {\"type\":\"u16\",\"off\":606,\"vals\":[95,32,50,50,50]}\nCODE128_CANDIDATE {\"type\":\"u16\",\"off\":608,\"vals\":[95,95,51,51,51]}\nCODE128_CANDIDATE {\"type\":\"u16\",\"off\":610,\"vals\":[45,95,52,52,52]}\nCODE128_CANDIDATE {\"type\":\"u16\",\"off\":612,\"vals\":[95,95,53,53,53]}\nCODE128_CANDIDATE {\"type\":\"u16\",\"off\":614,\"vals\":[95,45,54,54,54]}\nCODE128_CANDIDATE {\"type\":\"u16\",\"off\":616,\"vals\":[95,95,55,55,55]}\nCODE128_CANDIDATE {\"type\":\"u16\",\"off\":618,\"vals\":[95,95,56,56,56]}\nCODE128_CANDIDATE {\"type\":\"u16\",\"off\":620,\"vals\":[18,95,57,57,57]}\nCODE128_CANDIDATE {\"type\":\"u16\",\"off\":668,\"vals\":[67,65,255,255,255]}\nCODE128_CANDIDATE {\"type\":\"u16\",\"off\":926,\"vals\":[97,255,49,49,49]}\nCODE128_CANDIDATE {\"type\":\"u16\",\"off\":984,\"vals\":[1033,48,255,255,255]}\n",
+      "stderr": ""
+    },
+    {
+      "file": "tests/controlled-donor-text-inventory.cjs",
+      "status": "PASS",
+      "output": ":\"Arial\",\"size\":0,\"root\":\"Root.MasterSelectedObject.DataSourceGeneral.DataSource\",\"value\":\"LW\",\"valueEntry\":true,\"boxX\":3763,\"boxY\":744,\"owner\":\"\"}\nTEXT_INVENTORY {\"index\":29,\"name\":\"\u6587\u5b57 25\",\"x\":197,\"y\":1144,\"font\":\"Arial\",\"size\":0,\"root\":\"Root.MasterSelectedObject.DataSourceGeneral.DataSource\",\"value\":\"LWLWLWL\",\"valueEntry\":true,\"boxX\":65,\"boxY\":1012,\"owner\":\"\"}\nTEXT_INVENTORY {\"index\":30,\"name\":\"\u6587\u5b57 26\",\"x\":513,\"y\":1144,\"font\":\"Arial\",\"size\":6,\"root\":\"Root.MasterSelectedObject.DataSourceGeneral\",\"value\":\"LWLWLWLWLWLW\",\"valueEntry\":true,\"boxX\":381,\"boxY\":1012,\"owner\":\"\"}\nTEXT_INVENTORY {\"index\":31,\"name\":\"\u6587\u5b57 27\",\"x\":1796,\"y\":1144,\"font\":\"Arial\",\"size\":0,\"root\":\"Root.MasterSelectedObject.DataSourceGeneral.DataSource\",\"value\":\"LWLWLWL\",\"valueEntry\":true,\"boxX\":1381,\"boxY\":1012,\"owner\":\"\"}\nTEXT_INVENTORY {\"index\":32,\"name\":\"\u6587\u5b57 28\",\"x\":3039,\"y\":1144,\"font\":\"Arial\",\"size\":6,\"root\":\"Root.MasterSelectedObject.DataSourceGeneral.DataSource\",\"value\":\"LWLWLW\",\"valueEntry\":true,\"boxX\":2667,\"boxY\":1012,\"owner\":\"\"}\nTEXT_INVENTORY {\"index\":33,\"name\":\"\u6587\u5b57 29\",\"x\":3126,\"y\":1144,\"font\":\"Arial\",\"size\":6,\"root\":\"Root.MasterSelectedObject.DataSourceGeneral\",\"value\":\"LW\",\"valueEntry\":true,\"boxX\":2941,\"boxY\":1012,\"owner\":\"\"}\nTEXT_INVENTORY {\"index\":35,\"name\":\"\u6587\u5b57 30\",\"x\":4246,\"y\":138,\"font\":\"Arial\",\"size\":0,\"root\":\"Root.MasterSelectedObject.Border\",\"value\":\"LWLWLWLWL\",\"valueEntry\":true,\"boxX\":3974,\"boxY\":134,\"owner\":\"\"}\nTEXT_INVENTORY {\"index\":36,\"name\":\"\u6587\u5b57 31\",\"x\":4258,\"y\":503,\"font\":\"Arial\",\"size\":0,\"root\":\"Root.MasterSelectedObject.Border\",\"value\":\"LW\",\"valueEntry\":true,\"boxX\":4081,\"boxY\":499,\"owner\":\"\"}\nTEXT_INVENTORY {\"index\":37,\"name\":\"\u6587\u5b57 32\",\"x\":5013,\"y\":926,\"font\":\"Arial\",\"size\":0,\"root\":\"Root.MasterSelectedObject.Border\",\"value\":\"Pb\",\"valueEntry\":true,\"boxX\":4708,\"boxY\":696,\"owner\":\"\"}\n",
+      "stderr": ""
+    },
+    {
+      "file": "tests/layout-restoration-smoke.cjs",
+      "status": "PASS",
+      "output": "PASS: photo crop, OCR dedupe/noise filtering, barcode crop coordinate restoration, and source-driven font sizing\n",
+      "stderr": ""
+    },
+    {
+      "file": "tests/analysis-core-v2-smoke.cjs",
+      "status": "PASS",
+      "output": "[Label Workbench] analysis accuracy guard 20260911-analysis-accuracy-130-boundary-strict\n[Label Workbench] field consistency guard 20260911-field-consistency-110-conservative\n[Label Workbench] final confidence guard 20260918-v145-await-dom-no-version-write\n[Label Workbench] barcode cross-check 20260918-barcode-crosscheck-108-clear-stale-ocr\n[Label Workbench] BTW production safety gate 20260918-btw-production-gate-110-textobjects\n[Label Workbench] deterministic analysis core complete 20261102-layout-rc2 { files: 1, labels: 1 }\nPASS: \u7b2c\u4e00\u500b.pdf style result follows one deterministic analysis pipeline, corrects same-field barcode evidence, renders once, stages once, and excludes unresolved LOT from BTW\n",
+      "stderr": ""
+    },
+    {
+      "file": "tests/second-donor-generation-smoke.cjs",
+      "status": "PASS",
+      "output": "[Label Workbench] BTW object map 20261001-btw-object-map-048-native-sizing\n[Label Workbench] controlled 5C128+1DM native generator 20261102-layout-rc2\nPASS: generic 5C128+1DM layout restores normalized source geometry with Top-Left Text anchors at both 140x38mm and unrelated 96x54mm sizes, rejects missing geometry, while preserving the native donor object graph\n",
+      "stderr": ""
+    },
+    {
+      "file": "tests/btw-production-core-smoke.cjs",
+      "status": "PASS",
+      "output": "[Label Workbench] final confidence guard 20260918-v145-await-dom-no-version-write\n[Label Workbench] BTW production safety gate 20260918-btw-production-gate-110-textobjects\n[Label Workbench] deterministic BTW production core 20261102-layout-rc2\nPASS: deterministic BTW production core routes family -> second -> rich -> native while preserving the production safety gate\n",
+      "stderr": ""
+    },
+    {
+      "file": "tests/rc2-parity.cjs",
+      "status": "PASS",
+      "output": "[Label Workbench] BTW object map 20261001-btw-object-map-048-native-sizing\n[Label Workbench] controlled 5C128+1DM native generator 20261102-layout-rc2\n[Label Workbench] BTW production safety gate 20260918-btw-production-gate-110-textobjects\n[Label Workbench] deterministic BTW production core 20261102-layout-rc2\nPASS production download bytes, request and readback 140x38\nPASS production download bytes, request and readback 96x54\nPASS production download bytes, request and readback 45x55\n",
+      "stderr": ""
+    },
+    {
+      "file": "tests/renderer-general-smoke.cjs",
+      "status": "PASS",
+      "output": "PASS general candidate: shared expansion/CLI parity, 8 styles/lines, three alignments, orthogonal transforms, modules/quiet zones, visual displacement rejection, optical geometry/angle ambiguity and exact barcode patterns, unsupported capabilities fail closed; NOT BarTender runtime evidence\nPASS actual Run44 ledger -> measured ink-origin transform, left/center/right and three rotations, tight X/Y anchor residuals; reprojected offline evidence only\n",
+      "stderr": ""
+    },
+    {
+      "file": "tests/renderer-primitives-smoke.cjs",
+      "status": "PASS",
+      "output": "PASS typed native primitive planner, PNG identity, stroke footprint, endpoint anchor, hollow overlay registration + ambiguity/missing-ink rejection, actual image pattern, segmented HRI + caption displacement, unsupported profiles fail closed; no BarTender execution\nPASS global native-phase registration: unique actual bounding box, duplicate pattern rejection, bounded printer uncertainty; exact source interior reconstruction rejects content damage\n",
+      "stderr": ""
+    }
+  ],
+  "syntax": [
+    {
+      "file": "renderer/preview.cjs",
+      "status": "PASS"
+    },
+    {
+      "file": "renderer/rotation-qa.cjs",
+      "status": "PASS"
+    },
+    {
+      "file": "renderer/adapter.cjs",
+      "status": "PASS"
+    },
+    {
+      "file": "renderer/barcode.cjs",
+      "status": "PASS"
+    },
+    {
+      "file": "renderer/primitive-plan.cjs",
+      "status": "PASS"
+    },
+    {
+      "file": "renderer/text-layout.cjs",
+      "status": "PASS"
+    },
+    {
+      "file": "renderer/canonical.cjs",
+      "status": "PASS"
+    },
+    {
+      "file": "renderer/hri-qa.cjs",
+      "status": "PASS"
+    },
+    {
+      "file": "renderer/primitive-qa.cjs",
+      "status": "PASS"
+    },
+    {
+      "file": "renderer/raster-registration.cjs",
+      "status": "PASS"
+    },
+    {
+      "file": "renderer/visual-qa.cjs",
+      "status": "PASS"
+    },
+    {
+      "file": "renderer/prepare.cjs",
+      "status": "PASS"
+    },
+    {
+      "file": "renderer/materialize-text-pool.cjs",
+      "status": "PASS"
+    },
+    {
+      "file": "renderer/pool-contract.cjs",
+      "status": "PASS"
+    },
+    {
+      "file": "renderer/image-raster.cjs",
+      "status": "PASS"
+    },
+    {
+      "file": "renderer/geometry.cjs",
+      "status": "PASS"
+    },
+    {
+      "file": "renderer/text-placement.cjs",
+      "status": "PASS"
+    },
+    {
+      "file": "tests/renderer-general-smoke.cjs",
+      "status": "PASS"
+    },
+    {
+      "file": "tests/renderer-primitives-smoke.cjs",
+      "status": "PASS"
+    },
+    {
+      "file": "native/Label_Workbench_Native_Layout_ENGINE_V1/program/probe-render.cjs",
+      "status": "PASS"
+    },
+    {
+      "file": "native/Label_Workbench_Native_Layout_ENGINE_V1/program/compare-render.cjs",
+      "status": "PASS"
+    }
+  ],
+  "runtimeClaim": "NONE: offline only; actual BMP reanalysis is separately labelled"
+}

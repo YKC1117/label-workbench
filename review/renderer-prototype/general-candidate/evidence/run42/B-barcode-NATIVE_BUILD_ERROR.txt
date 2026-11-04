@@ -1,0 +1,12 @@
+﻿System.Management.Automation.MethodInvocationException: Exception calling "Read" with "1" argument(s): "Could not find file 'C:\Users\FTUSER5\actions-runner-label-workbench\_work\label-workbench\label-workbench\native\Label_Workbench_Native_Layout_ENGINE_V1\program\native-results\general-candidate\B-barcode\20261103-150817-b4c864bf7e1c430cb3cb339731c02991\hybrid-CODE_SHORT-size-module.bmp'." ---> System.IO.FileNotFoundException: Could not find file 'C:\Users\FTUSER5\actions-runner-label-workbench\_work\label-workbench\label-workbench\native\Label_Workbench_Native_Layout_ENGINE_V1\program\native-results\general-candidate\B-barcode\20261103-150817-b4c864bf7e1c430cb3cb339731c02991\hybrid-CODE_SHORT-size-module.bmp'.
+   at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+   at System.IO.FileStream.Init(String path, FileMode mode, FileAccess access, Int32 rights, Boolean useRights, FileShare share, Int32 bufferSize, FileOptions options, SECURITY_ATTRIBUTES secAttrs, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   at System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize, FileOptions options, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   at System.IO.File.InternalReadAllBytes(String path, Boolean checkHost)
+   at LabelWorkbench.RasterEvidence.Read(String path)
+   at CallSite.Target(Closure , CallSite , Type , String )
+   --- End of inner exception stack trace ---
+   at System.Management.Automation.ExceptionHandlingOps.CheckActionPreference(FunctionContext funcContext, Exception exception)
+   at System.Management.Automation.Interpreter.ActionCallInstruction`2.Run(InterpretedFrame frame)
+   at System.Management.Automation.Interpreter.EnterTryCatchFinallyInstruction.Run(InterpretedFrame frame)
+   at System.Management.Automation.Interpreter.EnterTryCatchFinallyInstruction.Run(InterpretedFrame frame)

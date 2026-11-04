@@ -1,0 +1,289 @@
+{
+  "schema": "lwb-general-runtime-review-v2",
+  "runId": 41598871444,
+  "runNumber": 45,
+  "jobId": 125792600726,
+  "candidateCommit": "f610c62ddbdaaa627cb6d6f878991fadfa51a628",
+  "url": "https://github.com/YKC1117/label-workbench/actions/runs/41598871444",
+  "artifactId": 13214116137,
+  "artifactSha256": "b6475b3758996a04096e98ea64daf67c62976c78c623f50a11c7251d4da9c068",
+  "gate": "PASS",
+  "productAcceptance": "NOT_COMPLETE",
+  "cases": [
+    {
+      "case": "A",
+      "status": "PASS",
+      "objectCount": 8,
+      "nativeTypes": [
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5,
+        5
+      ],
+      "editabilityChallengeRestore": "PASS_ALL_EXACT_XML",
+      "strictPeerAuditCount": 32,
+      "strictPeerIsolation": "PASS_ALL",
+      "saveCloseReopen": "PASS",
+      "visualQA": "PASS_PLACEMENT_AND_SIZE",
+      "opticalRotation": {
+        "status": "PASS",
+        "objects": []
+      },
+      "unexpectedOverlap": 0,
+      "outOfBounds": 0,
+      "sha256Before": "F0094F678C1ADBC05DC644C43893A32F1A1BB168EE232AF454A0EB0126F02432",
+      "sha256After": "F0094F678C1ADBC05DC644C43893A32F1A1BB168EE232AF454A0EB0126F02432",
+      "barTender": {
+        "FullVersion": "2022 R2",
+        "Version": "11.3",
+        "Edition": "Automation",
+        "BuildNumber": "184527",
+        "ProcessID": 18056
+      },
+      "powerShell": "5.1.26100.9711",
+      "alignmentResidualMm": [
+        {
+          "id": "BOLD9",
+          "x": -0.004666666666667041,
+          "y": -0.004666666666667041
+        },
+        {
+          "id": "ITALIC18",
+          "x": -0.009000000000000341,
+          "y": -0.004666666666667041
+        },
+        {
+          "id": "BOTH24",
+          "x": -0.004666666666667041,
+          "y": -0.018666666666668164
+        },
+        {
+          "id": "CENTER",
+          "x": -0.0016666666666722563,
+          "y": -0.11366666666666703
+        },
+        {
+          "id": "RIGHT",
+          "x": -0.0043333333333350765,
+          "y": 0.005000000000002558
+        },
+        {
+          "id": "SMALL7",
+          "x": -0.013666666666665606,
+          "y": 0.005000000000002558
+        },
+        {
+          "id": "MULTI_L1",
+          "x": 0.012166666666672654,
+          "y": -0.05133333333333212
+        },
+        {
+          "id": "MULTI_L2",
+          "x": 0.012166666666665549,
+          "y": -0.05033333333333445
+        }
+      ]
+    },
+    {
+      "case": "B",
+      "status": "PASS",
+      "objectCount": 6,
+      "nativeTypes": [
+        4,
+        4,
+        4,
+        4,
+        4,
+        4
+      ],
+      "editabilityChallengeRestore": "PASS_ALL_EXACT_XML",
+      "strictPeerAuditCount": 24,
+      "strictPeerIsolation": "PASS_ALL",
+      "saveCloseReopen": "PASS",
+      "visualQA": "PASS_PLACEMENT_AND_SIZE",
+      "opticalRotation": {
+        "status": "PASS",
+        "objects": []
+      },
+      "unexpectedOverlap": 0,
+      "outOfBounds": 0,
+      "sha256Before": "F0763F3B50BA2FBE5AC4D93027C551FE0DDDAFF7CA5B7617906C8F6FE9AC4B7D",
+      "sha256After": "F0763F3B50BA2FBE5AC4D93027C551FE0DDDAFF7CA5B7617906C8F6FE9AC4B7D",
+      "barTender": {
+        "FullVersion": "2022 R2",
+        "Version": "11.3",
+        "Edition": "Automation",
+        "BuildNumber": "184527",
+        "ProcessID": 18848
+      },
+      "powerShell": "5.1.26100.9711",
+      "alignmentResidualMm": []
+    },
+    {
+      "case": "C",
+      "status": "PASS",
+      "objectCount": 5,
+      "nativeTypes": [
+        5,
+        5,
+        5,
+        4,
+        4
+      ],
+      "editabilityChallengeRestore": "PASS_ALL_EXACT_XML",
+      "strictPeerAuditCount": 20,
+      "strictPeerIsolation": "PASS_ALL",
+      "saveCloseReopen": "PASS",
+      "visualQA": "PASS_PLACEMENT_AND_SIZE",
+      "opticalRotation": {
+        "status": "PASS",
+        "objects": [
+          {
+            "id": "ROT90",
+            "status": "PASS",
+            "policy": "BIDIRECTIONAL_INK_DISTANCE_1PX_IDENTICAL_EXTENT_UNIQUE_ANGLE",
+            "angle": 90,
+            "tolerancePx": 1,
+            "toleranceMmAt600Dpi": 0.042333333333333334,
+            "exactMaskEqual": false,
+            "ambiguousAngles": [],
+            "within": true,
+            "differingPixels": 1,
+            "unmatchedPixels": 0,
+            "expectedPx": [
+              74,
+              533
+            ],
+            "actualPx": [
+              74,
+              533
+            ]
+          },
+          {
+            "id": "ROT180",
+            "status": "PASS",
+            "policy": "BIDIRECTIONAL_INK_DISTANCE_1PX_IDENTICAL_EXTENT_UNIQUE_ANGLE",
+            "angle": 180,
+            "tolerancePx": 1,
+            "toleranceMmAt600Dpi": 0.042333333333333334,
+            "exactMaskEqual": false,
+            "ambiguousAngles": [],
+            "within": true,
+            "differingPixels": 3,
+            "unmatchedPixels": 0,
+            "expectedPx": [
+              589,
+              74
+            ],
+            "actualPx": [
+              589,
+              74
+            ]
+          },
+          {
+            "id": "ROT270",
+            "status": "PASS",
+            "policy": "BIDIRECTIONAL_INK_DISTANCE_1PX_IDENTICAL_EXTENT_UNIQUE_ANGLE",
+            "angle": 270,
+            "tolerancePx": 1,
+            "toleranceMmAt600Dpi": 0.042333333333333334,
+            "exactMaskEqual": false,
+            "ambiguousAngles": [],
+            "within": true,
+            "differingPixels": 5,
+            "unmatchedPixels": 0,
+            "expectedPx": [
+              74,
+              589
+            ],
+            "actualPx": [
+              74,
+              589
+            ]
+          },
+          {
+            "id": "BAR90",
+            "status": "PASS",
+            "policy": "EXACT_DARK_MASK_ROTATION_UNIQUE_ANGLE",
+            "angle": 90,
+            "tolerancePx": 0,
+            "toleranceMmAt600Dpi": 0,
+            "exactMaskEqual": true,
+            "ambiguousAngles": [],
+            "within": true,
+            "differingPixels": 0,
+            "unmatchedPixels": 0,
+            "expectedPx": [
+              188,
+              474
+            ],
+            "actualPx": [
+              188,
+              474
+            ]
+          },
+          {
+            "id": "DM270",
+            "status": "PASS",
+            "policy": "EXACT_DARK_MASK_ROTATION_UNIQUE_ANGLE",
+            "angle": 270,
+            "tolerancePx": 0,
+            "toleranceMmAt600Dpi": 0,
+            "exactMaskEqual": true,
+            "ambiguousAngles": [],
+            "within": true,
+            "differingPixels": 0,
+            "unmatchedPixels": 0,
+            "expectedPx": [
+              128,
+              128
+            ],
+            "actualPx": [
+              128,
+              128
+            ]
+          }
+        ]
+      },
+      "unexpectedOverlap": 0,
+      "outOfBounds": 0,
+      "sha256Before": "59ED5E81130EB65181AF676C966ECB9E00FDCD69567A3AA267926CC1AF7E8F19",
+      "sha256After": "59ED5E81130EB65181AF676C966ECB9E00FDCD69567A3AA267926CC1AF7E8F19",
+      "barTender": {
+        "FullVersion": "2022 R2",
+        "Version": "11.3",
+        "Edition": "Automation",
+        "BuildNumber": "184527",
+        "ProcessID": 28204
+      },
+      "powerShell": "5.1.26100.9711",
+      "alignmentResidualMm": [
+        {
+          "id": "ROT90",
+          "x": -0.004666666666667229,
+          "y": -0.061333333333333684
+        },
+        {
+          "id": "ROT180",
+          "x": -0.014666666666670755,
+          "y": -0.06599999999999895
+        },
+        {
+          "id": "ROT270",
+          "x": -0.0003333333333307558,
+          "y": -0.041666666666671404
+        }
+      ]
+    }
+  ],
+  "package": {
+    "file": "verified-runtime-evidence.zip",
+    "sha256": "60097f188f9ab0301fc492d122b46e9cbea2dd0124b8ac358915691a20700c00",
+    "bytes": 441997,
+    "contents": "All per-case actual BTW/BMP, canonical/request/preview, native XML requests/readback, payload challenge/restore and strict peer audits; only unchanged materialized Text pool omitted (reproducible from fixed-SHA repo materializer)."
+  }
+}

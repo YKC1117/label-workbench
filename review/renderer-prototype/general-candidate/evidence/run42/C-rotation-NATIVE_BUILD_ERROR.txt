@@ -1,0 +1,1 @@
+﻿System.Management.Automation.RuntimeException: Hybrid Text RotationAngle mismatch: 270 expected -90

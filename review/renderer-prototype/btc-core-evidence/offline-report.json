@@ -1,0 +1,131 @@
+{
+  "base": "22ef92e45095b2269e598c749034c1d1d3f9c303",
+  "platform": "Linux 6.18.57 x86_64",
+  "node": "v24.22.1",
+  "barTenderRuntime": "NOT_RUN",
+  "powershell51": "NOT_RUN",
+  "regression": [
+    {
+      "file": "tests/renderer-core-smoke.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "output": "PASS canonical/schema, geometry, encoder footprint, four-object transform, two-renderer QA, pool contract; no BarTender execution\n"
+    },
+    {
+      "file": "tests/renderer-visual-cli-smoke.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "output": "PASS synthetic BMP -> registration -> dual-render QA CLI; preview provenance mismatch rejected (not BarTender evidence)\n"
+    },
+    {
+      "file": "native/Label_Workbench_Native_Layout_ENGINE_V1/program/test-render.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "output": "PASS: absolute placement, displacement and size residuals, wrong page scale, duplicate bitmap\n"
+    },
+    {
+      "file": "tests/analysis-geometry-smoke.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "output": "PASS: known text fields, native barcode positions and barcode-overlap OCR suppression map to normalized source geometry\n"
+    },
+    {
+      "file": "tests/btw-layout-map-smoke.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "output": "PASS: normalized source geometry maps deterministically into CEA native BTW coordinates while preserving source mm\n"
+    },
+    {
+      "file": "tests/text-collision-line-parking-smoke.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "output": "[Label Workbench] BTW object map 20261001-btw-object-map-048-native-sizing\n[Label Workbench] controlled 5C128+1DM native generator 20261102-layout-rc2\nPASS: caption/value splitting, padded barcode avoidance, and native LineData endpoint parking\n"
+    },
+    {
+      "file": "tests/controlled-donor-code128-inventory.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "output": "\"u16\",\"off\":554,\"vals\":[57,4863,95,95,95]}\nCODE128_CANDIDATE {\"type\":\"u16\",\"off\":556,\"vals\":[57,40,95,95,95]}\nCODE128_CANDIDATE {\"type\":\"u16\",\"off\":558,\"vals\":[57,57,41,41,41]}\nCODE128_CANDIDATE {\"type\":\"u16\",\"off\":560,\"vals\":[41,57,32,32,32]}\nCODE128_CANDIDATE {\"type\":\"u16\",\"off\":562,\"vals\":[32,57,95,95,95]}\nCODE128_CANDIDATE {\"type\":\"u16\",\"off\":564,\"vals\":[48,41,95,95,95]}\nCODE128_CANDIDATE {\"type\":\"u16\",\"off\":566,\"vals\":[48,32,95,95,95]}\nCODE128_CANDIDATE {\"type\":\"u16\",\"off\":568,\"vals\":[48,48,45,45,45]}\nCODE128_CANDIDATE {\"type\":\"u16\",\"off\":570,\"vals\":[45,48,95,95,95]}\nCODE128_CANDIDATE {\"type\":\"u16\",\"off\":572,\"vals\":[48,48,95,95,95]}\nCODE128_CANDIDATE {\"type\":\"u16\",\"off\":574,\"vals\":[48,45,95,95,95]}\nCODE128_CANDIDATE {\"type\":\"u16\",\"off\":576,\"vals\":[48,48,95,95,95]}\nCODE128_CANDIDATE {\"type\":\"u16\",\"off\":578,\"vals\":[48,48,18,18,18]}\nCODE128_CANDIDATE {\"type\":\"u16\",\"off\":600,\"vals\":[41,95,3583,3583,3583]}\nCODE128_CANDIDATE {\"type\":\"u16\",\"off\":602,\"vals\":[32,95,48,48,48]}\nCODE128_CANDIDATE {\"type\":\"u16\",\"off\":604,\"vals\":[95,41,49,49,49]}\nCODE128_CANDIDATE {\"type\":\"u16\",\"off\":606,\"vals\":[95,32,50,50,50]}\nCODE128_CANDIDATE {\"type\":\"u16\",\"off\":608,\"vals\":[95,95,51,51,51]}\nCODE128_CANDIDATE {\"type\":\"u16\",\"off\":610,\"vals\":[45,95,52,52,52]}\nCODE128_CANDIDATE {\"type\":\"u16\",\"off\":612,\"vals\":[95,95,53,53,53]}\nCODE128_CANDIDATE {\"type\":\"u16\",\"off\":614,\"vals\":[95,45,54,54,54]}\nCODE128_CANDIDATE {\"type\":\"u16\",\"off\":616,\"vals\":[95,95,55,55,55]}\nCODE128_CANDIDATE {\"type\":\"u16\",\"off\":618,\"vals\":[95,95,56,56,56]}\nCODE128_CANDIDATE {\"type\":\"u16\",\"off\":620,\"vals\":[18,95,57,57,57]}\nCODE128_CANDIDATE {\"type\":\"u16\",\"off\":668,\"vals\":[67,65,255,255,255]}\nCODE128_CANDIDATE {\"type\":\"u16\",\"off\":926,\"vals\":[97,255,49,49,49]}\nCODE128_CANDIDATE {\"type\":\"u16\",\"off\":984,\"vals\":[1033,48,255,255,255]}\n"
+    },
+    {
+      "file": "tests/controlled-donor-text-inventory.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "output": ":\"Arial\",\"size\":0,\"root\":\"Root.MasterSelectedObject.DataSourceGeneral.DataSource\",\"value\":\"LW\",\"valueEntry\":true,\"boxX\":3763,\"boxY\":744,\"owner\":\"\"}\nTEXT_INVENTORY {\"index\":29,\"name\":\"文字 25\",\"x\":197,\"y\":1144,\"font\":\"Arial\",\"size\":0,\"root\":\"Root.MasterSelectedObject.DataSourceGeneral.DataSource\",\"value\":\"LWLWLWL\",\"valueEntry\":true,\"boxX\":65,\"boxY\":1012,\"owner\":\"\"}\nTEXT_INVENTORY {\"index\":30,\"name\":\"文字 26\",\"x\":513,\"y\":1144,\"font\":\"Arial\",\"size\":6,\"root\":\"Root.MasterSelectedObject.DataSourceGeneral\",\"value\":\"LWLWLWLWLWLW\",\"valueEntry\":true,\"boxX\":381,\"boxY\":1012,\"owner\":\"\"}\nTEXT_INVENTORY {\"index\":31,\"name\":\"文字 27\",\"x\":1796,\"y\":1144,\"font\":\"Arial\",\"size\":0,\"root\":\"Root.MasterSelectedObject.DataSourceGeneral.DataSource\",\"value\":\"LWLWLWL\",\"valueEntry\":true,\"boxX\":1381,\"boxY\":1012,\"owner\":\"\"}\nTEXT_INVENTORY {\"index\":32,\"name\":\"文字 28\",\"x\":3039,\"y\":1144,\"font\":\"Arial\",\"size\":6,\"root\":\"Root.MasterSelectedObject.DataSourceGeneral.DataSource\",\"value\":\"LWLWLW\",\"valueEntry\":true,\"boxX\":2667,\"boxY\":1012,\"owner\":\"\"}\nTEXT_INVENTORY {\"index\":33,\"name\":\"文字 29\",\"x\":3126,\"y\":1144,\"font\":\"Arial\",\"size\":6,\"root\":\"Root.MasterSelectedObject.DataSourceGeneral\",\"value\":\"LW\",\"valueEntry\":true,\"boxX\":2941,\"boxY\":1012,\"owner\":\"\"}\nTEXT_INVENTORY {\"index\":35,\"name\":\"文字 30\",\"x\":4246,\"y\":138,\"font\":\"Arial\",\"size\":0,\"root\":\"Root.MasterSelectedObject.Border\",\"value\":\"LWLWLWLWL\",\"valueEntry\":true,\"boxX\":3974,\"boxY\":134,\"owner\":\"\"}\nTEXT_INVENTORY {\"index\":36,\"name\":\"文字 31\",\"x\":4258,\"y\":503,\"font\":\"Arial\",\"size\":0,\"root\":\"Root.MasterSelectedObject.Border\",\"value\":\"LW\",\"valueEntry\":true,\"boxX\":4081,\"boxY\":499,\"owner\":\"\"}\nTEXT_INVENTORY {\"index\":37,\"name\":\"文字 32\",\"x\":5013,\"y\":926,\"font\":\"Arial\",\"size\":0,\"root\":\"Root.MasterSelectedObject.Border\",\"value\":\"Pb\",\"valueEntry\":true,\"boxX\":4708,\"boxY\":696,\"owner\":\"\"}\n"
+    },
+    {
+      "file": "tests/layout-restoration-smoke.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "output": "PASS: photo crop, OCR dedupe/noise filtering, barcode crop coordinate restoration, and source-driven font sizing\n"
+    },
+    {
+      "file": "tests/analysis-core-v2-smoke.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "output": "[Label Workbench] analysis accuracy guard 20260911-analysis-accuracy-130-boundary-strict\n[Label Workbench] field consistency guard 20260911-field-consistency-110-conservative\n[Label Workbench] final confidence guard 20260918-v145-await-dom-no-version-write\n[Label Workbench] barcode cross-check 20260918-barcode-crosscheck-108-clear-stale-ocr\n[Label Workbench] BTW production safety gate 20260918-btw-production-gate-110-textobjects\n[Label Workbench] deterministic analysis core complete 20261102-layout-rc2 { files: 1, labels: 1 }\nPASS: 第一個.pdf style result follows one deterministic analysis pipeline, corrects same-field barcode evidence, renders once, stages once, and excludes unresolved LOT from BTW\n"
+    },
+    {
+      "file": "tests/second-donor-generation-smoke.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "output": "[Label Workbench] BTW object map 20261001-btw-object-map-048-native-sizing\n[Label Workbench] controlled 5C128+1DM native generator 20261102-layout-rc2\nPASS: generic 5C128+1DM layout restores normalized source geometry with Top-Left Text anchors at both 140x38mm and unrelated 96x54mm sizes, rejects missing geometry, while preserving the native donor object graph\n"
+    },
+    {
+      "file": "tests/btw-production-core-smoke.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "output": "[Label Workbench] final confidence guard 20260918-v145-await-dom-no-version-write\n[Label Workbench] BTW production safety gate 20260918-btw-production-gate-110-textobjects\n[Label Workbench] deterministic BTW production core 20261102-layout-rc2\nPASS: deterministic BTW production core routes family -> second -> rich -> native while preserving the production safety gate\n"
+    },
+    {
+      "file": "tests/rc2-parity.cjs",
+      "status": "PASS",
+      "exitCode": 0,
+      "output": "[Label Workbench] BTW object map 20261001-btw-object-map-048-native-sizing\n[Label Workbench] controlled 5C128+1DM native generator 20261102-layout-rc2\n[Label Workbench] BTW production safety gate 20260918-btw-production-gate-110-textobjects\n[Label Workbench] deterministic BTW production core 20261102-layout-rc2\nPASS production download bytes, request and readback 140x38\nPASS production download bytes, request and readback 96x54\nPASS production download bytes, request and readback 45x55\n"
+    }
+  ],
+  "syntax": [
+    {
+      "file": "renderer/preview.cjs",
+      "status": "PASS"
+    },
+    {
+      "file": "renderer/adapter.cjs",
+      "status": "PASS"
+    },
+    {
+      "file": "renderer/geometry.cjs",
+      "status": "PASS"
+    },
+    {
+      "file": "renderer/canonical.cjs",
+      "status": "PASS"
+    },
+    {
+      "file": "renderer/visual-qa.cjs",
+      "status": "PASS"
+    },
+    {
+      "file": "renderer/prepare.cjs",
+      "status": "PASS"
+    },
+    {
+      "file": "renderer/barcode.cjs",
+      "status": "PASS"
+    },
+    {
+      "file": "renderer/pool-contract.cjs",
+      "status": "PASS"
+    },
+    {
+      "file": "layout.cjs",
+      "status": "PASS"
+    },
+    {
+      "file": "native/Label_Workbench_Native_Layout_ENGINE_V1/program/probe-render.cjs",
+      "status": "PASS"
+    }
+  ],
+  "code128Sha256": "0b1e2481bcde6e5cf1d084599f822dc3027ab19215530b7776296b40a59899f2",
+  "previewScope": "independent bwip encoder and SVG model frames, not BarTender execution"
+}

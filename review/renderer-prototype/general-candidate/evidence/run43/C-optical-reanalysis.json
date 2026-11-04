@@ -1,0 +1,111 @@
+{
+  "basis": "Reanalysis of existing Run43 BMP; not a new BarTender run, original suite remains FAIL",
+  "status": "PASS",
+  "objects": [
+    {
+      "id": "ROT90",
+      "status": "PASS",
+      "policy": "BIDIRECTIONAL_INK_DISTANCE_1PX_IDENTICAL_EXTENT_UNIQUE_ANGLE",
+      "angle": 90,
+      "tolerancePx": 1,
+      "toleranceMmAt600Dpi": 0.042333333333333334,
+      "exactMaskEqual": false,
+      "ambiguousAngles": [],
+      "within": true,
+      "differingPixels": 1,
+      "unmatchedPixels": 0,
+      "expectedPx": [
+        74,
+        533
+      ],
+      "actualPx": [
+        74,
+        533
+      ]
+    },
+    {
+      "id": "ROT180",
+      "status": "PASS",
+      "policy": "BIDIRECTIONAL_INK_DISTANCE_1PX_IDENTICAL_EXTENT_UNIQUE_ANGLE",
+      "angle": 180,
+      "tolerancePx": 1,
+      "toleranceMmAt600Dpi": 0.042333333333333334,
+      "exactMaskEqual": false,
+      "ambiguousAngles": [],
+      "within": true,
+      "differingPixels": 3,
+      "unmatchedPixels": 0,
+      "expectedPx": [
+        589,
+        74
+      ],
+      "actualPx": [
+        589,
+        74
+      ]
+    },
+    {
+      "id": "ROT270",
+      "status": "PASS",
+      "policy": "BIDIRECTIONAL_INK_DISTANCE_1PX_IDENTICAL_EXTENT_UNIQUE_ANGLE",
+      "angle": 270,
+      "tolerancePx": 1,
+      "toleranceMmAt600Dpi": 0.042333333333333334,
+      "exactMaskEqual": false,
+      "ambiguousAngles": [],
+      "within": true,
+      "differingPixels": 5,
+      "unmatchedPixels": 0,
+      "expectedPx": [
+        74,
+        589
+      ],
+      "actualPx": [
+        74,
+        589
+      ]
+    },
+    {
+      "id": "BAR90",
+      "status": "PASS",
+      "policy": "EXACT_DARK_MASK_ROTATION_UNIQUE_ANGLE",
+      "angle": 90,
+      "tolerancePx": 0,
+      "toleranceMmAt600Dpi": 0,
+      "exactMaskEqual": true,
+      "ambiguousAngles": [],
+      "within": true,
+      "differingPixels": 0,
+      "unmatchedPixels": 0,
+      "expectedPx": [
+        188,
+        474
+      ],
+      "actualPx": [
+        188,
+        474
+      ]
+    },
+    {
+      "id": "DM270",
+      "status": "PASS",
+      "policy": "EXACT_DARK_MASK_ROTATION_UNIQUE_ANGLE",
+      "angle": 270,
+      "tolerancePx": 0,
+      "toleranceMmAt600Dpi": 0,
+      "exactMaskEqual": true,
+      "ambiguousAngles": [],
+      "within": true,
+      "differingPixels": 0,
+      "unmatchedPixels": 0,
+      "expectedPx": [
+        128,
+        128
+      ],
+      "actualPx": [
+        128,
+        128
+      ]
+    }
+  ]
+}

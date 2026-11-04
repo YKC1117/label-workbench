@@ -1,0 +1,10 @@
+{
+  "run": 41600992090,
+  "number": 46,
+  "commit": "bf2cfff8b4b5c1dca17e09464cdeabf529d2bee6",
+  "workflowStatus": "SUCCESS: discovery completed, not renderer acceptance",
+  "capabilityStatus": "FAIL: fresh direct COM properties refused with 0x8000FFFF",
+  "artifactId": 13213324888,
+  "sha256": "126364a5bdc77880cb98bda72e997a31723d3108b964331e765810490b33bd22",
+  "nextHypothesis": "Designer format context and reacquired object references may support primitive setters; dynamic SetProperty is bounded to documented property names."
+}

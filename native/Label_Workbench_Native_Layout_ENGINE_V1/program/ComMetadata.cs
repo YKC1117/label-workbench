@@ -4,6 +4,9 @@ using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
 using TYPEATTR = System.Runtime.InteropServices.ComTypes.TYPEATTR;
 using FUNCDESC = System.Runtime.InteropServices.ComTypes.FUNCDESC;
+using TYPEKIND = System.Runtime.InteropServices.ComTypes.TYPEKIND;
+using VARDESC = System.Runtime.InteropServices.ComTypes.VARDESC;
+using VARKIND = System.Runtime.InteropServices.ComTypes.VARKIND;
 using ELEMDESC = System.Runtime.InteropServices.ComTypes.ELEMDESC;
 namespace LabelWorkbench {
     // Only the first two IDispatch slots are needed. IUnknown slots are implicit.
@@ -23,9 +26,40 @@ namespace LabelWorkbench {
         public int[] ParameterVariantTypes { get; set; }
         public int[] ParameterFlags { get; set; }
     }
+    public sealed class EnumMetadata {
+        public string TypeName { get; set; }
+        public string Name { get; set; }
+        public int Value { get; set; }
+    }
     public static class ComMetadata {
         [DllImport("oleaut32.dll", CharSet=CharSet.Unicode, PreserveSig=false)]
         private static extern void LoadTypeLibEx(string path, int regKind, out ITypeLib library);
+        public static EnumMetadata[] ReadEnums(string path) {
+            ITypeLib library; LoadTypeLibEx(path, 2, out library);
+            var result = new List<EnumMetadata>();
+            try {
+                for (int i=0; i<library.GetTypeInfoCount(); i++) {
+                    ITypeInfo info=null; IntPtr ap=IntPtr.Zero;
+                    try {
+                        library.GetTypeInfo(i,out info); info.GetTypeAttr(out ap);
+                        var attr=(TYPEATTR)Marshal.PtrToStructure(ap,typeof(TYPEATTR));
+                        if (attr.typekind!=TYPEKIND.TKIND_ENUM) continue;
+                        string tn,td,th; int tc; info.GetDocumentation(-1,out tn,out td,out tc,out th);
+                        for(int j=0;j<attr.cVars;j++) {
+                            IntPtr vp=IntPtr.Zero;
+                            try {
+                                info.GetVarDesc(j,out vp);
+                                var v=(VARDESC)Marshal.PtrToStructure(vp,typeof(VARDESC));
+                                if(v.varkind!=VARKIND.VAR_CONST) continue;
+                                string n,d,h; int c; info.GetDocumentation(v.memid,out n,out d,out c,out h);
+                                result.Add(new EnumMetadata {TypeName=tn,Name=n,Value=Convert.ToInt32(Marshal.GetObjectForNativeVariant(v.desc.lpvarValue))});
+                            } finally {if(vp!=IntPtr.Zero)info.ReleaseVarDesc(vp);}
+                        }
+                    } finally {if(ap!=IntPtr.Zero)info.ReleaseTypeAttr(ap);if(info!=null)Marshal.ReleaseComObject(info);}
+                }
+            } finally {Marshal.ReleaseComObject(library);}
+            return result.ToArray();
+        }
         public static MemberMetadata[] ReadLibrary(string path) {
             ITypeLib library;
             LoadTypeLibEx(path, 2, out library); // REGKIND_NONE: never register or change the system

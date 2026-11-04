@@ -1,0 +1,28 @@
+﻿<BarCode-Code-128 Name="Bar Code 2" Width="1.850 in" Height="0.590 in" Rotation.Center.Y="4" ConditionalPrintType="Always" Position.X="1.905 in" Position.Y="0.196 in" AutoSizeMinimumXDimension="-0.010" AutoSizeMaximumXDimension="-0.010" Color="00000000" ThermalOutput="UniGDI" EncodingCodePage="USASCII">
+    <DataSources>
+        <EmbeddedDataSource ID="{6BB023E3-F8CC-46DE-A8FD-49D9A1312F4A}" SubStringListStringID="4294967295" CharSet="0" CultureID="-3" InputCultureID="1033">
+            <Value>123456789012</Value>
+        </EmbeddedDataSource>
+    </DataSources>
+    <XDimension Index="3" Mils="13.330" Millimeters="0.340" Density="13.636"/>
+    <Color RGB="00000000"/>
+    <HumanReadable Visibility="None">
+        <BarCodeTextData ReadingOrder="LTR">
+            <Tabs/>
+            <Font PointSize="12.000" FontName="Arial" Height="-240" Weight="400" CharacterSet="16909056">
+                <Underline/>
+                <Strikethrough/>
+                <Foreground Mode="Solid" Color="00000000">
+                    <Color RGB="00000000"/>
+                </Foreground>
+            </Font>
+            <AutoFit MinAdjustment="0.00" MaxAdjustment="0.00"/>
+        </BarCodeTextData>
+        <Transforms>
+            <EmbeddedDataSource ID="{CE34A377-3B91-403E-9B9C-FE189E531349}" SubStringListStringID="4294967295" CultureID="-3" InputCultureID="1028">
+                <Value>文字範例</Value>
+            </EmbeddedDataSource>
+        </Transforms>
+    </HumanReadable>
+</BarCode-Code-128>
+

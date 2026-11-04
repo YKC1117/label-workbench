@@ -1,0 +1,35 @@
+{
+  "status": "PASS",
+  "objects": [
+    {
+      "id": "BORDER",
+      "status": "PASS",
+      "policy": "HOLLOW_NATIVE_RECTANGLE",
+      "interiorInkPixels": 0,
+      "strokeMm": [
+        0.508,
+        0.508,
+        0.508,
+        0.508
+      ]
+    },
+    {
+      "id": "RULE",
+      "status": "PASS",
+      "policy": "NATIVE_STRAIGHT_STROKE_GEOMETRY",
+      "outsideStrokePixels": 0,
+      "strokeMm": 0.2539819691249151
+    },
+    {
+      "id": "LOGO",
+      "status": "PASS",
+      "policy": "EXACT_COMPARABLE_BINARY_SOURCE_INTERIOR",
+      "boundaryPolicy": "DIAGNOSTIC_ONLY_RESAMPLING_SUPPORT",
+      "comparableSourceCells": 5776,
+      "boundaryMismatches": 4,
+      "sourceWidth": 120,
+      "sourceHeight": 60,
+      "mismatchedSourceCells": 0
+    }
+  ]
+}

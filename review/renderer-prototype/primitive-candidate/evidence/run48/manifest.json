@@ -1,0 +1,10 @@
+{
+  "run": 41605935058,
+  "number": 48,
+  "commit": "7ac2d33fa731811b76935202d2d5b1b237929f30",
+  "status": "FAIL",
+  "artifactId": 13216407485,
+  "artifactSha256": "8fb5bdae17bbd775fa57691ad1112f694bef965999fd074cbedea2241339e748",
+  "actualFacts": "Seven native objects, hot Save/reopen and all edit challenges/peer checks pass; strict exact tile registration unresolved for Text14/Line/Image/HRI; image ideal nearest-pixel comparison also fails on resampling boundary. Cold step NOT RUN.",
+  "zipSha256": "8fb5bdae17bbd775fa57691ad1112f694bef965999fd074cbedea2241339e748"
+}

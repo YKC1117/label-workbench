@@ -1,0 +1,150 @@
+﻿{
+    "name":  "Bar Code 2",
+    "policy":  "STRICT_XML_AND_COM_NO_NORMALIZATION_EXCEPTIONS",
+    "before":  {
+                   "name":  "Bar Code 2",
+                   "root":  "BarCode-Code-128",
+                   "attributes":  [
+                                      {
+                                          "name":  "Name",
+                                          "value":  "Bar Code 2"
+                                      },
+                                      {
+                                          "name":  "Width",
+                                          "value":  "1.850 in"
+                                      },
+                                      {
+                                          "name":  "Height",
+                                          "value":  "0.590 in"
+                                      },
+                                      {
+                                          "name":  "Rotation.Center.Y",
+                                          "value":  "4"
+                                      },
+                                      {
+                                          "name":  "ConditionalPrintType",
+                                          "value":  "Always"
+                                      },
+                                      {
+                                          "name":  "Position.X",
+                                          "value":  "1.905 in"
+                                      },
+                                      {
+                                          "name":  "Position.Y",
+                                          "value":  "0.196 in"
+                                      },
+                                      {
+                                          "name":  "AutoSizeMinimumXDimension",
+                                          "value":  "-0.010"
+                                      },
+                                      {
+                                          "name":  "AutoSizeMaximumXDimension",
+                                          "value":  "-0.010"
+                                      },
+                                      {
+                                          "name":  "Color",
+                                          "value":  "00000000"
+                                      },
+                                      {
+                                          "name":  "ThermalOutput",
+                                          "value":  "UniGDI"
+                                      },
+                                      {
+                                          "name":  "EncodingCodePage",
+                                          "value":  "USASCII"
+                                      }
+                                  ],
+                   "embeddedIds":  [
+                                       "{6BB023E3-F8CC-46DE-A8FD-49D9A1312F4A}",
+                                       "{CE34A377-3B91-403E-9B9C-FE189E531349}"
+                                   ],
+                   "transforms":  [
+                                      "\u003cTransforms\u003e\n            \u003cEmbeddedDataSource ID=\"{CE34A377-3B91-403E-9B9C-FE189E531349}\" SubStringListStringID=\"4294967295\" CultureID=\"-3\" InputCultureID=\"1028\"\u003e\n                \u003cValue\u003e文字範例\u003c/Value\u003e\n            \u003c/EmbeddedDataSource\u003e\n        \u003c/Transforms\u003e"
+                                  ],
+                   "protectedNodes":  {
+                                          "HumanReadable":  "\u003cHumanReadable Visibility=\"None\"\u003e\n        \u003cBarCodeTextData ReadingOrder=\"LTR\"\u003e\n            \u003cTabs /\u003e\n            \u003cFont PointSize=\"12.000\" FontName=\"Arial\" Height=\"-240\" Weight=\"400\" CharacterSet=\"16909056\"\u003e\n                \u003cUnderline /\u003e\n                \u003cStrikethrough /\u003e\n                \u003cForeground Mode=\"Solid\" Color=\"00000000\"\u003e\n                    \u003cColor RGB=\"00000000\" /\u003e\n                \u003c/Foreground\u003e\n            \u003c/Font\u003e\n            \u003cAutoFit MinAdjustment=\"0.00\" MaxAdjustment=\"0.00\" /\u003e\n        \u003c/BarCodeTextData\u003e\n        \u003cTransforms\u003e\n            \u003cEmbeddedDataSource ID=\"{CE34A377-3B91-403E-9B9C-FE189E531349}\" SubStringListStringID=\"4294967295\" CultureID=\"-3\" InputCultureID=\"1028\"\u003e\n                \u003cValue\u003e文字範例\u003c/Value\u003e\n            \u003c/EmbeddedDataSource\u003e\n        \u003c/Transforms\u003e\n    \u003c/HumanReadable\u003e",
+                                          "DataSources":  "\u003cDataSources\u003e\n        \u003cEmbeddedDataSource ID=\"{6BB023E3-F8CC-46DE-A8FD-49D9A1312F4A}\" SubStringListStringID=\"4294967295\" CharSet=\"0\" CultureID=\"-3\" InputCultureID=\"1033\"\u003e\n            \u003cValue\u003e123456789012\u003c/Value\u003e\n        \u003c/EmbeddedDataSource\u003e\n    \u003c/DataSources\u003e",
+                                          "XDimension":  "\u003cXDimension Index=\"3\" Mils=\"13.330\" Millimeters=\"0.340\" Density=\"6.818\" /\u003e",
+                                          "Font":  null
+                                      }
+               },
+    "after":  {
+                  "name":  "Bar Code 2",
+                  "root":  "BarCode-Code-128",
+                  "attributes":  [
+                                     {
+                                         "name":  "Name",
+                                         "value":  "Bar Code 2"
+                                     },
+                                     {
+                                         "name":  "Width",
+                                         "value":  "1.850 in"
+                                     },
+                                     {
+                                         "name":  "Height",
+                                         "value":  "0.590 in"
+                                     },
+                                     {
+                                         "name":  "Rotation.Center.Y",
+                                         "value":  "4"
+                                     },
+                                     {
+                                         "name":  "ConditionalPrintType",
+                                         "value":  "Always"
+                                     },
+                                     {
+                                         "name":  "Position.X",
+                                         "value":  "1.905 in"
+                                     },
+                                     {
+                                         "name":  "Position.Y",
+                                         "value":  "0.196 in"
+                                     },
+                                     {
+                                         "name":  "AutoSizeMinimumXDimension",
+                                         "value":  "-0.010"
+                                     },
+                                     {
+                                         "name":  "AutoSizeMaximumXDimension",
+                                         "value":  "-0.010"
+                                     },
+                                     {
+                                         "name":  "Color",
+                                         "value":  "00000000"
+                                     },
+                                     {
+                                         "name":  "ThermalOutput",
+                                         "value":  "UniGDI"
+                                     },
+                                     {
+                                         "name":  "EncodingCodePage",
+                                         "value":  "USASCII"
+                                     }
+                                 ],
+                  "embeddedIds":  [
+                                      "{6BB023E3-F8CC-46DE-A8FD-49D9A1312F4A}",
+                                      "{CE34A377-3B91-403E-9B9C-FE189E531349}"
+                                  ],
+                  "transforms":  [
+                                     "\u003cTransforms\u003e\n            \u003cEmbeddedDataSource ID=\"{CE34A377-3B91-403E-9B9C-FE189E531349}\" SubStringListStringID=\"4294967295\" CultureID=\"-3\" InputCultureID=\"1028\"\u003e\n                \u003cValue\u003e文字範例\u003c/Value\u003e\n            \u003c/EmbeddedDataSource\u003e\n        \u003c/Transforms\u003e"
+                                 ],
+                  "protectedNodes":  {
+                                         "HumanReadable":  "\u003cHumanReadable Visibility=\"None\"\u003e\n        \u003cBarCodeTextData ReadingOrder=\"LTR\"\u003e\n            \u003cTabs /\u003e\n            \u003cFont PointSize=\"12.000\" FontName=\"Arial\" Height=\"-240\" Weight=\"400\" CharacterSet=\"16909056\"\u003e\n                \u003cUnderline /\u003e\n                \u003cStrikethrough /\u003e\n                \u003cForeground Mode=\"Solid\" Color=\"00000000\"\u003e\n                    \u003cColor RGB=\"00000000\" /\u003e\n                \u003c/Foreground\u003e\n            \u003c/Font\u003e\n            \u003cAutoFit MinAdjustment=\"0.00\" MaxAdjustment=\"0.00\" /\u003e\n        \u003c/BarCodeTextData\u003e\n        \u003cTransforms\u003e\n            \u003cEmbeddedDataSource ID=\"{CE34A377-3B91-403E-9B9C-FE189E531349}\" SubStringListStringID=\"4294967295\" CultureID=\"-3\" InputCultureID=\"1028\"\u003e\n                \u003cValue\u003e文字範例\u003c/Value\u003e\n            \u003c/EmbeddedDataSource\u003e\n        \u003c/Transforms\u003e\n    \u003c/HumanReadable\u003e",
+                                         "DataSources":  "\u003cDataSources\u003e\n        \u003cEmbeddedDataSource ID=\"{6BB023E3-F8CC-46DE-A8FD-49D9A1312F4A}\" SubStringListStringID=\"4294967295\" CharSet=\"0\" CultureID=\"-3\" InputCultureID=\"1033\"\u003e\n            \u003cValue\u003e123456789012\u003c/Value\u003e\n        \u003c/EmbeddedDataSource\u003e\n    \u003c/DataSources\u003e",
+                                         "XDimension":  "\u003cXDimension Index=\"3\" Mils=\"13.330\" Millimeters=\"0.340\" Density=\"13.636\" /\u003e",
+                                         "Font":  null
+                                     }
+              },
+    "properties":  [
+
+                   ],
+    "effectiveValueBefore":  "123456789012",
+    "effectiveValueAfter":  "123456789012",
+    "xmlChanges":  [
+                       {
+                           "path":  "/root/1/@|Density",
+                           "before":  "6.818",
+                           "after":  "13.636"
+                       }
+                   ]
+}

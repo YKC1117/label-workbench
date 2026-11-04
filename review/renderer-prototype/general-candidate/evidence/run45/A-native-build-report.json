@@ -1,0 +1,882 @@
+﻿{
+    "schema":  "lwb-hybrid-pool-build-report-v1",
+    "status":  "VERIFIED_CANDIDATE_VISUAL_PENDING",
+    "renderer":  "hybrid-text-pool-btc",
+    "productAcceptance":  "NOT_RUN",
+    "textPool":  {
+                     "path":  "C:\\Users\\FTUSER5\\actions-runner-label-workbench\\_work\\label-workbench\\label-workbench\\native\\Label_Workbench_Native_Layout_ENGINE_V1\\program\\native-results\\A\\r-7acb81364e3e\\hybrid-text-pool.btw",
+                     "sha256":  "73E620EC2154D18AF3E279B4438A3775BE85D2A71F5BD8AFAAF664B31F03198B"
+                 },
+    "page":  {
+                 "printer":  "Argox CP-3140 PPLA",
+                 "LabelColumns":  1,
+                 "LabelRows":  1,
+                 "PaperWidth":  119.98999786376953,
+                 "PaperHeight":  80.010002136230469,
+                 "LabelWidth":  119.98999786376953,
+                 "LabelHeight":  80.010002136230469,
+                 "MarginLeft":  0,
+                 "MarginRight":  0,
+                 "MarginTop":  0,
+                 "MarginBottom":  0
+             },
+    "objects":  [
+                    {
+                        "id":  "BOLD9",
+                        "type":  "text",
+                        "physicalName":  "文字 1",
+                        "nativeType":  5,
+                        "referencePointXml":  null,
+                        "geometry":  {
+                                         "anchor":  {
+                                                        "status":  "PASS_VISUAL_PENDING",
+                                                        "mode":  "BARTENDER_DEFAULT_TOPLEFT_OMITTED",
+                                                        "serialized":  null
+                                                    },
+                                         "payload":  {
+                                                         "root":  "Text",
+                                                         "sourceId":  "{6E1B676D-8F75-4730-9296-8F59D6DFC18A}",
+                                                         "value":  "Bold Nine",
+                                                         "sourceCount":  1,
+                                                         "transforms":  0
+                                                     },
+                                         "properties":  {
+                                                            "FontName":  {
+                                                                             "requested":  "Arial",
+                                                                             "actual":  "Arial",
+                                                                             "unquantized":  null
+                                                                         },
+                                                            "FontSize":  {
+                                                                             "requested":  9,
+                                                                             "actual":  9,
+                                                                             "unquantized":  null
+                                                                         },
+                                                            "FontBold":  {
+                                                                             "requested":  true,
+                                                                             "actual":  true,
+                                                                             "unquantized":  null
+                                                                         },
+                                                            "FontItalic":  {
+                                                                               "requested":  false,
+                                                                               "actual":  false,
+                                                                               "unquantized":  null
+                                                                           },
+                                                            "RotationAngle":  {
+                                                                                  "requested":  0,
+                                                                                  "actual":  0,
+                                                                                  "unquantized":  null
+                                                                              },
+                                                            "X":  {
+                                                                      "requested":  4.7498,
+                                                                      "actual":  4.7498,
+                                                                      "unquantized":  4.746
+                                                                  },
+                                                            "Y":  {
+                                                                      "requested":  4.2926,
+                                                                      "actual":  4.2926,
+                                                                      "unquantized":  4.2803333333333331
+                                                                  }
+                                                        },
+                                         "anchorAfterProperties":  "BARTENDER_DEFAULT_TOPLEFT_OMITTED",
+                                         "alignmentEvidence":  {
+                                                                   "policy":  "MEASURED_INK_ORIGIN_TO_CANONICAL_FRAME",
+                                                                   "upright":  {
+                                                                                   "file":  "hybrid-BOLD9-upright.bmp",
+                                                                                   "requestedDpi":  600,
+                                                                                   "headerDpiX":  599.9988,
+                                                                                   "headerDpiY":  599.9988,
+                                                                                   "dpiTrust":  "TRUSTED_HEADER_MATCH",
+                                                                                   "physicalMmTrust":  "TRUSTED",
+                                                                                   "canvasWidthPx":  356,
+                                                                                   "canvasHeightPx":  92,
+                                                                                   "inkLeftPx":  6,
+                                                                                   "inkTopPx":  17,
+                                                                                   "inkWidthPx":  344,
+                                                                                   "inkHeightPx":  56,
+                                                                                   "inkWidthMm":  14.562666666666667,
+                                                                                   "inkHeightMm":  2.3706666666666663,
+                                                                                   "sha256":  "BD62ECA99A2556CE94547AF17C31D804F8B1BE9AE96EF7675D814833FBDBA48B",
+                                                                                   "symbolBounds":  "NOT_DECODER_CONFIRMED"
+                                                                               },
+                                                                   "placement":  {
+                                                                                     "schema":  "lwb-native-text-placement-v1",
+                                                                                     "policy":  "MEASURED_INK_ORIGIN_TO_CANONICAL_FRAME",
+                                                                                     "xMm":  4.746,
+                                                                                     "yMm":  4.280333333333333,
+                                                                                     "frame":  {
+                                                                                                   "xMm":  5,
+                                                                                                   "yMm":  5,
+                                                                                                   "widthMm":  45,
+                                                                                                   "heightMm":  6
+                                                                                               },
+                                                                                     "alignment":  "left",
+                                                                                     "alignmentShiftMm":  0,
+                                                                                     "inkOffset":  {
+                                                                                                       "xMm":  0.254,
+                                                                                                       "yMm":  0.7196666666666667
+                                                                                                   },
+                                                                                     "localOffset":  {
+                                                                                                         "xMm":  -0.254,
+                                                                                                         "yMm":  -0.7196666666666667
+                                                                                                     },
+                                                                                     "inkWidthMm":  14.562666666666667,
+                                                                                     "inkHeightMm":  2.3706666666666667,
+                                                                                     "rotationCom":  0
+                                                                                 }
+                                                               }
+                                     },
+                        "reopenEditable":  "CHALLENGE_RESTORE_EXACT_XML_AND_PEER_ISOLATION_PASS"
+                    },
+                    {
+                        "id":  "ITALIC18",
+                        "type":  "text",
+                        "physicalName":  "文字 2",
+                        "nativeType":  5,
+                        "referencePointXml":  null,
+                        "geometry":  {
+                                         "anchor":  {
+                                                        "status":  "PASS_VISUAL_PENDING",
+                                                        "mode":  "BARTENDER_DEFAULT_TOPLEFT_OMITTED",
+                                                        "serialized":  null
+                                                    },
+                                         "payload":  {
+                                                         "root":  "Text",
+                                                         "sourceId":  "{0A8D34E0-04AF-484A-8AF4-C3AA658128D2}",
+                                                         "value":  "Italic 18",
+                                                         "sourceCount":  1,
+                                                         "transforms":  0
+                                                     },
+                                         "properties":  {
+                                                            "FontName":  {
+                                                                             "requested":  "Arial",
+                                                                             "actual":  "Arial",
+                                                                             "unquantized":  null
+                                                                         },
+                                                            "FontSize":  {
+                                                                             "requested":  18,
+                                                                             "actual":  18,
+                                                                             "unquantized":  null
+                                                                         },
+                                                            "FontBold":  {
+                                                                             "requested":  false,
+                                                                             "actual":  false,
+                                                                             "unquantized":  null
+                                                                         },
+                                                            "FontItalic":  {
+                                                                               "requested":  true,
+                                                                               "actual":  true,
+                                                                               "unquantized":  null
+                                                                           },
+                                                            "RotationAngle":  {
+                                                                                  "requested":  0,
+                                                                                  "actual":  0,
+                                                                                  "unquantized":  null
+                                                                              },
+                                                            "X":  {
+                                                                      "requested":  54.61,
+                                                                      "actual":  54.609999999999992,
+                                                                      "unquantized":  54.619
+                                                                  },
+                                                            "Y":  {
+                                                                      "requested":  3.937,
+                                                                      "actual":  3.937,
+                                                                      "unquantized":  3.9416666666666664
+                                                                  }
+                                                        },
+                                         "anchorAfterProperties":  "BARTENDER_DEFAULT_TOPLEFT_OMITTED",
+                                         "alignmentEvidence":  {
+                                                                   "policy":  "MEASURED_INK_ORIGIN_TO_CANONICAL_FRAME",
+                                                                   "upright":  {
+                                                                                   "file":  "hybrid-ITALIC18-upright.bmp",
+                                                                                   "requestedDpi":  600,
+                                                                                   "headerDpiX":  599.9988,
+                                                                                   "headerDpiY":  599.9988,
+                                                                                   "dpiTrust":  "TRUSTED_HEADER_MATCH",
+                                                                                   "physicalMmTrust":  "TRUSTED",
+                                                                                   "canvasWidthPx":  526,
+                                                                                   "canvasHeightPx":  170,
+                                                                                   "inkLeftPx":  9,
+                                                                                   "inkTopPx":  25,
+                                                                                   "inkWidthPx":  516,
+                                                                                   "inkHeightPx":  111,
+                                                                                   "inkWidthMm":  21.843999999999998,
+                                                                                   "inkHeightMm":  4.698999999999999,
+                                                                                   "sha256":  "73D76D98039AA4DADDE5F6A969B3F1DC78AAF2CCC06E4E3A6A0507CEEFBBD197",
+                                                                                   "symbolBounds":  "NOT_DECODER_CONFIRMED"
+                                                                               },
+                                                                   "placement":  {
+                                                                                     "schema":  "lwb-native-text-placement-v1",
+                                                                                     "policy":  "MEASURED_INK_ORIGIN_TO_CANONICAL_FRAME",
+                                                                                     "xMm":  54.619,
+                                                                                     "yMm":  3.9416666666666664,
+                                                                                     "frame":  {
+                                                                                                   "xMm":  55,
+                                                                                                   "yMm":  5,
+                                                                                                   "widthMm":  55,
+                                                                                                   "heightMm":  10
+                                                                                               },
+                                                                                     "alignment":  "left",
+                                                                                     "alignmentShiftMm":  0,
+                                                                                     "inkOffset":  {
+                                                                                                       "xMm":  0.381,
+                                                                                                       "yMm":  1.0583333333333333
+                                                                                                   },
+                                                                                     "localOffset":  {
+                                                                                                         "xMm":  -0.381,
+                                                                                                         "yMm":  -1.0583333333333333
+                                                                                                     },
+                                                                                     "inkWidthMm":  21.844,
+                                                                                     "inkHeightMm":  4.699,
+                                                                                     "rotationCom":  0
+                                                                                 }
+                                                               }
+                                     },
+                        "reopenEditable":  "CHALLENGE_RESTORE_EXACT_XML_AND_PEER_ISOLATION_PASS"
+                    },
+                    {
+                        "id":  "BOTH24",
+                        "type":  "text",
+                        "physicalName":  "文字 3",
+                        "nativeType":  5,
+                        "referencePointXml":  null,
+                        "geometry":  {
+                                         "anchor":  {
+                                                        "status":  "PASS_VISUAL_PENDING",
+                                                        "mode":  "BARTENDER_DEFAULT_TOPLEFT_OMITTED",
+                                                        "serialized":  null
+                                                    },
+                                         "payload":  {
+                                                         "root":  "Text",
+                                                         "sourceId":  "{3FA6A9C6-F049-4293-AAB2-CB190BB7ED0E}",
+                                                         "value":  "Style 24",
+                                                         "sourceCount":  1,
+                                                         "transforms":  0
+                                                     },
+                                         "properties":  {
+                                                            "FontName":  {
+                                                                             "requested":  "Arial",
+                                                                             "actual":  "Arial",
+                                                                             "unquantized":  null
+                                                                         },
+                                                            "FontSize":  {
+                                                                             "requested":  24,
+                                                                             "actual":  24,
+                                                                             "unquantized":  null
+                                                                         },
+                                                            "FontBold":  {
+                                                                             "requested":  true,
+                                                                             "actual":  true,
+                                                                             "unquantized":  null
+                                                                         },
+                                                            "FontItalic":  {
+                                                                               "requested":  true,
+                                                                               "actual":  true,
+                                                                               "unquantized":  null
+                                                                           },
+                                                            "RotationAngle":  {
+                                                                                  "requested":  0,
+                                                                                  "actual":  0,
+                                                                                  "unquantized":  null
+                                                                              },
+                                                            "X":  {
+                                                                      "requested":  4.4958,
+                                                                      "actual":  4.4957999999999991,
+                                                                      "unquantized":  4.492
+                                                                  },
+                                                            "Y":  {
+                                                                      "requested":  18.3388,
+                                                                      "actual":  18.3388,
+                                                                      "unquantized":  18.349
+                                                                  }
+                                                        },
+                                         "anchorAfterProperties":  "BARTENDER_DEFAULT_TOPLEFT_OMITTED",
+                                         "alignmentEvidence":  {
+                                                                   "policy":  "MEASURED_INK_ORIGIN_TO_CANONICAL_FRAME",
+                                                                   "upright":  {
+                                                                                   "file":  "hybrid-BOTH24-upright.bmp",
+                                                                                   "requestedDpi":  600,
+                                                                                   "headerDpiX":  599.9988,
+                                                                                   "headerDpiY":  599.9988,
+                                                                                   "dpiTrust":  "TRUSTED_HEADER_MATCH",
+                                                                                   "physicalMmTrust":  "TRUSTED",
+                                                                                   "canvasWidthPx":  762,
+                                                                                   "canvasHeightPx":  231,
+                                                                                   "inkLeftPx":  12,
+                                                                                   "inkTopPx":  39,
+                                                                                   "inkWidthPx":  748,
+                                                                                   "inkHeightPx":  187,
+                                                                                   "inkWidthMm":  31.665333333333333,
+                                                                                   "inkHeightMm":  7.9163333333333332,
+                                                                                   "sha256":  "F67D8C94965E3B19FC5034746DE984948C8E405F00680FACF2870DB449D9A19B",
+                                                                                   "symbolBounds":  "NOT_DECODER_CONFIRMED"
+                                                                               },
+                                                                   "placement":  {
+                                                                                     "schema":  "lwb-native-text-placement-v1",
+                                                                                     "policy":  "MEASURED_INK_ORIGIN_TO_CANONICAL_FRAME",
+                                                                                     "xMm":  4.492,
+                                                                                     "yMm":  18.349,
+                                                                                     "frame":  {
+                                                                                                   "xMm":  5,
+                                                                                                   "yMm":  20,
+                                                                                                   "widthMm":  65,
+                                                                                                   "heightMm":  12
+                                                                                               },
+                                                                                     "alignment":  "left",
+                                                                                     "alignmentShiftMm":  0,
+                                                                                     "inkOffset":  {
+                                                                                                       "xMm":  0.508,
+                                                                                                       "yMm":  1.651
+                                                                                                   },
+                                                                                     "localOffset":  {
+                                                                                                         "xMm":  -0.508,
+                                                                                                         "yMm":  -1.651
+                                                                                                     },
+                                                                                     "inkWidthMm":  31.665333333333333,
+                                                                                     "inkHeightMm":  7.916333333333333,
+                                                                                     "rotationCom":  0
+                                                                                 }
+                                                               }
+                                     },
+                        "reopenEditable":  "CHALLENGE_RESTORE_EXACT_XML_AND_PEER_ISOLATION_PASS"
+                    },
+                    {
+                        "id":  "CENTER",
+                        "type":  "text",
+                        "physicalName":  "文字 4",
+                        "nativeType":  5,
+                        "referencePointXml":  null,
+                        "geometry":  {
+                                         "anchor":  {
+                                                        "status":  "PASS_VISUAL_PENDING",
+                                                        "mode":  "BARTENDER_DEFAULT_TOPLEFT_OMITTED",
+                                                        "serialized":  null
+                                                    },
+                                         "payload":  {
+                                                         "root":  "Text",
+                                                         "sourceId":  "{DA747826-D1A8-425F-AA7B-B494263AA17F}",
+                                                         "value":  "CENTER 12",
+                                                         "sourceCount":  1,
+                                                         "transforms":  0
+                                                     },
+                                         "properties":  {
+                                                            "FontName":  {
+                                                                             "requested":  "Courier New",
+                                                                             "actual":  "Courier New",
+                                                                             "unquantized":  null
+                                                                         },
+                                                            "FontSize":  {
+                                                                             "requested":  12,
+                                                                             "actual":  12,
+                                                                             "unquantized":  null
+                                                                         },
+                                                            "FontBold":  {
+                                                                             "requested":  false,
+                                                                             "actual":  false,
+                                                                             "unquantized":  null
+                                                                         },
+                                                            "FontItalic":  {
+                                                                               "requested":  false,
+                                                                               "actual":  false,
+                                                                               "unquantized":  null
+                                                                           },
+                                                            "RotationAngle":  {
+                                                                                  "requested":  0,
+                                                                                  "actual":  0,
+                                                                                  "unquantized":  null
+                                                                              },
+                                                            "X":  {
+                                                                      "requested":  81.2038,
+                                                                      "actual":  81.2038,
+                                                                      "unquantized":  81.197
+                                                                  },
+                                                            "Y":  {
+                                                                      "requested":  21.2344,
+                                                                      "actual":  21.234399999999997,
+                                                                      "unquantized":  21.238
+                                                                  }
+                                                        },
+                                         "anchorAfterProperties":  "BARTENDER_DEFAULT_TOPLEFT_OMITTED",
+                                         "alignmentEvidence":  {
+                                                                   "policy":  "MEASURED_INK_ORIGIN_TO_CANONICAL_FRAME",
+                                                                   "upright":  {
+                                                                                   "file":  "hybrid-CENTER-upright.bmp",
+                                                                                   "requestedDpi":  600,
+                                                                                   "headerDpiX":  599.9988,
+                                                                                   "headerDpiY":  599.9988,
+                                                                                   "dpiTrust":  "TRUSTED_HEADER_MATCH",
+                                                                                   "physicalMmTrust":  "TRUSTED",
+                                                                                   "canvasWidthPx":  542,
+                                                                                   "canvasHeightPx":  111,
+                                                                                   "inkLeftPx":  6,
+                                                                                   "inkTopPx":  18,
+                                                                                   "inkWidthPx":  522,
+                                                                                   "inkHeightPx":  64,
+                                                                                   "inkWidthMm":  22.098,
+                                                                                   "inkHeightMm":  2.7093333333333334,
+                                                                                   "sha256":  "D0EE84A6F5F50B24AEB6A23E095A7ACFBC1907987B647F21078617FAB3DAF171",
+                                                                                   "symbolBounds":  "NOT_DECODER_CONFIRMED"
+                                                                               },
+                                                                   "placement":  {
+                                                                                     "schema":  "lwb-native-text-placement-v1",
+                                                                                     "policy":  "MEASURED_INK_ORIGIN_TO_CANONICAL_FRAME",
+                                                                                     "xMm":  81.197,
+                                                                                     "yMm":  21.238,
+                                                                                     "frame":  {
+                                                                                                   "xMm":  70,
+                                                                                                   "yMm":  22,
+                                                                                                   "widthMm":  45,
+                                                                                                   "heightMm":  8
+                                                                                               },
+                                                                                     "alignment":  "center",
+                                                                                     "alignmentShiftMm":  11.451,
+                                                                                     "inkOffset":  {
+                                                                                                       "xMm":  0.254,
+                                                                                                       "yMm":  0.762
+                                                                                                   },
+                                                                                     "localOffset":  {
+                                                                                                         "xMm":  11.197000000000001,
+                                                                                                         "yMm":  -0.762
+                                                                                                     },
+                                                                                     "inkWidthMm":  22.098,
+                                                                                     "inkHeightMm":  2.7093333333333334,
+                                                                                     "rotationCom":  0
+                                                                                 }
+                                                               }
+                                     },
+                        "reopenEditable":  "CHALLENGE_RESTORE_EXACT_XML_AND_PEER_ISOLATION_PASS"
+                    },
+                    {
+                        "id":  "RIGHT",
+                        "type":  "text",
+                        "physicalName":  "文字 5",
+                        "nativeType":  5,
+                        "referencePointXml":  null,
+                        "geometry":  {
+                                         "anchor":  {
+                                                        "status":  "PASS_VISUAL_PENDING",
+                                                        "mode":  "BARTENDER_DEFAULT_TOPLEFT_OMITTED",
+                                                        "serialized":  null
+                                                    },
+                                         "payload":  {
+                                                         "root":  "Text",
+                                                         "sourceId":  "{1930472A-D1D8-40C7-9797-703882F64692}",
+                                                         "value":  "RIGHT EDGE",
+                                                         "sourceCount":  1,
+                                                         "transforms":  0
+                                                     },
+                                         "properties":  {
+                                                            "FontName":  {
+                                                                             "requested":  "Times New Roman",
+                                                                             "actual":  "Times New Roman",
+                                                                             "unquantized":  null
+                                                                         },
+                                                            "FontSize":  {
+                                                                             "requested":  12,
+                                                                             "actual":  12,
+                                                                             "unquantized":  null
+                                                                         },
+                                                            "FontBold":  {
+                                                                             "requested":  false,
+                                                                             "actual":  false,
+                                                                             "unquantized":  null
+                                                                         },
+                                                            "FontItalic":  {
+                                                                               "requested":  false,
+                                                                               "actual":  false,
+                                                                               "unquantized":  null
+                                                                           },
+                                                            "RotationAngle":  {
+                                                                                  "requested":  0,
+                                                                                  "actual":  0,
+                                                                                  "unquantized":  null
+                                                                              },
+                                                            "X":  {
+                                                                      "requested":  24.7396,
+                                                                      "actual":  24.7396,
+                                                                      "unquantized":  24.727
+                                                                  },
+                                                            "Y":  {
+                                                                      "requested":  39.0652,
+                                                                      "actual":  39.0652,
+                                                                      "unquantized":  39.068666666666665
+                                                                  }
+                                                        },
+                                         "anchorAfterProperties":  "BARTENDER_DEFAULT_TOPLEFT_OMITTED",
+                                         "alignmentEvidence":  {
+                                                                   "policy":  "MEASURED_INK_ORIGIN_TO_CANONICAL_FRAME",
+                                                                   "upright":  {
+                                                                                   "file":  "hybrid-RIGHT-upright.bmp",
+                                                                                   "requestedDpi":  600,
+                                                                                   "headerDpiX":  599.9988,
+                                                                                   "headerDpiY":  599.9988,
+                                                                                   "dpiTrust":  "TRUSTED_HEADER_MATCH",
+                                                                                   "physicalMmTrust":  "TRUSTED",
+                                                                                   "canvasWidthPx":  602,
+                                                                                   "canvasHeightPx":  117,
+                                                                                   "inkLeftPx":  2,
+                                                                                   "inkTopPx":  22,
+                                                                                   "inkWidthPx":  595,
+                                                                                   "inkHeightPx":  69,
+                                                                                   "inkWidthMm":  25.188333333333333,
+                                                                                   "inkHeightMm":  2.921,
+                                                                                   "sha256":  "9DDAF40FC2108DB70D6574AC93B9405EF0DDF76DABCB390A7EC66DD9B233097E",
+                                                                                   "symbolBounds":  "NOT_DECODER_CONFIRMED"
+                                                                               },
+                                                                   "placement":  {
+                                                                                     "schema":  "lwb-native-text-placement-v1",
+                                                                                     "policy":  "MEASURED_INK_ORIGIN_TO_CANONICAL_FRAME",
+                                                                                     "xMm":  24.727,
+                                                                                     "yMm":  39.068666666666665,
+                                                                                     "frame":  {
+                                                                                                   "xMm":  5,
+                                                                                                   "yMm":  40,
+                                                                                                   "widthMm":  45,
+                                                                                                   "heightMm":  7
+                                                                                               },
+                                                                                     "alignment":  "right",
+                                                                                     "alignmentShiftMm":  19.811666666666667,
+                                                                                     "inkOffset":  {
+                                                                                                       "xMm":  0.08466666666666667,
+                                                                                                       "yMm":  0.9313333333333333
+                                                                                                   },
+                                                                                     "localOffset":  {
+                                                                                                         "xMm":  19.727,
+                                                                                                         "yMm":  -0.9313333333333333
+                                                                                                     },
+                                                                                     "inkWidthMm":  25.188333333333333,
+                                                                                     "inkHeightMm":  2.9210000000000003,
+                                                                                     "rotationCom":  0
+                                                                                 }
+                                                               }
+                                     },
+                        "reopenEditable":  "CHALLENGE_RESTORE_EXACT_XML_AND_PEER_ISOLATION_PASS"
+                    },
+                    {
+                        "id":  "SMALL7",
+                        "type":  "text",
+                        "physicalName":  "文字 6",
+                        "nativeType":  5,
+                        "referencePointXml":  null,
+                        "geometry":  {
+                                         "anchor":  {
+                                                        "status":  "PASS_VISUAL_PENDING",
+                                                        "mode":  "BARTENDER_DEFAULT_TOPLEFT_OMITTED",
+                                                        "serialized":  null
+                                                    },
+                                         "payload":  {
+                                                         "root":  "Text",
+                                                         "sourceId":  "{DCE4CF0F-1F39-4BA7-B9B5-65FF87ABCF3F}",
+                                                         "value":  "Small Seven",
+                                                         "sourceCount":  1,
+                                                         "transforms":  0
+                                                     },
+                                         "properties":  {
+                                                            "FontName":  {
+                                                                             "requested":  "Arial",
+                                                                             "actual":  "Arial",
+                                                                             "unquantized":  null
+                                                                         },
+                                                            "FontSize":  {
+                                                                             "requested":  7,
+                                                                             "actual":  7,
+                                                                             "unquantized":  null
+                                                                         },
+                                                            "FontBold":  {
+                                                                             "requested":  false,
+                                                                             "actual":  false,
+                                                                             "unquantized":  null
+                                                                         },
+                                                            "FontItalic":  {
+                                                                               "requested":  false,
+                                                                               "actual":  false,
+                                                                               "unquantized":  null
+                                                                           },
+                                                            "RotationAngle":  {
+                                                                                  "requested":  0,
+                                                                                  "actual":  0,
+                                                                                  "unquantized":  null
+                                                                              },
+                                                            "X":  {
+                                                                      "requested":  59.867799999999995,
+                                                                      "actual":  59.8678,
+                                                                      "unquantized":  59.873
+                                                                  },
+                                                            "Y":  {
+                                                                      "requested":  39.5224,
+                                                                      "actual":  39.5224,
+                                                                      "unquantized":  39.534333333333336
+                                                                  }
+                                                        },
+                                         "anchorAfterProperties":  "BARTENDER_DEFAULT_TOPLEFT_OMITTED",
+                                         "alignmentEvidence":  {
+                                                                   "policy":  "MEASURED_INK_ORIGIN_TO_CANONICAL_FRAME",
+                                                                   "upright":  {
+                                                                                   "file":  "hybrid-SMALL7-upright.bmp",
+                                                                                   "requestedDpi":  600,
+                                                                                   "headerDpiX":  599.9988,
+                                                                                   "headerDpiY":  599.9988,
+                                                                                   "dpiTrust":  "TRUSTED_HEADER_MATCH",
+                                                                                   "physicalMmTrust":  "TRUSTED",
+                                                                                   "canvasWidthPx":  326,
+                                                                                   "canvasHeightPx":  69,
+                                                                                   "inkLeftPx":  3,
+                                                                                   "inkTopPx":  11,
+                                                                                   "inkWidthPx":  317,
+                                                                                   "inkHeightPx":  44,
+                                                                                   "inkWidthMm":  13.419666666666666,
+                                                                                   "inkHeightMm":  1.8626666666666665,
+                                                                                   "sha256":  "3BE6EA5AA72D4EB949C4B92DBB1AF940AC5D67F9906DDA1EFC6BDFF8E2926DFB",
+                                                                                   "symbolBounds":  "NOT_DECODER_CONFIRMED"
+                                                                               },
+                                                                   "placement":  {
+                                                                                     "schema":  "lwb-native-text-placement-v1",
+                                                                                     "policy":  "MEASURED_INK_ORIGIN_TO_CANONICAL_FRAME",
+                                                                                     "xMm":  59.873,
+                                                                                     "yMm":  39.534333333333336,
+                                                                                     "frame":  {
+                                                                                                   "xMm":  60,
+                                                                                                   "yMm":  40,
+                                                                                                   "widthMm":  50,
+                                                                                                   "heightMm":  6
+                                                                                               },
+                                                                                     "alignment":  "left",
+                                                                                     "alignmentShiftMm":  0,
+                                                                                     "inkOffset":  {
+                                                                                                       "xMm":  0.127,
+                                                                                                       "yMm":  0.4656666666666667
+                                                                                                   },
+                                                                                     "localOffset":  {
+                                                                                                         "xMm":  -0.127,
+                                                                                                         "yMm":  -0.4656666666666667
+                                                                                                     },
+                                                                                     "inkWidthMm":  13.419666666666666,
+                                                                                     "inkHeightMm":  1.8626666666666667,
+                                                                                     "rotationCom":  0
+                                                                                 }
+                                                               }
+                                     },
+                        "reopenEditable":  "CHALLENGE_RESTORE_EXACT_XML_AND_PEER_ISOLATION_PASS"
+                    },
+                    {
+                        "id":  "MULTI_L1",
+                        "type":  "text",
+                        "physicalName":  "文字 7",
+                        "nativeType":  5,
+                        "referencePointXml":  null,
+                        "geometry":  {
+                                         "anchor":  {
+                                                        "status":  "PASS_VISUAL_PENDING",
+                                                        "mode":  "BARTENDER_DEFAULT_TOPLEFT_OMITTED",
+                                                        "serialized":  null
+                                                    },
+                                         "payload":  {
+                                                         "root":  "Text",
+                                                         "sourceId":  "{F4501AAA-9853-4695-AAF8-364B81333ED3}",
+                                                         "value":  "LINE ONE",
+                                                         "sourceCount":  1,
+                                                         "transforms":  0
+                                                     },
+                                         "properties":  {
+                                                            "FontName":  {
+                                                                             "requested":  "Arial",
+                                                                             "actual":  "Arial",
+                                                                             "unquantized":  null
+                                                                         },
+                                                            "FontSize":  {
+                                                                             "requested":  12,
+                                                                             "actual":  12,
+                                                                             "unquantized":  null
+                                                                         },
+                                                            "FontBold":  {
+                                                                             "requested":  false,
+                                                                             "actual":  false,
+                                                                             "unquantized":  null
+                                                                         },
+                                                            "FontItalic":  {
+                                                                               "requested":  false,
+                                                                               "actual":  false,
+                                                                               "unquantized":  null
+                                                                           },
+                                                            "RotationAngle":  {
+                                                                                  "requested":  0,
+                                                                                  "actual":  0,
+                                                                                  "unquantized":  null
+                                                                              },
+                                                            "X":  {
+                                                                      "requested":  45.085,
+                                                                      "actual":  45.084999999999994,
+                                                                      "unquantized":  45.072833333333335
+                                                                  },
+                                                            "Y":  {
+                                                                      "requested":  54.1528,
+                                                                      "actual":  54.1528,
+                                                                      "unquantized":  54.153333333333336
+                                                                  }
+                                                        },
+                                         "anchorAfterProperties":  "BARTENDER_DEFAULT_TOPLEFT_OMITTED",
+                                         "alignmentEvidence":  {
+                                                                   "policy":  "MEASURED_INK_ORIGIN_TO_CANONICAL_FRAME",
+                                                                   "upright":  {
+                                                                                   "file":  "hybrid-MULTI_L1-upright.bmp",
+                                                                                   "requestedDpi":  600,
+                                                                                   "headerDpiX":  599.9988,
+                                                                                   "headerDpiY":  599.9988,
+                                                                                   "dpiTrust":  "TRUSTED_HEADER_MATCH",
+                                                                                   "physicalMmTrust":  "TRUSTED",
+                                                                                   "canvasWidthPx":  468,
+                                                                                   "canvasHeightPx":  118,
+                                                                                   "inkLeftPx":  8,
+                                                                                   "inkTopPx":  20,
+                                                                                   "inkWidthPx":  453,
+                                                                                   "inkHeightPx":  74,
+                                                                                   "inkWidthMm":  19.177,
+                                                                                   "inkHeightMm":  3.1326666666666667,
+                                                                                   "sha256":  "D332F4FD5D76E500E72BF0443BE79B3A22D8DEFB23B51B00C1442CD795706085",
+                                                                                   "symbolBounds":  "NOT_DECODER_CONFIRMED"
+                                                                               },
+                                                                   "placement":  {
+                                                                                     "schema":  "lwb-native-text-placement-v1",
+                                                                                     "policy":  "MEASURED_INK_ORIGIN_TO_CANONICAL_FRAME",
+                                                                                     "xMm":  45.072833333333335,
+                                                                                     "yMm":  54.153333333333336,
+                                                                                     "frame":  {
+                                                                                                   "xMm":  5,
+                                                                                                   "yMm":  55,
+                                                                                                   "widthMm":  100,
+                                                                                                   "heightMm":  8
+                                                                                               },
+                                                                                     "alignment":  "center",
+                                                                                     "alignmentShiftMm":  40.411500000000004,
+                                                                                     "inkOffset":  {
+                                                                                                       "xMm":  0.33866666666666667,
+                                                                                                       "yMm":  0.8466666666666667
+                                                                                                   },
+                                                                                     "localOffset":  {
+                                                                                                         "xMm":  40.072833333333335,
+                                                                                                         "yMm":  -0.8466666666666667
+                                                                                                     },
+                                                                                     "inkWidthMm":  19.177,
+                                                                                     "inkHeightMm":  3.1326666666666667,
+                                                                                     "rotationCom":  0
+                                                                                 }
+                                                               }
+                                     },
+                        "reopenEditable":  "CHALLENGE_RESTORE_EXACT_XML_AND_PEER_ISOLATION_PASS"
+                    },
+                    {
+                        "id":  "MULTI_L2",
+                        "type":  "text",
+                        "physicalName":  "文字 8",
+                        "nativeType":  5,
+                        "referencePointXml":  null,
+                        "geometry":  {
+                                         "anchor":  {
+                                                        "status":  "PASS_VISUAL_PENDING",
+                                                        "mode":  "BARTENDER_DEFAULT_TOPLEFT_OMITTED",
+                                                        "serialized":  null
+                                                    },
+                                         "payload":  {
+                                                         "root":  "Text",
+                                                         "sourceId":  "{DC860FF8-5971-4ADA-B3F9-8D005019EDAF}",
+                                                         "value":  "LINE TWO",
+                                                         "sourceCount":  1,
+                                                         "transforms":  0
+                                                     },
+                                         "properties":  {
+                                                            "FontName":  {
+                                                                             "requested":  "Arial",
+                                                                             "actual":  "Arial",
+                                                                             "unquantized":  null
+                                                                         },
+                                                            "FontSize":  {
+                                                                             "requested":  12,
+                                                                             "actual":  12,
+                                                                             "unquantized":  null
+                                                                         },
+                                                            "FontBold":  {
+                                                                             "requested":  false,
+                                                                             "actual":  false,
+                                                                             "unquantized":  null
+                                                                         },
+                                                            "FontItalic":  {
+                                                                               "requested":  false,
+                                                                               "actual":  false,
+                                                                               "unquantized":  null
+                                                                           },
+                                                            "RotationAngle":  {
+                                                                                  "requested":  0,
+                                                                                  "actual":  0,
+                                                                                  "unquantized":  null
+                                                                              },
+                                                            "X":  {
+                                                                      "requested":  44.577,
+                                                                      "actual":  44.577,
+                                                                      "unquantized":  44.564833333333333
+                                                                  },
+                                                            "Y":  {
+                                                                      "requested":  62.1538,
+                                                                      "actual":  62.1538,
+                                                                      "unquantized":  62.153333333333336
+                                                                  }
+                                                        },
+                                         "anchorAfterProperties":  "BARTENDER_DEFAULT_TOPLEFT_OMITTED",
+                                         "alignmentEvidence":  {
+                                                                   "policy":  "MEASURED_INK_ORIGIN_TO_CANONICAL_FRAME",
+                                                                   "upright":  {
+                                                                                   "file":  "hybrid-MULTI_L2-upright.bmp",
+                                                                                   "requestedDpi":  600,
+                                                                                   "headerDpiX":  599.9988,
+                                                                                   "headerDpiY":  599.9988,
+                                                                                   "dpiTrust":  "TRUSTED_HEADER_MATCH",
+                                                                                   "physicalMmTrust":  "TRUSTED",
+                                                                                   "canvasWidthPx":  493,
+                                                                                   "canvasHeightPx":  118,
+                                                                                   "inkLeftPx":  8,
+                                                                                   "inkTopPx":  20,
+                                                                                   "inkWidthPx":  477,
+                                                                                   "inkHeightPx":  74,
+                                                                                   "inkWidthMm":  20.192999999999998,
+                                                                                   "inkHeightMm":  3.1326666666666667,
+                                                                                   "sha256":  "95F3059D57E059A739731B2C72E77A00E5E146EA42DE08C9AC4350509F3780E9",
+                                                                                   "symbolBounds":  "NOT_DECODER_CONFIRMED"
+                                                                               },
+                                                                   "placement":  {
+                                                                                     "schema":  "lwb-native-text-placement-v1",
+                                                                                     "policy":  "MEASURED_INK_ORIGIN_TO_CANONICAL_FRAME",
+                                                                                     "xMm":  44.56483333333333,
+                                                                                     "yMm":  62.153333333333336,
+                                                                                     "frame":  {
+                                                                                                   "xMm":  5,
+                                                                                                   "yMm":  63,
+                                                                                                   "widthMm":  100,
+                                                                                                   "heightMm":  8
+                                                                                               },
+                                                                                     "alignment":  "center",
+                                                                                     "alignmentShiftMm":  39.9035,
+                                                                                     "inkOffset":  {
+                                                                                                       "xMm":  0.33866666666666667,
+                                                                                                       "yMm":  0.8466666666666667
+                                                                                                   },
+                                                                                     "localOffset":  {
+                                                                                                         "xMm":  39.56483333333333,
+                                                                                                         "yMm":  -0.8466666666666667
+                                                                                                     },
+                                                                                     "inkWidthMm":  20.193,
+                                                                                     "inkHeightMm":  3.1326666666666667,
+                                                                                     "rotationCom":  0
+                                                                                 }
+                                                               }
+                                     },
+                        "reopenEditable":  "CHALLENGE_RESTORE_EXACT_XML_AND_PEER_ISOLATION_PASS"
+                    }
+                ],
+    "warnings":  [
+                     "Designer-authored Text slots are reused; unused donor objects are deleted from the disposable candidate copy before any payload assignment; the embedded donor source remains unchanged.",
+                     "An omitted ReferencePoint after an explicit TopLeft request is accepted only pending final unique full-page BMP Visual QA."
+                 ],
+    "output":  "C:\\Users\\FTUSER5\\actions-runner-label-workbench\\_work\\label-workbench\\label-workbench\\native\\Label_Workbench_Native_Layout_ENGINE_V1\\program\\native-results\\A\\r-7acb81364e3e\\native-output.btw",
+    "outputSha256":  "F0094F678C1ADBC05DC644C43893A32F1A1BB168EE232AF454A0EB0126F02432",
+    "reopen":  "PASS",
+    "deletedUnusedDonorObjects":  33,
+    "layoutSettlement":  "FULL_FORMAT_RENDER_BEFORE_SAVE_AND_REOPEN_TRANSACTIONS"
+}

@@ -1,0 +1,610 @@
+﻿{
+    "schema":  "lwb-hybrid-pool-build-report-v1",
+    "status":  "VERIFIED_CANDIDATE_VISUAL_PENDING",
+    "renderer":  "hybrid-text-pool-btc",
+    "productAcceptance":  "NOT_RUN",
+    "textPool":  {
+                     "path":  "C:\\Users\\FTUSER5\\actions-runner-label-workbench\\_work\\label-workbench\\label-workbench\\native\\Label_Workbench_Native_Layout_ENGINE_V1\\program\\native-results\\A\\r-3102e4bc0701\\hybrid-text-pool.btw",
+                     "sha256":  "73E620EC2154D18AF3E279B4438A3775BE85D2A71F5BD8AFAAF664B31F03198B"
+                 },
+    "page":  {
+                 "printer":  "Argox CP-3140 PPLA",
+                 "LabelColumns":  1,
+                 "LabelRows":  1,
+                 "PaperWidth":  119.98999786376953,
+                 "PaperHeight":  80.010002136230469,
+                 "LabelWidth":  119.98999786376953,
+                 "LabelHeight":  80.010002136230469,
+                 "MarginLeft":  0,
+                 "MarginRight":  0,
+                 "MarginTop":  0,
+                 "MarginBottom":  0
+             },
+    "objects":  [
+                    {
+                        "id":  "BOLD9",
+                        "type":  "text",
+                        "physicalName":  "文字 1",
+                        "nativeType":  5,
+                        "referencePointXml":  null,
+                        "geometry":  {
+                                         "anchor":  {
+                                                        "status":  "PASS_VISUAL_PENDING",
+                                                        "mode":  "BARTENDER_DEFAULT_TOPLEFT_OMITTED",
+                                                        "serialized":  null
+                                                    },
+                                         "payload":  {
+                                                         "root":  "Text",
+                                                         "sourceId":  "{6E1B676D-8F75-4730-9296-8F59D6DFC18A}",
+                                                         "value":  "Bold Nine",
+                                                         "sourceCount":  1,
+                                                         "transforms":  0
+                                                     },
+                                         "properties":  {
+                                                            "FontName":  {
+                                                                             "requested":  "Arial",
+                                                                             "actual":  "Arial",
+                                                                             "unquantized":  null
+                                                                         },
+                                                            "FontSize":  {
+                                                                             "requested":  9,
+                                                                             "actual":  9,
+                                                                             "unquantized":  null
+                                                                         },
+                                                            "FontBold":  {
+                                                                             "requested":  true,
+                                                                             "actual":  true,
+                                                                             "unquantized":  null
+                                                                         },
+                                                            "FontItalic":  {
+                                                                               "requested":  false,
+                                                                               "actual":  false,
+                                                                               "unquantized":  null
+                                                                           },
+                                                            "RotationAngle":  {
+                                                                                  "requested":  0,
+                                                                                  "actual":  0,
+                                                                                  "unquantized":  null
+                                                                              },
+                                                            "X":  {
+                                                                      "requested":  5.0038,
+                                                                      "actual":  5.0038,
+                                                                      "unquantized":  5
+                                                                  },
+                                                            "Y":  {
+                                                                      "requested":  5.0038,
+                                                                      "actual":  5.0038,
+                                                                      "unquantized":  5
+                                                                  }
+                                                        },
+                                         "anchorAfterProperties":  "BARTENDER_DEFAULT_TOPLEFT_OMITTED",
+                                         "alignmentEvidence":  null
+                                     },
+                        "reopenEditable":  "CHALLENGE_RESTORE_EXACT_XML_AND_PEER_ISOLATION_PASS"
+                    },
+                    {
+                        "id":  "ITALIC18",
+                        "type":  "text",
+                        "physicalName":  "文字 2",
+                        "nativeType":  5,
+                        "referencePointXml":  null,
+                        "geometry":  {
+                                         "anchor":  {
+                                                        "status":  "PASS_VISUAL_PENDING",
+                                                        "mode":  "BARTENDER_DEFAULT_TOPLEFT_OMITTED",
+                                                        "serialized":  null
+                                                    },
+                                         "payload":  {
+                                                         "root":  "Text",
+                                                         "sourceId":  "{0A8D34E0-04AF-484A-8AF4-C3AA658128D2}",
+                                                         "value":  "Italic 18",
+                                                         "sourceCount":  1,
+                                                         "transforms":  0
+                                                     },
+                                         "properties":  {
+                                                            "FontName":  {
+                                                                             "requested":  "Arial",
+                                                                             "actual":  "Arial",
+                                                                             "unquantized":  null
+                                                                         },
+                                                            "FontSize":  {
+                                                                             "requested":  18,
+                                                                             "actual":  18,
+                                                                             "unquantized":  null
+                                                                         },
+                                                            "FontBold":  {
+                                                                             "requested":  false,
+                                                                             "actual":  false,
+                                                                             "unquantized":  null
+                                                                         },
+                                                            "FontItalic":  {
+                                                                               "requested":  true,
+                                                                               "actual":  true,
+                                                                               "unquantized":  null
+                                                                           },
+                                                            "RotationAngle":  {
+                                                                                  "requested":  0,
+                                                                                  "actual":  0,
+                                                                                  "unquantized":  null
+                                                                              },
+                                                            "X":  {
+                                                                      "requested":  54.991,
+                                                                      "actual":  54.991,
+                                                                      "unquantized":  55
+                                                                  },
+                                                            "Y":  {
+                                                                      "requested":  5.0038,
+                                                                      "actual":  5.0038,
+                                                                      "unquantized":  5
+                                                                  }
+                                                        },
+                                         "anchorAfterProperties":  "BARTENDER_DEFAULT_TOPLEFT_OMITTED",
+                                         "alignmentEvidence":  null
+                                     },
+                        "reopenEditable":  "CHALLENGE_RESTORE_EXACT_XML_AND_PEER_ISOLATION_PASS"
+                    },
+                    {
+                        "id":  "BOTH24",
+                        "type":  "text",
+                        "physicalName":  "文字 3",
+                        "nativeType":  5,
+                        "referencePointXml":  null,
+                        "geometry":  {
+                                         "anchor":  {
+                                                        "status":  "PASS_VISUAL_PENDING",
+                                                        "mode":  "BARTENDER_DEFAULT_TOPLEFT_OMITTED",
+                                                        "serialized":  null
+                                                    },
+                                         "payload":  {
+                                                         "root":  "Text",
+                                                         "sourceId":  "{3FA6A9C6-F049-4293-AAB2-CB190BB7ED0E}",
+                                                         "value":  "Style 24",
+                                                         "sourceCount":  1,
+                                                         "transforms":  0
+                                                     },
+                                         "properties":  {
+                                                            "FontName":  {
+                                                                             "requested":  "Arial",
+                                                                             "actual":  "Arial",
+                                                                             "unquantized":  null
+                                                                         },
+                                                            "FontSize":  {
+                                                                             "requested":  24,
+                                                                             "actual":  24,
+                                                                             "unquantized":  null
+                                                                         },
+                                                            "FontBold":  {
+                                                                             "requested":  true,
+                                                                             "actual":  true,
+                                                                             "unquantized":  null
+                                                                         },
+                                                            "FontItalic":  {
+                                                                               "requested":  true,
+                                                                               "actual":  true,
+                                                                               "unquantized":  null
+                                                                           },
+                                                            "RotationAngle":  {
+                                                                                  "requested":  0,
+                                                                                  "actual":  0,
+                                                                                  "unquantized":  null
+                                                                              },
+                                                            "X":  {
+                                                                      "requested":  5.0038,
+                                                                      "actual":  5.0038,
+                                                                      "unquantized":  5
+                                                                  },
+                                                            "Y":  {
+                                                                      "requested":  19.9898,
+                                                                      "actual":  19.9898,
+                                                                      "unquantized":  20
+                                                                  }
+                                                        },
+                                         "anchorAfterProperties":  "BARTENDER_DEFAULT_TOPLEFT_OMITTED",
+                                         "alignmentEvidence":  null
+                                     },
+                        "reopenEditable":  "CHALLENGE_RESTORE_EXACT_XML_AND_PEER_ISOLATION_PASS"
+                    },
+                    {
+                        "id":  "CENTER",
+                        "type":  "text",
+                        "physicalName":  "文字 4",
+                        "nativeType":  5,
+                        "referencePointXml":  null,
+                        "geometry":  {
+                                         "anchor":  {
+                                                        "status":  "PASS_VISUAL_PENDING",
+                                                        "mode":  "BARTENDER_DEFAULT_TOPLEFT_OMITTED",
+                                                        "serialized":  null
+                                                    },
+                                         "payload":  {
+                                                         "root":  "Text",
+                                                         "sourceId":  "{DA747826-D1A8-425F-AA7B-B494263AA17F}",
+                                                         "value":  "CENTER 12",
+                                                         "sourceCount":  1,
+                                                         "transforms":  0
+                                                     },
+                                         "properties":  {
+                                                            "FontName":  {
+                                                                             "requested":  "Courier New",
+                                                                             "actual":  "Courier New",
+                                                                             "unquantized":  null
+                                                                         },
+                                                            "FontSize":  {
+                                                                             "requested":  12,
+                                                                             "actual":  12,
+                                                                             "unquantized":  null
+                                                                         },
+                                                            "FontBold":  {
+                                                                             "requested":  false,
+                                                                             "actual":  false,
+                                                                             "unquantized":  null
+                                                                         },
+                                                            "FontItalic":  {
+                                                                               "requested":  false,
+                                                                               "actual":  false,
+                                                                               "unquantized":  null
+                                                                           },
+                                                            "RotationAngle":  {
+                                                                                  "requested":  0,
+                                                                                  "actual":  0,
+                                                                                  "unquantized":  null
+                                                                              },
+                                                            "X":  {
+                                                                      "requested":  81.457799999999992,
+                                                                      "actual":  81.457799999999992,
+                                                                      "unquantized":  81.451
+                                                                  },
+                                                            "Y":  {
+                                                                      "requested":  21.996399999999998,
+                                                                      "actual":  21.996399999999998,
+                                                                      "unquantized":  22
+                                                                  }
+                                                        },
+                                         "anchorAfterProperties":  "BARTENDER_DEFAULT_TOPLEFT_OMITTED",
+                                         "alignmentEvidence":  {
+                                                                   "policy":  "CANONICAL_FRAME_ALIGNED_USING_NATIVE_INK",
+                                                                   "alignment":  "center",
+                                                                   "upright":  {
+                                                                                   "file":  "hybrid-CENTER-upright.bmp",
+                                                                                   "requestedDpi":  600,
+                                                                                   "headerDpiX":  599.9988,
+                                                                                   "headerDpiY":  599.9988,
+                                                                                   "dpiTrust":  "TRUSTED_HEADER_MATCH",
+                                                                                   "physicalMmTrust":  "TRUSTED",
+                                                                                   "canvasWidthPx":  542,
+                                                                                   "canvasHeightPx":  111,
+                                                                                   "inkWidthPx":  522,
+                                                                                   "inkHeightPx":  64,
+                                                                                   "inkWidthMm":  22.098,
+                                                                                   "inkHeightMm":  2.7093333333333334,
+                                                                                   "sha256":  "D0EE84A6F5F50B24AEB6A23E095A7ACFBC1907987B647F21078617FAB3DAF171",
+                                                                                   "symbolBounds":  "NOT_DECODER_CONFIRMED"
+                                                                               },
+                                                                   "shiftMm":  11.451,
+                                                                   "targetX":  81.451,
+                                                                   "targetY":  22
+                                                               }
+                                     },
+                        "reopenEditable":  "CHALLENGE_RESTORE_EXACT_XML_AND_PEER_ISOLATION_PASS"
+                    },
+                    {
+                        "id":  "RIGHT",
+                        "type":  "text",
+                        "physicalName":  "文字 5",
+                        "nativeType":  5,
+                        "referencePointXml":  null,
+                        "geometry":  {
+                                         "anchor":  {
+                                                        "status":  "PASS_VISUAL_PENDING",
+                                                        "mode":  "BARTENDER_DEFAULT_TOPLEFT_OMITTED",
+                                                        "serialized":  null
+                                                    },
+                                         "payload":  {
+                                                         "root":  "Text",
+                                                         "sourceId":  "{1930472A-D1D8-40C7-9797-703882F64692}",
+                                                         "value":  "RIGHT EDGE",
+                                                         "sourceCount":  1,
+                                                         "transforms":  0
+                                                     },
+                                         "properties":  {
+                                                            "FontName":  {
+                                                                             "requested":  "Times New Roman",
+                                                                             "actual":  "Times New Roman",
+                                                                             "unquantized":  null
+                                                                         },
+                                                            "FontSize":  {
+                                                                             "requested":  12,
+                                                                             "actual":  12,
+                                                                             "unquantized":  null
+                                                                         },
+                                                            "FontBold":  {
+                                                                             "requested":  false,
+                                                                             "actual":  false,
+                                                                             "unquantized":  null
+                                                                         },
+                                                            "FontItalic":  {
+                                                                               "requested":  false,
+                                                                               "actual":  false,
+                                                                               "unquantized":  null
+                                                                           },
+                                                            "RotationAngle":  {
+                                                                                  "requested":  0,
+                                                                                  "actual":  0,
+                                                                                  "unquantized":  null
+                                                                              },
+                                                            "X":  {
+                                                                      "requested":  24.8158,
+                                                                      "actual":  24.8158,
+                                                                      "unquantized":  24.811666666666667
+                                                                  },
+                                                            "Y":  {
+                                                                      "requested":  40.004999999999995,
+                                                                      "actual":  40.004999999999995,
+                                                                      "unquantized":  40
+                                                                  }
+                                                        },
+                                         "anchorAfterProperties":  "BARTENDER_DEFAULT_TOPLEFT_OMITTED",
+                                         "alignmentEvidence":  {
+                                                                   "policy":  "CANONICAL_FRAME_ALIGNED_USING_NATIVE_INK",
+                                                                   "alignment":  "right",
+                                                                   "upright":  {
+                                                                                   "file":  "hybrid-RIGHT-upright.bmp",
+                                                                                   "requestedDpi":  600,
+                                                                                   "headerDpiX":  599.9988,
+                                                                                   "headerDpiY":  599.9988,
+                                                                                   "dpiTrust":  "TRUSTED_HEADER_MATCH",
+                                                                                   "physicalMmTrust":  "TRUSTED",
+                                                                                   "canvasWidthPx":  602,
+                                                                                   "canvasHeightPx":  117,
+                                                                                   "inkWidthPx":  595,
+                                                                                   "inkHeightPx":  69,
+                                                                                   "inkWidthMm":  25.188333333333333,
+                                                                                   "inkHeightMm":  2.921,
+                                                                                   "sha256":  "9DDAF40FC2108DB70D6574AC93B9405EF0DDF76DABCB390A7EC66DD9B233097E",
+                                                                                   "symbolBounds":  "NOT_DECODER_CONFIRMED"
+                                                                               },
+                                                                   "shiftMm":  19.811666666666667,
+                                                                   "targetX":  24.811666666666667,
+                                                                   "targetY":  40
+                                                               }
+                                     },
+                        "reopenEditable":  "CHALLENGE_RESTORE_EXACT_XML_AND_PEER_ISOLATION_PASS"
+                    },
+                    {
+                        "id":  "SMALL7",
+                        "type":  "text",
+                        "physicalName":  "文字 6",
+                        "nativeType":  5,
+                        "referencePointXml":  null,
+                        "geometry":  {
+                                         "anchor":  {
+                                                        "status":  "PASS_VISUAL_PENDING",
+                                                        "mode":  "BARTENDER_DEFAULT_TOPLEFT_OMITTED",
+                                                        "serialized":  null
+                                                    },
+                                         "payload":  {
+                                                         "root":  "Text",
+                                                         "sourceId":  "{DCE4CF0F-1F39-4BA7-B9B5-65FF87ABCF3F}",
+                                                         "value":  "Small Seven",
+                                                         "sourceCount":  1,
+                                                         "transforms":  0
+                                                     },
+                                         "properties":  {
+                                                            "FontName":  {
+                                                                             "requested":  "Arial",
+                                                                             "actual":  "Arial",
+                                                                             "unquantized":  null
+                                                                         },
+                                                            "FontSize":  {
+                                                                             "requested":  7,
+                                                                             "actual":  7,
+                                                                             "unquantized":  null
+                                                                         },
+                                                            "FontBold":  {
+                                                                             "requested":  false,
+                                                                             "actual":  false,
+                                                                             "unquantized":  null
+                                                                         },
+                                                            "FontItalic":  {
+                                                                               "requested":  false,
+                                                                               "actual":  false,
+                                                                               "unquantized":  null
+                                                                           },
+                                                            "RotationAngle":  {
+                                                                                  "requested":  0,
+                                                                                  "actual":  0,
+                                                                                  "unquantized":  null
+                                                                              },
+                                                            "X":  {
+                                                                      "requested":  59.9948,
+                                                                      "actual":  59.9948,
+                                                                      "unquantized":  60
+                                                                  },
+                                                            "Y":  {
+                                                                      "requested":  40.004999999999995,
+                                                                      "actual":  40.004999999999995,
+                                                                      "unquantized":  40
+                                                                  }
+                                                        },
+                                         "anchorAfterProperties":  "BARTENDER_DEFAULT_TOPLEFT_OMITTED",
+                                         "alignmentEvidence":  null
+                                     },
+                        "reopenEditable":  "CHALLENGE_RESTORE_EXACT_XML_AND_PEER_ISOLATION_PASS"
+                    },
+                    {
+                        "id":  "MULTI_L1",
+                        "type":  "text",
+                        "physicalName":  "文字 7",
+                        "nativeType":  5,
+                        "referencePointXml":  null,
+                        "geometry":  {
+                                         "anchor":  {
+                                                        "status":  "PASS_VISUAL_PENDING",
+                                                        "mode":  "BARTENDER_DEFAULT_TOPLEFT_OMITTED",
+                                                        "serialized":  null
+                                                    },
+                                         "payload":  {
+                                                         "root":  "Text",
+                                                         "sourceId":  "{F4501AAA-9853-4695-AAF8-364B81333ED3}",
+                                                         "value":  "LINE ONE",
+                                                         "sourceCount":  1,
+                                                         "transforms":  0
+                                                     },
+                                         "properties":  {
+                                                            "FontName":  {
+                                                                             "requested":  "Arial",
+                                                                             "actual":  "Arial",
+                                                                             "unquantized":  null
+                                                                         },
+                                                            "FontSize":  {
+                                                                             "requested":  12,
+                                                                             "actual":  12,
+                                                                             "unquantized":  null
+                                                                         },
+                                                            "FontBold":  {
+                                                                             "requested":  false,
+                                                                             "actual":  false,
+                                                                             "unquantized":  null
+                                                                         },
+                                                            "FontItalic":  {
+                                                                               "requested":  false,
+                                                                               "actual":  false,
+                                                                               "unquantized":  null
+                                                                           },
+                                                            "RotationAngle":  {
+                                                                                  "requested":  0,
+                                                                                  "actual":  0,
+                                                                                  "unquantized":  null
+                                                                              },
+                                                            "X":  {
+                                                                      "requested":  45.4152,
+                                                                      "actual":  45.4152,
+                                                                      "unquantized":  45.411500000000004
+                                                                  },
+                                                            "Y":  {
+                                                                      "requested":  54.991,
+                                                                      "actual":  54.991,
+                                                                      "unquantized":  55
+                                                                  }
+                                                        },
+                                         "anchorAfterProperties":  "BARTENDER_DEFAULT_TOPLEFT_OMITTED",
+                                         "alignmentEvidence":  {
+                                                                   "policy":  "CANONICAL_FRAME_ALIGNED_USING_NATIVE_INK",
+                                                                   "alignment":  "center",
+                                                                   "upright":  {
+                                                                                   "file":  "hybrid-MULTI_L1-upright.bmp",
+                                                                                   "requestedDpi":  600,
+                                                                                   "headerDpiX":  599.9988,
+                                                                                   "headerDpiY":  599.9988,
+                                                                                   "dpiTrust":  "TRUSTED_HEADER_MATCH",
+                                                                                   "physicalMmTrust":  "TRUSTED",
+                                                                                   "canvasWidthPx":  468,
+                                                                                   "canvasHeightPx":  118,
+                                                                                   "inkWidthPx":  453,
+                                                                                   "inkHeightPx":  74,
+                                                                                   "inkWidthMm":  19.177,
+                                                                                   "inkHeightMm":  3.1326666666666667,
+                                                                                   "sha256":  "D332F4FD5D76E500E72BF0443BE79B3A22D8DEFB23B51B00C1442CD795706085",
+                                                                                   "symbolBounds":  "NOT_DECODER_CONFIRMED"
+                                                                               },
+                                                                   "shiftMm":  40.411500000000004,
+                                                                   "targetX":  45.411500000000004,
+                                                                   "targetY":  55
+                                                               }
+                                     },
+                        "reopenEditable":  "CHALLENGE_RESTORE_EXACT_XML_AND_PEER_ISOLATION_PASS"
+                    },
+                    {
+                        "id":  "MULTI_L2",
+                        "type":  "text",
+                        "physicalName":  "文字 8",
+                        "nativeType":  5,
+                        "referencePointXml":  null,
+                        "geometry":  {
+                                         "anchor":  {
+                                                        "status":  "PASS_VISUAL_PENDING",
+                                                        "mode":  "BARTENDER_DEFAULT_TOPLEFT_OMITTED",
+                                                        "serialized":  null
+                                                    },
+                                         "payload":  {
+                                                         "root":  "Text",
+                                                         "sourceId":  "{DC860FF8-5971-4ADA-B3F9-8D005019EDAF}",
+                                                         "value":  "LINE TWO",
+                                                         "sourceCount":  1,
+                                                         "transforms":  0
+                                                     },
+                                         "properties":  {
+                                                            "FontName":  {
+                                                                             "requested":  "Arial",
+                                                                             "actual":  "Arial",
+                                                                             "unquantized":  null
+                                                                         },
+                                                            "FontSize":  {
+                                                                             "requested":  12,
+                                                                             "actual":  12,
+                                                                             "unquantized":  null
+                                                                         },
+                                                            "FontBold":  {
+                                                                             "requested":  false,
+                                                                             "actual":  false,
+                                                                             "unquantized":  null
+                                                                         },
+                                                            "FontItalic":  {
+                                                                               "requested":  false,
+                                                                               "actual":  false,
+                                                                               "unquantized":  null
+                                                                           },
+                                                            "RotationAngle":  {
+                                                                                  "requested":  0,
+                                                                                  "actual":  0,
+                                                                                  "unquantized":  null
+                                                                              },
+                                                            "X":  {
+                                                                      "requested":  44.907199999999996,
+                                                                      "actual":  44.907199999999996,
+                                                                      "unquantized":  44.9035
+                                                                  },
+                                                            "Y":  {
+                                                                      "requested":  62.992,
+                                                                      "actual":  62.992,
+                                                                      "unquantized":  63
+                                                                  }
+                                                        },
+                                         "anchorAfterProperties":  "BARTENDER_DEFAULT_TOPLEFT_OMITTED",
+                                         "alignmentEvidence":  {
+                                                                   "policy":  "CANONICAL_FRAME_ALIGNED_USING_NATIVE_INK",
+                                                                   "alignment":  "center",
+                                                                   "upright":  {
+                                                                                   "file":  "hybrid-MULTI_L2-upright.bmp",
+                                                                                   "requestedDpi":  600,
+                                                                                   "headerDpiX":  599.9988,
+                                                                                   "headerDpiY":  599.9988,
+                                                                                   "dpiTrust":  "TRUSTED_HEADER_MATCH",
+                                                                                   "physicalMmTrust":  "TRUSTED",
+                                                                                   "canvasWidthPx":  493,
+                                                                                   "canvasHeightPx":  118,
+                                                                                   "inkWidthPx":  477,
+                                                                                   "inkHeightPx":  74,
+                                                                                   "inkWidthMm":  20.192999999999998,
+                                                                                   "inkHeightMm":  3.1326666666666667,
+                                                                                   "sha256":  "95F3059D57E059A739731B2C72E77A00E5E146EA42DE08C9AC4350509F3780E9",
+                                                                                   "symbolBounds":  "NOT_DECODER_CONFIRMED"
+                                                                               },
+                                                                   "shiftMm":  39.9035,
+                                                                   "targetX":  44.9035,
+                                                                   "targetY":  63
+                                                               }
+                                     },
+                        "reopenEditable":  "CHALLENGE_RESTORE_EXACT_XML_AND_PEER_ISOLATION_PASS"
+                    }
+                ],
+    "warnings":  [
+                     "Designer-authored Text slots are reused; unused donor objects are deleted from the disposable candidate copy before any payload assignment; the embedded donor source remains unchanged.",
+                     "An omitted ReferencePoint after an explicit TopLeft request is accepted only pending final unique full-page BMP Visual QA."
+                 ],
+    "output":  "C:\\Users\\FTUSER5\\actions-runner-label-workbench\\_work\\label-workbench\\label-workbench\\native\\Label_Workbench_Native_Layout_ENGINE_V1\\program\\native-results\\A\\r-3102e4bc0701\\native-output.btw",
+    "outputSha256":  "D9551264B4495F4F0C8C6A12EEE9A85E116C9331A9525F4B3B14940DBF1996D7",
+    "reopen":  "PASS",
+    "deletedUnusedDonorObjects":  33,
+    "layoutSettlement":  "FULL_FORMAT_RENDER_BEFORE_SAVE_AND_REOPEN_TRANSACTIONS"
+}

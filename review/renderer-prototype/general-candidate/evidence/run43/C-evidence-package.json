@@ -1,0 +1,8 @@
+{
+  "file": "C-FAILED-runtime-evidence.zip",
+  "sha256": "01c5ebcd7137b9d8db386f62d07705fd1028757f1779d86962504da369cfaae7",
+  "originalGate": "FAIL",
+  "candidateStatus": "FAILED_UNVERIFIED",
+  "sourceRunId": 41594937167,
+  "notes": "Persisted original BTW and actual BMP, not a newly verified candidate. New optical reanalysis is separate."
+}

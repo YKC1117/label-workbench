@@ -1,0 +1,34 @@
+{
+  "status": "FAIL",
+  "objects": [
+    {
+      "id": "BORDER",
+      "status": "PASS",
+      "policy": "HOLLOW_NATIVE_RECTANGLE",
+      "interiorInkPixels": 0,
+      "strokeMm": [
+        0.508,
+        0.508,
+        0.508,
+        0.508
+      ]
+    },
+    {
+      "id": "RULE",
+      "status": "PASS",
+      "policy": "NATIVE_STRAIGHT_STROKE_GEOMETRY",
+      "outsideStrokePixels": 0,
+      "strokeMm": 0.2539819691249151
+    },
+    {
+      "id": "LOGO",
+      "status": "FAIL",
+      "policy": "DECLARED_PNG_PATTERN_ONE_MEASURED_PRINTER_DOT",
+      "printerDpi": 300,
+      "tolerancePx": 2,
+      "toleranceMm": 0.08466666666666667,
+      "differingPixels": 3402,
+      "unmatchedPixels": 21
+    }
+  ]
+}

@@ -1,0 +1,165 @@
+name: BarTender Renderer Windows Probe
+
+on:
+  push:
+    branches:
+      - experiment/com-renderer-prototype
+    paths:
+      - review/renderer-prototype/run-request.json
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bartender-renderer-windows-probe
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    name: Windows + BarTender 2022 COM probe
+    if: >-
+      github.actor == 'YKC1117' &&
+      contains(github.event.head_commit.message, '[bartender-probe]')
+    runs-on: [self-hosted, windows, x64, bartender]
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout exact trigger commit
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+          clean: true
+
+      - name: Provision isolated Node.js runtime
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install locked renderer dependencies
+        shell: powershell -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command ". '{0}'"
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $evidence = Join-Path $env:GITHUB_WORKSPACE 'review\renderer-prototype\runner-evidence'
+          New-Item -ItemType Directory -Force -Path $evidence | Out-Null
+          ('node=' + (& node.exe --version)) | Set-Content -LiteralPath (Join-Path $evidence 'node-runtime.txt') -Encoding UTF8
+          ('npm=' + (& npm.cmd --version)) | Add-Content -LiteralPath (Join-Path $evidence 'node-runtime.txt') -Encoding UTF8
+          & npm.cmd ci --ignore-scripts --no-audit --no-fund 2>&1 | Tee-Object -FilePath (Join-Path $evidence 'npm-ci.log')
+          if ($LASTEXITCODE -ne 0) { throw ('npm ci failed with exit code ' + $LASTEXITCODE) }
+
+      - name: Run renderer offline regression on the same Windows host
+        shell: powershell -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command ". '{0}'"
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $evidence = Join-Path $env:GITHUB_WORKSPACE 'review\renderer-prototype\runner-evidence'
+          & cmd.exe /d /s /c 'npm.cmd run test:renderer 2>&1' | Tee-Object -FilePath (Join-Path $evidence 'renderer-offline-regression.log')
+          if ($LASTEXITCODE -ne 0) { throw ('Renderer offline regression failed with exit code ' + $LASTEXITCODE) }
+
+      - name: Preflight Windows / PowerShell 5.1 / BarTender COM
+        shell: powershell -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command ". '{0}'"
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $reportDir = Join-Path $env:GITHUB_WORKSPACE 'review\renderer-prototype\runner-evidence'
+          New-Item -ItemType Directory -Force -Path $reportDir | Out-Null
+
+          $rows = [ordered]@{
+            timestampUtc = [DateTime]::UtcNow.ToString('o')
+            machine = $env:COMPUTERNAME
+            os = [Environment]::OSVersion.VersionString
+            powershell = $PSVersionTable.PSVersion.ToString()
+            executionPolicy = (Get-ExecutionPolicy -Scope Process).ToString()
+            processBits = [IntPtr]::Size * 8
+            node = (& node.exe --version).Trim()
+            npm = (& npm.cmd --version).Trim()
+            bartenderProgId = 'NOT_CHECKED'
+            bartenderExecutable = $null
+            existingBarTendPids = @()
+            ownershipPolicy = 'Renderer must create a new BarTender COM ProcessID; pre-existing ProcessID is rejected by Build-NativeLayout.ps1.'
+          }
+
+          if ($env:OS -ne 'Windows_NT') {
+            $rows | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $reportDir 'preflight.json') -Encoding UTF8
+            throw 'This workflow requires a Windows self-hosted runner.'
+          }
+
+          if ($PSVersionTable.PSVersion.Major -ne 5) {
+            $rows | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $reportDir 'preflight.json') -Encoding UTF8
+            throw ('Windows PowerShell 5.1 required; actual: ' + $PSVersionTable.PSVersion)
+          }
+
+          $btType = [Type]::GetTypeFromProgID('BarTender.Application', $false)
+          if ($null -eq $btType) {
+            $rows.bartenderProgId = 'MISSING'
+            $rows | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $reportDir 'preflight.json') -Encoding UTF8
+            throw 'BarTender.Application COM ProgID is not registered on this machine.'
+          }
+          $rows.bartenderProgId = 'REGISTERED'
+
+          $btExecutable = $null
+          if ($env:ProgramFiles) {
+            $candidate = Join-Path $env:ProgramFiles 'Seagull\BarTender 2022\BarTend.exe'
+            if (Test-Path -LiteralPath $candidate) { $btExecutable = $candidate }
+          }
+          if ($null -eq $btExecutable) {
+            $pf86 = [Environment]::GetEnvironmentVariable('ProgramFiles(x86)')
+            if ($pf86) {
+              $candidate = Join-Path $pf86 'Seagull\BarTender 2022\BarTend.exe'
+              if (Test-Path -LiteralPath $candidate) { $btExecutable = $candidate }
+            }
+          }
+          if ($btExecutable) { $rows.bartenderExecutable = [string]$btExecutable }
+
+          $existing = @(Get-Process -Name BarTend -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Id)
+          $rows.existingBarTendPids = @($existing)
+          $rows | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath (Join-Path $reportDir 'preflight.json') -Encoding UTF8
+
+          if ($existing.Length -gt 0) {
+            Write-Warning ('Background BarTend.exe process(es) detected: ' + ($existing -join ', ') + '. Continuing to renderer ownership check; no existing process will be killed.')
+          }
+
+      - name: Run canonical COM renderer probe
+        shell: cmd
+        run: call PROBE.cmd
+
+      - name: Collect compact result summary
+        if: always()
+        shell: powershell -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command ". '{0}'"
+        run: |
+          $ErrorActionPreference = 'Continue'
+          $program = Join-Path $env:GITHUB_WORKSPACE 'native\Label_Workbench_Native_Layout_ENGINE_V1\program'
+          $evidence = Join-Path $env:GITHUB_WORKSPACE 'review\renderer-prototype\runner-evidence'
+          New-Item -ItemType Directory -Force -Path $evidence | Out-Null
+
+          $summary = [ordered]@{
+            sha = $env:GITHUB_SHA
+            ref = $env:GITHUB_REF
+            runId = $env:GITHUB_RUN_ID
+            runAttempt = $env:GITHUB_RUN_ATTEMPT
+            resultZip = [bool](Test-Path -LiteralPath (Join-Path $program 'NATIVE_BUILD_RESULT.zip'))
+            latestBtw = [bool](Test-Path -LiteralPath (Join-Path $program 'LATEST_NATIVE_OUTPUT.btw'))
+            latestReport = [bool](Test-Path -LiteralPath (Join-Path $program 'LATEST_NATIVE_REPORT.json'))
+          }
+          $summary | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath (Join-Path $evidence 'workflow-summary.json') -Encoding UTF8
+
+          '## BarTender Renderer Windows Probe' | Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY
+          ('- Commit: `' + $env:GITHUB_SHA + '`') | Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY
+          ('- NATIVE_BUILD_RESULT.zip: **' + $summary.resultZip + '**') | Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY
+          ('- LATEST_NATIVE_OUTPUT.btw: **' + $summary.latestBtw + '**') | Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY
+          ('- LATEST_NATIVE_REPORT.json: **' + $summary.latestReport + '**') | Add-Content -LiteralPath $env:GITHUB_STEP_SUMMARY
+
+      - name: Upload BarTender evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bartender-renderer-evidence-${{ github.run_id }}
+          if-no-files-found: warn
+          retention-days: 30
+          path: |
+            canonical.json
+            fixture.json
+            review/renderer-prototype/runner-evidence/**
+            native/Label_Workbench_Native_Layout_ENGINE_V1/program/NATIVE_BUILD_RESULT.zip
+            native/Label_Workbench_Native_Layout_ENGINE_V1/program/LATEST_NATIVE_OUTPUT.btw
+            native/Label_Workbench_Native_Layout_ENGINE_V1/program/LATEST_NATIVE_REPORT.json
+            native/Label_Workbench_Native_Layout_ENGINE_V1/program/native-results/**

@@ -21,8 +21,8 @@ namespace NativeReviewFixture {
   static string F(double d){return d.ToString("R",CultureInfo.InvariantCulture);}
   public string GetXML(bool a,bool b){
    XmlDocument x=new XmlDocument();string font=Root=="Text"?"<Font/>":"";x.LoadXml("<"+Root+">"+font+"<DataSources><EmbeddedDataSource><Value/></EmbeddedDataSource></DataSources><XDimension/><HumanReadable/></"+Root+">");
-   XmlElement e=x.DocumentElement;e.SetAttribute("Name",Name);e.SetAttribute("X",F(X));e.SetAttribute("Y",F(Y));e.SetAttribute("Height",F(Height));e.SetAttribute("Rotation",F(RotationAngle));e.SetAttribute("FontSize",F(FontSize));if(Root!="Text")e.SetAttribute("FontName",_fontName);e.SetAttribute("DoNotPrint",DoNotPrint.ToString());e.SetAttribute("ReferencePoint","BottomLeft");
-   if(Root=="Text"){XmlElement f=(XmlElement)x.SelectSingleNode("/*/Font");f.SetAttribute("PointSize",F(FontSize));f.SetAttribute("FontName",_fontName);}
+   XmlElement e=x.DocumentElement;e.SetAttribute("Name",Name);e.SetAttribute("X",F(X));e.SetAttribute("Y",F(Y));e.SetAttribute("Height",F(Height));e.SetAttribute("Rotation",F(RotationAngle));if(Root!="Text"){e.SetAttribute("FontSize",F(FontSize));e.SetAttribute("FontName",_fontName);}e.SetAttribute("DoNotPrint",DoNotPrint.ToString());e.SetAttribute("ReferencePoint","BottomLeft");
+   if(Root=="Text"){XmlElement f=(XmlElement)x.SelectSingleNode("/*/Font");f.SetAttribute("PointSize",F(FontSize));f.SetAttribute("FontName",_fontName);f.SetAttribute("CharacterSet","16909057");f.SetAttribute("Height",F(-20*FontSize));}
    ((XmlElement)x.SelectSingleNode("//EmbeddedDataSource")).SetAttribute("ID",SourceId);x.SelectSingleNode("//Value").InnerText=Payload;
    XmlElement xd=(XmlElement)x.SelectSingleNode("//XDimension");xd.SetAttribute("Index",Index.ToString());xd.SetAttribute("Mils",F((Index+1)*10));xd.SetAttribute("Millimeters",F((Index+1)*.254));
    ((XmlElement)x.SelectSingleNode("//HumanReadable")).SetAttribute("Visibility",Caption);return x.OuterXml;
@@ -30,7 +30,7 @@ namespace NativeReviewFixture {
   public void SetXML(string value){
    SetXmlCalls++;string oldFont=_fontName;
    XmlDocument x=new XmlDocument();x.LoadXml(value);XmlElement e=x.DocumentElement;
-   Name=e.GetAttribute("Name");X=Double.Parse(e.GetAttribute("X"),CultureInfo.InvariantCulture);Y=Double.Parse(e.GetAttribute("Y"),CultureInfo.InvariantCulture);Height=Double.Parse(e.GetAttribute("Height"),CultureInfo.InvariantCulture);RotationAngle=Double.Parse(e.GetAttribute("Rotation"),CultureInfo.InvariantCulture);FontSize=Double.Parse(e.GetAttribute("FontSize"),CultureInfo.InvariantCulture);_fontName=e.GetAttribute("FontName");DoNotPrint=Boolean.Parse(e.GetAttribute("DoNotPrint"));
+   Name=e.GetAttribute("Name");X=Double.Parse(e.GetAttribute("X"),CultureInfo.InvariantCulture);Y=Double.Parse(e.GetAttribute("Y"),CultureInfo.InvariantCulture);Height=Double.Parse(e.GetAttribute("Height"),CultureInfo.InvariantCulture);RotationAngle=Double.Parse(e.GetAttribute("Rotation"),CultureInfo.InvariantCulture);if(e.HasAttribute("FontSize"))FontSize=Double.Parse(e.GetAttribute("FontSize"),CultureInfo.InvariantCulture);if(e.HasAttribute("FontName"))_fontName=e.GetAttribute("FontName");DoNotPrint=Boolean.Parse(e.GetAttribute("DoNotPrint"));
    XmlElement f=(XmlElement)x.SelectSingleNode("/*/Font");if(f!=null){if(f.HasAttribute("PointSize"))FontSize=Double.Parse(f.GetAttribute("PointSize"),CultureInfo.InvariantCulture);if(f.HasAttribute("FontName"))_fontName=f.GetAttribute("FontName");}
    if(_fontName!=oldFont)FontXmlChangeCalls++;
    Payload=x.SelectSingleNode("//Value").InnerText;SourceId=((XmlElement)x.SelectSingleNode("//EmbeddedDataSource")).GetAttribute("ID");

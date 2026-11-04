@@ -1,0 +1,10 @@
+{
+  "runId": 41594937167,
+  "runNumber": 43,
+  "commit": "3268680cdb7c51eb0dc3f41860be26446597aa46",
+  "url": "https://github.com/YKC1117/label-workbench/actions/runs/41594937167",
+  "artifactId": 13212370048,
+  "artifactSha256": "ecc6a336d5c23e9331569ce19060189277d9590ddd51abb8d7390f0a2a8cc98e",
+  "status": "FAIL",
+  "productAcceptance": "NOT_RUN"
+}

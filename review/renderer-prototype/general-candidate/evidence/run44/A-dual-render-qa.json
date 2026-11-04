@@ -1,0 +1,578 @@
+{
+  "schema": "lwb-dual-render-qa-v1",
+  "status": "FAIL",
+  "tolerance": {
+    "centerMm": 0.5,
+    "sizeMm": 0.5,
+    "edgeMm": 0.5,
+    "rotationDeg": 0.1,
+    "overlapAreaMm2": 0.25
+  },
+  "productAcceptance": "NOT_RUN",
+  "scope": "orthogonal local-frame text alignment and containment, native pattern rotation gate consumed separately, placement, footprint, containment and API rotation; every native request explicitly asks for TopLeft; BarTender may omit that default in XML only when unique full-page visual geometry independently passes; no independent optical angle estimation",
+  "objects": [
+    {
+      "id": "BOLD9",
+      "status": "PASS",
+      "policy": "TEXT_CONTAINMENT",
+      "expected": {
+        "x": 5,
+        "y": 5,
+        "width": 45,
+        "height": 6
+      },
+      "actual": {
+        "x": 5.249333333333333,
+        "y": 5.715,
+        "width": 14.562666666666667,
+        "height": 2.3706666666666667
+      },
+      "localInk": {
+        "x": 0.2493333333333334,
+        "y": 0.7149999999999999,
+        "right": 14.812000000000001,
+        "bottom": 3.0856666666666666
+      },
+      "alignmentErrorMm": 0.2493333333333334,
+      "delta": {
+        "centerX": -14.969333333333333,
+        "centerY": -1.0996666666666668,
+        "width": -30.437333333333335,
+        "height": -3.6293333333333333,
+        "rotation": 0
+      },
+      "outOfBounds": false,
+      "referencePoint": null,
+      "referencePointPresent": false,
+      "anchorEvidence": "TOPLEFT_REQUEST_OMITTED_PLUS_UNIQUE_VISUAL_GEOMETRY",
+      "rotationEvidence": "COM_READBACK_ONLY",
+      "renderedRotation": "NOT_INDEPENDENTLY_VERIFIED",
+      "barcodeFootprint": null
+    },
+    {
+      "id": "ITALIC18",
+      "status": "PASS",
+      "policy": "TEXT_CONTAINMENT",
+      "expected": {
+        "x": 55,
+        "y": 5,
+        "width": 55,
+        "height": 10
+      },
+      "actual": {
+        "x": 55.372,
+        "y": 6.0536666666666665,
+        "width": 21.844,
+        "height": 4.699
+      },
+      "localInk": {
+        "x": 0.3719999999999999,
+        "y": 1.0536666666666665,
+        "right": 22.216000000000008,
+        "bottom": 5.752666666666666
+      },
+      "alignmentErrorMm": 0.3719999999999999,
+      "delta": {
+        "centerX": -16.206000000000003,
+        "centerY": -1.5968333333333327,
+        "width": -33.156,
+        "height": -5.301,
+        "rotation": 0
+      },
+      "outOfBounds": false,
+      "referencePoint": null,
+      "referencePointPresent": false,
+      "anchorEvidence": "TOPLEFT_REQUEST_OMITTED_PLUS_UNIQUE_VISUAL_GEOMETRY",
+      "rotationEvidence": "COM_READBACK_ONLY",
+      "renderedRotation": "NOT_INDEPENDENTLY_VERIFIED",
+      "barcodeFootprint": null
+    },
+    {
+      "id": "BOTH24",
+      "status": "FAIL",
+      "policy": "TEXT_CONTAINMENT",
+      "expected": {
+        "x": 5,
+        "y": 20,
+        "width": 65,
+        "height": 12
+      },
+      "actual": {
+        "x": 5.503333333333334,
+        "y": 21.632333333333335,
+        "width": 31.665333333333333,
+        "height": 7.916333333333333
+      },
+      "localInk": {
+        "x": 0.5033333333333339,
+        "y": 1.6323333333333352,
+        "right": 32.16866666666667,
+        "bottom": 9.54866666666667
+      },
+      "alignmentErrorMm": 0.5033333333333339,
+      "delta": {
+        "centerX": -16.164,
+        "centerY": -0.40949999999999775,
+        "width": -33.334666666666664,
+        "height": -4.083666666666667,
+        "rotation": 0
+      },
+      "outOfBounds": false,
+      "referencePoint": null,
+      "referencePointPresent": false,
+      "anchorEvidence": "TOPLEFT_REQUEST_OMITTED_PLUS_UNIQUE_VISUAL_GEOMETRY",
+      "rotationEvidence": "COM_READBACK_ONLY",
+      "renderedRotation": "NOT_INDEPENDENTLY_VERIFIED",
+      "barcodeFootprint": null
+    },
+    {
+      "id": "CENTER",
+      "status": "PASS",
+      "policy": "TEXT_CONTAINMENT",
+      "expected": {
+        "x": 70,
+        "y": 22,
+        "width": 45,
+        "height": 8
+      },
+      "actual": {
+        "x": 81.70333333333333,
+        "y": 22.648333333333333,
+        "width": 22.098,
+        "height": 2.7093333333333334
+      },
+      "localInk": {
+        "x": 11.703333333333333,
+        "y": 0.6483333333333334,
+        "right": 33.80133333333333,
+        "bottom": 3.357666666666667
+      },
+      "alignmentErrorMm": 0.25233333333333263,
+      "delta": {
+        "centerX": 0.2523333333333255,
+        "centerY": -1.9969999999999999,
+        "width": -22.902,
+        "height": -5.290666666666667,
+        "rotation": 0
+      },
+      "outOfBounds": false,
+      "referencePoint": null,
+      "referencePointPresent": false,
+      "anchorEvidence": "TOPLEFT_REQUEST_OMITTED_PLUS_UNIQUE_VISUAL_GEOMETRY",
+      "rotationEvidence": "COM_READBACK_ONLY",
+      "renderedRotation": "NOT_INDEPENDENTLY_VERIFIED",
+      "barcodeFootprint": null
+    },
+    {
+      "id": "RIGHT",
+      "status": "PASS",
+      "policy": "TEXT_CONTAINMENT",
+      "expected": {
+        "x": 5,
+        "y": 40,
+        "width": 45,
+        "height": 7
+      },
+      "actual": {
+        "x": 24.892,
+        "y": 40.93633333333334,
+        "width": 25.188333333333333,
+        "height": 2.9210000000000003
+      },
+      "localInk": {
+        "x": 19.892,
+        "y": 0.9363333333333372,
+        "right": 45.08033333333333,
+        "bottom": 3.8573333333333366
+      },
+      "alignmentErrorMm": 0.08033333333332848,
+      "delta": {
+        "centerX": 9.986166666666662,
+        "centerY": -1.1031666666666595,
+        "width": -19.811666666666667,
+        "height": -4.079,
+        "rotation": 0
+      },
+      "outOfBounds": false,
+      "referencePoint": null,
+      "referencePointPresent": false,
+      "anchorEvidence": "TOPLEFT_REQUEST_OMITTED_PLUS_UNIQUE_VISUAL_GEOMETRY",
+      "rotationEvidence": "COM_READBACK_ONLY",
+      "renderedRotation": "NOT_INDEPENDENTLY_VERIFIED",
+      "barcodeFootprint": null
+    },
+    {
+      "id": "SMALL7",
+      "status": "PASS",
+      "policy": "TEXT_CONTAINMENT",
+      "expected": {
+        "x": 60,
+        "y": 40,
+        "width": 50,
+        "height": 6
+      },
+      "actual": {
+        "x": 60.11333333333334,
+        "y": 40.470666666666666,
+        "width": 13.419666666666666,
+        "height": 1.8626666666666667
+      },
+      "localInk": {
+        "x": 0.11333333333333684,
+        "y": 0.47066666666666634,
+        "right": 13.533000000000001,
+        "bottom": 2.3333333333333357
+      },
+      "alignmentErrorMm": 0.11333333333333684,
+      "delta": {
+        "centerX": -18.176833333333335,
+        "centerY": -1.597999999999999,
+        "width": -36.580333333333336,
+        "height": -4.137333333333333,
+        "rotation": 0
+      },
+      "outOfBounds": false,
+      "referencePoint": null,
+      "referencePointPresent": false,
+      "anchorEvidence": "TOPLEFT_REQUEST_OMITTED_PLUS_UNIQUE_VISUAL_GEOMETRY",
+      "rotationEvidence": "COM_READBACK_ONLY",
+      "renderedRotation": "NOT_INDEPENDENTLY_VERIFIED",
+      "barcodeFootprint": null
+    },
+    {
+      "id": "MULTI_L1",
+      "status": "PASS",
+      "policy": "TEXT_CONTAINMENT",
+      "expected": {
+        "x": 5,
+        "y": 55,
+        "width": 100,
+        "height": 8
+      },
+      "actual": {
+        "x": 45.76233333333333,
+        "y": 55.79533333333333,
+        "width": 19.177,
+        "height": 3.1326666666666667
+      },
+      "localInk": {
+        "x": 40.76233333333333,
+        "y": 0.7953333333333319,
+        "right": 59.93933333333334,
+        "bottom": 3.9279999999999973
+      },
+      "alignmentErrorMm": 0.350833333333334,
+      "delta": {
+        "centerX": 0.3508333333333269,
+        "centerY": -1.6383333333333354,
+        "width": -80.82300000000001,
+        "height": -4.867333333333333,
+        "rotation": 0
+      },
+      "outOfBounds": false,
+      "referencePoint": null,
+      "referencePointPresent": false,
+      "anchorEvidence": "TOPLEFT_REQUEST_OMITTED_PLUS_UNIQUE_VISUAL_GEOMETRY",
+      "rotationEvidence": "COM_READBACK_ONLY",
+      "renderedRotation": "NOT_INDEPENDENTLY_VERIFIED",
+      "barcodeFootprint": null
+    },
+    {
+      "id": "MULTI_L2",
+      "status": "PASS",
+      "policy": "TEXT_CONTAINMENT",
+      "expected": {
+        "x": 5,
+        "y": 63,
+        "width": 100,
+        "height": 8
+      },
+      "actual": {
+        "x": 45.254333333333335,
+        "y": 63.79633333333334,
+        "width": 20.193,
+        "height": 3.1326666666666667
+      },
+      "localInk": {
+        "x": 40.254333333333335,
+        "y": 0.7963333333333367,
+        "right": 60.44733333333333,
+        "bottom": 3.929000000000002
+      },
+      "alignmentErrorMm": 0.350833333333334,
+      "delta": {
+        "centerX": 0.350833333333334,
+        "centerY": -1.6373333333333306,
+        "width": -79.807,
+        "height": -4.867333333333333,
+        "rotation": 0
+      },
+      "outOfBounds": false,
+      "referencePoint": null,
+      "referencePointPresent": false,
+      "anchorEvidence": "TOPLEFT_REQUEST_OMITTED_PLUS_UNIQUE_VISUAL_GEOMETRY",
+      "rotationEvidence": "COM_READBACK_ONLY",
+      "renderedRotation": "NOT_INDEPENDENTLY_VERIFIED",
+      "barcodeFootprint": null
+    }
+  ],
+  "overlaps": [
+    {
+      "ids": [
+        "BOLD9",
+        "ITALIC18"
+      ],
+      "expectedAreaMm2": 0,
+      "actualAreaMm2": 0,
+      "unexpected": false
+    },
+    {
+      "ids": [
+        "BOLD9",
+        "BOTH24"
+      ],
+      "expectedAreaMm2": 0,
+      "actualAreaMm2": 0,
+      "unexpected": false
+    },
+    {
+      "ids": [
+        "BOLD9",
+        "CENTER"
+      ],
+      "expectedAreaMm2": 0,
+      "actualAreaMm2": 0,
+      "unexpected": false
+    },
+    {
+      "ids": [
+        "BOLD9",
+        "RIGHT"
+      ],
+      "expectedAreaMm2": 0,
+      "actualAreaMm2": 0,
+      "unexpected": false
+    },
+    {
+      "ids": [
+        "BOLD9",
+        "SMALL7"
+      ],
+      "expectedAreaMm2": 0,
+      "actualAreaMm2": 0,
+      "unexpected": false
+    },
+    {
+      "ids": [
+        "BOLD9",
+        "MULTI_L1"
+      ],
+      "expectedAreaMm2": 0,
+      "actualAreaMm2": 0,
+      "unexpected": false
+    },
+    {
+      "ids": [
+        "BOLD9",
+        "MULTI_L2"
+      ],
+      "expectedAreaMm2": 0,
+      "actualAreaMm2": 0,
+      "unexpected": false
+    },
+    {
+      "ids": [
+        "ITALIC18",
+        "BOTH24"
+      ],
+      "expectedAreaMm2": 0,
+      "actualAreaMm2": 0,
+      "unexpected": false
+    },
+    {
+      "ids": [
+        "ITALIC18",
+        "CENTER"
+      ],
+      "expectedAreaMm2": 0,
+      "actualAreaMm2": 0,
+      "unexpected": false
+    },
+    {
+      "ids": [
+        "ITALIC18",
+        "RIGHT"
+      ],
+      "expectedAreaMm2": 0,
+      "actualAreaMm2": 0,
+      "unexpected": false
+    },
+    {
+      "ids": [
+        "ITALIC18",
+        "SMALL7"
+      ],
+      "expectedAreaMm2": 0,
+      "actualAreaMm2": 0,
+      "unexpected": false
+    },
+    {
+      "ids": [
+        "ITALIC18",
+        "MULTI_L1"
+      ],
+      "expectedAreaMm2": 0,
+      "actualAreaMm2": 0,
+      "unexpected": false
+    },
+    {
+      "ids": [
+        "ITALIC18",
+        "MULTI_L2"
+      ],
+      "expectedAreaMm2": 0,
+      "actualAreaMm2": 0,
+      "unexpected": false
+    },
+    {
+      "ids": [
+        "BOTH24",
+        "CENTER"
+      ],
+      "expectedAreaMm2": 0,
+      "actualAreaMm2": 0,
+      "unexpected": false
+    },
+    {
+      "ids": [
+        "BOTH24",
+        "RIGHT"
+      ],
+      "expectedAreaMm2": 0,
+      "actualAreaMm2": 0,
+      "unexpected": false
+    },
+    {
+      "ids": [
+        "BOTH24",
+        "SMALL7"
+      ],
+      "expectedAreaMm2": 0,
+      "actualAreaMm2": 0,
+      "unexpected": false
+    },
+    {
+      "ids": [
+        "BOTH24",
+        "MULTI_L1"
+      ],
+      "expectedAreaMm2": 0,
+      "actualAreaMm2": 0,
+      "unexpected": false
+    },
+    {
+      "ids": [
+        "BOTH24",
+        "MULTI_L2"
+      ],
+      "expectedAreaMm2": 0,
+      "actualAreaMm2": 0,
+      "unexpected": false
+    },
+    {
+      "ids": [
+        "CENTER",
+        "RIGHT"
+      ],
+      "expectedAreaMm2": 0,
+      "actualAreaMm2": 0,
+      "unexpected": false
+    },
+    {
+      "ids": [
+        "CENTER",
+        "SMALL7"
+      ],
+      "expectedAreaMm2": 0,
+      "actualAreaMm2": 0,
+      "unexpected": false
+    },
+    {
+      "ids": [
+        "CENTER",
+        "MULTI_L1"
+      ],
+      "expectedAreaMm2": 0,
+      "actualAreaMm2": 0,
+      "unexpected": false
+    },
+    {
+      "ids": [
+        "CENTER",
+        "MULTI_L2"
+      ],
+      "expectedAreaMm2": 0,
+      "actualAreaMm2": 0,
+      "unexpected": false
+    },
+    {
+      "ids": [
+        "RIGHT",
+        "SMALL7"
+      ],
+      "expectedAreaMm2": 0,
+      "actualAreaMm2": 0,
+      "unexpected": false
+    },
+    {
+      "ids": [
+        "RIGHT",
+        "MULTI_L1"
+      ],
+      "expectedAreaMm2": 0,
+      "actualAreaMm2": 0,
+      "unexpected": false
+    },
+    {
+      "ids": [
+        "RIGHT",
+        "MULTI_L2"
+      ],
+      "expectedAreaMm2": 0,
+      "actualAreaMm2": 0,
+      "unexpected": false
+    },
+    {
+      "ids": [
+        "SMALL7",
+        "MULTI_L1"
+      ],
+      "expectedAreaMm2": 0,
+      "actualAreaMm2": 0,
+      "unexpected": false
+    },
+    {
+      "ids": [
+        "SMALL7",
+        "MULTI_L2"
+      ],
+      "expectedAreaMm2": 0,
+      "actualAreaMm2": 0,
+      "unexpected": false
+    },
+    {
+      "ids": [
+        "MULTI_L1",
+        "MULTI_L2"
+      ],
+      "expectedAreaMm2": 0,
+      "actualAreaMm2": 0,
+      "unexpected": false
+    }
+  ],
+  "quietZones": [],
+  "opticalRotation": {
+    "status": "PASS",
+    "objects": []
+  }
+}

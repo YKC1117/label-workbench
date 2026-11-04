@@ -80,6 +80,12 @@ function Assert-NativeSourceIsolation($objects) {
         $obj=Find-NativeObject $objects $name
         try{
             $xml=Read-NativeXml ([string](Invoke-ComMethod $obj 'GetXML' @($true,$true)))
+            $type=[int](Read-Property $obj 'Type')
+            if($type -in @(2,3,6)){
+                $root=if($type -eq 2){'Line'}elseif($type -eq 3){'Box'}else{'Picture'}
+                if($xml.DocumentElement.LocalName -cne $root -or @($xml.SelectNodes('//*[contains(local-name(),"DataSource")]')).Count -ne 0){throw 'Primitive type/root or zero-data-source contract violated.'}
+                continue
+            }
             $state=Get-NativeLiteralState $xml $xml.DocumentElement.LocalName
             if(-not $seen.Add([string]$state.sourceId)){throw 'Different objects share an EmbeddedDataSource ID.'}
         }finally{Release-NativeCom $obj}
@@ -277,7 +283,7 @@ function Export-NativeMeasurement($obj,[string]$path,[int]$dpi) {
     $trust='UNTRUSTED_HEADER_DPI_INVALID'
     if($valid){if([math]::Abs($r.HeaderDpiX-$dpi) -le $tol -and [math]::Abs($r.HeaderDpiY-$dpi) -le $tol){$trust='TRUSTED_HEADER_MATCH'}else{$trust='UNTRUSTED_HEADER_DPI_MISMATCH'}}
     $trusted=($trust -ceq 'TRUSTED_HEADER_MATCH')
-    return [ordered]@{file=[IO.Path]::GetFileName($path);requestedDpi=$dpi;headerDpiX=$r.HeaderDpiX;headerDpiY=$r.HeaderDpiY;dpiTrust=$trust;physicalMmTrust=if($trusted){'TRUSTED'}else{'UNTRUSTED'};canvasWidthPx=$r.CanvasWidth;canvasHeightPx=$r.CanvasHeight;inkWidthPx=$r.InkWidth;inkHeightPx=$r.InkHeight;inkWidthMm=if($trusted){$r.InkWidth*25.4/$dpi}else{$null};inkHeightMm=if($trusted){$r.InkHeight*25.4/$dpi}else{$null};sha256=(Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash;symbolBounds='NOT_DECODER_CONFIRMED'}
+    return [ordered]@{file=[IO.Path]::GetFileName($path);requestedDpi=$dpi;headerDpiX=$r.HeaderDpiX;headerDpiY=$r.HeaderDpiY;dpiTrust=$trust;physicalMmTrust=if($trusted){'TRUSTED'}else{'UNTRUSTED'};canvasWidthPx=$r.CanvasWidth;canvasHeightPx=$r.CanvasHeight;inkLeftPx=$r.Left;inkTopPx=$r.Top;inkWidthPx=$r.InkWidth;inkHeightPx=$r.InkHeight;inkWidthMm=if($trusted){$r.InkWidth*25.4/$dpi}else{$null};inkHeightMm=if($trusted){$r.InkHeight*25.4/$dpi}else{$null};sha256=(Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash;symbolBounds='NOT_DECODER_CONFIRMED'}
 }
 function Get-NativeInkError($m,$request) {
     if($null -eq $m -or $m.physicalMmTrust -cne 'TRUSTED'){throw 'Raster physical-mm measurement is untrusted.'}
@@ -287,6 +293,21 @@ function Get-NativeInkError($m,$request) {
 }
 function Fit-NativeXDimensionNearest($obj,$request,[string]$prefix,[int]$dpi) {
     $result=[ordered]@{status='NOT_RUN';targetWidthMm=[double]$request.widthMm;targetHeightMm=[double]$request.heightMm;samples=@();selected=$null;errorMm=$null;approximation='NOT_RUN';warning='Raster ink is a layout approximation, not decoder-confirmed symbol bounds.'}
+    if($null -ne $request.PSObject.Properties['moduleIndex']){
+        $xml=Read-NativeXml ([string](Invoke-ComMethod $obj 'GetXML' @($true,$true)))
+        $node=$xml.SelectSingleNode('/*/*[local-name()="XDimension"]')
+        if($null -eq $node){throw 'No XDimension for explicit module request.'}
+        $node.SetAttribute('Index',[string]$request.moduleIndex)
+        [void](Invoke-ComMethod $obj 'SetXML' @($xml.OuterXml))
+        $actual=Read-NativeXml ([string](Invoke-ComMethod $obj 'GetXML' @($true,$true)))
+        $x=Get-NativeXDimension $actual
+        if($x.index -ne $request.moduleIndex){throw 'Module index ignored.'}
+        Assert-NativeNear ($x.mils*0.0254) $request.moduleMm 0.001 'Printer module profile'
+        $bmp=Export-NativeMeasurement $obj ($prefix+'-module.bmp') $dpi
+        Assert-NativeRaster $bmp
+        $result.selected=[ordered]@{xDimension=$x;raster=$bmp}
+        $result.status='EXPLICIT_MODULE_READBACK';return $result
+    }
     $originalText=[string](Invoke-ComMethod $obj 'GetXML' @($true,$true));$original=Read-NativeXml $originalText
     $root=if($request.type -eq 'code128'){'BarCode-Code-128'}else{'BarCode-DataMatrix'}
     $payload=[string]$request.value
@@ -355,12 +376,7 @@ function Resolve-NativeDataMatrixComponent([string]$runDir) {
         $exact=Join-Path $root 'Barcodes\Common Bar Codes\Data Matrix.btc'
         if(Test-Path -LiteralPath $exact -PathType Leaf){return $exact}
     }
-    $candidates=@()
-    if(-not [string]::IsNullOrWhiteSpace($root)){$candidates=@(Get-ChildItem -LiteralPath $root -Recurse -File -Filter 'Data Matrix.btc' -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName)}
-    $candidates=@($candidates | Where-Object {$_ -notmatch 'GS1|HIBC'} | Sort-Object -Unique)
-    $candidates|ConvertTo-Json -Depth 3|Set-Content -LiteralPath (Join-Path $runDir 'datamatrix-component-candidates.json') -Encoding UTF8
-    if($candidates.Count -ne 1){throw ('Could not resolve exactly one standard Data Matrix.btc; candidates='+$candidates.Count)}
-    return [string]$candidates[0]
+    throw 'CAPABILITY_UNAVAILABLE_DATAMATRIX_BTC: expected Barcodes\Common Bar Codes\Data Matrix.btc under registered installation; no scan performed.'
 }
 function Insert-NativeComponent($document,[ref]$objectsRef,[string]$path,[string]$expectedRoot,$request,[string]$prefix) {
     $objects=$objectsRef.Value;$before=@(Get-NativeObjectNames $objects)
@@ -398,6 +414,47 @@ function Create-NativeText($document,[ref]$objectsRef,$request,[string]$prefix) 
 function Test-NativeLayoutInput($layout) {
     if($null -eq $layout){throw 'Layout is null.'}
     foreach($k in @('schema','widthMm','heightMm','objects')){if($null -eq $layout.PSObject.Properties[$k]){throw ('Missing layout.'+$k)}}
+    if($layout.schema -ceq 'renderer-probe-v1'){
+        # Reuse existing scalar/type validation, then retain the canonical targets intact.
+        $primitiveProfile=($null -ne $layout.PSObject.Properties['runtimeProfile'] -and $layout.runtimeProfile -ceq 'candidate-primitives-v1')
+        $candidateProfile=($primitiveProfile -or ($null -ne $layout.PSObject.Properties['runtimeProfile'] -and $layout.runtimeProfile -ceq 'candidate-general-v1'))
+        $allIds=New-Object 'System.Collections.Generic.HashSet[string]' ([StringComparer]::Ordinal)
+        $converted=@()
+        foreach($o in $layout.objects){
+            if($o.id -cnotmatch '^[A-Z0-9_\-]{1,64}$' -or -not $allIds.Add([string]$o.id)){throw 'Invalid/duplicate renderer object ID.'}
+            if($o.type -in @('line','box','image')){
+                if(-not $primitiveProfile){throw 'Native primitive profile required.'}
+                foreach($k in @('xMm','yMm')){[void](Test-NativeNumber $o.$k 0 1000 $k)}
+                foreach($k in @('widthMm','heightMm')){[void](Test-NativeNumber $o.$k 0.001 1000 $k)}
+                if($o.type -eq 'line'){if($o.referencePoint -cne 'Center'){throw 'Line requires explicit endpoint-derived Center anchor.'}}elseif($o.referencePoint -cne 'TopLeft' -or $o.rotationDeg -ne 0){throw 'Only upright TopLeft primitive supported.'}
+                if($o.type -in @('line','box')){[void](Test-NativeNumber $o.strokeMm 0.001 100 'strokeMm')}
+                else{if($o.assetSha256 -cnotmatch '^[A-F0-9]{64}$' -or $o.dataUri -cnotmatch '^data:image/png;base64,[A-Za-z0-9+/]+=*$'){throw 'Embedded PNG payload/hash required.'}}
+                continue
+            }
+            if($o.referencePoint -cne 'TopLeft' -or ($o.rotationDeg -ne 0 -and (-not $candidateProfile -or $o.rotationDeg -notin @(90,180,270)))){throw 'Unsupported prototype anchor or angle.'}
+            $v=[ordered]@{id=$o.id;type=$o.type;value=$o.value;xMm=$o.xMm;yMm=$o.yMm;rotationDeg=$o.rotationDeg}
+            [void](Test-NativeNumber $o.widthMm 0.01 1000 'frame width')
+            [void](Test-NativeNumber $o.heightMm 0.01 1000 'frame height')
+            if($o.type -eq 'text'){
+                if($o.alignment -cne 'left' -and (-not $candidateProfile -or $o.alignment -cnotin @('center','right'))){throw 'Unsupported text alignment.'}
+                if($candidateProfile){foreach($flag in @('bold','italic')){if($o.$flag -isnot [bool]){throw ('Invalid Text '+$flag)}}}
+                $v.fontName=$o.fontName;$v.fontSizePt=$o.fontSizePt
+            }else{
+                if($o.humanReadable -cne 'none' -and (-not $primitiveProfile -or $o.type -cne 'code128' -or $o.humanReadable -cne 'native-arial12-center' -or $o.rotationDeg -ne 0)){throw 'Unsupported caption mode.'}
+                [void](Test-NativeNumber $o.moduleMm 0.001 10 'moduleMm')
+                [void](Test-NativeNumber $o.moduleIndex 0 255 'moduleIndex')
+                if([int]$o.moduleIndex -ne $o.moduleIndex){throw 'Invalid module index.'}
+                $v.widthMm=$o.widthMm
+                if($o.type -eq 'code128'){$v.heightMm=$o.heightMm}
+            }
+            $converted+=,[pscustomobject]$v
+        }
+        $legacy=[pscustomobject]@{schema='lwb-native-layout-v1';widthMm=$layout.widthMm;heightMm=$layout.heightMm;objects=$converted}
+        if($converted.Count){$checked=Test-NativeLayoutInput $legacy}else{$checked=[pscustomobject]@{schema='lwb-native-layout-v1';widthMm=(Test-NativeNumber $layout.widthMm 5 1000 'widthMm');heightMm=(Test-NativeNumber $layout.heightMm 5 1000 'heightMm');printerName=$null;objects=@()}}
+        $checked.objects=$layout.objects
+        $checked|Add-Member -NotePropertyName runtimeProfile -NotePropertyValue $(if($primitiveProfile){'candidate-primitives-v1'}elseif($candidateProfile){'candidate-general-v1'}else{'upright-v1'})
+        return $checked
+    }
     if([string]$layout.schema -cne 'lwb-native-layout-v1'){throw 'Unsupported layout schema.'}
     foreach($prop in @($layout.PSObject.Properties)){if($prop.Name -cnotin @('schema','widthMm','heightMm','objects','printerName')){throw ('Unknown layout field: '+$prop.Name)}}
     $width=Test-NativeNumber $layout.widthMm 5 1000 'widthMm';$height=Test-NativeNumber $layout.heightMm 5 1000 'heightMm'
@@ -547,10 +604,24 @@ function Set-NativeTextFontName($obj,[string]$fontName,[string]$prefix='') {
 }
 function Set-NativeGeometry($obj,$request,[string]$prefix='') {
     $targets=[ordered]@{}
-    $result=[ordered]@{status='TARGET_GEOMETRY_WITHIN_TOLERANCE';properties=[ordered]@{}}
+    $result=[ordered]@{status='TARGET_GEOMETRY_WITHIN_TOLERANCE';properties=[ordered]@{};anchorContract='CANONICAL_UNROTATED_TOP_LEFT_TO_TOPLEFT_REFERENCE_POINT'}
+    if($null -ne $request.PSObject.Properties['referencePoint']){
+        $xml=Read-NativeXml ([string](Invoke-ComMethod $obj 'GetXML' @($true,$true)))
+        $xml.DocumentElement.SetAttribute('ReferencePoint',[string]$request.referencePoint)
+        [void](Invoke-ComMethod $obj 'SetXML' @($xml.OuterXml))
+        $back=Read-NativeXml ([string](Invoke-ComMethod $obj 'GetXML' @($true,$true)))
+        if($back.DocumentElement.GetAttribute('ReferencePoint') -cne $request.referencePoint){throw 'REFERENCE_POINT_UNPROVEN'}
+    }
     if($request.type -eq 'text'){
+        $result['textFrame']=[ordered]@{widthMm=if($null -ne $request.PSObject.Properties['widthMm']){$request.widthMm}else{$null};heightMm=if($null -ne $request.PSObject.Properties['heightMm']){$request.heightMm}else{$null};mode='NORMAL_TEXT_CONTAINMENT_NOT_FORCED_DIMENSIONS'}
         $result.properties['FontName']=(Set-NativeTextFontName $obj ([string]$request.fontName) $(if($prefix){$prefix+'-font'}else{''}))
         $targets['FontSize']=[double]$request.fontSizePt
+        foreach($flag in @('bold','italic')){
+            if($null -ne $request.PSObject.Properties[$flag]){
+                $property=if($flag -eq 'bold'){'FontBold'}else{'FontItalic'}
+                $targets[$property]=[bool]$request.$flag
+            }
+        }
     }elseif($request.type -eq 'code128'){$targets['Height']=[double]$request.heightMm}
     $targets['RotationAngle']=[double]$request.rotationDeg;$targets['X']=[double]$request.xMm;$targets['Y']=[double]$request.yMm
     foreach($key in $targets.Keys){Write-Property $obj $key $targets[$key]}
@@ -640,6 +711,12 @@ function Invoke-NativeLayoutBuild($formats,$layout,[string]$runDir,[string]$base
                     Assert-NativeRaster $expectedState.raster
                     $entry['presaveRaster']=$expectedState.raster
                     if([math]::Abs($request.rotationDeg) -lt 0.001){Assert-NativeNear $expectedState.raster.inkWidthPx $entry.sizing.selected.raster.inkWidthPx 1 'Presave sizing width'}
+                }
+                foreach($flag in @('bold','italic')){
+                    if($null -ne $request.PSObject.Properties[$flag]){
+                        $prop=if($flag -eq 'bold'){'FontBold'}else{'FontItalic'}
+                        if([bool](Read-Property $obj $prop) -ne [bool]$request.$flag){throw ('Style readback mismatch: '+$prop)}
+                    }
                 }
                 $expectedState['xmlKey']=Get-NativeXmlKey $presaveXml
                 $physicalMap+=,[ordered]@{id=$request.id;name=$name;type=$request.type;request=$request;expected=$expectedState}

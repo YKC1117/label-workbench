@@ -1,0 +1,64 @@
+﻿{
+    "schema":  "lwb-primitive-cold-reopen-v1",
+    "status":  "PASS",
+    "candidateShaBefore":  "36199B11E3E05B6755E5BCD5460C7AAB4E6BCCD0AC35032D79E15CDBBC8C787E",
+    "candidateShaAfter":  "36199B11E3E05B6755E5BCD5460C7AAB4E6BCCD0AC35032D79E15CDBBC8C787E",
+    "buildProcessID":  21964,
+    "coldProcessID":  16128,
+    "sourceFilesHidden":  [
+                              "C:\\Users\\FTUSER5\\actions-runner-label-workbench\\_work\\label-workbench\\label-workbench\\native\\Label_Workbench_Native_Layout_ENGINE_V1\\program\\native-results\\D\\r-33c89028aaaf\\asset-LOGO.png"
+                          ],
+    "objects":  [
+                    {
+                        "id":  "TITLE",
+                        "type":  "text",
+                        "nativeType":  5,
+                        "exactNativeBmpEqual":  true,
+                        "status":  "PASS"
+                    },
+                    {
+                        "id":  "CODE_1",
+                        "type":  "code128",
+                        "nativeType":  4,
+                        "exactNativeBmpEqual":  true,
+                        "status":  "PASS"
+                    },
+                    {
+                        "id":  "DM_1",
+                        "type":  "datamatrix",
+                        "nativeType":  4,
+                        "exactNativeBmpEqual":  true,
+                        "status":  "PASS"
+                    },
+                    {
+                        "id":  "HRI_1",
+                        "type":  "code128",
+                        "nativeType":  4,
+                        "exactNativeBmpEqual":  true,
+                        "status":  "PASS"
+                    },
+                    {
+                        "id":  "LOGO",
+                        "type":  "image",
+                        "nativeType":  6,
+                        "exactNativeBmpEqual":  true,
+                        "status":  "PASS"
+                    },
+                    {
+                        "id":  "RULE",
+                        "type":  "line",
+                        "nativeType":  2,
+                        "exactNativeBmpEqual":  true,
+                        "status":  "PASS"
+                    },
+                    {
+                        "id":  "BORDER",
+                        "type":  "box",
+                        "nativeType":  3,
+                        "exactNativeBmpEqual":  true,
+                        "status":  "PASS"
+                    }
+                ],
+    "wholeFormatSame":  true,
+    "error":  null
+}

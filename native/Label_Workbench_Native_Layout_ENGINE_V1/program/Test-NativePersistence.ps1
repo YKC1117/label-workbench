@@ -63,12 +63,12 @@ try {
  }
  foreach($fault in @('none','wrong-create','duplicate-name','duplicate-source','partial-insert','peer-payload','noop-index','bad-dpi','reopen-type','reopen-payload','reopen-nan','reopen-printer','reopen-margin','reopen-dpi')){
   $dir=Join-Path ([IO.Path]::GetTempPath()) ('native-review-'+[guid]::NewGuid().ToString('N'));[void][IO.Directory]::CreateDirectory($dir)
-  $case=[ordered]@{scenario=$fault;status='STARTED';actualError=$null;expectedError=$null}
+  $case=[ordered]@{scenario=$fault;status='STARTED';actualError=$null;expectedError=$null;contract='DISPOSABLE_CANDIDATE_TEXT_FONT_RUNTIME'}
   [void]$scenarioResults.Add($case)
   try{
    $layout=Get-Content -LiteralPath (Join-Path $base 'native-layout.multi.sample.json') -Raw -Encoding UTF8|ConvertFrom-Json
    # Force one text away from the fixture default so the regression exercises
-   # the real-runtime FontName COM failure -> Text XML fallback path.
+   # the real-runtime disposable-candidate FontName + PointSize XML path.
    $layout.objects[0].fontName='Mock Alternate Font'
    $formats=New-Object NativeReviewFixture.Formats;$formats.Fault=$fault
    $failed=$false;$result=$null
@@ -77,10 +77,14 @@ try {
     if($failed){throw ('Healthy six-object mock failed: '+$case.actualError)}
     if($result.objects.Count -ne 6 -or $result.reopen -cne 'PASS' -or -not(Test-Path -LiteralPath $result.output)){throw 'Healthy mock output missing.'}
     if([object]::ReferenceEquals($formats.Added,$formats.Reopened)){throw 'Reopen must be a new instance.'}
+
     $fontResult=$result.objects[0].geometry.properties['FontName']
     $fontObject=$formats.Added.Objects.Data[0]
-    if($fontResult.writeMode -cne 'XML_FONT_ATTRIBUTE_FALLBACK' -or $fontResult.actual -cne 'Mock Alternate Font' -or $fontObject.FontNameSetCalls -ne 1 -or $fontObject.FontXmlChangeCalls -ne 1){throw 'Healthy mock did not execute exactly one rejected COM font setter and XML font change.'}
-    if($formats.Added.Objects.Data[1].FontNameSetCalls -ne 0){throw 'Already-matched font was unnecessarily written.'}
+    if($fontResult.writeMode -cne 'DISPOSABLE_CANDIDATE_XML_FONTNAME_POINTSIZE' -or $fontResult.actualFontName -cne 'Mock Alternate Font' -or [math]::Abs([double]$fontResult.actualPointSize-8.0) -gt 0.001 -or $fontObject.FontNameSetCalls -ne 0 -or $fontObject.FontXmlChangeCalls -ne 1){throw 'Healthy mock did not execute one disposable-candidate Text font mutation without COM FontName access.'}
+
+    $secondFont=$result.objects[1].geometry.properties['FontName']
+    $secondObject=$formats.Added.Objects.Data[1]
+    if($secondFont.writeMode -cne 'DISPOSABLE_CANDIDATE_XML_FONTNAME_POINTSIZE' -or $secondFont.actualFontName -cne 'Arial' -or [math]::Abs([double]$secondFont.actualPointSize-7.0) -gt 0.001 -or $secondObject.FontNameSetCalls -ne 0 -or $secondObject.SetXmlCalls -ne 1){throw 'Second Text did not exercise candidate PointSize mutation without COM font access.'}
 
     if(@($result.objects|Where-Object{$_.reopenEditable -cne 'SECOND_PAYLOAD_AND_PEER_ISOLATION_OK'}).Count){throw 'Editability/isolation missing.'}
    }else{
@@ -112,6 +116,6 @@ finally{
  # Never leave mock script-scope overrides available to a production invocation.
  Remove-Module -ModuleInfo $m -Force -ErrorAction SilentlyContinue
  if($ResultPath){
-  [ordered]@{schema='native-mock-results-v1';status=$suiteStatus;error=$suiteError;expectedScenarios=14;completed=@($scenarioResults.ToArray()|Where-Object{$_.status -eq 'PASS'}).Count;scenarios=@($scenarioResults.ToArray())}|ConvertTo-Json -Depth 8|Set-Content -LiteralPath $ResultPath -Encoding UTF8
+  [ordered]@{schema='native-mock-results-v2-candidate-text';status=$suiteStatus;error=$suiteError;expectedScenarios=14;completed=@($scenarioResults.ToArray()|Where-Object{$_.status -eq 'PASS'}).Count;scenarios=@($scenarioResults.ToArray())}|ConvertTo-Json -Depth 8|Set-Content -LiteralPath $ResultPath -Encoding UTF8
  }
 }

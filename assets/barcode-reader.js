@@ -2,7 +2,7 @@
 (function(){
   'use strict';
   const BUILD='20261102-layout-rc2';
-  const modules=['assets/view-state-guard.js','assets/barcode-reader-core.js','assets/barcode-reader-ui.js','assets/barcode-generator.js','assets/label-interpreter.js','assets/analysis-accuracy.js','assets/analysis-pdf-native.js','assets/analysis-geometry.js','assets/analysis-layout-preview.js','assets/analysis-field-consistency.js','assets/analysis-copy.js','assets/btw-format.js','assets/btw-object-map.js','assets/btw-layout-map.js','assets/btw-family-native.js','assets/btw-native.js','assets/btw-rich-native.js','assets/btw-controlled-donor.js','assets/btw-second-donor.js','assets/btw-second-native.js','assets/btw-caption-adapter.js','assets/btw-rich-bridge.js','assets/bt-bridge.js','assets/workbench-priority.js','assets/analysis-confidence-guard.js','assets/btw-production-gate.js','assets/btw-production-core.js','assets/bt-native-primary.js','assets/analysis-final-display.js','assets/analysis-barcode-crosscheck.js','assets/analysis-core-v2.js'];
+  const modules=['assets/view-state-guard.js','assets/barcode-reader-core.js','assets/barcode-reader-ui.js','assets/barcode-generator.js','assets/label-interpreter.js','assets/analysis-accuracy.js','assets/analysis-pdf-native.js','assets/analysis-geometry.js','assets/pdf-canonical.js','assets/pdf-canonical-export.js','assets/analysis-layout-preview.js','assets/analysis-field-consistency.js','assets/analysis-copy.js','assets/btw-format.js','assets/btw-object-map.js','assets/btw-layout-map.js','assets/btw-family-native.js','assets/btw-native.js','assets/btw-rich-native.js','assets/btw-controlled-donor.js','assets/btw-second-donor.js','assets/btw-second-native.js','assets/btw-caption-adapter.js','assets/btw-rich-bridge.js','assets/bt-bridge.js','assets/workbench-priority.js','assets/analysis-confidence-guard.js','assets/btw-production-gate.js','assets/btw-production-core.js','assets/bt-native-primary.js','assets/analysis-final-display.js','assets/analysis-barcode-crosscheck.js','assets/analysis-core-v2.js'];
   window.LabelWorkbenchModuleLoader={BUILD,ready:false};
   function markReady(){
     window.LabelWorkbenchModuleLoader={BUILD,ready:true};
@@ -19,6 +19,8 @@
     if(src.includes('analysis-accuracy')&&window.LabelWorkbenchAnalysisAccuracy){loadNext();return}
     if(src.includes('analysis-pdf-native')&&window.LabelWorkbenchPdfNative){loadNext();return}
     if(src.includes('analysis-geometry')&&window.LabelWorkbenchAnalysisGeometry){loadNext();return}
+    if(src==='assets/pdf-canonical.js'&&window.LabelWorkbenchPdfCanonical){loadNext();return}
+    if(src.includes('pdf-canonical-export')&&window.LabelWorkbenchPdfCanonicalExport){loadNext();return}
     if(src.includes('analysis-field-consistency')&&window.LabelWorkbenchFieldConsistency){loadNext();return}
     if(src.includes('analysis-copy')&&window.LabelWorkbenchAnalysisCopy){loadNext();return}
     if(src.includes('btw-format')&&window.LabelWorkbenchBtwFormat){loadNext();return}

@@ -1,0 +1,17 @@
+{
+  "runId": 41596108274,
+  "runNumber": 44,
+  "commit": "1447acdfb4e81666edb75532e2f2b07f920cf124",
+  "url": "https://github.com/YKC1117/label-workbench/actions/runs/41596108274",
+  "artifactId": 13212579752,
+  "artifactSha256": "bce2f1534e48cf0d478fc9f9aa08b64b14650c22fe0492020443901dd7629364",
+  "suiteStatus": "FAIL",
+  "cases": {
+    "A": "FAIL: BOTH24 alignment error 0.503333 mm",
+    "B": "PASS",
+    "C": "PASS"
+  },
+  "package": "actual-runtime-evidence.zip",
+  "packageSha256": "e78ced1834eaca8c683e1acae3cb0b86cef6f84ae9ac76a29aec6847c151abf0",
+  "productAcceptance": "NOT_RUN"
+}

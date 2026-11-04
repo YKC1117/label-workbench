@@ -1,0 +1,67 @@
+﻿[
+    {
+        "TypeName":  "BtObjectType",
+        "Name":  "btObjectError",
+        "Value":  -1
+    },
+    {
+        "TypeName":  "BtObjectType",
+        "Name":  "btObjectLine",
+        "Value":  2
+    },
+    {
+        "TypeName":  "BtObjectType",
+        "Name":  "btObjectBox",
+        "Value":  3
+    },
+    {
+        "TypeName":  "BtObjectType",
+        "Name":  "btObjectBarcode",
+        "Value":  4
+    },
+    {
+        "TypeName":  "BtObjectType",
+        "Name":  "btObjectText",
+        "Value":  5
+    },
+    {
+        "TypeName":  "BtObjectType",
+        "Name":  "btObjectPicture",
+        "Value":  6
+    },
+    {
+        "TypeName":  "BtObjectType",
+        "Name":  "btObjectRFID",
+        "Value":  7
+    },
+    {
+        "TypeName":  "BtObjectType",
+        "Name":  "btObjectEllipse",
+        "Value":  8
+    },
+    {
+        "TypeName":  "BtObjectType",
+        "Name":  "btObjectRichText",
+        "Value":  9
+    },
+    {
+        "TypeName":  "BtObjectType",
+        "Name":  "btObjectShape",
+        "Value":  10
+    },
+    {
+        "TypeName":  "BtObjectType",
+        "Name":  "btObjectMagneticStripe",
+        "Value":  11
+    },
+    {
+        "TypeName":  "BtObjectType",
+        "Name":  "btObjectGridLayout",
+        "Value":  12
+    },
+    {
+        "TypeName":  "BtObjectType",
+        "Name":  "btObjectTable",
+        "Value":  13
+    }
+]
