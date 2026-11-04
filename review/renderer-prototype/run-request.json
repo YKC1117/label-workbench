@@ -1,8 +1,8 @@
 {
   "enabled": true,
   "probe": "designer-multiline",
-  "purpose": "Run52 Designer-authored multi-line Text alignment contract: read-only GetXML harvest of SHA-locked Designer base (73E6) and original-template (4CF9) with snapshot and SHA integrity proof; edit challenge on Designer object 33 through the proven sparse payload import to test whether native alignment survives text edits; exact XML+BMP restore, all-object peer audit, distinct-PID cold reopen. Pre-probe PS 5.1 ParagraphXmlValue regression. No SetXML, no dynamic property names, no typed Text Width/Height, no Create(5), no scanning. Paragraph capabilities remain NOT CERTIFIED unless evidenced.",
-  "requestedAt": "2026-11-04T02:59:08.144366+00:00",
+  "purpose": "Run52 diagnostic-only recheck of the SHA-locked Designer base harvest after observed READ_ONLY_HARVEST_NOT_PROVEN. Capture per-object ordinal XML/Value before-and-after drift plus first-difference locations; preserve all SHA, snapshot, peer, rollback and cold FAIL_CLOSED gates. No fixed-frame/wrap certification and no Renderer modification.",
+  "requestedAt": "2026-11-04T03:18:06.315Z",
   "requestedBy": "YKC1117",
   "target": "experiment/com-renderer-prototype"
 }
