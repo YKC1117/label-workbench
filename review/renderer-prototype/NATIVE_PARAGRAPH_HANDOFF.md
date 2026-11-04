@@ -217,3 +217,18 @@ Run52 actual [Windows workflow #41765633348](https://github.com/YKC1117/label-wo
 - **Follow-up diagnostic**: `Probe-DesignerMultiline.ps1` now writes per-object ordinal XML/Value drift pairs, changed-field booleans, first differing UTF-16 index, and lengths into `integrity.drift` and separate `harvest-*-drift-*.xml/.txt` files. This performs no extra COM calls and **does not relax** `Snapshot` / SHA / peer / cold FAIL_CLOSED. It is intentionally a bounded diagnostic rerun, not a renewed claim of paragraph capability.
 
 Do not call the observed RIGHT raster editable/persistent until the edit challenge and cold reopen actually pass. Native auto-wrap and fixed frame remain **NOT_CERTIFIED**.
+
+
+## 11. Run52 bounded diagnostic: real Paragraph fields found (2026-11-04)
+
+Actual [Windows Run #41766394207](https://github.com/YKC1117/label-workbench/actions/runs/41766394207), artifact `bartender-renderer-evidence-41766394207`: **FAIL_CLOSED**; same-host QA **PASS**. This was **one diagnostic rerun**, not a replay of Run51 Width. Machine-readable extraction: `paragraph-root-cause/run52-windows-paragraph-xml-evidence.json`.
+
+**Native BarTender 2022 GetXML now confirms four actual Text5 `Style="Paragraph"` objects** in the SHA-locked Designer base. Three have explicit `Paragraph Alignment="Centered"` (文字 30, 31, 32), all have `ParagraphWidth` and `ParagraphHeightMode="FitToText"`, and one (文字 33) has the `Paragraph` child but no serialized `Alignment` attribute. The earlier claim that there was no true paragraph donor is **incorrect**: a Designer-authored paragraph sample already exists in the repository. This is read-only evidence of real field names and values, **not** authorization to guess/write arbitrary XML or proof of editability.
+
+**Exact cause of snapshot drift:** only `文字 30` changed. Its in-memory XML `ParagraphHeight` moved from `0.304 in` to `0.407 in`; no Value changed, no other object's XML changed, and the SHA-256 of the source BTW bytes was unchanged. The hypothesis is a BarTender FitToText height recalculation during reading/export, but the triggering operation is **not yet isolated**. The unchanged source SHA does not make the strict in-memory before/after snapshot pass, so both Run52 attempts correctly remain FAIL_CLOSED.
+
+**Important alignment correction:** The two-band `文字 33` object raster has near-equal right ink edges, but the XML has **no explicit Alignment attribute** and the first line contains many leading spaces. Those spaces could explain the raster without native RIGHT alignment. It must not be called verified right justification. The `Centered` fields on 文字 30/31/32 are the first *explicit* native alignment contract evidence.
+
+The edit challenge, peer edit audit, SaveAs, and different-PID cold reopen were **NOT RUN**. Auto-wrap, fixed frame, overflow, and Renderer product acceptance remain **NOT_CERTIFIED**.
+
+**Recommended next bounded task (no immediate rerun of the identical probe):** design a focused, SHA-locked **Designer Text5 paragraph** read/write challenge based on the *observed* `Style="Paragraph"`, `Paragraph Alignment="Centered"`, and actual `ParagraphWidth` fields. Prefer the clean single-source 文字 31 or 32 as a typed payload donor. Separately isolate the `文字 30` computed height side effect by recording snapshots before and after each specific read/render operation, without suppressing or normalizing unknown drift. Only trigger Windows again once those two experiments and offline fail-closed regressions have been consolidated. Do not edit Renderer core, merge PR #35, or ask for repeated user manual tests.

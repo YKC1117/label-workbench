@@ -1,0 +1,111 @@
+{
+  "schema": "lwb-run52-windows-paragraph-xml-evidence-v1",
+  "date": "2026-11-04",
+  "repository": "YKC1117/label-workbench",
+  "branch": "experiment/com-renderer-prototype",
+  "evidence": {
+    "run52_initial": {
+      "runId": 41765633348,
+      "url": "https://github.com/YKC1117/label-workbench/actions/runs/41765633348",
+      "overall": "FAIL_CLOSED"
+    },
+    "run52_diagnostic": {
+      "runId": 41766394207,
+      "url": "https://github.com/YKC1117/label-workbench/actions/runs/41766394207",
+      "artifact": "bartender-renderer-evidence-41766394207",
+      "overall": "FAIL_CLOSED"
+    },
+    "sourceDesignerBtwSha256": "73E620EC2154D18AF3E279B4438A3775BE85D2A71F5BD8AFAAF664B31F03198B",
+    "sourceShaUnchanged": true,
+    "objectCount": 41
+  },
+  "verifiedNativeParagraphs": [
+    {
+      "name": "文字 30",
+      "type": 5,
+      "root": "Text",
+      "style": "Paragraph",
+      "referencePoint": "TopCenter",
+      "paragraphXmlAttributes": {
+        "Alignment": "Centered",
+        "ParagraphWidth": "0.537 in",
+        "ParagraphHeightMode": "FitToText",
+        "ParagraphHeight": "0.407 in"
+      },
+      "dataSourceCount": 2,
+      "cleanText": false,
+      "sourceXmlEvidenceFile": "harvest-designer-base-obj-36.xml",
+      "rasterObservedClass": "NOT_OBSERVABLE_SINGLE_BAND",
+      "inkBands": 1
+    },
+    {
+      "name": "文字 31",
+      "type": 5,
+      "root": "Text",
+      "style": "Paragraph",
+      "referencePoint": "TopCenter",
+      "paragraphXmlAttributes": {
+        "Alignment": "Centered",
+        "ParagraphWidth": "0.346 in",
+        "ParagraphHeightMode": "FitToText",
+        "ParagraphHeight": "0.197 in"
+      },
+      "dataSourceCount": 1,
+      "cleanText": true,
+      "sourceXmlEvidenceFile": "harvest-designer-base-obj-37.xml"
+    },
+    {
+      "name": "文字 32",
+      "type": 5,
+      "root": "Text",
+      "style": "Paragraph",
+      "referencePoint": "Center",
+      "paragraphXmlAttributes": {
+        "Alignment": "Centered",
+        "ParagraphWidth": "0.346 in",
+        "ParagraphHeightMode": "FitToText",
+        "ParagraphHeight": "0.197 in"
+      },
+      "dataSourceCount": 1,
+      "cleanText": true,
+      "sourceXmlEvidenceFile": "harvest-designer-base-obj-38.xml"
+    },
+    {
+      "name": "文字 33",
+      "type": 5,
+      "root": "Text",
+      "style": "Paragraph",
+      "referencePoint": null,
+      "paragraphXmlAttributes": {
+        "ParagraphWidth": "0.684 in",
+        "ParagraphHeightMode": "FitToText",
+        "ParagraphHeight": "0.203 in"
+      },
+      "dataSourceCount": 1,
+      "cleanText": true,
+      "sourceXmlEvidenceFile": "harvest-designer-base-obj-41.xml",
+      "rasterObservedClass": "RIGHT",
+      "inkBands": 2
+    }
+  ],
+  "snapshotDrift": {
+    "objectName": "文字 30",
+    "xmlChanged": true,
+    "valueChanged": false,
+    "changedParagraphAttributes": {
+      "ParagraphHeight": {
+        "before": "0.304 in",
+        "after": "0.407 in"
+      }
+    },
+    "sourceFileShaUnchanged": true,
+    "failClosed": true
+  },
+  "interpretationLimits": [
+    "The observed XML proves native Text Style=Paragraph and actual Paragraph child attributes, but not a safe write/edit contract.",
+    "Object 33 does not explicitly serialize Alignment; right-edge raster evidence alone can be explained by leading spaces and does not certify RIGHT alignment.",
+    "ExportToFile may have triggered recalculation of FitToText height; this causal explanation is a hypothesis until isolated.",
+    "No edit challenge, peer isolation during edit, SaveAs or cold reopen was run.",
+    "Native width-controlled wrapping, fixed frame and production Renderer acceptance remain NOT_CERTIFIED."
+  ]
+}
