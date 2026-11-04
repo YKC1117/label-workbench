@@ -1,8 +1,8 @@
 {
   "enabled": true,
-  "probe": "native-paragraph",
-  "purpose": "Run51 Text5 native paragraph contract: documented typed Width on a Designer Text5 slot in the proven fixed-SHA Designer context, mechanical width-controlled wrap / default alignment / fixed-height evidence, exact edit restore, Text+Box3+Code128 peer isolation, distinct-PID cold reopen with XML/Value/BMP/BTW SHA comparison, read-only installed template listing. No SetXML, no dynamic property names, no Create(5), no BTC/BTW scan. Paragraph capabilities remain NOT CERTIFIED unless evidenced; renderer not modified.",
-  "requestedAt": "2026-11-04T02:15:24.770370+00:00",
+  "probe": "designer-multiline",
+  "purpose": "Run52 Designer-authored multi-line Text alignment contract: read-only GetXML harvest of SHA-locked Designer base (73E6) and original-template (4CF9) with snapshot and SHA integrity proof; edit challenge on Designer object 33 through the proven sparse payload import to test whether native alignment survives text edits; exact XML+BMP restore, all-object peer audit, distinct-PID cold reopen. Pre-probe PS 5.1 ParagraphXmlValue regression. No SetXML, no dynamic property names, no typed Text Width/Height, no Create(5), no scanning. Paragraph capabilities remain NOT CERTIFIED unless evidenced.",
+  "requestedAt": "2026-11-04T02:59:08.144366+00:00",
   "requestedBy": "YKC1117",
   "target": "experiment/com-renderer-prototype"
 }
