@@ -58,3 +58,7 @@ Overall arbitrary customer JPG/PNG/PDF → usable BTW product is **NOT COMPLETE*
 Next highest-value engineering task: a bounded **native RichText9 / paragraph contract probe in the proven Designer context**. Installed enum now proves RichText9 exists, but its XML/data source/value/RTF/geometry have not been read or tested. Do not guess RTF properties or reopen Create5 primary. Capture its true XML/value/Width/Height/alignment/readback/persistence/real BMP, then decide whether it can express fixed/multiline/native justification. Alternatively a deterministic Designer-authored Paragraph component contract; no mass BTC scan. Keep new image/line/box/HRI and old Text/barcode gates intact.
 
 After native text semantics and broader image coverage converge, one mixed realistic customer fixture is worthwhile. No website integration, merge/deploy, or user manual BTW testing is requested in this handoff. Normal GPT can continue directly from the committed source and evidence without architecture restart.
+
+## 2026-11-04 follow-up
+
+RichText9 contract discovery probe is implemented offline (not yet run on Windows). See `PARAGRAPH_CONTRACT.md`. Fixed frame / native justification / wrap remain NOT CERTIFIED; Run45 and Run49 evidence is unchanged and authoritative.
