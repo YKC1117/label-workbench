@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "test:browser": "playwright test",
-    "test:renderer": "node tests/renderer-core-smoke.cjs && node tests/renderer-visual-cli-smoke.cjs && node native/Label_Workbench_Native_Layout_ENGINE_V1/program/test-render.cjs && node tests/renderer-general-smoke.cjs && node tests/renderer-primitives-smoke.cjs && node tests/richtext-contract-verdict-smoke.cjs"
+    "test:renderer": "node tests/renderer-core-smoke.cjs && node tests/renderer-visual-cli-smoke.cjs && node native/Label_Workbench_Native_Layout_ENGINE_V1/program/test-render.cjs && node tests/renderer-general-smoke.cjs && node tests/renderer-primitives-smoke.cjs && node tests/richtext-contract-verdict-smoke.cjs && node tests/paragraph-contract-verdict-smoke.cjs"
   },
   "devDependencies": {
     "@playwright/test": "1.55.1",

@@ -1,0 +1,82 @@
+{
+  "schema": "lwb-text-xml-census-v1",
+  "purpose": "Root cause R1/R2 for Run51: every real BarTender GetXML Text root found in committed evidence, de-duplicated by SHA-256.",
+  "method": "Unzip every committed *.zip (and nested zips) plus run49 verified-mixed-evidence.zip and all committed *.xml; parse roots; count attributes/children. Generated offline 2026-11-04 at 9d6f663.",
+  "uniqueXmlDocuments": 341,
+  "roots": {
+    "Command": 71,
+    "Text": 75,
+    "BarCode-Code-128": 117,
+    "BarCode-DataMatrix": 60,
+    "Box": 5,
+    "Picture": 5,
+    "Line": 5,
+    "BarCode-Code39-FullAscii": 3
+  },
+  "textAttributes": {
+    "Text/@": {
+      "Name": 75,
+      "Width": 75,
+      "ConditionalPrintType": 75,
+      "Position.X": 75,
+      "Position.Y": 75,
+      "ReferencePoint": 19,
+      "Rotation": 9,
+      "Rotation.Angle": 9
+    },
+    "Text/Font/@": {
+      "PointSize": 75,
+      "FontName": 75,
+      "Height": 75,
+      "Weight": 75,
+      "CharacterSet": 75,
+      "Style.Italic": 6
+    },
+    "Text/AutoFit/@": {
+      "MinAdjustment": 75,
+      "MaxAdjustment": 75
+    }
+  },
+  "textChildren": {
+    "Text": {
+      "Tabs": 75,
+      "Font": 75,
+      "AutoFit": 75,
+      "DataSources": 75
+    }
+  },
+  "rootWidthValues": {
+    "Text": {
+      "1.850 in": 75
+    },
+    "BarCode-Code-128": {
+      "1.850 in": 117
+    },
+    "BarCode-DataMatrix": {
+      "1.850 in": 60
+    },
+    "Picture": {
+      "0.787 in": 2,
+      "1.000 in": 2,
+      "0.708 in": 1
+    },
+    "Line": {
+      "1.850 in": 5
+    },
+    "Box": {
+      "1.000 in": 2,
+      "4.488 in": 1
+    },
+    "BarCode-Code39-FullAscii": {
+      "1.850 in": 3
+    }
+  },
+  "textSources": {
+    "native_Label_Workbench_Native_Layout_ENGINE_V1_evidence_latest-result_object-1-a": 1,
+    "native_Label_Workbench_Native_Layout_ENGINE_V1_evidence_latest-result_object-1-b": 1,
+    "native_Label_Workbench_Native_Layout_ENGINE_V1_evidence_latest-one-shot-v2-real-": 1,
+    "r49": 7,
+    "review_renderer-prototype_general-candidate_evidence_run45_verified-runtime-evid": 65
+  },
+  "paragraphLikeFieldsFound": []
+}

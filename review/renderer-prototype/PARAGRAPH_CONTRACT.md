@@ -153,3 +153,8 @@ Workflow 只在 YKC1117 push 了 `run-request.json` 且 commit 訊息含 `[barte
 - **實際 Value 訊號**：`Value` 與 DataMerge Export literal 都回傳 ``<RTF 資料>``，但 RichText 物件 XML **沒有 DataSources 子節點**。``<RTF 資料>`` 看起來是 BarTender 本地化的 RTF 佔位標示，**不能直接推論真正 RTF 位元內容或 markup 模型**。
 - **判讀修正**：最初 Run50 工具把上述標示正規表示式命中為 `MARKUP`；此為 **format evidence 的誤分類**，已補回歸測試與保守規則：識別 ``<RTF 資料>``／``<RTF Data>`` 時回傳 `UNKNOWN`，記 `OPAQUE_RTF_PLACEHOLDER_NOT_FORMAT_EVIDENCE`，保留 `payloadPermitted=false`。既有 Run50 原始報告不改寫，修正只適用後續離線判讀或下一輪 Probe；本修正不需第二次 BarTender 實機操作。
 - **能力界線不變**：固定框、換行、原生水平對齊、縮字、超框裁切仍 `NOT_CERTIFIED`。不可因 Run50 workflow `SUCCESS` 便聲稱可還原任意客戶段落標籤。
+
+
+## 10. Run51 候選：Text5 原生段落路線（2026-11-04，尚未實機）
+
+RichText9 在 Run50 中必要 setter 被拒、Value 為不透明佔位字串，沒有可驗證的寫入路線。下一輪改走 Text5：在已證實的 Designer Text pool 中，對真正的 Text5 寫入官方文件化的 typed `Width`，並以機械式條件判斷寬度是否真的控制原生換行。ROOT CAUSE、Probe 設計、判讀規則與決策表見 `NATIVE_PARAGRAPH_HANDOFF.md`。固定框、對齊、換行仍 NOT CERTIFIED。

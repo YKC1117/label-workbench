@@ -62,3 +62,5 @@ After native text semantics and broader image coverage converge, one mixed reali
 ## 2026-11-04 follow-up
 
 RichText9 Run50 discovery was executed on Windows / BarTender 2022 R2: [Run #41756559623](https://github.com/YKC1117/label-workbench/actions/runs/41756559623) DISCOVERY_COMPLETE (NOT product acceptance). See `PARAGRAPH_CONTRACT.md` section 9 for the actual typed-setter limitations and the opaque `<RTF 資料>` placeholder reclassification. Fixed frame / native justification / wrap remain NOT CERTIFIED; Run45 and Run49 evidence is unchanged and authoritative.
+
+Run51 candidate (not yet run): Text5 native paragraph probe via documented typed Width on a Designer Text slot. See `NATIVE_PARAGRAPH_HANDOFF.md`. Paragraph capabilities remain NOT CERTIFIED.
