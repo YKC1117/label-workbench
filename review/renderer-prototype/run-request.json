@@ -1,8 +1,8 @@
 {
   "enabled": true,
-  "probe": "designer-multiline",
-  "purpose": "Run52 diagnostic-only recheck of the SHA-locked Designer base harvest after observed READ_ONLY_HARVEST_NOT_PROVEN. Capture per-object ordinal XML/Value before-and-after drift plus first-difference locations; preserve all SHA, snapshot, peer, rollback and cold FAIL_CLOSED gates. No fixed-frame/wrap certification and no Renderer modification.",
-  "requestedAt": "2026-11-04T03:18:06.315Z",
+  "probe": "canonical-build",
+  "purpose": "First end-to-end product flow: tests/fixtures/vector-minimal.pdf -> committed canonical (Node == website within declared 1px text-ink contract) -> existing Build-NativeLayout + Verify-PrimitiveColdReopen -> source PDF vs cold whole-format comparison (0.5 mm). No core changes.",
+  "requestedAt": "2026-11-04T07:16:10.740951+00:00",
   "requestedBy": "YKC1117",
   "target": "experiment/com-renderer-prototype"
 }
