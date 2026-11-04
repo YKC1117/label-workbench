@@ -1,0 +1,120 @@
+{
+  "schema": "lwb-canonical-v1",
+  "runtimeProfile": "candidate-primitives-v1",
+  "label": {
+    "widthMm": 120,
+    "heightMm": 80,
+    "dpi": 300
+  },
+  "objects": [
+    {
+      "id": "TITLE",
+      "type": "text",
+      "xMm": 6,
+      "yMm": 7,
+      "widthMm": 75,
+      "heightMm": 8,
+      "rotation": 0,
+      "printable": true,
+      "text": "NATIVE MIXED LABEL",
+      "fontFamily": "Arial",
+      "fontSizePt": 14,
+      "bold": true,
+      "italic": false,
+      "alignment": "left",
+      "multiline": false,
+      "frameMode": "containment"
+    },
+    {
+      "id": "BORDER",
+      "type": "box",
+      "xMm": 3,
+      "yMm": 3,
+      "widthMm": 114,
+      "heightMm": 74,
+      "rotation": 0,
+      "printable": true,
+      "strokeMm": 0.508
+    },
+    {
+      "id": "RULE",
+      "type": "line",
+      "xMm": 6,
+      "yMm": 21,
+      "widthMm": 108,
+      "heightMm": 0.001,
+      "rotation": 0,
+      "printable": true,
+      "strokeMm": 0.254
+    },
+    {
+      "id": "LOGO",
+      "type": "image",
+      "xMm": 94,
+      "yMm": 7,
+      "widthMm": 18,
+      "heightMm": 9,
+      "rotation": 0,
+      "printable": true,
+      "dataUri": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHgAAAA8CAIAAAAiz+n/AAAAyElEQVR4nO3cOwqEMABAQbPs/a+cbRZL0cKn6EwlCBIfAb9kWQAOG+vWnPPCcTzVGP/Cn2vH8R5CR4SOCB0ROvLd2LdeMXc6dN9y9OD3tP+UzeiI0BGhI0JHhI4IHRE6InRE6IjQEaEjQke2Xiqd6m1fzszoiNARoSNCR4SOCB0ROiJ0ROjIZU+G5yl/ZPC7we0IHRE6InRE6IjQEaEjQkeEjggdEToidEToiNARoSNCR6xucC6rG9SEjggdEToidEToiNAA9/UDSI8Sbn4DDpsAAAAASUVORK5CYII="
+    },
+    {
+      "id": "CODE_1",
+      "type": "barcode1d",
+      "xMm": 6,
+      "yMm": 30,
+      "widthMm": 25.146,
+      "heightMm": 7,
+      "rotation": 0,
+      "printable": true,
+      "symbology": "Code128",
+      "value": "AB12",
+      "moduleMm": 0.254,
+      "moduleIndex": 2,
+      "barHeightMm": 7,
+      "humanReadable": false,
+      "quietZoneMm": 2.54
+    },
+    {
+      "id": "DM_1",
+      "type": "barcode2d",
+      "xMm": 94,
+      "yMm": 31,
+      "widthMm": 6.094476,
+      "heightMm": 6.094476,
+      "rotation": 0,
+      "printable": true,
+      "symbology": "DataMatrix",
+      "value": "LOT-12345678901234567890",
+      "moduleMm": 0.338582,
+      "moduleIndex": 3,
+      "rows": null,
+      "columns": null,
+      "gs1": false
+    },
+    {
+      "id": "HRI_1",
+      "type": "barcode1d",
+      "xMm": 6,
+      "yMm": 50,
+      "widthMm": 33.547978,
+      "heightMm": 14.6,
+      "rotation": 0,
+      "printable": true,
+      "symbology": "Code128",
+      "value": "12345678",
+      "moduleMm": 0.338582,
+      "moduleIndex": 3,
+      "barHeightMm": 9,
+      "humanReadable": true,
+      "quietZoneMm": 3.4,
+      "caption": {
+        "fontFamily": "Arial",
+        "fontSizePt": 12,
+        "alignment": "center",
+        "gapMm": 1.1,
+        "heightMm": 4.5
+      }
+    }
+  ]
+}

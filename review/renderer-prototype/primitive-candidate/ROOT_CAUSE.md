@@ -31,3 +31,10 @@ Image comparison required a separate comparability correction. A nearest-neighbo
 Reanalysis of unchanged Run48 evidence under the corrected comparability policy is recorded separately as offline PASS; Run48 remains FAIL and has no cold proof. A new combined runtime must validate the full pipeline.
 
 Publication is strengthened: Build leaves image outputs as `candidate.cold-pending.btw`, never in LATEST accepted aliases. Only successful distinct-process cold proof promotes to native-output.btw and accepted aliases. Cold failure quarantines all candidate paths and repackages failed evidence; no hot-only image BTW is published as verified.
+
+
+## Run49 final integrated runtime PASS
+
+Run 41608415240 / candidate f9ac4cb4ea1059e65641a2d55f4900a7f634c028: seven native mixed objects, 25 strict peer audits, all geometry/style/payload/source contracts and edit challenges, real 600dpi whole/per-object/primitive/HRI QA PASS. No unexpected overlap/out-of-bounds. Distinct-process cold proof PID21964→16128 with original image path removed: 7/7 native BMPs and whole BMP exactly equal; candidate before/after hashes unchanged. Output was only promoted after cold PASS. Final BTW SHA36199B11E3E05B6755E5BCD5460C7AAB4E6BCCD0AC35032D79E15CDBBC8C787E independently verified from artifact bytes.
+
+Raw original Run48 remains FAIL. Run49 does not claim native paragraph semantics or arbitrary image/HRI styles. See PRIMITIVE_RENDERER_HANDOFF.md and evidence/run49/summary.json for precise certified scope and next steps.

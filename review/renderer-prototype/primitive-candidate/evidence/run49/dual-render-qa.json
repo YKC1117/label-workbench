@@ -1,0 +1,495 @@
+{
+  "schema": "lwb-dual-render-qa-v1",
+  "status": "PASS_PLACEMENT_AND_SIZE",
+  "tolerance": {
+    "centerMm": 0.5,
+    "sizeMm": 0.5,
+    "edgeMm": 0.5,
+    "rotationDeg": 0.1,
+    "overlapAreaMm2": 0.25
+  },
+  "productAcceptance": "NOT_RUN",
+  "scope": "orthogonal local-frame text alignment and containment, native pattern rotation gate consumed separately, placement, footprint, containment and API rotation; every native request explicitly asks for TopLeft; BarTender may omit that default in XML only when unique full-page visual geometry independently passes; no independent optical angle estimation",
+  "objects": [
+    {
+      "id": "TITLE",
+      "status": "PASS",
+      "policy": "TEXT_CONTAINMENT",
+      "expected": {
+        "x": 6,
+        "y": 7,
+        "width": 75,
+        "height": 8
+      },
+      "actual": {
+        "x": 6.011333333333333,
+        "y": 6.942666666666667,
+        "width": 52.02766666666667,
+        "height": 3.5136666666666665
+      },
+      "symbolActual": null,
+      "caption": null,
+      "localInk": {
+        "x": 0.011333333333332973,
+        "y": -0.057333333333333236,
+        "right": 52.039,
+        "bottom": 3.4563333333333333
+      },
+      "alignmentErrorMm": 0.011333333333332973,
+      "delta": {
+        "centerX": -11.474833333333336,
+        "centerY": -2.3004999999999995,
+        "width": -22.97233333333333,
+        "height": -4.4863333333333335,
+        "rotation": 0
+      },
+      "outOfBounds": false,
+      "referencePoint": null,
+      "referencePointPresent": false,
+      "anchorEvidence": "TOPLEFT_REQUEST_OMITTED_PLUS_UNIQUE_VISUAL_GEOMETRY",
+      "rotationEvidence": "COM_READBACK_ONLY",
+      "renderedRotation": "NOT_INDEPENDENTLY_VERIFIED",
+      "barcodeFootprint": null
+    },
+    {
+      "id": "BORDER",
+      "status": "PASS",
+      "policy": "SYMBOL_INK",
+      "expected": {
+        "x": 2.746,
+        "y": 2.746,
+        "width": 114.508,
+        "height": 74.508
+      },
+      "actual": {
+        "x": 2.751666666666667,
+        "y": 2.751666666666667,
+        "width": 114.51166666666667,
+        "height": 74.50666666666666
+      },
+      "symbolActual": null,
+      "caption": null,
+      "localInk": null,
+      "alignmentErrorMm": null,
+      "delta": {
+        "centerX": 0.007500000000000284,
+        "centerY": 0.0049999999999954525,
+        "width": 0.0036666666666747005,
+        "height": -0.0013333333333349628,
+        "rotation": 0
+      },
+      "outOfBounds": false,
+      "referencePoint": null,
+      "referencePointPresent": false,
+      "anchorEvidence": "TOPLEFT_REQUEST_OMITTED_PLUS_UNIQUE_VISUAL_GEOMETRY",
+      "rotationEvidence": "COM_READBACK_ONLY",
+      "renderedRotation": "NOT_INDEPENDENTLY_VERIFIED",
+      "barcodeFootprint": null
+    },
+    {
+      "id": "RULE",
+      "status": "PASS",
+      "policy": "SYMBOL_INK",
+      "expected": {
+        "x": 5.9999988240740745,
+        "y": 20.873000000005444,
+        "width": 108.00000235185186,
+        "height": 0.2549999999891135
+      },
+      "actual": {
+        "x": 5.969,
+        "y": 20.870333333333335,
+        "width": 108.03466666666667,
+        "height": 0.254
+      },
+      "symbolActual": null,
+      "caption": null,
+      "localInk": null,
+      "alignmentErrorMm": null,
+      "delta": {
+        "centerX": -0.013666666666672711,
+        "centerY": -0.003166666666666984,
+        "width": 0.0346643148148047,
+        "height": -0.000999999989113487,
+        "rotation": 0.0005305164769424664
+      },
+      "outOfBounds": false,
+      "referencePoint": "Center",
+      "referencePointPresent": true,
+      "anchorEvidence": "EXPLICIT_XML_CENTER",
+      "rotationEvidence": "COM_READBACK_ONLY",
+      "renderedRotation": "NOT_INDEPENDENTLY_VERIFIED",
+      "barcodeFootprint": null
+    },
+    {
+      "id": "LOGO",
+      "status": "PASS",
+      "policy": "SYMBOL_INK",
+      "expected": {
+        "x": 94,
+        "y": 7,
+        "width": 18,
+        "height": 9
+      },
+      "actual": {
+        "x": 93.98,
+        "y": 6.985,
+        "width": 17.991666666666667,
+        "height": 8.974666666666668
+      },
+      "symbolActual": null,
+      "caption": null,
+      "localInk": null,
+      "alignmentErrorMm": null,
+      "delta": {
+        "centerX": -0.024166666666658898,
+        "centerY": -0.027666666666664952,
+        "width": -0.00833333333333286,
+        "height": -0.02533333333333232,
+        "rotation": 0
+      },
+      "outOfBounds": false,
+      "referencePoint": null,
+      "referencePointPresent": false,
+      "anchorEvidence": "TOPLEFT_REQUEST_OMITTED_PLUS_UNIQUE_VISUAL_GEOMETRY",
+      "rotationEvidence": "COM_READBACK_ONLY",
+      "renderedRotation": "NOT_INDEPENDENTLY_VERIFIED",
+      "barcodeFootprint": null
+    },
+    {
+      "id": "CODE_1",
+      "status": "PASS",
+      "policy": "SYMBOL_INK",
+      "expected": {
+        "x": 8.54,
+        "y": 30,
+        "width": 20.066,
+        "height": 7
+      },
+      "actual": {
+        "x": 8.551333333333334,
+        "y": 30.014333333333333,
+        "width": 20.066,
+        "height": 6.985
+      },
+      "symbolActual": null,
+      "caption": null,
+      "localInk": null,
+      "alignmentErrorMm": null,
+      "delta": {
+        "centerX": 0.01133333333333475,
+        "centerY": 0.006833333333332803,
+        "width": 0,
+        "height": -0.01499999999999968,
+        "rotation": 0
+      },
+      "outOfBounds": false,
+      "referencePoint": null,
+      "referencePointPresent": false,
+      "anchorEvidence": "TOPLEFT_REQUEST_OMITTED_PLUS_UNIQUE_VISUAL_GEOMETRY",
+      "rotationEvidence": "COM_READBACK_ONLY",
+      "renderedRotation": "NOT_INDEPENDENTLY_VERIFIED",
+      "barcodeFootprint": {
+        "widthMm": 25.146,
+        "heightMm": 7,
+        "rows": null,
+        "columns": null
+      }
+    },
+    {
+      "id": "DM_1",
+      "status": "PASS",
+      "policy": "SYMBOL_INK",
+      "expected": {
+        "x": 94,
+        "y": 31,
+        "width": 6.094476,
+        "height": 6.094476
+      },
+      "actual": {
+        "x": 93.98,
+        "y": 30.988,
+        "width": 6.096,
+        "height": 6.096
+      },
+      "symbolActual": null,
+      "caption": null,
+      "localInk": null,
+      "alignmentErrorMm": null,
+      "delta": {
+        "centerX": -0.019237999999994315,
+        "centerY": -0.011237999999998749,
+        "width": 0.0015239999999998588,
+        "height": 0.0015239999999998588,
+        "rotation": 0
+      },
+      "outOfBounds": false,
+      "referencePoint": null,
+      "referencePointPresent": false,
+      "anchorEvidence": "TOPLEFT_REQUEST_OMITTED_PLUS_UNIQUE_VISUAL_GEOMETRY",
+      "rotationEvidence": "COM_READBACK_ONLY",
+      "renderedRotation": "NOT_INDEPENDENTLY_VERIFIED",
+      "barcodeFootprint": {
+        "widthMm": 6.094476,
+        "heightMm": 6.094476,
+        "rows": 18,
+        "columns": 18
+      }
+    },
+    {
+      "id": "HRI_1",
+      "status": "PASS",
+      "policy": "SYMBOL_INK",
+      "expected": {
+        "x": 6,
+        "y": 50,
+        "width": 33.547978,
+        "height": 14.599999999999994
+      },
+      "actual": {
+        "x": 9.398,
+        "y": 49.995666666666665,
+        "width": 26.754666666666665,
+        "height": 13.165666666666667
+      },
+      "symbolActual": {
+        "x": 9.398,
+        "y": 49.995666666666665,
+        "width": 26.754666666666665,
+        "height": 8.974666666666668
+      },
+      "caption": {
+        "status": "PASS",
+        "expected": {
+          "x": 9.4,
+          "y": 60.1,
+          "width": 26.747978,
+          "height": 4.5
+        },
+        "actual": {
+          "x": 13.758333333333333,
+          "y": 60.071,
+          "width": 18.330333333333332,
+          "height": 3.0903333333333336
+        }
+      },
+      "localInk": null,
+      "alignmentErrorMm": null,
+      "delta": {
+        "centerX": 0.0013443333333302832,
+        "centerY": -0.017000000000003013,
+        "width": 0.006688666666661902,
+        "height": -0.02533333333333232,
+        "rotation": 0
+      },
+      "outOfBounds": false,
+      "referencePoint": null,
+      "referencePointPresent": false,
+      "anchorEvidence": "TOPLEFT_REQUEST_OMITTED_PLUS_UNIQUE_VISUAL_GEOMETRY",
+      "rotationEvidence": "COM_READBACK_ONLY",
+      "renderedRotation": "NOT_INDEPENDENTLY_VERIFIED",
+      "barcodeFootprint": {
+        "widthMm": 33.547978,
+        "heightMm": 9,
+        "rows": null,
+        "columns": null
+      }
+    }
+  ],
+  "overlaps": [
+    {
+      "ids": [
+        "TITLE",
+        "BORDER"
+      ],
+      "expectedAreaMm2": 600,
+      "actualAreaMm2": 182.8078781111111,
+      "unexpected": false
+    },
+    {
+      "ids": [
+        "TITLE",
+        "RULE"
+      ],
+      "expectedAreaMm2": 0,
+      "actualAreaMm2": 0,
+      "unexpected": false
+    },
+    {
+      "ids": [
+        "TITLE",
+        "LOGO"
+      ],
+      "expectedAreaMm2": 0,
+      "actualAreaMm2": 0,
+      "unexpected": false
+    },
+    {
+      "ids": [
+        "TITLE",
+        "CODE_1"
+      ],
+      "expectedAreaMm2": 0,
+      "actualAreaMm2": 0,
+      "unexpected": false
+    },
+    {
+      "ids": [
+        "TITLE",
+        "DM_1"
+      ],
+      "expectedAreaMm2": 0,
+      "actualAreaMm2": 0,
+      "unexpected": false
+    },
+    {
+      "ids": [
+        "TITLE",
+        "HRI_1"
+      ],
+      "expectedAreaMm2": 0,
+      "actualAreaMm2": 0,
+      "unexpected": false
+    },
+    {
+      "ids": [
+        "BORDER",
+        "RULE"
+      ],
+      "expectedAreaMm2": 27.54000059854648,
+      "actualAreaMm2": 27.44080533333348,
+      "unexpected": false
+    },
+    {
+      "ids": [
+        "BORDER",
+        "LOGO"
+      ],
+      "expectedAreaMm2": 162,
+      "actualAreaMm2": 161.46921111111106,
+      "unexpected": false
+    },
+    {
+      "ids": [
+        "BORDER",
+        "CODE_1"
+      ],
+      "expectedAreaMm2": 140.462,
+      "actualAreaMm2": 140.16101,
+      "unexpected": false
+    },
+    {
+      "ids": [
+        "BORDER",
+        "DM_1"
+      ],
+      "expectedAreaMm2": 37.142637714576004,
+      "actualAreaMm2": 37.161216000000046,
+      "unexpected": false
+    },
+    {
+      "ids": [
+        "BORDER",
+        "HRI_1"
+      ],
+      "expectedAreaMm2": 489.80047879999984,
+      "actualAreaMm2": 352.24302311111103,
+      "unexpected": false
+    },
+    {
+      "ids": [
+        "RULE",
+        "LOGO"
+      ],
+      "expectedAreaMm2": 0,
+      "actualAreaMm2": 0,
+      "unexpected": false
+    },
+    {
+      "ids": [
+        "RULE",
+        "CODE_1"
+      ],
+      "expectedAreaMm2": 0,
+      "actualAreaMm2": 0,
+      "unexpected": false
+    },
+    {
+      "ids": [
+        "RULE",
+        "DM_1"
+      ],
+      "expectedAreaMm2": 0,
+      "actualAreaMm2": 0,
+      "unexpected": false
+    },
+    {
+      "ids": [
+        "RULE",
+        "HRI_1"
+      ],
+      "expectedAreaMm2": 0,
+      "actualAreaMm2": 0,
+      "unexpected": false
+    },
+    {
+      "ids": [
+        "LOGO",
+        "CODE_1"
+      ],
+      "expectedAreaMm2": 0,
+      "actualAreaMm2": 0,
+      "unexpected": false
+    },
+    {
+      "ids": [
+        "LOGO",
+        "DM_1"
+      ],
+      "expectedAreaMm2": 0,
+      "actualAreaMm2": 0,
+      "unexpected": false
+    },
+    {
+      "ids": [
+        "LOGO",
+        "HRI_1"
+      ],
+      "expectedAreaMm2": 0,
+      "actualAreaMm2": 0,
+      "unexpected": false
+    },
+    {
+      "ids": [
+        "CODE_1",
+        "DM_1"
+      ],
+      "expectedAreaMm2": 0,
+      "actualAreaMm2": 0,
+      "unexpected": false
+    },
+    {
+      "ids": [
+        "CODE_1",
+        "HRI_1"
+      ],
+      "expectedAreaMm2": 0,
+      "actualAreaMm2": 0,
+      "unexpected": false
+    },
+    {
+      "ids": [
+        "DM_1",
+        "HRI_1"
+      ],
+      "expectedAreaMm2": 0,
+      "actualAreaMm2": 0,
+      "unexpected": false
+    }
+  ],
+  "quietZones": [],
+  "opticalRotation": {
+    "status": "PASS",
+    "objects": []
+  }
+}

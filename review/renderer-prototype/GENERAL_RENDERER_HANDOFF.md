@@ -1,3 +1,5 @@
+> Latest extension: Run49 verifies a seven-object native mixed label with restricted HRI/Picture/Line/Box and distinct-process source-hidden image persistence. Read [PRIMITIVE_RENDERER_HANDOFF.md](PRIMITIVE_RENDERER_HANDOFF.md) first. Run45 below remains the historical Text/barcode baseline.
+
 # General Renderer handoff — 2026-11-03, Run45 verified
 
 Only YKC1117/label-workbench / experiment/com-renderer-prototype / Draft PR #35. Main, Pages and Releases untouched. Preserve latest remote HEAD; no rollback.

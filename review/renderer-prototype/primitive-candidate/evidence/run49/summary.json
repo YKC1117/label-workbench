@@ -1,0 +1,164 @@
+{
+  "schema": "lwb-native-mixed-runtime-v1",
+  "runId": 41608415240,
+  "runNumber": 49,
+  "url": "https://github.com/YKC1117/label-workbench/actions/runs/41608415240",
+  "candidateCommit": "f9ac4cb4ea1059e65641a2d55f4900a7f634c028",
+  "artifactId": 13216899752,
+  "artifactSha256": "451af1269667470f50c134128ff3aefa98590e5c566147f0d5fed42ba2921fa0",
+  "status": "PASS",
+  "productAcceptance": "NOT_COMPLETE",
+  "nativeObjectCount": 7,
+  "strictPeerAuditCount": 25,
+  "peerBitmapPolicy": "Picture peers additionally require exact before/after native BMP SHA",
+  "editability": [
+    {
+      "id": "TITLE",
+      "type": "text",
+      "nativeType": 5,
+      "status": "CHALLENGE_RESTORE_EXACT_XML_AND_PEER_ISOLATION_PASS"
+    },
+    {
+      "id": "CODE_1",
+      "type": "code128",
+      "nativeType": 4,
+      "status": "CHALLENGE_RESTORE_EXACT_XML_AND_PEER_ISOLATION_PASS"
+    },
+    {
+      "id": "DM_1",
+      "type": "datamatrix",
+      "nativeType": 4,
+      "status": "CHALLENGE_RESTORE_EXACT_XML_AND_PEER_ISOLATION_PASS"
+    },
+    {
+      "id": "HRI_1",
+      "type": "code128",
+      "nativeType": 4,
+      "status": "CHALLENGE_RESTORE_EXACT_XML_AND_PEER_ISOLATION_PASS"
+    },
+    {
+      "id": "LOGO",
+      "type": "image",
+      "nativeType": 6,
+      "status": "NATIVE_GEOMETRY_OR_IMAGE_CHALLENGE_EXACT_RESTORE_PASS"
+    },
+    {
+      "id": "RULE",
+      "type": "line",
+      "nativeType": 2,
+      "status": "NATIVE_GEOMETRY_OR_IMAGE_CHALLENGE_EXACT_RESTORE_PASS"
+    },
+    {
+      "id": "BORDER",
+      "type": "box",
+      "nativeType": 3,
+      "status": "NATIVE_GEOMETRY_OR_IMAGE_CHALLENGE_EXACT_RESTORE_PASS"
+    }
+  ],
+  "wholeVisual": "PASS_PLACEMENT_AND_SIZE",
+  "unexpectedOverlap": 0,
+  "outOfBounds": 0,
+  "primitiveContent": {
+    "status": "PASS",
+    "objects": [
+      {
+        "id": "BORDER",
+        "status": "PASS",
+        "policy": "HOLLOW_NATIVE_RECTANGLE",
+        "interiorInkPixels": 0,
+        "strokeMm": [
+          0.508,
+          0.508,
+          0.508,
+          0.508
+        ]
+      },
+      {
+        "id": "RULE",
+        "status": "PASS",
+        "policy": "NATIVE_STRAIGHT_STROKE_GEOMETRY",
+        "outsideStrokePixels": 0,
+        "strokeMm": 0.2539819691249151
+      },
+      {
+        "id": "LOGO",
+        "status": "PASS",
+        "policy": "EXACT_COMPARABLE_BINARY_SOURCE_INTERIOR",
+        "boundaryPolicy": "DIAGNOSTIC_ONLY_RESAMPLING_SUPPORT",
+        "comparableSourceCells": 5776,
+        "boundaryMismatches": 4,
+        "sourceWidth": 120,
+        "sourceHeight": 60,
+        "mismatchedSourceCells": 0
+      }
+    ]
+  },
+  "coldProof": {
+    "schema": "lwb-primitive-cold-reopen-v1",
+    "status": "PASS",
+    "candidateShaBefore": "36199B11E3E05B6755E5BCD5460C7AAB4E6BCCD0AC35032D79E15CDBBC8C787E",
+    "candidateShaAfter": "36199B11E3E05B6755E5BCD5460C7AAB4E6BCCD0AC35032D79E15CDBBC8C787E",
+    "buildProcessID": 21964,
+    "coldProcessID": 16128,
+    "sourceFilesHidden": [
+      "C:\\Users\\FTUSER5\\actions-runner-label-workbench\\_work\\label-workbench\\label-workbench\\native\\Label_Workbench_Native_Layout_ENGINE_V1\\program\\native-results\\D\\r-33c89028aaaf\\asset-LOGO.png"
+    ],
+    "objects": [
+      {
+        "id": "TITLE",
+        "type": "text",
+        "nativeType": 5,
+        "exactNativeBmpEqual": true,
+        "status": "PASS"
+      },
+      {
+        "id": "CODE_1",
+        "type": "code128",
+        "nativeType": 4,
+        "exactNativeBmpEqual": true,
+        "status": "PASS"
+      },
+      {
+        "id": "DM_1",
+        "type": "datamatrix",
+        "nativeType": 4,
+        "exactNativeBmpEqual": true,
+        "status": "PASS"
+      },
+      {
+        "id": "HRI_1",
+        "type": "code128",
+        "nativeType": 4,
+        "exactNativeBmpEqual": true,
+        "status": "PASS"
+      },
+      {
+        "id": "LOGO",
+        "type": "image",
+        "nativeType": 6,
+        "exactNativeBmpEqual": true,
+        "status": "PASS"
+      },
+      {
+        "id": "RULE",
+        "type": "line",
+        "nativeType": 2,
+        "exactNativeBmpEqual": true,
+        "status": "PASS"
+      },
+      {
+        "id": "BORDER",
+        "type": "box",
+        "nativeType": 3,
+        "exactNativeBmpEqual": true,
+        "status": "PASS"
+      }
+    ],
+    "wholeFormatSame": true,
+    "error": null
+  },
+  "candidateSha256": "36199B11E3E05B6755E5BCD5460C7AAB4E6BCCD0AC35032D79E15CDBBC8C787E",
+  "package": "verified-mixed-evidence.zip",
+  "packageSha256": "bbae504655836086c06c64d5ed9b843f823118402fb430d05814511a3aa96dd7",
+  "packageBytes": 218700
+}
