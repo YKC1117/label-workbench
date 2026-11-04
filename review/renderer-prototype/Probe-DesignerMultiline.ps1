@@ -70,6 +70,34 @@ function Compare-Snapshots($a,$b){
  foreach($k in @($a.Keys)){if(-not $b.ContainsKey($k)){return $false};if(-not (Test-OrdinalEqual ([string]$a[$k].xml) ([string]$b[$k].xml)) -or -not (Test-OrdinalEqual ([string]$a[$k].value) ([string]$b[$k].value))){return $false}}
  return $true
 }
+# Diagnostic only: record every ordinal XML/Value drift. Never relax FAIL_CLOSED.
+# This operates solely on already-captured snapshots; it performs no COM writes.
+function First-OrdinalDifference([string]$a,[string]$b){
+ $min=[Math]::Min($a.Length,$b.Length)
+ for($j=0;$j -lt $min;$j++){if([int][char]$a[$j] -ne [int][char]$b[$j]){return $j}}
+ return $min
+}
+function Save-HarvestDrift($before,$after,[string]$label){
+ $rows=@();$i=0
+ foreach($name in @($before.Keys)){
+  $i++;$tag='harvest-'+$label+'-drift-'+$i.ToString('00')
+  if(-not $after.ContainsKey($name)){$rows+=,[ordered]@{name=[string]$name;kind='MISSING_AFTER'};continue}
+  $b=$before[$name];$a=$after[$name]
+  $bx=[string]$b.xml;$ax=[string]$a.xml;$bv=[string]$b.value;$av=[string]$a.value
+  $xc=-not (Test-OrdinalEqual $bx $ax);$vc=-not (Test-OrdinalEqual $bv $av)
+  if(-not ($xc -or $vc)){continue}
+  $item=[ordered]@{name=[string]$name;kind='CHANGED';xmlChanged=$xc;valueChanged=$vc
+   xmlBefore=$null;xmlAfter=$null;xmlFirstDiff=$null;xmlLengthBefore=$bx.Length;xmlLengthAfter=$ax.Length
+   valueBefore=$null;valueAfter=$null;valueFirstDiff=$null;valueLengthBefore=$bv.Length;valueLengthAfter=$av.Length}
+  if($xc){$item.xmlBefore=$tag+'-before.xml';$item.xmlAfter=$tag+'-after.xml';$item.xmlFirstDiff=(First-OrdinalDifference $bx $ax)
+   Save-T $bx $item.xmlBefore;Save-T $ax $item.xmlAfter}
+  if($vc){$item.valueBefore=$tag+'-before.txt';$item.valueAfter=$tag+'-after.txt';$item.valueFirstDiff=(First-OrdinalDifference $bv $av)
+   Save-T $bv $item.valueBefore;Save-T $av $item.valueAfter}
+  $rows+=,$item
+ }
+ foreach($name in @($after.Keys)){if(-not $before.ContainsKey($name)){$rows+=,[ordered]@{name=[string]$name;kind='MISSING_BEFORE'}}}
+ return $rows
+}
 function Audit-Peers([string]$tag){
  foreach($name in @($script:peerMap.Keys)){
   $now=Read-State $name;$was=$script:peerMap[$name]
@@ -163,7 +191,9 @@ function Invoke-Harvest([string]$label,[string]$path,[string]$expectedSha){
    }finally{Release-C $o}
   }
   $after=Snapshot @(Get-Names)
-  $h.integrity=[ordered]@{snapshotEqual=(Compare-Snapshots $before $after);objectCount=$names.Count;shaBefore=$sha;shaAfter=$null}
+  $equal=Compare-Snapshots $before $after
+  $drift=@();if(-not $equal){$drift=@(Save-HarvestDrift $before $after $label)}
+  $h.integrity=[ordered]@{snapshotEqual=$equal;objectCount=$names.Count;shaBefore=$sha;shaAfter=$null;driftCount=$drift.Count;drift=$drift}
  }finally{Close-Doc}
  $h.integrity.shaAfter=File-Sha $path
  $result.harvest+=,$h;Save-J $result (Join-Path $out 'multiline-contract-report.json')

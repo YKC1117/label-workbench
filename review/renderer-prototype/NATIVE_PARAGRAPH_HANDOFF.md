@@ -205,3 +205,15 @@ Evidence artifact: bartender-renderer-evidence-41760467332. Runner renderer regr
 | 任何 FAIL CLOSED | 保存並隔離證據，先排除失敗原因 |
 
 **自動換行（Normal Wrapped／Paragraph）**：所有已提交的 donor 都沒有這類物件。最小方案是一次性取得一個 Designer 製作的段落樣本：在 LWB-FTUSER5 上，以 BarTender Designer 建立一個「Wrap to fit width」的文字物件（Arial 8 pt、固定寬度，左／中／右各一個），存成 `.btc`，以 SHA 鎖定後提交，用法比照 `proven-code128.btc`。**阻塞點**：目前的自動化環境只有 Automation COM，沒有任何不經猜測就能建立段落物件的介面；這一步需要有人操作一次 Designer。
+
+
+## 10. Run52 Windows evidence and strictly diagnostic follow-up (2026-11-04)
+
+Run52 actual [Windows workflow #41765633348](https://github.com/YKC1117/label-workbench/actions/runs/41765633348): **FAIL_CLOSED**. Artifact: `bartender-renderer-evidence-41765633348`.
+
+- Windows PowerShell 5.1 `Test-ParagraphXmlValue.ps1` **37/37 PASS**; same-host renderer tests include multiline **34/34 PASS**, paragraph 36/36, RichText 28/28. These are not the native alignment contract.
+- SHA-locked Designer base: **41 objects**, `shaBefore=shaAfter=73E620EC...198B`. Native `GetXML` harvest found `文字 33` Text5, one DataSource, Value with explicit CR, and a native two-band raster whose right edges differ about **0.2963 mm**; classification **RIGHT (read-only observation only)**. `文字 30` has two DataSources and one measured object ink band, so CENTER was **not observed**.
+- **Blocking failure**: all-object in-memory `Snapshot` XML/Value before vs after harvest was **not identical**, despite unchanged source BTW file SHA. Original probe stored only the boolean `snapshotEqual=false` with no per-object before/after diff, making the exact cause unknowable from Run52's artifact. `READ_ONLY_HARVEST_NOT_PROVEN:designer-base` correctly stopped work. `original-template` harvest, edit, peer audits, SaveAs and different-PID cold reopen were **NOT RUN**.
+- **Follow-up diagnostic**: `Probe-DesignerMultiline.ps1` now writes per-object ordinal XML/Value drift pairs, changed-field booleans, first differing UTF-16 index, and lengths into `integrity.drift` and separate `harvest-*-drift-*.xml/.txt` files. This performs no extra COM calls and **does not relax** `Snapshot` / SHA / peer / cold FAIL_CLOSED. It is intentionally a bounded diagnostic rerun, not a renewed claim of paragraph capability.
+
+Do not call the observed RIGHT raster editable/persistent until the edit challenge and cold reopen actually pass. Native auto-wrap and fixed frame remain **NOT_CERTIFIED**.
