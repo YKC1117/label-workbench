@@ -1,7 +1,7 @@
 {
   "enabled": true,
   "probe": "canonical-build",
-  "purpose": "First end-to-end product flow: tests/fixtures/vector-minimal.pdf -> committed canonical (Node == website within declared 1px text-ink contract) -> existing Build-NativeLayout + Verify-PrimitiveColdReopen -> source PDF vs cold whole-format comparison (0.5 mm). No core changes. Attempt 2: rerun only after fixing the Windows Node.js absolute-path ESM import using pathToFileURL; first attempt did not reach BarTender COM. Preserve all existing V3/V4 gates and fail-closed rules.",
+  "purpose": "First end-to-end product flow: tests/fixtures/vector-minimal.pdf -> committed canonical (Node == website within declared 1px text-ink contract) -> existing Build-NativeLayout + Verify-PrimitiveColdReopen -> source PDF vs cold whole-format comparison (0.5 mm). No core changes. Attempt 2: rerun only after fixing the Windows Node.js absolute-path ESM import using pathToFileURL; first attempt did not reach BarTender COM. Preserve all existing V3/V4 gates and fail-closed rules. Final acceptance attempt only after independent GitHub-hosted Windows 2022 Node V1 regression proves PDF font URL and ESM module loading; V1 Linux and browser V2 also PASS. Preserve fixed cold + source gates and stop on further runtime failure.",
   "requestedAt": "2026-11-04T07:16:10.740951+00:00",
   "requestedBy": "YKC1117",
   "target": "experiment/com-renderer-prototype"
