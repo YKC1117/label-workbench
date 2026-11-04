@@ -7,7 +7,7 @@ $ErrorActionPreference='Stop'
 $request=Get-Content -LiteralPath (Join-Path $PSScriptRoot 'run-request.json') -Raw -Encoding UTF8|ConvertFrom-Json
 $probe='primitive-candidate'
 if($null -ne $request.PSObject.Properties['probe']){$probe=[string]$request.probe}
-$map=@{'primitive-candidate'='Run-PrimitiveCandidate.ps1';'richtext-contract'='Probe-RichTextContract.ps1';'native-paragraph'='Probe-NativeParagraph.ps1';'designer-multiline'='Probe-DesignerMultiline.ps1'}
+$map=@{'primitive-candidate'='Run-PrimitiveCandidate.ps1';'richtext-contract'='Probe-RichTextContract.ps1';'native-paragraph'='Probe-NativeParagraph.ps1';'designer-multiline'='Probe-DesignerMultiline.ps1';'canonical-build'='Run-CanonicalBuild.ps1'}
 if(-not $map.ContainsKey($probe)){throw ('Unknown probe selector: '+$probe)}
 $target=Join-Path $PSScriptRoot $map[$probe]
 $tokens=$null;$errors=$null;[void][Management.Automation.Language.Parser]::ParseFile($target,[ref]$tokens,[ref]$errors)

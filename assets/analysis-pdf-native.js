@@ -214,5 +214,6 @@
     console.info('[Label Workbench] PDF native-text assist',BUILD);return true;
   }
   if(!install()){let tries=0;const timer=setInterval(()=>{tries++;if(install()||tries>80)clearInterval(timer)},80)}
-  window.LabelWorkbenchPdfNative={BUILD,refine,extractPdfEvidence,textItemsToLines,splitGroups,mergeNativeFields,nativeBarcodeState,patchDom,install};
+  // pdfjs/PDF_SRC are exposed so the canonical export reuses this exact pdf.js instance.
+  window.LabelWorkbenchPdfNative={BUILD,PDF_SRC,pdfjs,refine,extractPdfEvidence,textItemsToLines,splitGroups,mergeNativeFields,nativeBarcodeState,patchDom,install};
 })();

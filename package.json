@@ -3,10 +3,13 @@
   "private": true,
   "scripts": {
     "test:browser": "playwright test",
-    "test:renderer": "node tests/renderer-core-smoke.cjs && node tests/renderer-visual-cli-smoke.cjs && node native/Label_Workbench_Native_Layout_ENGINE_V1/program/test-render.cjs && node tests/renderer-general-smoke.cjs && node tests/renderer-primitives-smoke.cjs && node tests/richtext-contract-verdict-smoke.cjs && node tests/paragraph-contract-verdict-smoke.cjs && node tests/multiline-contract-verdict-smoke.cjs"
+    "test:renderer": "node tests/renderer-core-smoke.cjs && node tests/renderer-visual-cli-smoke.cjs && node native/Label_Workbench_Native_Layout_ENGINE_V1/program/test-render.cjs && node tests/renderer-general-smoke.cjs && node tests/renderer-primitives-smoke.cjs && node tests/richtext-contract-verdict-smoke.cjs && node tests/paragraph-contract-verdict-smoke.cjs && node tests/multiline-contract-verdict-smoke.cjs && node tests/pdf-canonical-smoke.cjs && node tests/compare-source-native-smoke.cjs"
   },
   "devDependencies": {
     "@playwright/test": "1.55.1",
-    "bwip-js": "4.8.0"
+    "bwip-js": "4.8.0",
+    "bwip-js-site": "npm:bwip-js@4.6.0",
+    "pdfjs-dist": "6.3.289",
+    "zxing-wasm": "3.1.3"
   }
 }

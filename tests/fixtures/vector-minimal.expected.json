@@ -1,0 +1,167 @@
+{
+  "schema": "lwb-vector-fixture-expected-v1",
+  "fixture": "tests/fixtures/vector-minimal.pdf",
+  "method": [
+    "Page, text design positions, fonts and barcode geometry are hand-written design constants (they are inputs to tools/create-vector-pdf-fixtures.py, restated here by hand).",
+    "expectedInk is computed by tools/vector-fixture-expected-ink.py from Liberation Sans glyf outlines with fontTools only; it does not read the PDF or use pdf.js or the canonical core.",
+    "Barcode canonical boxes are hand-derived from renderer/adapter.cjs semantics: Code128 canonical xMm = symbol left - quietZoneMm, widthMm = symbol + 2*quietZoneMm, quietZoneMm = 10 x module; Data Matrix box = symbol."
+  ],
+  "page": {
+    "widthMm": 100.0,
+    "heightMm": 70.0
+  },
+  "texts": [
+    {
+      "text": "LW VECTOR LABEL",
+      "pdfFont": "LiberationSans-Bold",
+      "sizePt": 12,
+      "leftMm": 6.0,
+      "baselineMm": 11.0,
+      "expectedInk": {
+        "inkLeftMm": 6.2832,
+        "inkTopMm": 8.0441,
+        "inkWidthMm": 40.2704,
+        "inkHeightMm": 2.9972,
+        "advanceWidthMm": 40.6838
+      },
+      "fontFamily": "Arial",
+      "bold": true,
+      "italic": false,
+      "substitution": "LiberationSans->Arial (metric-compatible)"
+    },
+    {
+      "text": "PART NO:",
+      "pdfFont": "LiberationSans",
+      "sizePt": 8,
+      "leftMm": 6.0,
+      "baselineMm": 18.0,
+      "expectedInk": {
+        "inkLeftMm": 6.2315,
+        "inkTopMm": 16.0294,
+        "inkWidthMm": 12.8392,
+        "inkHeightMm": 1.9982,
+        "advanceWidthMm": 13.3284
+      },
+      "fontFamily": "Arial",
+      "bold": false,
+      "italic": false,
+      "substitution": "LiberationSans->Arial (metric-compatible)"
+    },
+    {
+      "text": "LW-ABC-77",
+      "pdfFont": "LiberationSans",
+      "sizePt": 8,
+      "leftMm": 30.0,
+      "baselineMm": 18.0,
+      "expectedInk": {
+        "inkLeftMm": 30.2315,
+        "inkTopMm": 16.0294,
+        "inkWidthMm": 14.6816,
+        "inkHeightMm": 1.9982,
+        "advanceWidthMm": 15.0551
+      },
+      "fontFamily": "Arial",
+      "bold": false,
+      "italic": false,
+      "substitution": "LiberationSans->Arial (metric-compatible)"
+    },
+    {
+      "text": "QTY: 250",
+      "pdfFont": "LiberationSans",
+      "sizePt": 10,
+      "leftMm": 6.0,
+      "baselineMm": 25.0,
+      "expectedInk": {
+        "inkLeftMm": 6.1671,
+        "inkTopMm": 22.5368,
+        "inkWidthMm": 14.7932,
+        "inkHeightMm": 3.1299,
+        "advanceWidthMm": 15.0981
+      },
+      "fontFamily": "Arial",
+      "bold": false,
+      "italic": false,
+      "substitution": "LiberationSans->Arial (metric-compatible)"
+    },
+    {
+      "text": "DM: LWDM01",
+      "pdfFont": "LiberationSans",
+      "sizePt": 8,
+      "leftMm": 66.0,
+      "baselineMm": 25.0,
+      "expectedInk": {
+        "inkLeftMm": 66.2315,
+        "inkTopMm": 23.0294,
+        "inkWidthMm": 17.3495,
+        "inkHeightMm": 1.9982,
+        "advanceWidthMm": 17.7188
+      },
+      "fontFamily": "Arial",
+      "bold": false,
+      "italic": false,
+      "substitution": "LiberationSans->Arial (metric-compatible)"
+    },
+    {
+      "text": "LW-ABC-77",
+      "pdfFont": "LiberationSans",
+      "sizePt": 8,
+      "leftMm": 6.0,
+      "baselineMm": 44.0,
+      "expectedInk": {
+        "inkLeftMm": 6.2315,
+        "inkTopMm": 42.0294,
+        "inkWidthMm": 14.6816,
+        "inkHeightMm": 1.9982,
+        "advanceWidthMm": 15.0551
+      },
+      "fontFamily": "Arial",
+      "bold": false,
+      "italic": false,
+      "substitution": "LiberationSans->Arial (metric-compatible)"
+    }
+  ],
+  "barcodes": [
+    {
+      "type": "barcode1d",
+      "symbology": "Code128",
+      "value": "LW-ABC-77",
+      "symbolLeftMm": 6.0,
+      "symbolTopMm": 30.0,
+      "modules": 134,
+      "moduleMm": 0.254,
+      "moduleIndex": 2,
+      "symbolWidthMm": 34.036,
+      "barHeightMm": 8.0,
+      "quietZoneMm": 2.54,
+      "canonical": {
+        "xMm": 3.46,
+        "yMm": 30.0,
+        "widthMm": 39.116,
+        "heightMm": 8.0
+      }
+    },
+    {
+      "type": "barcode2d",
+      "symbology": "DataMatrix",
+      "value": "LWDM01",
+      "symbolLeftMm": 66.0,
+      "symbolTopMm": 30.0,
+      "modules": 12,
+      "moduleMm": 0.338582,
+      "moduleIndex": 3,
+      "symbolWidthMm": 4.062984,
+      "canonical": {
+        "xMm": 66.0,
+        "yMm": 30.0,
+        "widthMm": 4.062984,
+        "heightMm": 4.062984
+      }
+    }
+  ],
+  "tolerances": {
+    "barcodeGeometryMm": 0.01,
+    "barcodeBasis": "vector rectangles, float32 path data",
+    "textInkMm": 0.08,
+    "textInkBasis": "600 dpi raster pixel 0.0423 mm plus antialias threshold; not tuned to pass"
+  }
+}
