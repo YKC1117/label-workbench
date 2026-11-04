@@ -20,7 +20,8 @@ async function libs(){
 async function extract(file){
   const {pdfjs,zx,createCanvas,bwip}=await libs();
   const data=new Uint8Array(fs.readFileSync(file));
-  const pdf=await pdfjs.getDocument({data,standardFontDataUrl:path.join(ROOT,'node_modules/pdfjs-dist/standard_fonts/'),isEvalSupported:false}).promise;
+  const standardFontDataUrl=pathToFileURL(path.join(ROOT,'node_modules/pdfjs-dist/standard_fonts')+path.sep).href;
+  const pdf=await pdfjs.getDocument({data,standardFontDataUrl,isEvalSupported:false}).promise;
   const page=await pdf.getPage(1);
   const opList=await page.getOperatorList();
   const textContent=await page.getTextContent({includeMarkedContent:false});

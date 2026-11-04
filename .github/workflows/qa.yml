@@ -307,6 +307,20 @@ jobs:
       - name: Validate PDF canonical V1 plus existing renderer regressions
         run: npm run test:renderer
 
+  pdf-canonical-windows:
+    name: Windows Node PDF canonical V1 (no BarTender)
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install pinned Windows dependencies
+        run: npm.cmd ci --ignore-scripts --no-audit --no-fund
+      - name: Windows V1 and renderer regression (no COM)
+        run: npm.cmd run test:renderer
+
   browser-e2e:
     runs-on: ubuntu-24.04
     steps:
