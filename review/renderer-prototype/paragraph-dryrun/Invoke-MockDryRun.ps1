@@ -21,8 +21,8 @@ function global:Get-Process{param([string]$Name,[int]$Id,$ErrorAction)
  if($Name){return @()};if($Id -eq $PID){return [pscustomobject]@{StartTime=(Get-Date);ProcessName='pwsh'}}
  if($global:LivePids -contains $Id){return [pscustomobject]@{Id=$Id;ProcessName='BarTend';StartTime=(Get-Date);Path='/tmp/mock-bt/BarTend.exe'}};if($ErrorAction -eq 'Stop'){throw "no proc $Id"};return $null}
 function global:Start-Process{return [pscustomobject]@{HasExited=$true}}
-$global:PMock=@{widthRefused=$false;heightRefused=$true;autofit=$false;contaminate=$false;restoreDrift=$false}
-switch($Scenario){'width-refused'{$global:PMock.widthRefused=$true}'autofit'{$global:PMock.autofit=$true}'contaminate'{$global:PMock.contaminate=$true}'restore-drift'{$global:PMock.restoreDrift=$true}'height-clip'{$global:PMock.heightRefused=$false}}
+$global:PMock=@{widthRefused=$false;heightRefused=$true;autofit=$false;contaminate=$false;restoreDrift=$false;lowerBase64=$false;widthIgnored=$false}
+switch($Scenario){'width-refused'{$global:PMock.widthRefused=$true}'autofit'{$global:PMock.autofit=$true}'contaminate'{$global:PMock.contaminate=$true}'restore-drift'{$global:PMock.restoreDrift=$true}'height-clip'{$global:PMock.heightRefused=$false}'xml-base64-lower'{$global:PMock.lowerBase64=$true}'run51-replay'{$global:PMock.widthIgnored=$true}}
 & (Join-Path $repo 'review/renderer-prototype/Probe-NativeParagraph.ps1')
 "EXIT=$LASTEXITCODE"
 $d=Join-Path $repo 'review/renderer-prototype/runner-evidence/native-paragraph'

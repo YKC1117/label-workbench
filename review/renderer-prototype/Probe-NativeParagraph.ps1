@@ -19,6 +19,8 @@ if(Test-Path -LiteralPath $out){Remove-Item -LiteralPath $out -Recurse -Force}
 Import-Module (Join-Path $base 'Com.psm1') -Force
 Import-Module (Join-Path $base 'NativeLayoutEngine.psm1') -Force
 Import-Module (Join-Path $base 'HybridPayload.psm1') -Force
+# Strict object-XML Value decoding (Run51 Base64 UTF-8) and ordinal equality.
+Import-Module (Join-Path $PSScriptRoot 'ParagraphXmlValue.psm1') -Force
 Add-Type -Path (Join-Path $base 'ComMetadata.cs')
 $node=(Get-Command node.exe -CommandType Application -ErrorAction Stop).Source
 $verdictTool=Join-Path $PSScriptRoot 'paragraph-contract-verdict.cjs'
@@ -39,7 +41,7 @@ $result=[ordered]@{
  installedTemplateInventory=[ordered]@{status='NOT_RUN'};peerAudits=@();hardFailures=@();errors=@()
 }
 $app=$null;$formats=$null;$doc=$null;$objects=$null;$wd=$null
-$script:ownedPids=@();$script:peerMap=@{};$script:targetName=$null
+$script:ownedPids=@();$script:peerMap=@{};$script:targetName=$null;$script:lastCleanReason=$null
 $existing=@(Get-Process -Name BarTend -ErrorAction SilentlyContinue|Select-Object -ExpandProperty Id)
 $result.runtime['preExistingBarTendPids']=@($existing)
 
@@ -70,26 +72,13 @@ function Snapshot-Peers($names){$m=@{};foreach($name in @($names)){$m[$name]=Rea
 function Audit-Peers([string]$tag){
  foreach($name in @($script:peerMap.Keys)){
   $now=Read-PeerState $name;$was=$script:peerMap[$name]
-  $ok=(([string]$now.xml -ceq [string]$was.xml) -and ([string]$now.value -ceq [string]$was.value))
+  $ok=((Test-OrdinalEqual ([string]$now.xml) ([string]$was.xml)) -and (Test-OrdinalEqual ([string]$now.value) ([string]$was.value)))
   $result.peerAudits+=,[ordered]@{tag=$tag;name=$name;status=$(if($ok){'EXACT'}else{'CHANGED'})}
   if(-not $ok){$safe=($name -replace '[^A-Za-z0-9_-]','_');Save-T ([string]$was.xml) ('peer-'+$tag+'-'+$safe+'-before.xml');Save-T ([string]$now.xml) ('peer-'+$tag+'-'+$safe+'-after.xml');Hard ('PEER_CONTAMINATION:'+$tag+':'+$name)}
  }
 }
-# Same acceptance rule as NativeLayoutEngine Get-NativeLiteralState (not exported).
-function Test-CleanText([string]$xmlText){
- $d=New-Object Xml.XmlDocument;$d.LoadXml($xmlText)
- if($d.DocumentElement.LocalName -cne 'Text'){return $null}
- $ds=$d.SelectSingleNode('/*/*[local-name()="DataSources"]');if($null -eq $ds){return $null}
- $kids=@($ds.ChildNodes|Where-Object{$_ -is [Xml.XmlElement]})
- if($kids.Count -ne 1 -or $kids[0].LocalName -cne 'EmbeddedDataSource'){return $null}
- $s=$kids[0]
- if(@($s.SelectNodes('.//*[contains(local-name(),"Transform")]')).Count -ne 0){return $null}
- foreach($a in @('Name','DataSourceName')){if($s.HasAttribute($a) -and $s.GetAttribute($a)){return $null}}
- if($s.HasAttribute('SubStringListStringID') -and $s.GetAttribute('SubStringListStringID') -cne '4294967295'){return $null}
- if([string]::IsNullOrWhiteSpace($s.GetAttribute('ID'))){return $null}
- $v=@($s.SelectNodes('./*[local-name()="Value"]'));if($v.Count -ne 1){return $null}
- return [ordered]@{sourceId=$s.GetAttribute('ID');value=$v[0].InnerText}
-}
+# Clean-text rule now lives in ParagraphXmlValue.psm1 (strict Base64 UTF-8 decode).
+function Test-CleanText([string]$xmlText){$why=$null;$r=Test-CleanTextXml $xmlText ([ref]$why);if($null -eq $r){$script:lastCleanReason=$why};return $r}
 # Flatten XML into path -> value to report exactly which native fields appeared.
 function Get-FieldMap([string]$xmlText){
  $d=New-Object Xml.XmlDocument;$d.LoadXml($xmlText);$m=New-Object System.Collections.Hashtable ([StringComparer]::Ordinal)
@@ -106,7 +95,7 @@ function Get-FieldMap([string]$xmlText){
 }
 function Get-FieldDiff([string]$a,[string]$b){
  $x=Get-FieldMap $a;$y=Get-FieldMap $b;$added=@();$removed=@();$changed=@()
- foreach($k in @($y.Keys|Sort-Object)){if(-not $x.ContainsKey($k)){$added+=,[ordered]@{field=$k;value=$y[$k]}}elseif([string]$x[$k] -cne [string]$y[$k]){$changed+=,[ordered]@{field=$k;before=$x[$k];after=$y[$k]}}}
+ foreach($k in @($y.Keys|Sort-Object)){if(-not $x.ContainsKey($k)){$added+=,[ordered]@{field=$k;value=$y[$k]}}elseif(-not (Test-OrdinalEqual ([string]$x[$k]) ([string]$y[$k]))){$changed+=,[ordered]@{field=$k;before=$x[$k];after=$y[$k]}}}
  foreach($k in @($x.Keys|Sort-Object)){if(-not $y.ContainsKey($k)){$removed+=,[ordered]@{field=$k;value=$x[$k]}}}
  return [ordered]@{added=$added;removed=$removed;changed=$changed}
 }
@@ -132,7 +121,7 @@ function Get-ExportLiteral([string]$exportText,[string]$name){
  $set=New-Object Xml.XmlReaderSettings;$set.DtdProcessing=[Xml.DtdProcessing]::Prohibit;$set.XmlResolver=$null
  $rd=[Xml.XmlReader]::Create((New-Object IO.StringReader($exportText)),$set)
  try{$d=New-Object Xml.XmlDocument;$d.XmlResolver=$null;$d.PreserveWhitespace=$true;$d.Load($rd)}finally{$rd.Dispose()}
- $rows=@($d.SelectNodes('/Command/DataMerge/Object')|Where-Object{$_.GetAttribute('Name') -ceq $name})
+ $rows=@($d.SelectNodes('/Command/DataMerge/Object')|Where-Object{Test-OrdinalEqual $_.GetAttribute('Name') $name})
  if($rows.Count -ne 1){return $null};$v=@($rows[0].SelectNodes('./SubString/Value'));if($v.Count -ne 1){return $null}
  if($v[0].HasAttribute('Encoding')){if($v[0].GetAttribute('Encoding') -ine 'base64'){return $null};$b=[Convert]::FromBase64String($v[0].InnerText);return [ordered]@{encoding='base64';literal=(New-Object Text.UnicodeEncoding($false,$false,$true)).GetString($b)}}
  return [ordered]@{encoding='raw';literal=$v[0].InnerText}
@@ -140,13 +129,13 @@ function Get-ExportLiteral([string]$exportText,[string]$name){
 function Set-TargetPayload([string]$text,[string]$tag){
  $o=Find-O $script:targetName
  try{
-  $before=Get-X $o;$state=Test-CleanText $before;if($null -eq $state){Hard ('TARGET_NOT_CLEAN_TEXT:'+$tag)}
+  $before=Get-X $o;$state=Test-CleanText $before;if($null -eq $state){Hard ('TARGET_NOT_CLEAN_TEXT:'+$tag+':'+$script:lastCleanReason)}
   $com=[string](Com\Read-Property $o 'Value')
   $exportText=[string](Com\Invoke-ComMethod $script:objects 'ExportDataSourceValuesToXML' @())
   $lit=Get-ExportLiteral $exportText $script:targetName;if($null -eq $lit){Hard ('EXPORT_LITERAL_NOT_ONE:'+$tag)}
   $note='EXPORT_LITERAL_EQUALS_VALUE'
-  if([string]$lit.literal -cne $com){
-   if($lit.encoding -ceq 'raw' -and [string]$lit.literal -ceq ($com -replace "`r`n","`n")){$note='EXPORT_RAW_NEWLINE_NORMALIZED_BY_XML_PARSER'}
+  if(-not (Test-OrdinalEqual ([string]$lit.literal) $com)){
+   if($lit.encoding -ceq 'raw' -and (Test-OrdinalEqual ([string]$lit.literal) ($com -replace "`r`n","`n"))){$note='EXPORT_RAW_NEWLINE_NORMALIZED_BY_XML_PARSER'}
    else{Hard ('EXPORT_LITERAL_DIFFERS_FROM_VALUE:'+$tag)}
   }
   $exp=New-Object Xml.XmlDocument;$exp.LoadXml($exportText)
@@ -154,7 +143,7 @@ function Set-TargetPayload([string]$text,[string]$tag){
   Save-T $sparse.OuterXml ($tag+'-import.xml')
   if(-not [bool](Com\Invoke-ComMethod $script:objects 'ImportDataSourceValuesFromXML' @($sparse.OuterXml))){Hard ('PAYLOAD_IMPORT_FALSE:'+$tag)}
   $after=Get-X $o;$read=[string](Com\Read-Property $o 'Value');$st=Test-CleanText $after
-  $exact=($read -ceq $text -and $null -ne $st -and [string]$st.value -ceq $text -and [string]$st.sourceId -ceq [string]$state.sourceId)
+  $exact=((Test-OrdinalEqual $read $text) -and $null -ne $st -and (Test-OrdinalEqual ([string]$st.value) $text) -and (Test-OrdinalEqual ([string]$st.sourceId) ([string]$state.sourceId)))
   return [ordered]@{xmlBefore=$before;xmlAfter=$after;readback=$read;readbackExact=$exact;exportEncoding=$lit.encoding;exportNote=$note}
  }finally{Release-C $o}
 }
@@ -211,7 +200,7 @@ try{
  $pool=Join-Path $out 'designer-source.btw'
  & $node (Join-Path $root 'renderer\materialize-text-pool.cjs') $pool *> (Join-Path $out 'designer-materialize.log')
  $poolSha=$(if(Test-Path -LiteralPath $pool){File-Sha $pool}else{$null})
- $result.designerBase=[ordered]@{expected=$designerSha;actual=$poolSha;shaOk=($LASTEXITCODE -eq 0 -and $poolSha -ceq $designerSha)}
+ $result.designerBase=[ordered]@{expected=$designerSha;actual=$poolSha;shaOk=($LASTEXITCODE -eq 0 -and (Test-OrdinalEqual $poolSha $designerSha))}
  if(-not $result.designerBase.shaOk){Hard 'DESIGNER_BASE_SHA'}
  $script:doc=Com\Invoke-ComMethod $script:formats 'Open' @($pool,$false,'')
  $script:objects=Com\Read-Property $script:doc 'Objects'
@@ -287,14 +276,14 @@ try{
   if(-not $r.readbackExact){
    $restoreTry=$null;try{$restoreTry=Set-TargetPayload $longText 'challenge-emergency-restore'}catch{$result.errors+=,(Get-Err $_.Exception)}
    $o=Find-O $script:targetName;try{$emXml=Get-X $o}finally{Release-C $o}
-   $result.challenge=[ordered]@{status='DONE';preBmp='challenge-pre.bmp';steps=$csteps;restoreXmlExact=($emXml -ceq $preXml);restoreBmpExact=$false;emergencyRestoreAttempted=$true}
+   $result.challenge=[ordered]@{status='DONE';preBmp='challenge-pre.bmp';steps=$csteps;restoreXmlExact=(Test-OrdinalEqual $emXml $preXml);restoreBmpExact=$false;emergencyRestoreAttempted=$true}
    Hard ('CHALLENGE_READBACK_MISMATCH:'+$p[0])
   }
   Audit-Peers ('challenge-'+$p[0])
  }
  $o=Find-O $script:targetName;try{$postXml=Get-X $o}finally{Release-C $o}
- $result.challenge=[ordered]@{status='DONE';preBmp='challenge-pre.bmp';steps=$csteps;restoreXmlExact=($postXml -ceq $preXml)
-  restoreBmpExact=((File-Sha (Join-Path $out 'edit-restore.bmp')) -ceq (File-Sha (Join-Path $out 'challenge-pre.bmp')))}
+ $result.challenge=[ordered]@{status='DONE';preBmp='challenge-pre.bmp';steps=$csteps;restoreXmlExact=(Test-OrdinalEqual $postXml $preXml)
+  restoreBmpExact=(Test-OrdinalEqual (File-Sha (Join-Path $out 'edit-restore.bmp')) (File-Sha (Join-Path $out 'challenge-pre.bmp')))}
  if(-not ($result.challenge.restoreXmlExact -and $result.challenge.restoreBmpExact)){Save-T $postXml 'challenge-post.xml';Hard 'CHALLENGE_RESTORE_NOT_EXACT'}
  Done 'challenge'
 
@@ -321,19 +310,19 @@ try{
  $coldPeers=Snapshot-Peers @($script:peerMap.Keys)
  $peerEq=$true
  foreach($k in @($hotPeers.Keys)){
-  if(-not $coldPeers.ContainsKey($k) -or [string]$coldPeers[$k].xml -cne [string]$hotPeers[$k].xml -or [string]$coldPeers[$k].value -cne [string]$hotPeers[$k].value){
+  if(-not $coldPeers.ContainsKey($k) -or -not (Test-OrdinalEqual ([string]$coldPeers[$k].xml) ([string]$hotPeers[$k].xml)) -or -not (Test-OrdinalEqual ([string]$coldPeers[$k].value) ([string]$hotPeers[$k].value))){
    $peerEq=$false;$safe=($k -replace '[^A-Za-z0-9_-]','_');Save-T ([string]$hotPeers[$k].xml) ('cold-peer-hot-'+$safe+'.xml');if($coldPeers.ContainsKey($k)){Save-T ([string]$coldPeers[$k].xml) ('cold-peer-cold-'+$safe+'.xml')}
   }
  }
  $result.cold=[ordered]@{status='DONE';buildPid=$buildPid;coldPid=$coldPid;buildProcessExited=$buildExited;distinctPid=($coldPid -ne $buildPid -and $buildExited)
-  targetType=$coldType;targetGetters=$coldGetters;targetXmlEqual=($coldXml -ceq $hotXml);targetValueEqual=($coldVal -ceq $hotVal)
-  targetBmpEqual=((File-Sha (Join-Path $out 'target-cold.bmp')) -ceq (File-Sha (Join-Path $out 'target-hot-postsave.bmp')))
-  formatBmpEqual=((File-Sha (Join-Path $out 'format-cold.bmp')) -ceq (File-Sha (Join-Path $out 'format-hot-postsave.bmp')))
+  targetType=$coldType;targetGetters=$coldGetters;targetXmlEqual=(Test-OrdinalEqual $coldXml $hotXml);targetValueEqual=(Test-OrdinalEqual $coldVal $hotVal)
+  targetBmpEqual=(Test-OrdinalEqual (File-Sha (Join-Path $out 'target-cold.bmp')) (File-Sha (Join-Path $out 'target-hot-postsave.bmp')))
+  formatBmpEqual=(Test-OrdinalEqual (File-Sha (Join-Path $out 'format-cold.bmp')) (File-Sha (Join-Path $out 'format-hot-postsave.bmp')))
   peerXmlEqual=$peerEq;shaBefore=$shaBefore;shaAfter=$null}
  Close-Owned
  $result.cold.shaAfter=File-Sha $btw
  $c=$result.cold
- if(-not ($c.distinctPid -and $c.targetType -eq 5 -and $c.targetXmlEqual -and $c.targetValueEqual -and $c.targetBmpEqual -and $c.formatBmpEqual -and $c.peerXmlEqual -and $c.shaBefore -ceq $c.shaAfter)){Hard 'COLD_REOPEN_OR_SHA_MISMATCH'}
+ if(-not ($c.distinctPid -and $c.targetType -eq 5 -and $c.targetXmlEqual -and $c.targetValueEqual -and $c.targetBmpEqual -and $c.formatBmpEqual -and $c.peerXmlEqual -and (Test-OrdinalEqual $c.shaBefore $c.shaAfter))){Hard 'COLD_REOPEN_OR_SHA_MISMATCH'}
  Done 'cold'
  $result.status='DISCOVERY_COMPLETE_NOT_RENDERER_ACCEPTANCE'
 }catch{

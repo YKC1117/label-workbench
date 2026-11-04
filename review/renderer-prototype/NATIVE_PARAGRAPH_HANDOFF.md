@@ -130,3 +130,78 @@ Evidence artifact: bartender-renderer-evidence-41760467332. Runner renderer regr
 - The installed template listing reached its 400 file cap entirely within barcode BTC files (400/400): NOT a valid paragraph donor search. Next discovery must use one bounded, named, SHA-locked Designer-authored paragraph candidate; do not repeat mass scanning.
 
 **Decision:** do not rerun identical Text5 Width writes. Fix Test-CleanText only against observed Base64 UTF-8 XML semantics (strict decode; reject other encodings), and independently obtain one real Designer Normal Wrapped Text/Paragraph donor or a single constrained donor creation path before further BarTender probe. Fixed frame, native justification, wrap stay NOT_CERTIFIED.
+
+## 9. Run52 候選：Designer 多行文字與原生對齊契約（2026-11-04，尚未實機）
+
+基準 HEAD：`d4e91c788aa52923a8662a03e5c629ef7edec653`。本輪**沒有**重跑 Run51 的 Width 寫入。
+
+### 9.1 Run51 Base64 判讀錯誤：已修正
+
+- 兩種實機 Base64 契約**不可混用**：
+  - 物件 `GetXML` 的 `<Value Encoding="Base64">`：UTF-8（Run51 實測）。
+  - DataMerge 匯出的 `<Value Encoding="base64">`：UTF-16LE（repo 既有實機證據 `datasources-before.xml`，連單獨的 CR 也精確保留）。
+- 新模組 `ParagraphXmlValue.psm1` 只接受前者的觀察格式。以下一律 FAIL CLOSED：小寫拼法、其他 Encoding、多餘屬性、空值、空白或換行、非法字元、非標準 padding、UTF-8 BOM、非法 UTF-8；並以 round-trip 驗證位元組一致。
+- `Probe-NativeParagraph.ps1` 改用此模組。精確還原的判準不變（GetXML 原文加 BMP SHA）。
+- `Test-ParagraphXmlValue.ps1`：37/37 PASS。分派入口會先在 Runner 的 PS 5.1 上執行，失敗就不啟動 BarTender。
+- mock `run51-replay` 重現 Run51：Width 失效判為 `NOT_EVIDENCED`，CRLF 編輯挑戰精確通過，冷重開 PASS。
+
+### 9.2 新發現：PowerShell `-ceq` 不是逐字元比較（高優先，核心未改）
+
+`"A"+[char]0+"B" -ceq "AB"` 為 True；U+00AD、U+200B、U+200D、U+FEFF 也一樣。所有以 `-ceq`／`-cne` 判斷「精確一致」的 gate，都可能漏判只差在這些字元上的變更。
+
+- 本輪自有的 Probe 層已全部改用 `Test-OrdinalEqual`（`[string]::Equals(...,Ordinal)`），並有 regression 覆蓋。這只會更嚴格。
+- **核心未修改**（依指示）。`-ceq`／`-cne` 出現次數：`HybridPool.psm1` 78、`NativeLayoutEngine.psm1` 69、`Build-NativeLayout.ps1` 24、`HybridPayload.psm1` 6。其中只有一部分是 XML／Value 內容比較（例如 peer audit、還原、冷重開），其餘是 ASCII 常數比較，不受影響。建議另開一輪逐一審查內容比較並改為 ordinal，再重跑 Run45／49 確認不回歸。
+
+### 9.3 ROOT CAUSE：真正的 Designer 多行物件一直就在基底裡
+
+證據檔：`paragraph-root-cause/designer-multiline-candidates.json`。
+
+1. repo 中可解析且 SHA 可驗證的 Designer 文件只有：controlled 基底 `73E6…`、`original-template.btw` `4CF9…`、second donor `5B06…`。`seed-2022r2` 的實際 SHA 與宣告不符、容器無法解析，**不可使用**（另附：網站端 `bytes()` 對陣列呼叫 `atob()` 會失敗）。
+2. BTW 容器不含屬性名稱，**不從位元組推斷任何設定**。
+3. 在 SHA 鎖定的 Designer 基底中，有兩個由 Designer 製作的**多行文字**物件，以往的 Probe 只取前兩個乾淨槽，所以從未讀過它們的 XML：
+   - **文字 30**：DataMerge 實機有兩個子字串 `"RoHS\r"` + `"COMPLIANT"`。Designer 預覽實測兩行中心差 0.5 px（約 0.06 mm），左右緣差 6／7 px，**疑似原生置中**。
+   - **文字 33**：單一子字串 `"            120824\rC.K.   QA  ACC"`。預覽實測右緣差 2 px（約 0.24 mm），左緣差 61 px，**疑似原生靠右**（前導空白在靠右時不可見）。網站端 `mapContainer` 只解析出 32 個文字物件，唯獨漏掉它，表示其記錄結構與一般單行文字不同。
+4. 預覽來自 `original-template.btw`，**只是線索**；必須由 BarTender 實機 GetXML 與 BMP 證實。
+5. 所有已提交的 donor 中都**沒有**依寬度自動換行的段落物件，所以自動換行本輪仍無法處理。
+
+### 9.4 Probe：`Probe-DesignerMultiline.ps1`（`probe: designer-multiline`）
+
+- **A. 唯讀收集**：對兩份 SHA 鎖定文件的副本，讀出每個物件的 GetXML、Value、資料來源數量，以及逐欄欄位表。目標與參照物件另取 getter 與 600 dpi BMP。前後全物件快照必須 ordinal 一致、檔案 SHA 不變，不存檔。
+- **B. 改字挑戰**（只針對文字 33，且需通過 `Test-CleanTextXml`，否則記錄理由並跳過）：
+  - 用已證實的 sparse import 依序寫入「短首行」「長首行」，最後還原原值。
+  - 每步驟讀回需精確；對其餘全部物件做 XML＋Value 的 peer audit。
+  - 還原後 GetXML 原文與 BMP SHA 必須和挑戰前完全一致。
+  - Save 後以不同 PID 冷重開，比對目標、整頁、所有 peer 與 BTW SHA。
+- **不使用**：SetXML、GetProperty／SetProperty、Text 的 typed Width／Height、Create(5)、binary patching、任何掃描。
+- 可重現的輸入副本執行後即刪除，只保留 SHA。
+
+### 9.5 判讀：`multiline-contract-verdict.cjs`
+
+- **對齊分類**：用 BarTender 自己的物件 BMP 分出墨跡帶，比較左緣、右緣、中心的離散度（容差 0.5 mm，沿用 `visual-qa.cjs`）。兩行寬度差不超過容差時判為 `NOT_OBSERVABLE`；同時符合兩種以上分類時判為 `AMBIGUOUS`。
+- **欄位對照**：列出「只在多行目標出現」與「參照都有、目標沒有」的欄位。只列差異，**不宣稱**哪個欄位代表對齊。
+- **改字後保持**：基準狀態與兩次改字狀態必須是同一種對齊分類，且改字確實改變了行寬，才判為 `ALIGNMENT_PRESERVED_AFTER_EDIT:<類別>`。
+- **能力標記**：只有在「無硬失敗、精確還原、冷重開 PASS、改字後保持」全部成立時，該類別才標為 `CONTRACT_EVIDENCED_NOT_RENDERER_CERTIFIED`。唯讀觀察到的置中只會列入 `observedReadOnlyAlignment`，**不認證**。自動換行與固定框一律 `NOT_CERTIFIED`。
+- **FAIL CLOSED**：唯讀收集改動了文件、來源 SHA 不符、讀回或還原不精確、peer 污染、改字後零筆 audit、冷重開不一致、非自有程序、runner 不是 `LWB-FTUSER5`。
+
+### 9.6 離線驗證（非實機證據）
+
+- node regression：multiline 34/34、paragraph 36/36、RichText 28/28；完整 `test:renderer` PASS。
+- multiline verdict 經 9 個刻意改壞的變異測試，全部被 regression 抓到。其中一個變異暴露了「兩行寬度只差略多於容差、同時符合兩種分類」的測試缺口，已補上。
+- PowerShell：`Test-ParagraphXmlValue.ps1` 37/37；所有 PS 檔皆為純 ASCII，並通過 PS7 parser 加 5.1 AST 掃描。
+- mock dry-run：
+  - designer-multiline：normal、align-lost、contaminate、restore-drift、transform33、harvest-mutates、source-sha。
+  - native-paragraph：8 情境，含 run51-replay、xml-base64-lower。
+  - richtext 代表情境。
+  - 全部符合設計。**mock 不代表 BarTender 行為。**
+
+### 9.7 實機結果後的決策
+
+| Run52 結果 | 意義與下一步 |
+|---|---|
+| 文字 33 為 `ALIGNMENT_PRESERVED_AFTER_EDIT:RIGHT`，冷重開 PASS | 第一個「改字後仍保持原生對齊」的實證（靠右）。下一步：設計以此 Designer 物件為 donor 的「多行靠右」原生元件契約，並在 Visual QA 新增多行對齊 gate，之後才接 Renderer |
+| 文字 30 唯讀判為 CENTER，且欄位對照出現穩定的目標專屬欄位 | 置中欄位名稱與值已有**實機依據**。下一輪才可評估：在 Designer 文字上 SetXML 寫入「實機觀察到的」欄位與值，加上改字保持與精確還原 |
+| 文字 33 不符合乾淨文字條件（例如有 transform） | 只保留唯讀證據。改字挑戰需要另一個單一子字串的 Designer 多行物件 |
+| 判為 LEFT 或 AMBIGUOUS | 預覽線索不成立。保存證據；對齊仍未取得 |
+| 任何 FAIL CLOSED | 保存並隔離證據，先排除失敗原因 |
+
+**自動換行（Normal Wrapped／Paragraph）**：所有已提交的 donor 都沒有這類物件。最小方案是一次性取得一個 Designer 製作的段落樣本：在 LWB-FTUSER5 上，以 BarTender Designer 建立一個「Wrap to fit width」的文字物件（Arial 8 pt、固定寬度，左／中／右各一個），存成 `.btc`，以 SHA 鎖定後提交，用法比照 `proven-code128.btc`。**阻塞點**：目前的自動化環境只有 Automation COM，沒有任何不經猜測就能建立段落物件的介面；這一步需要有人操作一次 Designer。

@@ -66,3 +66,5 @@ RichText9 Run50 discovery was executed on Windows / BarTender 2022 R2: [Run #417
 Run51 candidate (not yet run): Text5 native paragraph probe via documented typed Width on a Designer Text slot. See `NATIVE_PARAGRAPH_HANDOFF.md`. Paragraph capabilities remain NOT CERTIFIED.
 
 Run51: https://github.com/YKC1117/label-workbench/actions/runs/41760467332 FAIL_CLOSED. Existing Text5 typed Width did not establish wrap, and CRLF GetXML Value Base64 needs strict decoding in probe parser. Save/cold NOT RUN. Details in NATIVE_PARAGRAPH_HANDOFF.md section 8. Do not rerun identical width probe without a real Designer paragraph donor.
+
+Run52 candidate (not yet run): Designer-authored multi-line Text alignment probe (`designer-multiline`) plus strict object-XML Base64 decoding and ordinal comparisons. See `NATIVE_PARAGRAPH_HANDOFF.md` section 9. Core HybridPool/NativeLayoutEngine/Build-NativeLayout/HybridPayload still use culture-sensitive -ceq/-cne (78/69/24/6 occurrences, a subset compare XML/Value content): open follow-up.

@@ -163,3 +163,7 @@ RichText9 在 Run50 中必要 setter 被拒、Value 為不透明佔位字串，�
 ## 11. Run51 Windows result (2026-11-04)
 
 https://github.com/YKC1117/label-workbench/actions/runs/41760467332：DISCOVERY_FAILED_CLOSED. Existing single-line Text5 ignored typed Width (50.8 / 30.48 mm; getter 80.772 mm, 1 band), 27/27 peers EXACT. CRLF Value was Base64-encoded in GetXML, exposing a separate Test-CleanText parser limitation; save/cold NOT RUN. See NATIVE_PARAGRAPH_HANDOFF.md section 8. No native paragraph capability is certified.
+
+## 12. Run52 候選（尚未實機）
+
+Run51 的 Base64 判讀已依實機格式修正。SHA 鎖定的 Designer 基底中發現兩個 Designer 製作的多行文字物件（文字 30 疑似置中、文字 33 疑似靠右），新增唯讀收集加上「改字後是否保持對齊」的 Probe。詳見 `NATIVE_PARAGRAPH_HANDOFF.md` 第 9 節。所有段落能力仍 NOT CERTIFIED。
